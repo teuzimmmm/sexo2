@@ -610,11 +610,13 @@ class ModStorageService:
                 dir=str(champion_dir),
             )
         )
+        target_created = False
         try:
             extract_mod_archive(source, temporary_dir)
             if not any(temporary_dir.iterdir()):
                 raise ValueError("The selected mod archive contains no files")
             temporary_dir.replace(target_dir)
+            target_created = True
             manifest_path = self.set_champion_target_ids(
                 champion_id_int,
                 skin_ids,
@@ -624,6 +626,8 @@ class ModStorageService:
             return target_dir, manifest_path, mod_name
         except Exception:
             safe_remove_entry(temporary_dir)
+            if target_created:
+                safe_remove_entry(target_dir)
             raise
 
     def _resolve_mod_path(self, base_dir: Path, relative_path: object) -> Optional[Path]:

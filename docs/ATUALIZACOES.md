@@ -58,3 +58,14 @@ Para publicar uma release assinada localmente, usar `scripts/publish_local.py`
 com `--version` e `--folder`; utiliza a autenticação de publicação já guardada
 pelo Git Credential Manager, não o token de leitura distribuído.
 GitHub CI aprovou os commits de validação da central e da versão 1.5.1.
+
+## Compatibilidade obrigatória a partir de 1.5.2
+
+scripts/compatibility_bases.json registra cada baseline suportada. release_local
+gera SEXO2-update-from-<base>.zip para todas e falha se faltar uma pasta; nunca
+apagar baseline sem definir migração. A versão recém-gerada é registrada para as
+próximas releases. publish_local envia os deltas e o ZIP com helper junto da
+release. O cliente novo escolhe o delta por versão. Clientes anteriores escolhem
+só o primary: quem ficou várias versões atrás deve usar uma vez o ZIP com helper
+novo, que identifica o executável por hash. Depois pode saltar versões no painel.
+Assinatura e validação de cada arquivo continuam obrigatórias.

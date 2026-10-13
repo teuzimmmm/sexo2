@@ -6,6 +6,7 @@ Checks for updates to CommunityDragon game hash files and downloads/combines the
 """
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 import requests
 from pathlib import Path
 from typing import Optional, Dict, Callable
@@ -87,7 +88,7 @@ def check_file_commits(file_path: str, session: requests.Session) -> Optional[Di
             'date': latest_commit['commit']['committer']['date']
         }
     except requests.HTTPError as e:
-        if e.response and e.response.status_code in (403, 429):
+        if e.response is not None and e.response.status_code in (403, 429):
             log.warning(f"GitHub API rate limit exceeded while checking {file_path}")
             return {'rate_limited': True}
         else:
@@ -104,12 +105,18 @@ def check_for_updates() -> bool:
     Returns:
         True if updates are available, False otherwise
     """
-    session = requests.Session()
-    session.headers.update({
-        'User-Agent': APP_USER_AGENT,
-        'Accept': 'application/vnd.github.v3+json'
-    })
-    
+    # Sessions are not shared between workers. Keep network concurrency bounded.
+    def check_one(hash_file):
+        with requests.Session() as session:
+            session.headers.update({
+                'User-Agent': APP_USER_AGENT,
+                'Accept': 'application/vnd.github.v3+json',
+            })
+            return check_file_commits(f"{HASHES_DIR}/{hash_file}", session)
+
+    with ThreadPoolExecutor(max_workers=3, thread_name_prefix="HashCheck") as pool:
+        results = list(pool.map(check_one, HASH_FILES))
+
     local_state = load_state()
     local_file_shas = local_state.get('files', {})
     
@@ -117,9 +124,7 @@ def check_for_updates() -> bool:
     any_checked = False
     rate_limited = False
     
-    for hash_file in HASH_FILES:
-        file_path = f"{HASHES_DIR}/{hash_file}"
-        commits = check_file_commits(file_path, session)
+    for hash_file, commits in zip(HASH_FILES, results):
         
         if commits is None:
             continue

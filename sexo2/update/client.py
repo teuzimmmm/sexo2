@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 import requests
 
-RELEASE_VERSION = '1.5.1'
+RELEASE_VERSION = '1.5.2'
 
 def assets_root():
     return Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[2]))/'assets'
@@ -45,11 +45,18 @@ def check_release(repository=None,token=None,current=RELEASE_VERSION):
     if response.status_code!=200:raise ValueError('Não foi possível consultar as atualizações agora.')
     release=response.json(); latest=release.get('tag_name','')
     if release.get('draft') or release.get('prerelease'):raise ValueError('A versão publicada não é uma atualização estável.')
-    asset=next((a for a in release.get('assets',[]) if a.get('name')=='SEXO2-update.zip'),None)
+    assets=release.get('assets',[])
+    compatible_name='SEXO2-update-from-'+current.removeprefix('v')+'.zip'
+    asset=next((a for a in assets if a.get('name')==compatible_name),None)
+    has_compatibility=any(str(a.get('name','')).startswith('SEXO2-update-from-') for a in assets)
+    if asset is None and not has_compatibility:
+        # Releases predating compatibility assets keep their existing transport.
+        asset=next((a for a in assets if a.get('name')=='SEXO2-update.zip'),None)
+
     available=version(latest)>version(current) and bool(asset)
     return {'configured':True,'available':available,'version':current,'latest':latest,
             'github':'https://github.com/'+repository,'assetId':asset.get('id') if asset else None,
-            'message':('Nova versão disponível: '+latest) if available else 'Você está usando a versão mais recente publicada.'}
+            'message':('Nova versão disponível: '+latest) if available else ('Esta instalação precisa de um pacote de transição compatível.' if version(latest)>version(current) and not asset else 'Você está usando a versão mais recente publicada.')}
 
 
 def download_asset(repository,token,asset_id,destination):

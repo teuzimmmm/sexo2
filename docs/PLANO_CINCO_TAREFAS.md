@@ -121,3 +121,22 @@ sala continua respondendo; sem VPN nem abertura de porta no roteador.
 
 Para cada etapa: checks dirigidos ao comportamento alterado, pacote retroativo e
 rollback. Não recompilar/publicar versão só para declarar o plano concluído.
+
+## Avanço concreto — entrega 1.5.2
+
+Implementado: substituição dirigida do splash por plugin sem bridge, consultas de
+hashes com concorrência limitada, métricas de abertura e limpeza de importação
+incompleta. Core DLL tem o CSS da tela; primeiro frame/ordem de plugin ainda exigem
+conferência no LoL. Logs reais mostraram 9–11 segundos em skin sync, portanto
+abertura rápida não está concluída.
+
+Retroatividade: gerador exige todas as bases registradas e preserva a nova
+baseline; seleção online por versão nos novos clientes. Helper externo identifica
+bases antigas por hash. Não exigir sequência manual de releases intermediárias.
+
+Outro ponto identificado: utils/core/modpkg.py lê o conteúdo de um arquivo WAD
+inteiro e monta bytes descomprimidos antes de gravar. Pacotes grandes podem gerar
+pico de memória, hipótese relevante para PC fraco; não comprova a origem dos
+crashes na partida. Planejar extração em fluxo para disco, mantendo verificação de
+checksum/tamanho e remoção de saída parcial. Ainda não mudar esse parser junto
+com o primeiro patch: precisa de testes próprios com pacotes reais/compressão.

@@ -284,3 +284,25 @@ launcher; causa das falhas de mods e origem da tela fullscreen não comprovadas.
 Toda entrega deve incluir caminho de atualização para bases antigas suportadas,
 preservação de dados e rollback, com assinatura local. Nenhuma instalação ativa
 foi alterada nesta investigação.
+
+### Primeira entrega dirigida — 1.5.2
+
+- Origem da tela da screenshot localizada em CSS embutido no core.dll: seletor
+  index_loading_div, profile-icons/7.jpg e content Rose. Novo plugin SEXO2-Startup
+  substitui exatamente esse estilo usando Galo embutido, sem bridge/rede. Teste
+  headless valida inclusive CSS antigo inserido depois. Não recompilar core nem
+  prometer ausência de primeiro frame antigo: ordem real deve ser conferida no LoL.
+- Consultas de commits dos nove hashes limitadas a três simultâneas, cada uma com
+  sessão própria. Correção da detecção de HTTP 403/429 com Response false.
+- Medições das etapas de abertura. Logs anteriores mostraram 9–11 s na etapa de
+  skins; a melhoria dos hashes não resolve sozinha esse gargalo. Mover manutenção
+  para segundo plano continua pendente, exigindo publicação atômica/controle de uso.
+- Importação de mod de campeão remove destino recém-extraído se o registro falha;
+  teste simula disco cheio e preserva mods anteriores/original.
+- Geração exige todas as bases registradas, cria deltas diretos e ZIP com helper.
+  Novos clientes selecionam asset por versão; versões antigas sem essa lógica usam
+  helper de transição externo uma vez se saltarem várias versões. Bases canônicas
+  preservadas e nova versão registrada para as próximas entregas.
+- Ainda pendentes: diagnóstico causal de crashes/RAM, abertura fora da manutenção,
+  biblioteca/lote/exportação e AirDrop. Não aplicar atualização automaticamente no
+  PC durante desenvolvimento; entrega é pacote em lugar, sem instalador.

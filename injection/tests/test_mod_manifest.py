@@ -3,6 +3,7 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 from injection.mods import storage
 from injection.mods.storage import ModStorageService
@@ -46,6 +47,21 @@ class UnreadableManifestTests(unittest.TestCase):
                 self.assertIsNone(ModStorageService._load_manifest(self.manifest))
         self.assertEqual(len(logs.output), 1)
 
+
+class ChampionImportRollbackTests(unittest.TestCase):
+    def test_failed_registration_removes_only_new_extracted_mod(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); service=ModStorageService(root/'mods')
+            champion=service.get_champion_dir(11); champion.mkdir(parents=True,exist_ok=True)
+            existing=champion/'Existing'; existing.mkdir(); (existing/'keep').write_bytes(b'old')
+            archive=root/'New.fantome'
+            with zipfile.ZipFile(archive,'w') as zf:
+                zf.writestr('WAD/MasterYi.wad.client',b'new')
+            with patch.object(service,'set_champion_target_ids',side_effect=OSError('disk full')):
+                with self.assertRaises(OSError): service.import_mod_file(11,archive,[11001])
+            self.assertEqual({p.name for p in champion.iterdir()},{'Existing'})
+            self.assertEqual((existing/'keep').read_bytes(),b'old')
+            self.assertTrue(archive.exists())
 
 if __name__ == '__main__':
     unittest.main()

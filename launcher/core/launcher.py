@@ -68,7 +68,7 @@ def _show_error(message: str) -> None:
         user32.MessageBoxW(
             None,
             message,
-            "Rose - Launcher",
+            "SEXO2 — Inicialização",
             MB_OK | MB_ICONERROR | MB_TOPMOST,
         )
         updater_log.error(f"Error dialog shown to user: {message}")
@@ -222,13 +222,19 @@ def _run_launcher_dialog(dev_mode: bool, test_download_fail: bool) -> None:
 
         def worker():
             try:
+                started = time.monotonic()
                 _perform_update(dialog, dev_mode=dev_mode)
 
                 hash_sequence = HashCheckSequence()
+                stage = time.monotonic()
                 hash_sequence.perform_hash_check(dialog, dev_mode=dev_mode)
+                updater_log.info("[STARTUP] hash_check_seconds=%.3f", time.monotonic() - stage)
                 
                 skin_sequence = SkinSyncSequence()
+                stage = time.monotonic()
                 skin_sequence.perform_skin_sync(dialog, test_fail=test_download_fail)
+                updater_log.info("[STARTUP] skin_sync_seconds=%.3f", time.monotonic() - stage)
+                updater_log.info("[STARTUP] preparation_seconds=%.3f", time.monotonic() - started)
 
                 dialog.set_detail("Verificações concluídas.")
                 dialog.set_status("Abrindo SEXO2…")

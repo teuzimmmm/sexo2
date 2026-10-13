@@ -31,6 +31,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Packaging failed.' }
     python scripts/build_patch.py --base $previousFolder --new "$appDist/SEXO2" --output "$releaseFolder/SEXO2-update.zip" --version $releaseVersion --key-file $keyFile
     if ($LASTEXITCODE -ne 0) { throw 'Signing failed.' }
+    python scripts/build_compatibility.py --new "$appDist/SEXO2" --output $releaseFolder --version $releaseVersion --key-file $keyFile
+    if ($LASTEXITCODE -ne 0) { throw 'Retroactive updates failed. Do not publish this release.' }
     Write-Output "Local signed release ready: $releaseFolder"
 } finally {
     Remove-Item Env:SEXO2_SIGNING_KEY_HEX -ErrorAction SilentlyContinue
