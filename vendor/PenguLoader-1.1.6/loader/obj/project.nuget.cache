@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "PYtc6a8lTX8=",
+  "success": true,
+  "projectFilePath": "Z:\\mathe\\onedrive\\Desktop\\gpt-etc\\novo\\rose-1.4.6-port\\Rose-main\\vendor\\PenguLoader-1.1.6\\loader\\loader.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\mathe\\.nuget\\packages\\microsoft.windows.sdk.contracts\\10.0.18362.2005\\microsoft.windows.sdk.contracts.10.0.18362.2005.nupkg.sha512",
+    "C:\\Users\\mathe\\.nuget\\packages\\modernwpfui\\0.9.6\\modernwpfui.0.9.6.nupkg.sha512",
+    "C:\\Users\\mathe\\.nuget\\packages\\ookii.dialogs.wpf\\4.0.0\\ookii.dialogs.wpf.4.0.0.nupkg.sha512",
+    "C:\\Users\\mathe\\.nuget\\packages\\system.runtime.windowsruntime\\4.6.0\\system.runtime.windowsruntime.4.6.0.nupkg.sha512",
+    "C:\\Users\\mathe\\.nuget\\packages\\system.runtime.windowsruntime.ui.xaml\\4.6.0\\system.runtime.windowsruntime.ui.xaml.4.6.0.nupkg.sha512",
+    "C:\\Users\\mathe\\.nuget\\packages\\system.valuetuple\\4.5.0\\system.valuetuple.4.5.0.nupkg.sha512"
+  ],
+  "logs": []
+}

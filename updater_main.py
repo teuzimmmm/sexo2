@@ -1,0 +1,104 @@
+"""Independent helper: signed updates of an existing SEXO2 installation."""
+import argparse,json,os,queue,tempfile,threading,sys,zipfile,subprocess
+from pathlib import Path
+import tkinter as tk
+from tkinter import filedialog,messagebox
+import psutil
+from sexo2.update.engine import apply_patch,digest,verify
+from sexo2.update.client import check_release,download_asset
+from sexo2.update.trust import PUBLIC_KEY
+
+BLOCKED={'sexo2.exe','rose.exe','leagueclient.exe','leagueclientux.exe','league of legends.exe','league of legends (tm) client.exe'}
+def ensure_closed():
+    for proc in psutil.process_iter(['name']):
+        if (proc.info.get('name')or'').lower()in BLOCKED:
+            raise ValueError('Feche SEXO2 e LoL antes de aplicar. Nenhum programa foi encerrado automaticamente.')
+
+def refresh_shortcuts(installation):
+    if os.name!='nt':return
+    script = r"""$w = New-Object -ComObject WScript.Shell
+$root = $env:SEXO2_UPDATE_PATH
+$paths = @((Join-Path $w.SpecialFolders('Desktop') 'SEXO2.lnk'), (Join-Path $w.SpecialFolders('Programs') 'SEXO2\SEXO2.lnk'))
+foreach ($path in $paths) {
+ if (Test-Path -LiteralPath $path) {
+  $link = $w.CreateShortcut($path)
+  if ($link.TargetPath -ieq (Join-Path $root 'SEXO2.exe')) {
+   $link.IconLocation = (Join-Path $root '_internal\assets\sexo2-black-v3.ico') + ',0'
+   $link.Save()
+  }
+ }
+}
+"""
+    subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-Command',script],
+        env={**os.environ,'SEXO2_UPDATE_PATH':str(installation)},capture_output=True,timeout=15,
+        creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0),check=True)
+    import ctypes
+    ctypes.windll.shell32.SHChangeNotify(0x08000000,0,None,None)
+
+def installed_default():
+    if os.name=='nt':
+        import winreg
+        key=r'Software\Microsoft\Windows\CurrentVersion\Uninstall\{B876AA51-DB38-448E-BD13-716F1C9DE750}_is1'
+        for hive in (winreg.HKEY_CURRENT_USER,winreg.HKEY_LOCAL_MACHINE):
+            try:
+                with winreg.OpenKey(hive,key)as reg:
+                    return winreg.QueryValueEx(reg,'Inno Setup: App Path')[0]
+            except OSError:pass
+    return str(Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'SEXO2')
+
+def local_package(installation):
+    app=Path(installation)/'SEXO2.exe'
+    if not app.is_file():return ''
+    folder=Path(sys.executable).parent if getattr(sys,'frozen',False)else Path(__file__).parent
+    current=digest(app)
+    for file in folder.glob('SEXO2-update*.zip'):
+        try:
+            with zipfile.ZipFile(file)as z:
+                data=verify(z.read('manifest.json'),z.read('manifest.sig'),PUBLIC_KEY)
+                if data['files'].get('SEXO2.exe',{}).get('old')==current:return str(file)
+        except Exception:continue
+    return ''
+
+def main():
+    parser=argparse.ArgumentParser();parser.add_argument('--install-dir');parser.add_argument('--package');args=parser.parse_args()
+    app=tk.Tk();app.title('SEXO2 — Atualização');app.geometry('510x280');app.resizable(False,False)
+    installation=tk.StringVar(value=args.install_dir or installed_default())
+    package=tk.StringVar(value=args.package or local_package(installation.get()));status=tk.StringVar(value='Atualiza a instalação existente e preserva seus dados.')
+    tk.Label(app,text='SEXO2',font=('Segoe UI',18,'bold')).pack(anchor='w',padx=20,pady=12)
+    tk.Label(app,text='Pasta instalada').pack(anchor='w',padx=20)
+    row=tk.Frame(app);row.pack(fill='x',padx=20);tk.Entry(row,textvariable=installation).pack(side='left',fill='x',expand=True)
+    tk.Button(row,text='Escolher',command=lambda:installation.set(filedialog.askdirectory()or installation.get())).pack(side='right')
+    tk.Button(app,text='Selecionar pacote local',command=lambda:package.set(filedialog.askopenfilename(filetypes=[('Atualização SEXO2','*.zip')])or package.get())).pack(anchor='w',padx=20,pady=10)
+    tk.Label(app,textvariable=status,wraplength=465,justify='left').pack(anchor='w',padx=20)
+    events=queue.Queue();busy=[False]
+    def apply():
+        if busy[0]:return
+        root=Path(installation.get());local=package.get()or local_package(root);busy[0]=True;button.config(state='disabled');status.set('Verificando pacote e instalação…')
+        def work():
+            try:
+                ensure_closed()
+                if local:result=apply_patch(local,root,PUBLIC_KEY,ensure_closed)
+                else:
+                    assets=root/'_internal/assets';repo=json.loads((assets/'update-source.json').read_text(encoding='utf-8')).get('repository','')
+                    access=assets/'update-access.json';token=json.loads(access.read_text(encoding='utf-8')).get('token','')if access.exists()else''
+                    marker=root/'sexo2-release.json';current=json.loads(marker.read_text(encoding='utf-8')).get('version','1.4.7')if marker.exists()else'1.4.7'
+                    release=check_release(repo,token,current)
+                    if not release.get('available'):raise ValueError(release['message'])
+                    with tempfile.TemporaryDirectory(prefix='sexo2-download-')as temp:
+                        file=download_asset(repo,token,release['assetId'],Path(temp)/'update.zip');result=apply_patch(file,root,PUBLIC_KEY,ensure_closed)
+                try:refresh_shortcuts(root)
+                except Exception:pass
+                events.put(('success',result))
+            except Exception as error:events.put(('error',str(error)))
+        threading.Thread(target=work,daemon=True,name='SEXO2-Updater').start()
+    button=tk.Button(app,text='Aplicar atualização',command=apply);button.pack(anchor='e',padx=20,pady=12)
+    def poll():
+        try:
+            kind,value=events.get_nowait();busy[0]=False;button.config(state='normal')
+            if kind=='success':status.set('Atualizado para '+value+'. Pode abrir o SEXO2.');messagebox.showinfo('SEXO2','Atualização concluída; seus dados foram preservados.')
+            else:status.set(value)
+        except queue.Empty:pass
+        app.after(100,poll)
+    app.protocol('WM_DELETE_WINDOW',lambda:messagebox.showinfo('SEXO2','Aguarde a atualização terminar.')if busy[0]else app.destroy())
+    poll();app.mainloop()
+if __name__=='__main__':main()

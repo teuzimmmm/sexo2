@@ -1,0 +1,33 @@
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\build\pengu-loader\Pengu Loader.exe.config
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\build\pengu-loader\Pengu Loader.exe
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\loader.csproj.AssemblyReference.cache
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\de-DE.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\en-US.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\es-ES.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\fr-FR.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\ja-JP.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\pt-BR.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\ru-RU.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\tr-TR.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\vi-VN.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Languages\zh-CN.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Properties\DesignTimeResources.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\MainWindow.g.cs
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Views\MainPage.g.cs
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Views\PluginItem.g.cs
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Views\PluginsPage.g.cs
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\App.g.cs
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Pengu Loader_MarkupCompile.cache
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Pengu Loader_MarkupCompile.lref
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\App.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\MainWindow.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Views\MainPage.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Views\PluginItem.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Views\PluginsPage.baml
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Pengu Loader.g.resources
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\PenguLoader.Properties.Resources.resources
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\loader.csproj.GenerateResource.cache
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\loader.GeneratedMSBuildEditorConfig.editorconfig
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\loader.csproj.CoreCompileInputs.cache
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\loader.csproj.Up2Date
+Z:\mathe\onedrive\Desktop\gpt-etc\novo\rose-1.4.6-port\Rose-main\vendor\PenguLoader-1.1.6\loader\obj\Release\Pengu Loader.exe

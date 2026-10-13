@@ -1,0 +1,1 @@
+PUBLIC_KEY = bytes.fromhex('57b00c4de0be9975ef6a598996ee214f031cbbe7989b84329cc0529b79ef0edf')
