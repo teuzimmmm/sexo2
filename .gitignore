@@ -29,3 +29,8 @@ assets/update-access.json
 
 # Per-game runtime hash database, never source or update payload
 hashes.game.txt
+
+Pengu Loader/config
+Pengu Loader/datastore
+**/obj/
+**/bin/
