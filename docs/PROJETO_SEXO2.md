@@ -255,3 +255,22 @@ Build local 1.5.1 executou 137 testes gerais, compilação e auditoria. Patch re
 aplicado numa instalação simulada com configuração pessoal preservada. Transição
 inclui bases r2/r3/1.5.0, para receber o token uma vez; próximas versões podem ser
 consultadas e baixadas pelo aplicativo. Chave de assinatura permanece local.
+
+
+### Correção da transição da instalação real
+
+Screenshot mostrou ausência de update-source.json. O nome Rose Teste 0.3 não era
+indício suficiente de instalação incorreta: o atalho SEXO2 aponta para essa pasta.
+Executável real é 1.4.7.8 (r1), SHA-256 correspondente à primeira entrega SEXO2.
+O pacote anterior só continha r2/r3/1.5.0, causando fallback online indevido.
+
+- Gerado patch assinado r1 → 1.5.1 a partir da base original preservada.
+- Todos os 39 arquivos anteriores conferidos na instalação real, sem gravar nela.
+- Patch aplicado numa cópia simulada e resultado/arquivos pessoais verificados.
+- Helper de transição agora faz preflight e informa necessidade de ZIP compatível
+  em versões antigas; não tenta ler arquivo de atualização ausente.
+- Três testes novos cobrem instalação ausente, base antiga sem pacote e uso local.
+- Pacote adicional SEXO2-Transicao-r1.zip contém helper corrigido e somente o
+  patch compatível. O helper instalado dentro de 1.5.1 mantém o build canônico,
+  para corresponder à baseline e aos próximos deltas; a correção do helper no
+  código entra no próximo build normal.

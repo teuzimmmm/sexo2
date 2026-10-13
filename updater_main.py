@@ -46,10 +46,10 @@ def installed_default():
             except OSError:pass
     return str(Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'SEXO2')
 
-def local_package(installation):
+def local_package(installation, folder=None):
     app=Path(installation)/'SEXO2.exe'
     if not app.is_file():return ''
-    folder=Path(sys.executable).parent if getattr(sys,'frozen',False)else Path(__file__).parent
+    folder=Path(folder) if folder is not None else (Path(sys.executable).parent if getattr(sys,'frozen',False)else Path(__file__).parent)
     current=digest(app)
     for file in folder.glob('SEXO2-update*.zip'):
         try:
@@ -58,6 +58,19 @@ def local_package(installation):
                 if data['files'].get('SEXO2.exe',{}).get('old')==current:return str(file)
         except Exception:continue
     return ''
+
+def plan_update(installation, selected='', folder=None):
+    root=Path(installation)
+    if not (root/'SEXO2.exe').is_file():
+        raise ValueError('Escolha a pasta onde está o SEXO2.exe que você usa.')
+    local=selected or local_package(root,folder)
+    if local:
+        if not Path(local).is_file():raise ValueError('O pacote selecionado não está disponível. Selecione novamente.')
+        return root,local
+    source=root/'_internal/assets/update-source.json'
+    if not source.is_file():
+        raise ValueError('Esta versão precisa de um pacote de transição compatível. Extraia todos os arquivos do ZIP juntos e execute o atualizador dessa pasta. Não é necessário reinstalar.')
+    return root,''
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--install-dir');parser.add_argument('--package');args=parser.parse_args()
@@ -73,7 +86,9 @@ def main():
     events=queue.Queue();busy=[False]
     def apply():
         if busy[0]:return
-        root=Path(installation.get());local=package.get()or local_package(root);busy[0]=True;button.config(state='disabled');status.set('Verificando pacote e instalação…')
+        try:root,local=plan_update(installation.get(),package.get())
+        except ValueError as error:status.set(str(error));return
+        busy[0]=True;button.config(state='disabled');status.set('Verificando pacote e instalação…')
         def work():
             try:
                 ensure_closed()
