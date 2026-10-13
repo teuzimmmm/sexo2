@@ -50,3 +50,11 @@ declarados podem ser trocados; arquivos pessoais e hashes.game.txt são protegid
 Testes isolados cobrem assinatura inválida, versão divergente, caminhos proibidos,
 falha durante troca, conservação dos dados e retenção de somente um backup.
 A aparência real ainda depende das fontes e do cliente LoL em execução.
+
+
+Acesso de leitura configurado pelo usuário em 13/10/2026. Versão 1.5.1 inclui
+o acesso e o patch de transição. Token validado na API, sem reprodução em logs.
+Para publicar uma release assinada localmente, usar `scripts/publish_local.py`
+com `--version` e `--folder`; utiliza a autenticação de publicação já guardada
+pelo Git Credential Manager, não o token de leitura distribuído.
+GitHub CI aprovou os commits de validação da central e da versão 1.5.1.
