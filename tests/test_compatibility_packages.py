@@ -28,7 +28,7 @@ class CompatibilityPackagesTests(unittest.TestCase):
                 self.assertEqual(apply_patch(chosen,base,public),'1.5.2')
                 self.assertEqual((base/'config.ini').read_bytes(),b'personal')
                 self.assertEqual((base/'SEXO2.exe').read_bytes(),b'new')
-            self.assertEqual(json.loads(registry.read_text())['1.5.2'],str(new))
+            self.assertEqual(Path(json.loads(registry.read_text())['1.5.2']).resolve(),new.resolve())
             with zipfile.ZipFile(out/'SEXO2-Atualizacao-1.5.2.zip') as archive:
                 self.assertIn('SEXO2 Update.exe',archive.namelist())
                 self.assertEqual(len([n for n in archive.namelist() if n.endswith('.zip')]),2)
