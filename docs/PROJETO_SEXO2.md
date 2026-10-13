@@ -235,3 +235,9 @@ antigas do usuário ou backups legados automaticamente nesta etapa.
 Publicação: GitHub recusou histórico com hashes.game.txt (219 MB). Arquivo
 permanece no PC, fora do Git. O histórico antigo permanece na branch local
 stability/entry-performance; main é um snapshot limpo para primeira publicação.
+
+
+Decisão final: assinatura somente no PC, conforme anotação explícita do usuário.
+Não enviar a chave privada ao GitHub. CI passa a validar apenas; releases são
+preparadas pelo script local. A release privada v1.5.0 foi publicada com quatro
+artefatos; GitHub normaliza espaços nos nomes. Hashes e tamanhos serão conferidos.

@@ -32,18 +32,14 @@ anônima ao repositório privado não consegue baixar seus lançamentos.
 ## Publicar
 
 O primeiro lançamento inclui uma baseline gerada localmente e o patch de
-transição. Os próximos são gerados pelo workflow `release.yml` ao enviar uma tag
-`vX.Y.Z`. Commits sem tag não chegam automaticamente aos amigos.
+transição. Os próximos são gerados localmente e publicados como `vX.Y.Z`. Commits sem tag não chegam automaticamente aos amigos.
 
-O workflow obtém a baseline anterior, recupera binários de build dela, executa
-testes, compila, audita o executável, assina o delta e publica atualização e nova
-baseline. Mantém o protocolo da base Rose separado da versão própria do SEXO2.
-A baseline é recurso de compilação/primeiro uso; instalações existentes recebem
-o delta. Uma versão antiga demais pode exigir patches intermediários.
-
-Secret de assinatura: `SEXO2_SIGNING_KEY_HEX`. A chave privada local está em
-`release-secrets/signing.key`, ignorada no Git e ausente dos pacotes. Não apagar:
-a chave pública é a raiz de confiança dos aplicativos já distribuídos.
+Decisão final do usuário: chave somente no PC. O GitHub valida o código; não
+compila/assina/publica sozinho. `scripts/release_local.ps1` prepara, testa, compila,
+audita e assina localmente. Depois o pacote pronto é enviado à release privada.
+A chave privada está em `release-secrets/signing.key`, ignorada no Git e ausente
+dos pacotes. Não apagar nem substituí-la para clientes já distribuídos.
+Nenhum secret de assinatura foi criado no GitHub.
 
 ## Recuperação e limites
 

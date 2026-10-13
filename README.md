@@ -11,7 +11,8 @@ o helper atualiza a mesma pasta e mantém somente a última recuperação.
 Não cria outra instalação ou atalhos. Veja [ATUALIZACOES.md](docs/ATUALIZACOES.md).
 
 O código é privado em `teuzimmmm/sexo2`. Um commit mantém o código no GitHub;
-uma tag `vX.Y.Z` solicita build/testes/publicação pelo workflow de release.
+as versões são compiladas e assinadas no PC, depois publicadas no GitHub.
+O workflow valida o código, sem guardar a chave privada.
 A primeira baseline é publicada a partir da compilação local verificada.
 
 ## Desenvolvimento
