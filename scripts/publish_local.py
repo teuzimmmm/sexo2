@@ -15,7 +15,7 @@ if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+',repository):raise ValueEr
 api='https://api.github.com/repos/'+repository+'/releases'
 response=session.get(api+'/tags/v'+version,timeout=15)
 if response.status_code==404:
-    body='SEXO2 '+version+' — atualização na instalação existente.\n\nPacote compilado e assinado localmente. A chave privada permanece no PC. Baixe pelo painel Configurações > Atualizações e feche SEXO2 e LoL antes de aplicar. Dados pessoais são preservados e somente a última recuperação é mantida.'
+    body='SEXO2 '+version+' — atualização na instalação existente.\n\nPacote compilado e assinado localmente. A chave privada permanece no PC. Baixe pelo painel Configurações > Atualizações e feche apenas o SEXO2 antes de aplicar; o LoL pode permanecer aberto. Dados pessoais são preservados e somente a última recuperação é mantida.'
     notes=Path(args.folder)/'release-notes.md'
     if notes.exists(): body=notes.read_text(encoding='utf-8')
     response=session.post(api,json={'tag_name':'v'+version,'target_commitish':'main','name':'SEXO2 '+version+' — atualização','body':body,'draft':True,'prerelease':False},timeout=20)

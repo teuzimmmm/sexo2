@@ -8,11 +8,12 @@ from sexo2.update.engine import apply_patch,digest,verify
 from sexo2.update.client import check_release,download_asset
 from sexo2.update.trust import PUBLIC_KEY
 
-BLOCKED={'sexo2.exe','rose.exe','leagueclient.exe','leagueclientux.exe','league of legends.exe','league of legends (tm) client.exe'}
+# Only the application being replaced must be stopped. League is independent.
+BLOCKED={'sexo2.exe','rose.exe'}
 def ensure_closed():
     for proc in psutil.process_iter(['name']):
         if (proc.info.get('name')or'').lower()in BLOCKED:
-            raise ValueError('Feche SEXO2 e LoL antes de aplicar. Nenhum programa foi encerrado automaticamente.')
+            raise ValueError('Feche apenas o SEXO2 antes de aplicar. O LoL pode permanecer aberto.')
 
 def refresh_shortcuts(installation):
     if os.name!='nt':return
@@ -76,7 +77,7 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--install-dir');parser.add_argument('--package');args=parser.parse_args()
     app=tk.Tk();app.title('SEXO2 — Atualização');app.geometry('510x280');app.resizable(False,False)
     installation=tk.StringVar(value=args.install_dir or installed_default())
-    package=tk.StringVar(value=args.package or local_package(installation.get()));status=tk.StringVar(value='Atualiza a instalação existente e preserva seus dados.')
+    package=tk.StringVar(value=args.package or local_package(installation.get()));status=tk.StringVar(value='Atualiza a instalação existente e preserva seus dados. O LoL pode permanecer aberto; feche apenas o SEXO2.')
     tk.Label(app,text='SEXO2',font=('Segoe UI',18,'bold')).pack(anchor='w',padx=20,pady=12)
     tk.Label(app,text='Pasta instalada').pack(anchor='w',padx=20)
     row=tk.Frame(app);row.pack(fill='x',padx=20);tk.Entry(row,textvariable=installation).pack(side='left',fill='x',expand=True)

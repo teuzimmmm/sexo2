@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 import requests
 
-RELEASE_VERSION = '1.5.2'
+RELEASE_VERSION = '1.5.3'
 
 def assets_root():
     return Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[2]))/'assets'

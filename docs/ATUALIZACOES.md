@@ -4,7 +4,7 @@
 
 A versão 1.5.0 adiciona configurações próprias, BORK preto, Galo na abertura e
 atualizador independente. O pacote de transição contém `SEXO2 Update.exe` e patches
-assinados para r2/r3. Extraia, feche SEXO2 e LoL, execute o helper. Ele tenta achar
+assinados para r2/r3. Extraia, feche apenas SEXO2, execute o helper novo. Ele tenta achar
 a instalação pelo cadastro existente e o pacote pelo hash do executável. Nada é
 reinstalado ou registrado novamente. Se precisar, escolha a pasta instalada.
 
@@ -18,7 +18,8 @@ apagados automaticamente.
 Repositório: https://github.com/teuzimmmm/sexo2 (privado).
 Ao abrir o SEXO2, a consulta ocorre em segundo plano. O painel também oferece
 Verificar atualização, Atualizar e Abrir GitHub do projeto. Uma atualização só é
-aplicada pelo helper após fechar o aplicativo e o LoL. Não há fechamento forçado.
+aplicada pelo helper após fechar apenas o aplicativo. O LoL pode permanecer
+aberto. Não há fechamento forçado.
 
 Acesso de publicação e de download são separados. O usuário autorizou incluir
 um token compartilhado de leitura no aplicativo para seu grupo. Esse token deve
@@ -69,3 +70,14 @@ release. O cliente novo escolhe o delta por versão. Clientes anteriores escolhe
 só o primary: quem ficou várias versões atrás deve usar uma vez o ZIP com helper
 novo, que identifica o executável por hash. Depois pode saltar versões no painel.
 Assinatura e validação de cada arquivo continuam obrigatórias.
+
+## LoL aberto durante atualização — 1.5.3
+
+Removida a exigência geral de fechar LeagueClient/LeagueClientUx e o jogo.
+Somente SEXO2/Rose em execução bloqueia a substituição do aplicativo. O helper
+não encerra processos. A regra antiga permanece nos helpers já distribuídos:
+para a primeira atualização sem fechar o LoL, abrir o helper novo externo.
+Depois de receber 1.5.3, o helper do painel já usa a regra nova. Código dos plugins
+já carregados no client pode continuar antigo até seu próximo carregamento.
+Arquivos em uso continuam sujeitos à proteção de transação/recuperação do updater;
+a mudança não força substituição de DLL bloqueada nem reinicia o LoL.

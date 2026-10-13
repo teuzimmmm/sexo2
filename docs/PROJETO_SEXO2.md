@@ -306,3 +306,13 @@ foi alterada nesta investigação.
 - Ainda pendentes: diagnóstico causal de crashes/RAM, abertura fora da manutenção,
   biblioteca/lote/exportação e AirDrop. Não aplicar atualização automaticamente no
   PC durante desenvolvimento; entrega é pacote em lugar, sem instalador.
+
+### Atualização sem fechar LoL — 1.5.3
+
+Pedido do usuário: retirar fechamento do LoL, como no Rose. Removidos os quatro
+nomes de processos League da barreira de atualização; apenas SEXO2/Rose precisa
+estar fechado para substituir seu executável. Textos do helper/pacote/release
+ajustados. Testes verificam client e partida abertos, nenhuma chamada de kill ou
+terminate, e proteção contra SEXO2/Rose ativo. Helper externo novo necessário uma
+vez para superar a exigência presente no helper antigo; novas atualizações pelo
+painel passam a permitir o LoL aberto. Não tocar na instalação ativa automaticamente.
