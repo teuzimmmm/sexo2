@@ -274,3 +274,13 @@ O pacote anterior só continha r2/r3/1.5.0, causando fallback online indevido.
   patch compatível. O helper instalado dentro de 1.5.1 mantém o build canônico,
   para corresponder à baseline e aos próximos deltas; a correção do helper no
   código entra no próximo build normal.
+
+### Cinco tarefas e compatibilidade retroativa — 13/10/2026
+
+Plano detalhado em PLANO_CINCO_TAREFAS.md. Importação em lote e AirDrop continuam
+pendentes: primeiro investigar estabilidade dos mods, abertura lenta e splash
+Rose remanescente. Confirmado bloqueio sequencial de hash check + skin sync no
+launcher; causa das falhas de mods e origem da tela fullscreen não comprovadas.
+Toda entrega deve incluir caminho de atualização para bases antigas suportadas,
+preservação de dados e rollback, com assinatura local. Nenhuma instalação ativa
+foi alterada nesta investigação.
