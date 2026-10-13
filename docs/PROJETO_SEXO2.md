@@ -241,3 +241,17 @@ Decisão final: assinatura somente no PC, conforme anotação explícita do usu�
 Não enviar a chave privada ao GitHub. CI passa a validar apenas; releases são
 preparadas pelo script local. A release privada v1.5.0 foi publicada com quatro
 artefatos; GitHub normaliza espaços nos nomes. Hashes e tamanhos serão conferidos.
+
+
+### 1.5.1 — acesso às atualizações privadas
+
+Usuário forneceu e autorizou configurar o token de leitura compartilhado. Leitura
+do repositório, consulta da última release e acesso ao download foram verificados
+pela API. Token salvo apenas em assets/update-access.json, ignorado pelo Git.
+Valor não registrado nos documentos ou logs. Pacote do grupo inclui o acesso
+conforme autorização; a credencial de publicação não é distribuída.
+
+Build local 1.5.1 executou 137 testes gerais, compilação e auditoria. Patch real
+aplicado numa instalação simulada com configuração pessoal preservada. Transição
+inclui bases r2/r3/1.5.0, para receber o token uma vez; próximas versões podem ser
+consultadas e baixadas pelo aplicativo. Chave de assinatura permanece local.

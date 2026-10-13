@@ -23,9 +23,9 @@ aplicada pelo helper após fechar o aplicativo e o LoL. Não há fechamento for�
 Acesso de publicação e de download são separados. O usuário autorizou incluir
 um token compartilhado de leitura no aplicativo para seu grupo. Esse token deve
 ser fine-grained, limitado a `teuzimmmm/sexo2`, Contents: Read-only; pode ser
-extraído do pacote. O token de publicação nunca é incluído. Configurar o token de
-leitura como secret `SEXO2_DOWNLOAD_TOKEN` no GitHub; a rotina de build coloca-o
-em `assets/update-access.json`, ignorado no Git. Não colar tokens no chat.
+extraído do pacote. O token de publicação nunca é incluído. Salvar o token de leitura localmente em `assets/update-access.json`, ignorado
+no Git; a rotina de build inclui esse arquivo no aplicativo. Também pode receber
+`SEXO2_DOWNLOAD_TOKEN` apenas no ambiente de compilação local. Não colar tokens no chat.
 Sem esse token, o botão GitHub funciona para contas autorizadas, mas a consulta
 anônima ao repositório privado não consegue baixar seus lançamentos.
 
