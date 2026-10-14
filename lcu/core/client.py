@@ -84,6 +84,17 @@ class LCU:
         try:return 200<=response.status_code<300
         finally:response.close()
     
+    def reconnect_game(self) -> bool:
+        """Ask the still-running client to reopen its current game."""
+        if not self.ok or self.phase not in ('Reconnect', 'InProgress', 'GameStart'):
+            return False
+        response = self._connection.session.post(
+            (self._connection.base or '') + '/lol-gameflow/v1/reconnect', timeout=2)
+        try:
+            return 200 <= response.status_code < 300
+        finally:
+            response.close()
+
     # Properties (delegated to properties handler)
     @property
     def phase(self) -> Optional[str]:

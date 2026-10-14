@@ -157,3 +157,11 @@ adição em lote, revisão, gerenciamento e exportação/restauração. Seletore
 retirados do fluxo de Configurações. Interrupção em blocos e fila de fundo protegem
 a entrada em partida; não é promessa de resolver todos os crashes do jogo.
 Falta AirDrop (tarefa 5), teste visual no client e validação de desempenho real.
+
+## Arena Bravura — 1.6.1
+
+Rotina específica documentada em ARENA_BRAVURA.md: confirmação -3 do jogador
+local, identificação após revelação, skin local e um único reinício/reconexão.
+Cliente permanece aberto, proteção persistente por gameId e retorno sem skin
+em falha. Validação em partida real continua pendente. Não altera as cinco
+frentes anteriores nem promete resolver todos os travamentos.

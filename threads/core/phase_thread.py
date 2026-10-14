@@ -51,6 +51,10 @@ class PhaseThread(threading.Thread):
             state.auto_accept_controller=AutoAccept(lcu)
             state.auto_accept_controller.enabled=str(get_config_option('General','autoaccept','false')).lower()=='true'
 
+        from friends.arena_bravery import ArenaBravery
+        self.arena_bravery = ArenaBravery(lcu, state, injection_manager)
+        state.arena_bravery_controller = self.arena_bravery
+
         # Initialize handlers
         self.swiftplay_handler = SwiftplayHandler(lcu, state, injection_manager, skin_scraper)
         self.phase_handler = PhaseHandler(lcu, state, injection_manager, skin_scraper, self.swiftplay_handler)
@@ -70,6 +74,10 @@ class PhaseThread(threading.Thread):
             
             ph = self.lcu.phase if self.lcu.ok else None
             self.state.auto_accept_controller.tick(ph)
+            try:
+                self.arena_bravery.tick(ph)
+            except Exception:
+                log.exception("[Arena] Bravura monitoring failed")
 
             # A client restart Rose's loader deferred (the client wasn't ready,
             # or a champ select was on) happens once the client is readable in

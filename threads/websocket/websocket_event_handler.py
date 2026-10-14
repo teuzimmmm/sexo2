@@ -277,6 +277,9 @@ class WebSocketEventHandler:
     def _handle_session_event(self, payload: dict):
         """Handle champion select session event"""
         sess = payload.get("data") or {}
+        bravery = getattr(self.state, 'arena_bravery_controller', None)
+        if bravery and isinstance(sess, dict):
+            bravery.observe(sess)
         self.state.local_cell_id = sess.get("localPlayerCellId", self.state.local_cell_id)
         
         # Track selected skin ID from myTeam

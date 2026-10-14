@@ -545,6 +545,10 @@ class OverlayManager:
         reader = patcher_session["reader"]
         runoverlay_log = patcher_session["log"]
         try:
+            ready = getattr(injection_manager, 'arena_overlay_ready', None)
+            if ready and not ready():
+                self._stop_ltk_patcher(proc)
+                return 1
             # The host cannot find a frozen game; it hooks it right after resume
             if injection_manager:
                 log.info("[INJECT] Overlay ready - resuming game for the LTK patcher")

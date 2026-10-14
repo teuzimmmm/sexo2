@@ -10,7 +10,7 @@ import zipfile
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 MAX_TOTAL = 1024 * 1024 * 1024
-PROTECTED = {'config.ini', 'hashes.game.txt', 'friends-preferences.json', 'sexo2-startup-ready.json'}
+PROTECTED = {'config.ini', 'hashes.game.txt', 'friends-preferences.json', 'sexo2-startup-ready.json', 'arena-bravery-match.json'}
 
 
 def digest(path):
