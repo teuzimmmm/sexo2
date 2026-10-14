@@ -99,7 +99,7 @@ def check_file_commits(file_path: str, session: requests.Session) -> Optional[Di
         return None
 
 
-def check_for_updates() -> bool:
+def check_for_updates(parallel=True, cancelled=lambda:False) -> bool:
     """Check if hash files have been updated on GitHub
     
     Returns:
@@ -114,8 +114,16 @@ def check_for_updates() -> bool:
             })
             return check_file_commits(f"{HASHES_DIR}/{hash_file}", session)
 
-    with ThreadPoolExecutor(max_workers=3, thread_name_prefix="HashCheck") as pool:
-        results = list(pool.map(check_one, HASH_FILES))
+    if parallel:
+        with ThreadPoolExecutor(max_workers=3, thread_name_prefix="HashCheck") as pool:
+            results = list(pool.map(check_one, HASH_FILES))
+    else:
+        # A daemon maintenance probe must not leave executor threads joining at
+        # interpreter shutdown. Check one request at a time and stop between them.
+        results=[]
+        for name in HASH_FILES:
+            if cancelled():return False
+            results.append(check_one(name))
 
     local_state = load_state()
     local_file_shas = local_state.get('files', {})

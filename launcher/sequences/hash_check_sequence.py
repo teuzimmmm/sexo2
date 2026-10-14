@@ -19,7 +19,7 @@ updater_log = get_named_logger("updater", prefix="log_updater")
 class HashCheckSequence:
     """Handles game hash file verification sequence"""
     
-    def perform_hash_check(self, dialog, dev_mode: bool = False) -> None:
+    def perform_hash_check(self, dialog, dev_mode: bool = False) -> bool:
         """Perform hash file check and update
         
         Args:
@@ -31,7 +31,7 @@ class HashCheckSequence:
             updater_log.info("Hash check skipped (dev mode)")
             dialog.set_status("Hash check skipped (dev mode)")
             dialog.pump_messages()
-            return
+            return False
         
         updater_log.info("Starting game hash verification sequence.")
         dialog.clear_transfer_text()
@@ -45,6 +45,7 @@ class HashCheckSequence:
             dialog.pump_messages()
             updater_log.info(f"Hash check status: {message}")
         
+        hashes_file = None
         try:
             # This will block until hashes are downloaded and merged
             updated = update_hash_files(status_callback=status_callback, dev_mode=dev_mode)
@@ -105,3 +106,5 @@ class HashCheckSequence:
         dialog.clear_transfer_text()
         dialog.pump_messages()
 
+
+        return hashes_file is not None and hashes_file.is_file()

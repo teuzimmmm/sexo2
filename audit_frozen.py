@@ -11,8 +11,8 @@ def signature(code):
     if isinstance(code,types.CodeType):
         return(code.co_code,tuple(signature(x)for x in code.co_consts),code.co_names,code.co_varnames,code.co_freevars,code.co_cellvars)
     return code
-for name in ['friends.room','friends.auto_accept','friends.preferences','friends.service','friends.selection_guard','lcu.core.client','party.hosting.controller','utils.download.verified_file','utils.core.atomic_file','config','injection.game.game_monitor','party.core.party_manager','pengu.communication.message_handler','sexo2.services.work_queue','sexo2.services.settings','sexo2.update.engine','sexo2.update.client','sexo2.update.trust','utils.download.hash_updater','injection.mods.storage','launcher.core.launcher']:
-    source=root/(name.replace('.','/')+'.py')
+for name in ['main','friends.room','friends.auto_accept','friends.preferences','friends.service','friends.selection_guard','lcu.core.client','party.hosting.controller','utils.download.verified_file','utils.core.atomic_file','config','injection.game.game_monitor','party.core.party_manager','pengu.communication.message_handler','sexo2.services.work_queue','sexo2.services.settings','sexo2.update.engine','sexo2.update.client','sexo2.update.trust','utils.download.hash_updater','injection.mods.storage','launcher.core.launcher','launcher.core.startup_policy','launcher.sequences.hash_check_sequence','launcher.sequences.skin_sync_sequence','utils.core.modpkg','party.discovery.custom_mods']:
+    source=root/'main/__init__.py' if name=='main' else root/(name.replace('.','/')+'.py')
     expected=compile(source.read_text(encoding='utf-8-sig'),str(source),'exec')
     actual=pyz.extract(name)
     assert signature(expected)==signature(actual),name

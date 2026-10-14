@@ -316,3 +316,22 @@ ajustados. Testes verificam client e partida abertos, nenhuma chamada de kill ou
 terminate, e proteção contra SEXO2/Rose ativo. Helper externo novo necessário uma
 vez para superar a exigência presente no helper antigo; novas atualizações pelo
 painel passam a permitir o LoL aberto. Não tocar na instalação ativa automaticamente.
+
+### 1.5.4 — memória dos modpkg e abertura com biblioteca existente
+
+- Extração de arquivos/chunks em blocos de até 1 MiB, sem materializar o conteúdo
+  completo. Tamanho e XXH3-64 preservados; saída temporária só substitui destino
+  depois de validada. Em caso de corrupção/disco cheio, preservar arquivo anterior.
+- Hash de conteúdo da sala também usa blocos e mantém identidade entre pacote e
+  pasta importada. iter_files continua disponível para compatibilidade.
+- Ensaio de arquivo de 32 MiB: alocações Python de 32 MiB (raw) / 64 MiB (zstd)
+  caíram para aproximadamente 2,1 MiB. Não representa todo o RSS nem prova que todos
+  os crashes da partida foram resolvidos; Zstandard ainda usa memória nativa.
+- Checkpoint da biblioteca somente após preparação bem-sucedida. Próximas aberturas
+  usam marcadores/revisão/estatísticas locais; arquivo ausente/alterado invalida-o.
+- Consulta em segundo plano somente lê revisões e agenda novidades para próxima
+  abertura. Não extrai nem substitui skins durante uso. Hash probe sequencial e
+  cancelável entre requisições, sem executor que atrase saída do aplicativo.
+- Primeiro uso/preparação de novidades ainda pode levar tempo. Em partida ativa,
+  manter biblioteca confirmada e adiar manutenção. UI/primeiro frame e desempenho
+  no PC real ainda precisam conferência. Biblioteca em lote e AirDrop pendentes.

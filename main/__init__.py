@@ -693,6 +693,9 @@ def run_league_unlock(args: Optional[argparse.Namespace] = None,
 
     # Wait for WebSocket status to be active before setting up the injection system
     log.info("Waiting for WebSocket status to be active...")
+    from launcher.core.startup_policy import start_probe
+    start_probe(state, tray_manager)
+
     while not t_ws.connection.is_connected:
         time.sleep(0.1)
 

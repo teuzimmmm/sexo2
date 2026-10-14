@@ -64,8 +64,7 @@ def _archive_content_hash(archive_path: Path) -> Optional[str]:
     if archive_path.suffix.lower() == MODPKG_SUFFIX:
         # Hash the files the package unpacks to, as the imported folder holds them
         with ModPackage.open(archive_path) as package:
-            for relative_path, content in package.iter_files():
-                entries.append((relative_path, hashlib.sha256(content).digest()))
+            entries.extend(package.iter_file_digests())
         return _content_digest(entries) if entries else None
     with zipfile.ZipFile(archive_path, "r") as archive:
         for info in archive.infolist():

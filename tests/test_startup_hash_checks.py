@@ -35,3 +35,12 @@ class StartupHashTests(unittest.TestCase):
     def test_rate_limit_does_not_trigger_download_for_existing_state(self):
         with patch.object(updater,'load_state',return_value=self.state()), patch.object(updater,'check_file_commits',return_value={'rate_limited':True}), self.assertLogs(level='WARNING'):
             self.assertFalse(updater.check_for_updates())
+
+    def test_background_checks_do_not_create_executor_and_stop_between_requests(self):
+        stopped=[False]
+        def checked(*args):
+            stopped[0]=True
+            return {'sha':'same'}
+        with patch.object(updater,'ThreadPoolExecutor',side_effect=AssertionError('executor during background probe')), patch.object(updater,'check_file_commits',side_effect=checked) as check:
+            self.assertFalse(updater.check_for_updates(parallel=False,cancelled=lambda:stopped[0]))
+        self.assertEqual(check.call_count,1)

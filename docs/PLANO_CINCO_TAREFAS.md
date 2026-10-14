@@ -134,9 +134,18 @@ Retroatividade: gerador exige todas as bases registradas e preserva a nova
 baseline; seleção online por versão nos novos clientes. Helper externo identifica
 bases antigas por hash. Não exigir sequência manual de releases intermediárias.
 
-Outro ponto identificado: utils/core/modpkg.py lê o conteúdo de um arquivo WAD
-inteiro e monta bytes descomprimidos antes de gravar. Pacotes grandes podem gerar
+Outro ponto identificado: utils/core/modpkg.py lia arquivos/chunks associados a WADs
+e montava seus bytes descomprimidos antes de gravar. Pacotes grandes podem gerar
 pico de memória, hipótese relevante para PC fraco; não comprova a origem dos
 crashes na partida. Planejar extração em fluxo para disco, mantendo verificação de
 checksum/tamanho e remoção de saída parcial. Ainda não mudar esse parser junto
 com o primeiro patch: precisa de testes próprios com pacotes reais/compressão.
+
+## Avanço 1.5.4
+
+Extração e hash de modpkg agora em fluxo com validação e saída atômica. Checkpoint
+após sincronização permite abertura sem consultas de rede nas aberturas seguintes;
+consulta remota só agenda manutenção, sem escrever biblioteca durante uso.
+Primeiro uso e novidades ainda exigem preparação. A investigação dos crashes em
+partida continua; testes de memória não substituem teste real. Tarefas 4/5 não
+iniciadas nessa entrega. Retroatividade e regra de LoL aberto preservadas.

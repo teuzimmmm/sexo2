@@ -205,6 +205,12 @@ def run_launcher(dev_mode: bool = False, test_download_fail: bool = False) -> No
         log.debug("Win32 launcher skipped on non-Windows platform.")
         return
 
+    from . import startup_policy
+    if not dev_mode and not test_download_fail and startup_policy.can_start_fast():
+        startup_policy._fast_used = True
+        updater_log.info('[STARTUP] Reusing confirmed local library; remote check deferred')
+        return
+    startup_policy._fast_used = False
     with _route_logger(log, updater_log):
         _run_launcher_dialog(dev_mode, test_download_fail)
 
@@ -227,12 +233,15 @@ def _run_launcher_dialog(dev_mode: bool, test_download_fail: bool) -> None:
 
                 hash_sequence = HashCheckSequence()
                 stage = time.monotonic()
-                hash_sequence.perform_hash_check(dialog, dev_mode=dev_mode)
+                hashes_ready = hash_sequence.perform_hash_check(dialog, dev_mode=dev_mode)
                 updater_log.info("[STARTUP] hash_check_seconds=%.3f", time.monotonic() - stage)
                 
                 skin_sequence = SkinSyncSequence()
                 stage = time.monotonic()
-                skin_sequence.perform_skin_sync(dialog, test_fail=test_download_fail)
+                skins_ready = skin_sequence.perform_skin_sync(dialog, test_fail=test_download_fail)
+                if hashes_ready and skins_ready:
+                    from .startup_policy import record_ready
+                    record_ready()
                 updater_log.info("[STARTUP] skin_sync_seconds=%.3f", time.monotonic() - stage)
                 updater_log.info("[STARTUP] preparation_seconds=%.3f", time.monotonic() - started)
 

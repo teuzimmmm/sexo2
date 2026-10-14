@@ -22,6 +22,7 @@ import mmap
 import os
 import re
 import struct
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from typing import Iterator, NamedTuple, Optional, Union
@@ -53,6 +54,7 @@ _ZSTD = 1
 # Far above any file the game ships, low enough to refuse a decompression bomb
 _MAX_CHUNK_SIZE = 512 * 1024 * 1024
 _DECOMPRESS_STEP = 16 * 1024 * 1024
+_STREAM_STEP = 1024 * 1024
 
 # mod-tools only reads WAD folders named like the game's WAD files
 _WAD_FOLDER = re.compile(r"[a-z0-9_.-]+\.wad(\.client)?")
@@ -182,6 +184,62 @@ class ModPackage:
             raise ModpkgError(f"Corrupted file in the .modpkg: {name}")
         return content
 
+    def record_blocks(self, record: _Record):
+        """Yield bounded decoded blocks and validate their final size/checksum."""
+        name = self.paths[record.path_index]
+        if record.uncompressed_size > _MAX_CHUNK_SIZE:
+            raise ModpkgError(f"File too large in the .modpkg: {name}")
+        source = _RegionReader(self._data, record.data_offset, record.compressed_size)
+        checksum = xxhash.xxh3_64()
+        size = 0
+        def blocks(reader):
+            nonlocal size
+            while True:
+                block = reader.read(min(_STREAM_STEP, record.uncompressed_size + 1 - size))
+                if not block:
+                    break
+                size += len(block)
+                if size > record.uncompressed_size:
+                    raise ModpkgError(f"Corrupted file in the .modpkg: {name}")
+                checksum.update(block)
+                yield block
+        if record.compression == _ZSTD:
+            try:
+                with zstandard.ZstdDecompressor().stream_reader(source) as reader:
+                    yield from blocks(reader)
+            except zstandard.ZstdError as error:
+                raise ModpkgError(f"Corrupted file in the .modpkg: {name}") from error
+        else:
+            yield from blocks(source)
+        if size != record.uncompressed_size or checksum.intdigest() != record.uncompressed_checksum:
+            raise ModpkgError(f"Corrupted file in the .modpkg: {name}")
+
+    def write_record(self, record: _Record, destination: Path) -> None:
+        """Commit only a verified file; retain the original on extraction failure."""
+        destination = Path(destination)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        fd, temporary = tempfile.mkstemp(prefix='.sexo2-chunk-', dir=destination.parent)
+        temporary = Path(temporary)
+        try:
+            with os.fdopen(fd, 'wb') as output:
+                for block in self.record_blocks(record):
+                    output.write(block)
+            temporary.replace(destination)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def iter_file_digests(self):
+        """SHA-256 content digests with the same layout as an extracted folder."""
+        import hashlib
+        for relative_path, content in sorted(self._layout().items()):
+            checksum = hashlib.sha256()
+            if isinstance(content, bytes):
+                checksum.update(content)
+            else:
+                for block in self.record_blocks(content):
+                    checksum.update(block)
+            yield relative_path, checksum.digest()
+
     def _meta_file(self, path: bytes) -> Optional[_Record]:
         return next(
             (
@@ -260,12 +318,30 @@ def extract_modpkg(source: Union[str, Path], dest_dir: Union[str, Path]) -> None
         if package.unplaced_file_count:
             log.warning(f"[MODPKG] {source.name}: skipping {package.unplaced_file_count} files that target no game WAD")
         file_count = 0
-        for relative_path, content in package.iter_files():
+        for relative_path, content in sorted(package._layout().items()):
             target = dest_dir.joinpath(*relative_path.split("/"))
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(content)
+            if isinstance(content, bytes):
+                target.write_bytes(content)
+            else:
+                package.write_record(content, target)
             file_count += 1
     log.debug(f"[EXTRACT] Unpacked {file_count} files from {source.name} to {dest_dir}")
+
+
+class _RegionReader:
+    """Bounded reads of an mmap region; no exported views survive its lifetime."""
+    def __init__(self, data, offset, size):
+        self.data = data
+        self.offset = offset
+        self.end = offset + size
+
+    def read(self, size=-1):
+        size = _STREAM_STEP if size < 0 else min(size, _STREAM_STEP)
+        end = min(self.end, self.offset + size)
+        block = self.data[self.offset:end]
+        self.offset = end
+        return block
 
 
 class _Cursor:

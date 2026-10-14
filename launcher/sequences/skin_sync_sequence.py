@@ -23,7 +23,7 @@ MB_TOPMOST = 0x00040000
 class SkinSyncSequence:
     """Handles skin download and verification sequence"""
 
-    def perform_skin_sync(self, dialog, test_fail: bool = False) -> None:
+    def perform_skin_sync(self, dialog, test_fail: bool = False) -> bool:
         """Perform skin download and verification
 
         Args:
@@ -103,3 +103,5 @@ class SkinSyncSequence:
             dialog.pump_messages()
             updater_log.warning("Skin download failed; continuing startup.")
 
+
+        return success

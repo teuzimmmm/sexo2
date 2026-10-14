@@ -405,5 +405,42 @@ class ModpkgModTests(unittest.TestCase):
         self.assertEqual(package_hash, folder_hash)
 
 
+class StreamingChunkTests(unittest.TestCase):
+    def test_large_raw_and_zstd_chunks_extract_without_reading_whole_chunk(self):
+        content=b'large chunk data' * (1024*1024)
+        for compressed in (False,True):
+            with self.subTest(compressed=compressed), tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp);archive=root/'large.modpkg'
+                archive.write_bytes(build_package([Chunk(SKIN0,content,zstd=compressed)],metadata=None))
+                with patch.object(ModPackage,'read',side_effect=AssertionError('whole-chunk read')):
+                    extract_modpkg(archive,root/'out')
+                target=root/'out/WAD/aatrox.wad.client'/f'{SKIN0_HASH:016x}.bin'
+                self.assertEqual(target.read_bytes(),content)
+
+    def test_hashing_large_package_matches_folder_without_whole_chunk_read(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);archive=root/'large.modpkg'
+            archive.write_bytes(build_package([Chunk(SKIN0,b'data'*(1024*1024),zstd=True)],metadata=None))
+            with patch.object(ModPackage,'read',side_effect=AssertionError('whole-chunk read')):
+                extract_modpkg(archive,root/'out')
+                archive_hash,_=custom_mods.mod_hashes(archive)
+                folder_hash,_=custom_mods.mod_hashes(root/'out')
+            self.assertIsNotNone(archive_hash);self.assertEqual(archive_hash,folder_hash)
+
+    def test_invalid_size_and_checksum_preserve_existing_output_and_remove_partial(self):
+        for corrupted in ('short','long','checksum','frame'):
+            with self.subTest(corrupted=corrupted), tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp)
+                def tweak(index,fields):
+                    if corrupted=='short':fields[4]+=1
+                    elif corrupted=='long':fields[4]-=1
+                    elif corrupted=='checksum':fields[6]^=1
+                    elif corrupted=='frame':fields[2]=1
+                package=ModPackage(build_package([Chunk(SKIN0,b'data')],metadata=None,tweak=tweak))
+                target=root/'existing.bin';target.write_bytes(b'original')
+                with self.assertRaises(ModpkgError):package.write_record(package.records[0],target)
+                self.assertEqual(target.read_bytes(),b'original')
+                self.assertEqual([p.name for p in root.iterdir()],['existing.bin'])
+
 if __name__ == "__main__":
     unittest.main()
