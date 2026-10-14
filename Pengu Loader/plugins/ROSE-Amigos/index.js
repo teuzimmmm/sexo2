@@ -1,4 +1,4 @@
-/** @name ROSE-Amigos @description Preparo, perfis, sorteio coordenado, sala e diagnóstico. */
+/** @name SEXO2-Skins @description Preparo, perfis, sorteio coordenado, sala e diagnóstico. */
 (function(){
   'use strict';
   function memberStatus(m){
@@ -24,13 +24,13 @@
 #rose-amigos-panel button{cursor:pointer}#rose-amigos-panel button:hover{border-color:#d8b764}#rose-amigos-panel button:disabled{opacity:.45;cursor:default}#rose-amigos-panel input[type=checkbox]{width:16px;height:16px;vertical-align:middle}
 #rose-amigos-panel .ra-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}#rose-amigos-panel .ra-between{justify-content:space-between}#rose-amigos-panel .ra-muted{color:#a8aaa2;font-size:12px;line-height:1.5}#rose-amigos-panel .ra-card{padding:12px;margin:8px 0;border:1px solid #36474b;border-radius:6px}#rose-amigos-panel .ra-ok{color:#7bd5a7}#rose-amigos-panel .ra-error{color:#f3a090}#rose-amigos-panel .ra-tabs{margin:14px 0;border-bottom:1px solid #534a30;padding-bottom:10px}#rose-amigos-panel .ra-active{border-color:#c89b3c;background:#29413d}#rose-amigos-panel .ra-notice{white-space:pre-wrap;padding:9px;border-left:3px solid #c89b3c;color:#e4d3a2}#rose-amigos-panel .ra-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}#rose-amigos-panel .ra-skins{max-height:190px;overflow:auto}#rose-amigos-panel footer{margin-top:16px;border-top:1px solid #4c4430;padding-top:10px}#rose-amigos-panel select{max-width:100%}
 `;document.head.appendChild(style);
-    const launch=document.createElement('button');launch.id='rose-amigos-launch';launch.textContent='ROSE Amigos · verificar';document.body.appendChild(launch);
-    const panel=document.createElement('section');panel.id='rose-amigos-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Rose Amigos');document.body.appendChild(panel);
+    const launch=document.createElement('button');launch.id='rose-amigos-launch';launch.textContent='SEXO2 · verificar';document.body.appendChild(launch);
+    const panel=document.createElement('section');panel.id='rose-amigos-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','SEXO2');document.body.appendChild(panel);
     const backdrop=document.createElement('div');backdrop.id='rose-amigos-backdrop';backdrop.hidden=true;document.body.appendChild(backdrop);
     function close(){panel.hidden=true;backdrop.hidden=true;if(window.__roseHub)window.__roseHub.close();else launch.focus();}
     backdrop.onclick=close;
     let bridge=null,state=null,pending=null,sequence=0,tab='Preparo',nameDraft='',skinDraft={},theme='Qualquer',phase=null,notice='',search='',lastSeen=0,roomDraft='',lastRender='';
-    let championSearch='',skinSearch='',libraryLoaded=false,favoriteQueue=[],favoriteDraft={};
+    let championSearch='',skinSearch='',libraryLoaded=false,favoriteQueue=[],favoriteDraft={},transportNotice=false;
     window.addEventListener('rose-hub-friends',e=>{tab=e.detail.tab;e.detail.target.appendChild(panel);panel.hidden=false;backdrop.hidden=true;request();render();});
     const prefix='amigos-r5-'+Date.now()+'-'+Math.random().toString(36).slice(2);
     function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
@@ -127,14 +127,16 @@
       if(!pending||data.requestId!==pending.id)return;
       const action=pending.action,extra=pending.extra;pending=null;
       if(action==='favorite')delete favoriteDraft[extra.championId+':'+extra.skinId];
-      if(data.type==='friends-error'){notice=data.error||'Não foi possível confirmar a operação.';render();if(favoriteQueue.length)request('favorite',favoriteQueue.shift());return;}
+      if(data.type==='friends-error'){transportNotice=false;notice=data.error||'Não foi possível confirmar a operação.';render();if(favoriteQueue.length)request('favorite',favoriteQueue.shift());return;}
+      const recovered=transportNotice;
+      if(recovered){notice='';transportNotice=false;}
       const signature=JSON.stringify({...data,requestId:undefined});const changed=signature!==lastRender;lastRender=signature;
       state=data;lastSeen=Date.now();phase=data.phase;launch.hidden=!['Lobby','ChampSelect','Matchmaking','ReadyCheck'].includes(phase);launch.textContent='Ferramentas · '+(data.readiness.localReady?'preparado':'verificar');
       if(action==='library-list')libraryLoaded=true;
       notice=action==='snapshot'?notice:data.message||'';
       if(action==='save-profile'){nameDraft='';skinDraft={};}
       const editing=panel.contains(document.activeElement)&&['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName);
-      if(changed||action!=='snapshot')render();
+      if(changed||recovered||action!=='snapshot')render();
       if(favoriteQueue.length){request('favorite',favoriteQueue.shift());return;}
       if(tab==='Favoritas'&&!libraryLoaded){libraryLoaded=true;request('library-list');}
     }
@@ -143,8 +145,12 @@
     function tick(){
       if(!launch.isConnected)document.body.appendChild(launch);if(!panel.isConnected)document.body.appendChild(panel);if(!backdrop.isConnected)document.body.appendChild(backdrop);
       if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('friends-state',receive);bridge.subscribe('friends-error',receive);bridge.subscribe('phase-change',data=>{phase=data.phase;if(phase==='InProgress'){close();launch.hidden=true;}else request();});}
-      if(pending&&Date.now()-pending.since>15000){pending=null;favoriteQueue=[];favoriteDraft={};notice='O Rose demorou a responder. Tente novamente.';if(!panel.hidden)render();}
-      if(bridge&&!bridge.ready){launch.textContent='ROSE Amigos · sem conexão';notice='O Rose está sem resposta. Confira se o programa está aberto.';}
+      if(pending&&Date.now()-pending.since>15000){pending=null;favoriteQueue=[];favoriteDraft={};transportNotice=true;notice='O SEXO2 demorou a responder. Tente novamente.';if(!panel.hidden)render();}
+      if(bridge&&!bridge.ready){
+        if(pending?.action==='snapshot')pending=null;
+        launch.textContent='SEXO2 · reconectando';
+        if(!transportNotice||notice!=='Reconectando ao SEXO2…'){transportNotice=true;notice='Reconectando ao SEXO2…';if(!panel.hidden)render();}
+      }
       if(phase!=='InProgress')request();
     }
     setInterval(tick,3000);tick();

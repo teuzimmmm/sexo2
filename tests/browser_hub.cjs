@@ -23,6 +23,13 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  await page.waitForTimeout(200);
  await page.locator('.menu_item_Golden').last().click();
  await page.getByRole('combobox',{name:'Skin automática'}).waitFor();
+ await page.evaluate(()=>window.__roseBridge.ready=false);
+ await page.getByText('Reconectando ao SEXO2…',{exact:true}).waitFor();
+ assert.equal(await page.locator('#rose-hub').getByText(/O Rose/).count(),0);
+ await page.evaluate(()=>window.__roseBridge.ready=true);
+ await page.waitForFunction(()=>!document.querySelector('#rose-hub')?.textContent.includes('Reconectando ao SEXO2…'));
+ await page.getByRole('combobox',{name:'Skin automática'}).waitFor();
+
  const icon=await page.locator('.menu_item_Golden .menu-item-icon').last().evaluate(e=>({width:e.clientWidth,height:e.clientHeight,color:getComputedStyle(e).backgroundColor}));
  assert.deepEqual(icon,{width:20,height:20,color:'rgb(205, 190, 145)'});
  assert.equal(await page.locator('#rose-amigos-launch').isVisible(),false);

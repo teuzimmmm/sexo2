@@ -1,5 +1,5 @@
 /**
- * @name Rose-SwiftplayPins
+ * @name SEXO2-SwiftplayPins
  * @description Skins fixadas por campeão para Swiftplay — fork r2
  */
 (function () {
@@ -30,7 +30,7 @@
   if (window.__roseSwiftplayPinsLoaded) return;
   window.__roseSwiftplayPinsLoaded = true;
   let bridge, state = null, draft = {}, dirty = false, open = false, chooser = null;
-  let pending = null, saving = false, lastState = 0, message = "", sequence = 0;
+  let pending = null, saving = false, lastState = 0, message = "", sequence = 0, transportHidden = false, hubActive = null;
   const prefix = `swiftplay-r2-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const root = document.createElement("div");
   root.id = "rose-swiftplay-pins";
@@ -69,7 +69,8 @@
 `;
   document.head.appendChild(style);
   document.body.appendChild(root);
-  window.addEventListener('rose-hub-swiftplay',e=>{e.detail.target.appendChild(root);open=true;render();});
+  window.addEventListener('rose-hub-friends',e=>{if(root.closest('#rose-hub')){hubActive=e.detail.tab==='Automático';if(!hubActive)root.hidden=true;}});
+  window.addEventListener('rose-hub-swiftplay',e=>{hubActive=true;e.detail.target.appendChild(root);open=true;render();});
   const el = (tag, cls, text) => {
     const node = document.createElement(tag);
     if (cls) node.className = cls;
@@ -97,7 +98,7 @@
     return b;
   }
   function available() {
-    return bridge?.ready && state?.active && Date.now() - lastState < 8000;
+    return hubActive !== false && bridge?.ready && state?.active && Date.now() - lastState < 8000;
   }
   function editable() {return available() && state.editable && !saving && !state.error;}
   function render() {
@@ -212,6 +213,7 @@
       if (!wasSave) {state=null;lastState=0;}
       render();return;
     }
+    const recovered = transportHidden;transportHidden = false;
     const oldIds = state?.championIds || [];
     const visibleState = value => JSON.stringify(value && {
       active:value.active, editable:value.editable, error:value.error,
@@ -226,7 +228,7 @@
     if (!data.active) {open=false;dirty=false;chooser=null;}
     // Unchanged polls leave the DOM intact, including scrollbar dragging.
     // Real updates rebuild safely with search, focus and scroll retained.
-    if (updated || changed || wasSave || !data.active) render();
+    if (updated || changed || wasSave || !data.active || (recovered && hubActive !== false)) render();
   }
   function tick() {
     if (!root.isConnected && document.body) document.body.appendChild(root);
@@ -246,6 +248,7 @@
       if (pending.save) {message="Confirmação demorou. Atualizando as preferências antes de tentar novamente.";dirty=false;}
       pending=null;saving=false;
     }
+    if (!bridge.ready) {transportHidden=true;if(pending&&!pending.save)pending=null;}
     if (!available()) {root.hidden=true;}
     request({type:"swiftplay-pins-request"});
   }

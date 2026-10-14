@@ -194,3 +194,13 @@ somente na skin aplicada, busca curta, UI ociosa durante partida e sem espera
 artificial pela bandeja. Atualizador fecha somente a instalação selecionada e
 reabre após sucesso ou rollback completo. Primeiro uso automático exige helper
 novo; helpers antigos mantêm comportamento anterior. Crash real ainda pendente.
+
+## Correção 1.6.4 — reconexão do painel
+
+Textos visíveis do painel de skins agora dizem SEXO2. Aviso transitório sai
+quando chega uma resposta saudável, mesmo sem alteração dos dados. Consultas de
+snapshot perdidas não seguram a reconexão por quinze segundos. Swiftplay retorna
+após desconexão mesmo quando o catálogo não mudou; não aparece na aba Favoritas.
+Teste integrado inclui queda/volta de conexão, funções existentes e rolagem.
+Teste do atualizador normaliza caminhos do Windows (alias curto vs caminho real)
+para passar no runner do GitHub; não era falha de reabertura do executável.

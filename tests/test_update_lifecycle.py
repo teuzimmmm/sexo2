@@ -7,7 +7,7 @@ from sexo2.update.lifecycle import processes_for,stop_installed_app,reopen_app,s
 class UpdateLifecycleTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
-        self.root=Path(self.temp.name);(self.root/'SEXO2.exe').write_bytes(b'fixture')
+        self.root=Path(self.temp.name).resolve();(self.root/'SEXO2.exe').write_bytes(b'fixture')
     def process(self,name,path,pid=123):
         p=Mock();p.info={'name':name};p.exe.return_value=str(path);p.pid=pid;p.children.return_value=[];return p
     def test_only_selected_installation_is_targeted(self):
