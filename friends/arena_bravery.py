@@ -139,7 +139,7 @@ class ArenaBravery:
             self.armed = False
             return
         candidates = eligible(service.catalogs.catalog(cid)['skins'], 'Qualquer', prefs['excluded'],
-                              lambda sid: service.archive(cid, sid))
+                              lambda sid: service.archive(cid, sid, verify=False))
         favorites = [s for s in candidates if s['skinId'] in prefs['favorites'].get(str(cid), [])]
         if prefs.get('automatic') in ('favorite', 'favorites') and favorites:
             candidates = favorites
@@ -147,6 +147,9 @@ class ArenaBravery:
             self.armed = False
             return
         pick = draw(candidates, secrets.token_hex(16), 0, cid)
+        if not service.archive(cid, pick['skinId'], verify=True):
+            self.armed = False
+            return
         from injection.game.match_recovery import game_pids
         import psutil
         pids = game_pids()

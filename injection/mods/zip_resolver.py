@@ -27,9 +27,9 @@ def _find_by_extensions(base: Path, stem: str) -> Optional[Path]:
 def _rglob_by_extensions(base: Path, pattern_stem: str) -> Optional[Path]:
     """Search recursively for a file with any skin extension, return first match."""
     for ext in SKIN_EXTENSIONS:
-        matches = list(base.rglob(f"**/{pattern_stem}{ext}"))
-        if matches:
-            return matches[0]
+        match = next(base.rglob(f"**/{pattern_stem}{ext}"), None)
+        if match is not None:
+            return match
     return None
 
 

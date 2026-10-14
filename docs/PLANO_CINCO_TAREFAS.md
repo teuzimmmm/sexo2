@@ -186,3 +186,11 @@ da verificação, não benchmark da abertura completa ou prova dos crashes.
 Testes de ciclo de vida e curto-circuito adicionados. Ainda faltam desempenho em
 partida, primeira tela no LoL e AirDrop. Distribuir patches retroativos de todas
 as bases, sem instalação nova.
+
+## Avanço 1.6.3
+
+Investigação detalhada em PERFORMANCE_1_6_3.md. Consulta leve de arquivos, CRC
+somente na skin aplicada, busca curta, UI ociosa durante partida e sem espera
+artificial pela bandeja. Atualizador fecha somente a instalação selecionada e
+reabre após sucesso ou rollback completo. Primeiro uso automático exige helper
+novo; helpers antigos mantêm comportamento anterior. Crash real ainda pendente.

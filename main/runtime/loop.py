@@ -61,6 +61,8 @@ def run_main_loop(state: SharedState, skin_scraper: LCUSkinScraper) -> None:
 
 def _compute_main_loop_sleep(state: SharedState, ui_activity: bool) -> float:
     """Return adaptive main-loop sleep based on current activity."""
+    if state.phase in ("GameStart", "InProgress", "Reconnect"):
+        return max(MAIN_LOOP_IDLE_SLEEP, 0.25)
     fast_loop = (
         ui_activity
         or state.champion_exchange_triggered
@@ -77,6 +79,12 @@ def _process_ui_updates(state: SharedState, skin_scraper: LCUSkinScraper) -> boo
         True when this iteration has active UI/chroma work and benefits from
         high-frequency looping.
     """
+    if state.phase in ("GameStart", "InProgress", "Reconnect"):
+        from ui.core import user_interface as ui_module
+        ui = ui_module._user_interface
+        if ui is not None and ui.has_pending_operations():
+            ui.process_pending_operations()  # Preserve pending hide/destroy requests.
+        return False  # No catalogue, positioning or resolution scans during a match.
     ui_activity = False
 
     # For Swiftplay mode, use ui_skin_id and calculate champion_id from skin_id

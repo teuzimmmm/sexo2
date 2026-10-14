@@ -86,10 +86,10 @@ class FriendsService:
             sid=getattr(self.state,name,None)
             if type(sid)is int and sid//1000==cid:return sid
         return cid*1000
-    def archive(self,cid,sid):
+    def archive(self,cid,sid,verify=True):
         if sid==cid*1000:return True
         classic=is_classic_game_mode(getattr(self.state,'current_game_mode',None))
-        key=(cid,sid,classic);cached=self._file_cache.get(key)
+        key=(cid,sid,classic,verify);cached=self._file_cache.get(key)
         if cached and cached[0]>time.monotonic():return cached[1]
         injector=getattr(self.manager,'injector',None)
         if classic:
@@ -101,7 +101,7 @@ class FriendsService:
         try:
             path=resolver.resolve_zip(name,champion_id=archive_cid)
             available=bool(path and Path(path).is_file() and zipfile.is_zipfile(path))
-            if available:
+            if available and verify:
                 stat=Path(path).stat();signature=(str(path),stat.st_size,stat.st_mtime_ns)
                 if signature in self._crc_cache:available=self._crc_cache[signature]
                 else:
@@ -111,7 +111,7 @@ class FriendsService:
         except Exception:available=False
         self._file_cache[key]=(time.monotonic()+15,available)
         return available
-    def available(self,cid,sid):return sid==cid*1000 or sid in self.owned()or self.archive(cid,sid)
+    def available(self,cid,sid):return sid==cid*1000 or sid in self.owned()or self.archive(cid,sid,verify=False)
     def picks(self):
         result={}
         for cid in self.local_ids():
@@ -129,7 +129,7 @@ class FriendsService:
             if pick is None:continue
             sid=pick.get('skinId');entry=next((s for s in self.catalogs.catalog(cid)['skins']if s['skinId']==sid and type(sid)is int),None)
             if not entry:raise ValueError('A skin escolhida não está no catálogo atual deste campeão.')
-            if not self.available(cid,sid):raise ValueError('Arquivo da skin indisponível: '+entry['name'])
+            if sid!=cid*1000 and sid not in self.owned() and not self.archive(cid,sid,verify=True):raise ValueError('Arquivo da skin indisponível ou corrompido: '+entry['name'])
             changes[cid]=entry
         if not changes:raise ValueError('Este conjunto não tem uma escolha para seus campeões atuais.')
         if self.context()!=context:raise ValueError('Os campeões mudaram durante a confirmação. Tente novamente.')

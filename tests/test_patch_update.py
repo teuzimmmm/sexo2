@@ -1,6 +1,6 @@
 import json,shutil,tempfile,unittest,zipfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch,Mock
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding,PublicFormat,PrivateFormat,NoEncryption
 from scripts.build_patch import build
@@ -48,10 +48,10 @@ class PatchTests(unittest.TestCase):
         apply_patch(self.package,self.old,self.public)
         backups=list((self.old/'.sexo2-update').glob('rollback*'));self.assertEqual(len(backups),1)
         self.assertEqual((backups[0]/'files/SEXO2.exe').read_bytes(),b'new app')
-    def test_process_check_blocks_before_touching_any_file(self):
+    def test_process_check_blocks_before_transaction_and_installed_file_changes(self):
         def blocked():raise ValueError('LoL aberto')
         with self.assertRaisesRegex(ValueError,'LoL aberto'):apply_patch(self.package,self.old,self.public,blocked)
-        self.assertFalse((self.old/'.sexo2-update').exists())
+        self.assertFalse((self.old/'.sexo2-update/transaction/journal.json').exists())
     def test_traversal_and_personal_files_are_rejected_even_if_signed(self):
         for name in ['../outside.txt','config.ini','_internal/config.ini','C:/bad','a\\b','skins/x.zip']:
             raw=json.dumps({'schema':1,'app':'SEXO2','version':'1.5.0','files':{name:{'old':None,'new':'0'*64}}}).encode()
@@ -59,5 +59,17 @@ class PatchTests(unittest.TestCase):
                 z.writestr('manifest.json',raw);z.writestr('manifest.sig',self.key.sign(raw));z.writestr('payload/'+name,b'x')
             with self.assertRaises(ValueError):apply_patch(self.package,self.old,self.public)
             self.assertEqual((self.old/'SEXO2.exe').read_bytes(),b'old app')
+
+    def test_invalid_package_never_requests_application_shutdown(self):
+        wrong=Ed25519PrivateKey.generate().public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+        close=Mock()
+        with self.assertRaises(ValueError):apply_patch(self.package,self.old,wrong,close)
+        close.assert_not_called()
+
+    def test_incompatible_patch_keeps_running_app_untouched(self):
+        (self.old/'SEXO2.exe').write_bytes(b'other version')
+        close=Mock()
+        with self.assertRaises(ValueError):apply_patch(self.package,self.old,self.public,close)
+        close.assert_not_called()
 
 if __name__=='__main__':unittest.main()

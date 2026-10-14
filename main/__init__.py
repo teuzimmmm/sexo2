@@ -678,6 +678,12 @@ def run_league_unlock(args: Optional[argparse.Namespace] = None,
 
         tray_manager.restart_callback = updated_tray_restart_callback
     
+    from sexo2.update.lifecycle import start_shutdown_listener
+    def shutdown_for_update():
+        state.stop = True
+        injection_manager.resume_if_suspended()
+    state.update_shutdown_listener = start_shutdown_listener(shutdown_for_update)
+
     # Initialize threads (this starts the WebSocket server)
     thread_manager, t_phase, t_ui, t_ws, t_lcu_monitor = initialize_threads(
         lcu, state, args, injection_manager, skin_scraper, app_status, on_lcu_disconnected, on_lcu_reconnected
@@ -696,8 +702,11 @@ def run_league_unlock(args: Optional[argparse.Namespace] = None,
     from launcher.core.startup_policy import start_probe
     start_probe(state, tray_manager)
 
-    while not t_ws.connection.is_connected:
+    while not state.stop and not t_ws.connection.is_connected:
         time.sleep(0.1)
+    if state.stop:
+        perform_cleanup(state, thread_manager, tray_manager, injection_manager)
+        return
 
     log.info("WebSocket status is active, proceeding with Pengu Loader and injection system setup")
 

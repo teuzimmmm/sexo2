@@ -31,7 +31,7 @@ def generate(registry, new, output, version, key):
     with zipfile.ZipFile(output/('SEXO2-Atualizacao-'+version+'.zip'),'w',zipfile.ZIP_DEFLATED,compresslevel=3) as archive:
         archive.write(helper,'SEXO2 Update.exe')
         for entry in entries: archive.write(output/entry['asset'],entry['asset'])
-        archive.writestr('LEIA-ME.txt','Extraia este ZIP inteiro em uma pasta. Feche apenas SEXO2; o LoL pode permanecer aberto. Abra SEXO2 Update.exe e escolha a pasta instalada. O pacote compativel e escolhido automaticamente. Nao extraia os ZIPs internos. Nao reinstala nem apaga seus mods/configuracoes.')
+        archive.writestr('LEIA-ME.txt','Extraia este ZIP inteiro em uma pasta. O SEXO2 sera fechado e reaberto automaticamente; o LoL pode permanecer aberto. Abra SEXO2 Update.exe e escolha a pasta instalada. O pacote compativel e escolhido automaticamente. Nao extraia os ZIPs internos. Nao reinstala nem apaga seus mods/configuracoes.')
     # Preserve the canonical new baseline for all subsequent releases.
     try:
         baseline=Path(new).resolve().relative_to(project).as_posix()

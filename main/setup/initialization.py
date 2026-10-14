@@ -5,12 +5,10 @@ Initialization setup (logging and tray manager)
 """
 
 import logging
-import time
 from typing import Optional
 
 import argparse
 
-from config import TRAY_INIT_SLEEP_S
 from utils.core.logging import setup_logging, get_logger, install_uncaught_exception_logging, log_section, log_success
 from utils.core.paths import get_user_data_dir, get_detected_user_info
 from utils.integration.tray_manager import TrayManager
@@ -74,8 +72,7 @@ def initialize_tray_manager(args: argparse.Namespace) -> Optional[TrayManager]:
         tray_manager.start()
         log_success(log, "System tray icon initialized - console hidden", "")
         
-        # Give tray icon a moment to fully initialize
-        time.sleep(TRAY_INIT_SLEEP_S)
+        # Tray status is queued until the backend is ready; never sleep here.
         
         # Note: Status will be managed by AppStatus class
         

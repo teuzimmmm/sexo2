@@ -7,10 +7,14 @@ import psutil
 from sexo2.update.engine import apply_patch,digest,verify
 from sexo2.update.client import check_release,download_asset
 from sexo2.update.trust import PUBLIC_KEY
+from sexo2.update.lifecycle import stop_installed_app, reopen_app, processes_for
 
 # Only the application being replaced must be stopped. League is independent.
 BLOCKED={'sexo2.exe','rose.exe'}
-def ensure_closed():
+def ensure_closed(installation=None):
+    if installation is not None:
+        if processes_for(installation):raise ValueError('O SEXO2 ainda está em uso.')
+        return
     for proc in psutil.process_iter(['name']):
         if (proc.info.get('name')or'').lower()in BLOCKED:
             raise ValueError('Feche apenas o SEXO2 antes de aplicar. O LoL pode permanecer aberto.')
@@ -77,7 +81,7 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--install-dir');parser.add_argument('--package');args=parser.parse_args()
     app=tk.Tk();app.title('SEXO2 — Atualização');app.geometry('510x280');app.resizable(False,False)
     installation=tk.StringVar(value=args.install_dir or installed_default())
-    package=tk.StringVar(value=args.package or local_package(installation.get()));status=tk.StringVar(value='Atualiza a instalação existente e preserva seus dados. O LoL pode permanecer aberto; feche apenas o SEXO2.')
+    package=tk.StringVar(value=args.package or local_package(installation.get()));status=tk.StringVar(value='Atualiza a instalação existente e preserva seus dados. O SEXO2 será fechado e aberto automaticamente. O LoL pode permanecer aberto.')
     tk.Label(app,text='SEXO2',font=('Segoe UI',18,'bold')).pack(anchor='w',padx=20,pady=12)
     tk.Label(app,text='Pasta instalada').pack(anchor='w',padx=20)
     row=tk.Frame(app);row.pack(fill='x',padx=20);tk.Entry(row,textvariable=installation).pack(side='left',fill='x',expand=True)
@@ -92,8 +96,14 @@ def main():
         busy[0]=True;button.config(state='disabled');status.set('Verificando pacote e instalação…')
         def work():
             try:
-                ensure_closed()
-                if local:result=apply_patch(local,root,PUBLIC_KEY,ensure_closed)
+                closed = [False]
+                def close_for_update():
+                    if closed[0]:
+                        ensure_closed(root);return
+                    events.put(('progress', 'Fechando o SEXO2 para aplicar a atualização…'))
+                    stop_installed_app(root)
+                    closed[0] = True
+                if local:result=apply_patch(local,root,PUBLIC_KEY,close_for_update)
                 else:
                     assets=root/'_internal/assets';repo=json.loads((assets/'update-source.json').read_text(encoding='utf-8')).get('repository','')
                     access=assets/'update-access.json';token=json.loads(access.read_text(encoding='utf-8')).get('token','')if access.exists()else''
@@ -101,17 +111,32 @@ def main():
                     release=check_release(repo,token,current)
                     if not release.get('available'):raise ValueError(release['message'])
                     with tempfile.TemporaryDirectory(prefix='sexo2-download-')as temp:
-                        file=download_asset(repo,token,release['assetId'],Path(temp)/'update.zip');result=apply_patch(file,root,PUBLIC_KEY,ensure_closed)
+                        file=download_asset(repo,token,release['assetId'],Path(temp)/'update.zip');result=apply_patch(file,root,PUBLIC_KEY,close_for_update)
                 try:refresh_shortcuts(root)
                 except Exception:pass
-                events.put(('success',result))
-            except Exception as error:events.put(('error',str(error)))
+                try:
+                    reopen_app(root)
+                    events.put(('success', result))
+                except Exception:
+                    events.put(('reopen-error', result))
+            except Exception as error:
+                suffix = ''
+                if 'closed' in locals() and closed[0] and not (root/'.sexo2-update/transaction/journal.json').exists():
+                    try:
+                        reopen_app(root)
+                        suffix = ' A versão anterior foi reaberta.'
+                    except Exception: suffix = ' Abra o SEXO2 pelo atalho.'
+                events.put(('error',str(error)+suffix))
         threading.Thread(target=work,daemon=True,name='SEXO2-Updater').start()
     button=tk.Button(app,text='Aplicar atualização',command=apply);button.pack(anchor='e',padx=20,pady=12)
     def poll():
         try:
-            kind,value=events.get_nowait();busy[0]=False;button.config(state='normal')
-            if kind=='success':status.set('Atualizado para '+value+'. Pode abrir o SEXO2.');messagebox.showinfo('SEXO2','Atualização concluída; seus dados foram preservados.')
+            kind,value=events.get_nowait()
+            if kind=='progress':
+                status.set(value);app.after(100,poll);return
+            busy[0]=False;button.config(state='normal')
+            if kind=='success':status.set('Atualizado para '+value+'. SEXO2 aberto novamente.');messagebox.showinfo('SEXO2','Atualização concluída; seus dados foram preservados.')
+            elif kind=='reopen-error':status.set('Atualizado para '+value+'. Abra o SEXO2 pelo atalho; não foi possível reabrir automaticamente.')
             else:status.set(value)
         except queue.Empty:pass
         app.after(100,poll)

@@ -89,7 +89,6 @@ def apply_patch(package, installation, public_key, ensure_closed=lambda: None):
         raise ValueError('Selecione a pasta da instalação existente do SEXO2.')
     if root.is_junction() or root.is_symlink():
         raise ValueError('Selecione uma pasta local normal.')
-    ensure_closed()
     work = root/'.sexo2-update'
     if work.exists() and (work.is_symlink() or work.is_junction()):
         raise ValueError('Pasta de recuperação inválida.')
@@ -100,6 +99,8 @@ def apply_patch(package, installation, public_key, ensure_closed=lambda: None):
     with UpdateLock(work/'lock'):
         transaction = work/'transaction'
         if (transaction/'journal.json').exists():
+            verify((transaction/'manifest.json').read_bytes(), (transaction/'manifest.sig').read_bytes(), public_key)
+            ensure_closed()
             restore(root, transaction, public_key)
             remove_owned(transaction, work)
         elif transaction.exists():
@@ -138,6 +139,7 @@ def apply_patch(package, installation, public_key, ensure_closed=lambda: None):
             required = sum(i.file_size for i in infos)*2 + 50*1024*1024
             if shutil.disk_usage(root).free < required:
                 raise ValueError('Falta espaço para aplicar e recuperar a atualização.')
+            ensure_closed()
             transaction.mkdir()
             (transaction/'manifest.json').write_bytes(raw)
             (transaction/'manifest.sig').write_bytes(signature)
