@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-System tray manager for Rose
+System tray manager for SEXO2
 """
 
 import threading
@@ -13,18 +13,18 @@ from PIL import Image, ImageDraw
 from utils.core.logging import get_logger
 from utils.core.paths import get_user_data_dir, open_folder_in_explorer
 from config import (
-    APP_VERSION, FORK_LABEL,
-    TRAY_READY_MAX_WAIT_S, TRAY_READY_CHECK_INTERVAL_S,
     TRAY_THREAD_JOIN_TIMEOUT_S, TRAY_ICON_WIDTH, TRAY_ICON_HEIGHT,
     TRAY_ICON_ELLIPSE_COORDS, TRAY_ICON_BORDER_WIDTH,
     TRAY_ICON_FONT_SIZE, TRAY_ICON_TEXT_X, TRAY_ICON_TEXT_Y
 )
 
+from sexo2.version import RELEASE_VERSION
+
 log = get_logger()
 
 
 class TrayManager:
-    """Manages the system tray icon for Rose"""
+    """Manages the system tray icon for SEXO2"""
     
     def __init__(self, quit_callback: Optional[Callable] = None, restart_callback: Optional[Callable] = None):
         """
@@ -39,6 +39,7 @@ class TrayManager:
         self.icon = None
         self.tray_thread = None
         self._stop_event = threading.Event()
+        self._ready_event = threading.Event()
         self._locked_icon_image = None
         self._unlocked_icon_image = None
         self._base_icon_image = None  # Current base icon (locked or unlocked)
@@ -55,11 +56,11 @@ class TrayManager:
         image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(image)
         
-        # Draw a simple "SC" logo (Rose)
+        # Draw a simple "S2" logo (Rose)
         # Background circle (scaled 2x)
-        draw.ellipse(TRAY_ICON_ELLIPSE_COORDS, fill=(0, 100, 200, 255), outline=(0, 50, 100, 255), width=TRAY_ICON_BORDER_WIDTH)
+        draw.ellipse(TRAY_ICON_ELLIPSE_COORDS, fill=(20, 24, 28, 255), outline=(190, 190, 190, 255), width=TRAY_ICON_BORDER_WIDTH)
         
-        # "SC" text
+        # "S2" text
         try:
             # Try to use a font if available
             from PIL import ImageFont
@@ -73,8 +74,8 @@ class TrayManager:
             # Fallback to default font
             font = ImageFont.load_default()
         
-        # Draw "SC" text (scaled 2x)
-        draw.text((TRAY_ICON_TEXT_X, TRAY_ICON_TEXT_Y), "SC", fill=(255, 255, 255, 255), font=font)
+        # Draw "S2" text (scaled 2x)
+        draw.text((TRAY_ICON_TEXT_X, TRAY_ICON_TEXT_Y), "S2", fill=(255, 255, 255, 255), font=font)
         
         return image
     
@@ -195,7 +196,7 @@ class TrayManager:
 
                 show_message_box_threaded(
                     f"Failed to open settings dialog:\n\n{e}",
-                    "Rose Settings",
+                    "SEXO2 — Configurações",
                     0x10,  # MB_ICONERROR
                 )
             except Exception:
@@ -252,20 +253,11 @@ class TrayManager:
         count = f" (ocorreu {issue['count']} vezes)" if issue['count'] > 1 else ""
         show_message_box_threaded(
             f"{issue['summary']}{count}\n\n{issue['detail']}\n\n"
-            "O Rose só informa o que observou; a causa do fechamento pode ser desconhecida. "
+            "O SEXO2 só informa o que observou; a causa do fechamento pode ser desconhecida. "
             "Use 'Parar SEXO2 nesta partida' se precisar reconectar sem novas tentativas.",
             "SEXO2 - problema nesta partida",
             0x30,
         )
-
-    def _on_open_friends_room(self, icon, item):
-        import os, sys
-        sala = Path(sys.executable).parent / "Sala" / "Rose Sala.exe"
-        if sala.is_file():
-            os.startfile(str(sala))
-        else:
-            from utils.system.admin_utils import show_message_box_threaded
-            show_message_box_threaded("Abra o SEXO2 Sala.exe da pasta Sala do pacote atualizado.", "SEXO2 - Sala dos amigos", 0x40)
 
     def _on_open_logs(self, icon, item):
         open_folder_in_explorer(get_user_data_dir() / "logs")
@@ -331,9 +323,9 @@ class TrayManager:
     def _create_menu(self) -> pystray.Menu:
         """Create the context menu for the tray icon"""
         return pystray.Menu(
-            pystray.MenuItem(f"{FORK_LABEL} (base {APP_VERSION})", None, enabled=False),
+            pystray.MenuItem(f"SEXO2 {RELEASE_VERSION}", None, enabled=False),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Open Mods Folder", self._on_open_mods),
+            pystray.MenuItem("Abrir pasta de mods", self._on_open_mods),
             pystray.MenuItem(lambda item: self._issue_menu_label(), self._on_show_match_issue,
                              enabled=lambda item: self._match_issue is not None),
             pystray.MenuItem("Abrir pasta dos logs", self._on_open_logs),
@@ -344,8 +336,8 @@ class TrayManager:
                 enabled=lambda item: self._stop_match_enabled(),
             ),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Restart", self._on_restart),
-            pystray.MenuItem("Quit", self._on_quit),
+            pystray.MenuItem("Reiniciar SEXO2", self._on_restart),
+            pystray.MenuItem("Sair", self._on_quit),
         )
     
     def _run_tray(self):
@@ -367,17 +359,19 @@ class TrayManager:
             log.info("System tray icon started")
             # Use run_detached to prevent blocking the main thread
             self.icon.run_detached()
+            self._ready_event.set()
             self._refresh_issue_display()
         except Exception as e:
             log.error(f"Failed to start system tray: {e}")
     
     def start(self):
         """Start the system tray icon"""
-        if self.tray_thread and self.tray_thread.is_alive():
+        if self._ready_event.is_set() or (self.tray_thread and self.tray_thread.is_alive()):
             log.warning("System tray is already running")
             return
         
         try:
+            self._stop_event.clear()
             self.tray_thread = threading.Thread(target=self._run_tray, daemon=True)
             self.tray_thread.start()
             log.info("System tray manager started - no console window")
@@ -386,6 +380,8 @@ class TrayManager:
     
     def stop(self):
         """Stop the system tray icon"""
+        self._stop_event.set()
+        self._ready_event.clear()
         if self.icon:
             try:
                 self.icon.stop()
@@ -398,7 +394,7 @@ class TrayManager:
     
     def is_running(self) -> bool:
         """Check if the tray icon is running"""
-        return self.icon is not None and self.tray_thread is not None and self.tray_thread.is_alive()
+        return self.icon is not None and self._ready_event.is_set() and not self._stop_event.is_set()
     
     def wait_for_quit(self, timeout: Optional[float] = None) -> bool:
         """
@@ -419,36 +415,16 @@ class TrayManager:
         Args:
             status: "locked" or "unlocked"
         """
-        # Wait for tray icon to be ready (up to 5 seconds)
-        max_wait = TRAY_READY_MAX_WAIT_S
-        wait_interval = TRAY_READY_CHECK_INTERVAL_S
-        elapsed = 0.0
-        
-        while (not self.icon or not self._base_icon_image) and elapsed < max_wait:
-            threading.Event().wait(wait_interval)
-            elapsed += wait_interval
-        
-        if not self.icon or not self._base_icon_image:
+        if status not in ('locked', 'unlocked'):
+            log.warning("Unknown tray status: %s", status)
             return
-        
+        # Remember early startup status; the tray backend applies it when ready.
+        # An icon is presentation only and must never stall initialization.
+        if status == self._current_status and self.icon and self._base_icon_image:
+            return
         self._current_status = status
-        try:
-            if status == "locked":
-                # Show locked icon
-                if self._locked_icon_image:
-                    self.icon.icon = self._locked_icon_image
-                    log.info("Wilted icon shown")
-            elif status == "unlocked":
-                # Show golden unlocked icon
-                if self._unlocked_icon_image:
-                    self.icon.icon = self._unlocked_icon_image
-                    log.info("Bloomed icon shown")
-            else:
-                log.warning(f"Unknown status: {status}")
-            self._refresh_issue_display()
-        except Exception as e:
-            log.error(f"Failed to update tray icon: {e}")
-    
+        self._refresh_issue_display()
+
     def set_downloading(self, is_downloading: bool):
         """
         Update the tray icon to show downloading status (legacy method for compatibility)

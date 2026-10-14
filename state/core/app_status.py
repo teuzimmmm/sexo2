@@ -52,8 +52,7 @@ class AppStatus:
             
             # Check if there are preview image files in the merged structure
             # Structure: {champion_id}/{skin_id}/{skin_id}.png and {champion_id}/{skin_id}/{chroma_id}/{chroma_id}.png
-            preview_files = list(skins_dir.rglob("*.png"))
-            return bool(preview_files)
+            return next(skins_dir.rglob("*.png"), None) is not None
         except Exception as e:
             log.debug(f"Failed to check previews directory: {e}")
             return False
@@ -73,9 +72,7 @@ class AppStatus:
                 return False
             
             # Check if directory has any champion folders with skin files
-            champion_dirs = [d for d in skins_dir.iterdir() if d.is_dir()]
-            if not champion_dirs:
-                return False
+            champion_dirs = (d for d in skins_dir.iterdir() if d.is_dir())
             
             # Check if at least one champion has skin files in new structure
             # Structure: {champion_id}/{skin_id}/{skin_id}.zip and {champion_id}/{skin_id}/{chroma_id}/{chroma_id}.zip

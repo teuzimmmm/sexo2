@@ -15,5 +15,5 @@ Path('sexo2/update/trust.py').write_text('PUBLIC_KEY = bytes.fromhex('+repr(pub.
 repo=os.environ['GITHUB_REPOSITORY'];Path('assets/update-source.json').write_text(json.dumps({'repository':repo,'channel':'stable','private':True}),encoding='utf-8')
 token=os.environ.get('SEXO2_DOWNLOAD_TOKEN','')
 if token:Path('assets/update-access.json').write_text(json.dumps({'token':token}),encoding='utf-8')
-p=Path('sexo2/update/client.py');s=p.read_text(encoding='utf-8');s=re.sub(r"RELEASE_VERSION = '[^']+'",'RELEASE_VERSION = '+repr(version),s);p.write_text(s,encoding='utf-8')
+p=Path('sexo2/version.py');s=p.read_text(encoding='utf-8');s=re.sub(r"RELEASE_VERSION = '[^']+'",'RELEASE_VERSION = '+repr(version),s);p.write_text(s,encoding='utf-8')
 p=Path('assets/sexo2-version.txt');s=p.read_text(encoding='utf-8');s=re.sub(r'(filevers|prodvers)=\([^)]*\)',lambda m:m.group(1)+'=('+version.replace('.',',')+',0)',s);s=re.sub(r"(StringStruct\('(?:FileVersion|ProductVersion)',')[^']+('\))",lambda m:m.group(1)+version+'.0'+m.group(2),s);p.write_text(s,encoding='utf-8')

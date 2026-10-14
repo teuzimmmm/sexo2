@@ -580,10 +580,10 @@ class OverlayManager:
                     missing_polls += 1
                     if missing_polls >= 6 and not exit_reported:
                         ctx.report.jogo_perdido()
-                        ctx.report_issue("GAME_EXIT", "Rose perdeu o processo do LoL", "O jogo deixou de ser detectado enquanto a skin estava ativa. A causa não foi identificada.")
+                        ctx.report_issue("GAME_EXIT", "SEXO2 perdeu o processo do LoL", "O jogo deixou de ser detectado enquanto a skin estava ativa. A causa não foi identificada.")
                         exit_reported = True
                 elif not seen and ctx.in_active_phase and not no_game_reported and time.monotonic() - resumed_at >= 90:
-                    ctx.report_issue("GAME_NOT_SEEN", "Processo do LoL não apareceu", "O Rose não detectou o processo do jogo após 90 segundos. A causa não foi identificada.")
+                    ctx.report_issue("GAME_NOT_SEEN", "Processo do LoL não apareceu", "O SEXO2 não detectou o processo do jogo após 90 segundos. A causa não foi identificada.")
                     no_game_reported = True
                 if session["state"] == "failed":
                     break

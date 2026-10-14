@@ -165,3 +165,24 @@ local, identificação após revelação, skin local e um único reinício/recon
 Cliente permanece aberto, proteção persistente por gameId e retorno sem skin
 em falha. Validação em partida real continua pendente. Não altera as cinco
 frentes anteriores nem promete resolver todos os travamentos.
+
+## Avanço 1.6.2 — bandeja e abertura
+
+Bandeja mostra versão própria, português, sem base de protocolo Rose exposta.
+Versionamento próprio centralizado em sexo2/version.py; APP_VERSION antigo
+continua apenas como compatibilidade do protocolo existente, sem renomear dados
+pessoais ou perder configurações.
+
+set_status não aguarda até cinco segundos pelo backend: guarda o estado e aplica
+quando o ícone fica pronto. Estado do backend desacoplado da thread que somente
+inicia run_detached; impede criação duplicada. Status repetido não redesenha.
+
+AppStatus não materializa lista de todas as imagens e pastas: existência termina
+na primeira imagem/pacote encontrado. Medição local única, consulta antiga seguida
+da nova, portanto com diferença de cache de disco: 41 PNGs encontrados, 2,5242 s
+na enumeração completa e 0,0147 s na consulta curta, mesmo resultado. Isso é tempo
+da verificação, não benchmark da abertura completa ou prova dos crashes.
+
+Testes de ciclo de vida e curto-circuito adicionados. Ainda faltam desempenho em
+partida, primeira tela no LoL e AirDrop. Distribuir patches retroativos de todas
+as bases, sem instalação nova.
