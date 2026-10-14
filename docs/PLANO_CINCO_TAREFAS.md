@@ -149,3 +149,11 @@ consulta remota só agenda manutenção, sem escrever biblioteca durante uso.
 Primeiro uso e novidades ainda exigem preparação. A investigação dos crashes em
 partida continua; testes de memória não substituem teste real. Tarefas 4/5 não
 iniciadas nessa entrega. Retroatividade e regra de LoL aberto preservadas.
+
+## Avanço 1.6.0
+
+Tarefa 4 implementada e testada em serviço e painel simulado: biblioteca própria,
+adição em lote, revisão, gerenciamento e exportação/restauração. Seletores legados
+retirados do fluxo de Configurações. Interrupção em blocos e fila de fundo protegem
+a entrada em partida; não é promessa de resolver todos os crashes do jogo.
+Falta AirDrop (tarefa 5), teste visual no client e validação de desempenho real.

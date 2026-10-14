@@ -58,3 +58,43 @@ Referências:
 - https://wiki.leaguetoolkit.dev/making-mods/mod-projects/
 - https://github.com/LeagueToolkit/docs/blob/main/Mod-Package-Format.md
 - https://developers.cloudflare.com/cloudflare-one/faq/cloudflare-tunnels-faq/
+
+## Implementação da biblioteca — 1.6.0
+
+Um único acesso Biblioteca de mods em Configurações. Os controles Adicionar e
+Gerenciar legados deixam de abrir seletores sobrepostos. Dentro da biblioteca:
+entrada por categoria, busca/paginação de 50 itens, revisão de campeão e skin-base,
+renomeação, edição de múltiplos alvos, remoção com confirmação dentro do painel,
+exportação e pasta de exportações. Favoritas de skins oficiais continuam no painel
+Skins existente; não confundir skin-base de mod com favorita oficial.
+
+Identificação sem extrair conteúdo completo: metadados, WAD/characters e tokens
+inteiros no nome. Conflitos ficam para revisão. Campo de alvos explícito preservado;
+sem esse campo, sugerir base padrão, com edição disponível no catálogo do client.
+Não prometer detecção universal nem compatibilidade sem testar o mod no jogo.
+
+Observador serial, arquivos estáveis em duas leituras, originais mantidos. Pastas
+separadas para categorias; ZIP com .fantome/.modpkg dentro prepara esses arquivos
+sem exigir descompactação manual. Pasta externa única normalizada para WAD/RAW;
+ZIP sem dados de mod rejeitado. Interrupção por blocos de 1 MiB na seleção/partida;
+retentativa, histórico persistente e pausa do observador após inatividade. Worker
+usa processamento de fundo do Windows. Não alterar prioridade do LoL.
+
+Hashes reaproveitados apenas com arquivos iguais; conteúdo editado reindexado sem
+ocultar a cópia antiga. Alvos novos de mod idêntico são combinados. Temporários
+não entram na listagem. Marcadores, nomes, alvos e arquivo de entrada não somem
+quando um pacote falha. Um trabalho lento não bloqueia status do bridge.
+
+Exportação: ZIP portátil com pacotes, manifesto de SHA-256, nomes, categorias e
+alvos. META e créditos dos mods mantidos; autoria/licença do modpkg guardadas em
+arquivos de metadados separados e exportadas junto. Sem config, preferências,
+credenciais ou links de sala do aplicativo. Restauração verifica todos os pacotes
+antes de importar, preserva os existentes e confere espaço livre.
+
+AirDrop/transporte de arquivos pela sala ainda não implementado. Usará este mesmo
+importador/manifesto; não transmitir o arquivo inteiro nos frames atuais da sala.
+
+Fontes técnicas conferidas:
+- https://github.com/LeagueToolkit/league-mod/blob/main/docs/design/modpkg.md
+- https://wiki.leaguetoolkit.dev/making-mods/mod-projects/
+- https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadpriority

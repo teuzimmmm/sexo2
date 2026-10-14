@@ -35,6 +35,11 @@ response=session.patch(api+'/'+str(release['id']),json={'draft':False},timeout=2
 response=session.get(api+'/'+str(release['id']),timeout=20);response.raise_for_status();data=response.json()
 assert not data['draft']
 import hashlib
+def file_sha256(path):
+    result=hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda:stream.read(1024*1024),b''):result.update(block)
+    return result.hexdigest()
 actual={a['name']:a for a in data['assets']}
 for name in names:
     final=name.replace(' ','.')
@@ -42,6 +47,6 @@ for name in names:
     assert asset is not None,name
     file=folder/name
     assert asset['size']==file.stat().st_size
-    assert asset['digest']=='sha256:'+hashlib.sha256(file.read_bytes()).hexdigest()
+    assert asset['digest']=='sha256:'+file_sha256(file)
 (folder/'github-release-verification.json').write_text(json.dumps({'url':data['html_url'],'tag':data['tag_name'],'assets':[{k:a[k]for k in ['id','name','size','digest']}for a in data['assets']]},indent=2),encoding='utf-8')
 print('Verified private release:',data['html_url'],flush=True)

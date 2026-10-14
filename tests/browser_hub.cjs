@@ -19,7 +19,7 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
   class FakeSocket{static OPEN=1;constructor(){this.readyState=1;setTimeout(()=>this.onopen?.(),0);}send(text){window.sent.push(JSON.parse(text));}close(){this.readyState=3;}}
   window.WebSocket=FakeSocket;
  });
- for(const name of ['ROSE-Amigos','ROSE-SwiftplayPins','ROSE-PartyMode','ROSE-SettingsPanel','SEXO2-Settings','ROSE-Hub','ROSE-UI'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',name,'index.js')});
+ for(const name of ['ROSE-Amigos','ROSE-SwiftplayPins','ROSE-PartyMode','ROSE-SettingsPanel','SEXO2-ModLibrary','SEXO2-Settings','ROSE-Hub','ROSE-UI'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',name,'index.js')});
  await page.waitForTimeout(200);
  await page.locator('.menu_item_Golden').last().click();
  await page.getByRole('combobox',{name:'Skin automática'}).waitFor();
@@ -86,6 +86,22 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  assert.ok(await page.evaluate(()=>window.sent.some(p=>p.type==='sexo2-update-open')));
  await page.locator('#rose-hub-content').evaluate(e=>e.scrollTop=0);
  await page.screenshot({path:'preview-r6/settings-adapted.png'});
+ await page.evaluate(()=>{
+  const previous=window.__roseBridge.send;
+  window.__roseBridge.send=data=>{
+   if(data.type==='sexo2-library-request'){
+    const library={type:'sexo2-library-state',message:'Cole os arquivos na pasta aberta. Originais preservados.',champions:[{id:11,name:'Master Yi'},{id:22,name:'Ashe'}],mods:[{id:'aa11',name:'BORK Master Yi',category:'skins',championId:11,targets:[11000]},{id:'bb22',name:'Ashe Elegante',category:'skins',championId:22,targets:[22000]}],incoming:[{id:'cc33',file:'skins/Outfit.fantome',displayName:'Outfit',category:'skins',status:'revisar'}]};
+    setTimeout(()=>window.emit('sexo2-library-state',library),0);return;
+   }
+   previous(data);
+  };
+ });
+ await page.getByRole('button',{name:'Biblioteca de mods',exact:true}).click();
+ await page.locator('#rose-hub #sexo2-mod-library').waitFor();
+ assert.equal(await page.locator('lol-uikit-dialog-frame').count(),0);
+ await page.waitForTimeout(50);await page.screenshot({path:'preview-r6/mod-library-in-hud.png'});
+ await page.getByRole('button',{name:'← Configurações',exact:true}).click();
+
  await page.getByRole('button',{name:'Verificação e diagnóstico',exact:true}).click();
  await page.getByText('Aceitar partidas automaticamente',{exact:true}).waitFor();
  assert.equal(await page.locator('#rose-hub #rose-settings-panel').count(),0);

@@ -45,6 +45,15 @@ class SerialWorker:
         return thread is None or not thread.is_alive()
 
     def _run(self):
+        if self.name=='SEXO2-Mod-library':
+            try:
+                import sys,ctypes
+                if sys.platform=='win32':
+                    api=ctypes.WinDLL('kernel32',use_last_error=True)
+                    api.GetCurrentThread.restype=ctypes.c_void_p
+                    api.SetThreadPriority.argtypes=[ctypes.c_void_p,ctypes.c_int]
+                    api.SetThreadPriority(api.GetCurrentThread(),0x10000)
+            except Exception:log.debug('[MOD_LIBRARY] Background scheduling unavailable')
         while not self._closed.is_set() or not self._queue.empty():
             try:
                 work, on_error, queued_at = self._queue.get(timeout=0.1)

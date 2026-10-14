@@ -293,6 +293,8 @@ class MessageHandler:
 
     def _route(self, payload_type: Optional[str], payload: dict) -> None:
         # Route to appropriate handler
+        if payload_type == 'sexo2-library-request':
+            self._handle_library(payload); return
         if payload_type == 'sexo2-update-request':
             self._handle_sexo2_update(payload); return
         if payload_type == 'sexo2-update-open':
@@ -561,6 +563,95 @@ class MessageHandler:
         except Exception as e:
             log.error(f"[SkinMonitor] Failed to handle dice button click: {e}")
     
+    def _handle_library(self, payload):
+        from sexo2.services.mod_library import ModLibrary
+        from sexo2.services.work_queue import SerialWorker
+        with self._background_lock:
+            if not hasattr(self, '_library_service'):
+                self._library_closed = threading.Event()
+                def champions():
+                    lcu = self.skin_scraper.lcu if self.skin_scraper else None
+                    return lcu.get('/lol-game-data/assets/v1/champion-summary.json') if lcu and lcu.ok else None
+                def busy():
+                    phase = getattr(self.shared_state, 'phase', None)
+                    return bool(self._library_closed.is_set() or getattr(self.shared_state, 'stop', False) or phase not in ('Lobby','None','EndOfGame','PreEndOfGame') or getattr(self.injection_manager, '_injection_in_progress', False))
+                self._library_service = ModLibrary(self.mod_storage, get_user_data_dir(), champions, busy,
+                    lambda data:self._send_response(json.dumps(data,ensure_ascii=False)))
+                self._library_worker = SerialWorker('SEXO2-Mod-library', capacity=8)
+                self._library_scan_pending = False
+                def watch():
+                    while not self._library_closed.is_set() and not getattr(self.shared_state, 'stop', False):
+                        service=self._library_service
+                        if service.watching and not self._library_scan_pending:
+                            if service.busy():
+                                service.watch_deadline=time.monotonic()+600
+                                notice='Aguardando sair da seleção ou da partida para preparar os mods.'
+                                if service.message!=notice:service.emit(notice)
+                            elif time.monotonic()>service.watch_deadline:
+                                service.watching=False;service.emit('Observação da pasta pausada. Clique em Adicionar em lote para continuar.')
+                            else:self._queue_library_scan()
+                        self._library_closed.wait(2)
+                threading.Thread(target=watch,name='SEXO2-Mod-inbox',daemon=True).start()
+        service = self._library_service
+        action = payload.get('action','list')
+        if action == 'status':
+            service.emit(); return
+        if action == 'stop':
+            service.watching=False; service.cancel.set(); service.emit('Interrompendo importação. Os originais permanecem na pasta.'); return
+        def failed(error):
+            service.emit(str(error))
+        def work():
+            if action == 'list': service.refresh();service.emit('Biblioteca carregada.')
+            elif action == 'inbox':
+                category=payload.get('category','skins')
+                if category not in ('skins',*self.mod_storage.MOD_CATEGORIES):raise ValueError('Categoria inválida.')
+                service.category=category;service.cancel.clear();service.watching=True;service.watch_deadline=time.monotonic()+600
+                open_folder_in_explorer(service.inbox/category);service.emit('Cole seus arquivos na pasta aberta. Eles serão processados quando estiverem estáveis.')
+            elif action == 'retry':service.retry(payload.get('id'))
+            elif action == 'resolve': service.resolve(payload.get('id'),payload.get('championId'),payload.get('targets'))
+            elif action == 'rename':
+                row=next((m for m in service.mods if m['id']==payload.get('id')),None)
+                name=str(payload.get('name') or '')[:128]
+                service.rename(payload.get('id'),name)
+                if row:self._sync_selected_custom_mod_display_name(row['championId'],row['path'],row['storedName'],name)
+            elif action == 'targets':service.targets(payload.get('id'),payload.get('targets'))
+            elif action == 'delete':
+                row=next((m for m in service.mods if m['id']==payload.get('id')),None)
+                if row is None:raise ValueError('Mod não encontrado.')
+                service.delete(row['id'])
+                if row['category']=='skins':
+                    self._clear_active_selection_if_matches(row['championId'],row['path'])
+                else:self._clear_category_selection_if_matches(row['category'],row['storedName'])
+            elif action == 'export':service.export();open_folder_in_explorer(service.exports)
+            elif action == 'exports':service.exports.mkdir(exist_ok=True);open_folder_in_explorer(service.exports)
+            elif action == 'skins':
+                cid=payload.get('championId')
+                if type(cid)is not int or cid not in {c['id'] for c in service.catalog}:raise ValueError('Campeão inválido.')
+                lcu=self.skin_scraper.lcu if self.skin_scraper else None
+                data=lcu.get('/lol-game-data/assets/v1/champions/'+str(cid)+'.json') if lcu and lcu.ok else None
+                skins=[{'id':skin['id'],'name':str(skin.get('name') or 'Padrão')} for skin in (data or {}).get('skins',[]) if isinstance(skin,dict) and type(skin.get('id'))is int and skin['id']//1000==cid]
+                self._send_response(json.dumps({'type':'sexo2-library-skins','requestId':payload.get('requestId'),'id':payload.get('id'),'championId':cid,'skins':skins},ensure_ascii=False))
+            else:raise ValueError('Ação de biblioteca inválida.')
+        if not self._library_worker.submit(work,failed):failed(ValueError('Aguarde o trabalho atual da biblioteca.'))
+
+    def close_library(self):
+        closed=getattr(self,'_library_closed',None)
+        if closed is not None:closed.set()
+        service=getattr(self,'_library_service',None)
+        if service is not None:service.watching=False;service.cancel.set()
+        worker=getattr(self,'_library_worker',None)
+        if worker is not None:worker.close(timeout=.3)
+
+    def _queue_library_scan(self):
+        self._library_scan_pending=True
+        def done():
+            try:
+                if self._library_service.watching:self._library_service.scan()
+            finally:self._library_scan_pending=False
+        def failed(error):
+            self._library_scan_pending=False;self._library_service.emit(str(error))
+        if not self._library_worker.submit(done,failed):self._library_scan_pending=False
+
     def _handle_sexo2_update(self, payload):
         from sexo2.services.work_queue import SerialWorker
         with self._background_lock:

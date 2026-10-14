@@ -116,6 +116,7 @@ class PenguSkinMonitorThread(threading.Thread):
     def stop(self) -> None:
         """Stop the server"""
         try:
+            self.message_handler.close_library()
             self.websocket_server.stop()
         finally:
             # Clean up port file on shutdown

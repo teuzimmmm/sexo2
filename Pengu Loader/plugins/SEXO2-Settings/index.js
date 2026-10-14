@@ -49,9 +49,11 @@ function build(){
  status=el('p','Conectando ao aplicativo…');status.setAttribute('role','status');form.append(status);
  const actions=el('div');actions.className='s2-actions';const save=button('Salvar alterações',saveSettings);save.id='sexo2-settings-save';actions.append(save,button('Descartar alterações',()=>{dirty=false;if(settings)populate(settings);message('Alterações descartadas.');}));form.append(actions);
  form.addEventListener('submit',e=>{e.preventDefault();saveSettings();});
- root.append(el('h3','Mods personalizados'));const tools=el('div');tools.className='s2-actions';const category=el('select');category.setAttribute('aria-label','Categoria de mods');for(const [value,name]of Object.entries(CATEGORIES)){const option=el('option',name);option.value=value;category.append(option);}tools.append(category);
- function tool(action){window.dispatchEvent(new CustomEvent('sexo2-settings-tool',{detail:{action,category:category.value}}));}
- tools.append(button('Adicionar',()=>tool('add')),button('Gerenciar',()=>tool('manage')),button('Diagnóstico detalhado',()=>tool('diagnostics')));root.append(tools);
+ root.append(el('h3','Mods personalizados'));const tools=el('div');tools.className='s2-actions';const libraryHost=el('div');
+ let configHidden=[];
+ function openLibrary(){root.dataset.libraryOpen='true';const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;configHidden=[...root.children].filter(node=>node!==libraryHost&&node.tagName!=='STYLE').map(node=>[node,node.hidden]);for(const[node]of configHidden)node.hidden=true;libraryHost.hidden=false;window.dispatchEvent(new CustomEvent('sexo2-mod-library-open',{detail:{target:libraryHost,category:'all',add:false}}));}
+ window.addEventListener('sexo2-mod-library-close',()=>{for(const[node,hidden]of configHidden)node.hidden=hidden;configHidden=[];delete root.dataset.libraryOpen;const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=false;libraryHost.hidden=true;});
+ tools.append(button('Biblioteca de mods',openLibrary),button('Diagnóstico detalhado',()=>window.dispatchEvent(new CustomEvent('sexo2-settings-tool',{detail:{action:'diagnostics',category:'skins'}}))));root.append(tools,libraryHost);
  root.append(el('h3','Atualizações'));updateStatus=el('p','Verificando atualizações…');updateStatus.setAttribute('role','status');root.append(updateStatus);
  const updates=el('div');updates.className='s2-actions';updates.append(button('Verificar atualização',()=>checkUpdate()));
  updateButton=button('Atualizar',()=>bridge?.send({type:'sexo2-update-open'}));updateButton.disabled=true;updates.append(updateButton);
@@ -80,7 +82,7 @@ function receive(data){
  if(saving){dirty=false;populate(data.settings);message('Configurações salvas.');}
  else{populate(data);if(!dirty)message('');}
 }
-window.addEventListener('rose-hub-settings',e=>{if(!root)build();root.hidden=false;e.detail.target.append(root);request();});
+window.addEventListener('rose-hub-settings',e=>{if(!root)build();root.hidden=false;e.detail.target.append(root);if(root.dataset.libraryOpen==='true'){const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;}request();});
 window.addEventListener('rose-hub-settings-close',()=>{if(root)root.hidden=true;});
 const timer=setInterval(()=>{if(!root)build();if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('settings-data',receive);bridge.subscribe('settings-saved',receive);bridge.subscribe('sexo2-update-state',updateReceived);bridge.onReady(()=>{pending=null;lock(false);request();checkUpdate();});clearInterval(timer);}},100);
 setInterval(()=>{if(pending&&Date.now()-pending.at>15000){pending=null;lock(false);message('Não houve confirmação. Confira a conexão; suas alterações foram mantidas.',true);}},1000);

@@ -283,7 +283,7 @@ class ModStorageService:
         return default_targets, mod_targets
 
     @staticmethod
-    def _hash_mod_folder(mod_path: Path) -> tuple[str, dict[str, str]]:
+    def _hash_mod_folder(mod_path: Path, *, check_continue=None) -> tuple[str, dict[str, str]]:
         """Return a rename-stable folder hash and hashes for contained WADs."""
         folder_hash = hashlib.sha256()
         wad_hashes: dict[str, str] = {}
@@ -301,6 +301,7 @@ class ModStorageService:
                 file_hash = hashlib.sha256()
                 with file_path.open("rb") as stream:
                     for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                        if check_continue is not None:check_continue()
                         file_hash.update(chunk)
                 file_digest = file_hash.digest()
                 folder_hash.update(relative_path.encode("utf-8"))
@@ -310,6 +311,7 @@ class ModStorageService:
                 if relative_path.casefold().endswith((".wad", ".wad.client")):
                     wad_hashes[relative_path] = file_hash.hexdigest()
             except (OSError, ValueError):
+                if check_continue is not None:raise
                 continue
         return folder_hash.hexdigest(), wad_hashes
 
@@ -385,6 +387,7 @@ class ModStorageService:
         skin_ids: object,
         mod_name: Optional[str] = None,
         mod_path: Optional[Path] = None,
+        *, precomputed_hashes=None,
     ) -> Path:
         """Persist the user's manual targets for a champion or named mod."""
         champion_id_int = self._to_int(champion_id)
@@ -400,12 +403,12 @@ class ModStorageService:
         default_targets, mod_targets = self._load_target_manifest(champion_id_int)
         if mod_name:
             if mod_path is not None:
-                folder_hash, wad_hashes = self._hash_mod_folder(Path(mod_path))
+                folder_hash, wad_hashes = precomputed_hashes if precomputed_hashes is not None else self._hash_mod_folder(Path(mod_path))
                 existing_display_name = None
                 for key, metadata in list(mod_targets.items()):
                     if key == folder_hash or (
                         isinstance(metadata, dict)
-                        and metadata.get("folderHash") == folder_hash
+                        and (metadata.get("folderHash") == folder_hash or metadata.get("name") == str(mod_name))
                     ):
                         if isinstance(metadata, dict):
                             existing_display_name = self._extract_display_name(metadata)
@@ -580,6 +583,7 @@ class ModStorageService:
         champion_id: int | str,
         source_path: str | Path,
         skin_ids: object,
+        *, before_commit=None, prepare_extracted=None,
     ) -> tuple[Path, Path, str]:
         """Extract one user-selected mod archive into its champion folder."""
         source = Path(source_path).expanduser()
@@ -612,9 +616,12 @@ class ModStorageService:
         )
         target_created = False
         try:
-            extract_mod_archive(source, temporary_dir)
+            extract_mod_archive(source, temporary_dir, check_continue=before_commit)
+            prepared_hashes = prepare_extracted(temporary_dir) if prepare_extracted is not None else None
             if not any(temporary_dir.iterdir()):
                 raise ValueError("The selected mod archive contains no files")
+            if before_commit is not None:
+                before_commit()
             temporary_dir.replace(target_dir)
             target_created = True
             manifest_path = self.set_champion_target_ids(
@@ -622,6 +629,7 @@ class ModStorageService:
                 skin_ids,
                 mod_name=mod_name,
                 mod_path=target_dir,
+                precomputed_hashes=prepared_hashes,
             )
             return target_dir, manifest_path, mod_name
         except Exception:
@@ -791,6 +799,7 @@ class ModStorageService:
         self,
         category: str,
         source_path: str | Path,
+        *, before_commit=None, prepare_extracted=None,
     ) -> tuple[Path, str]:
         """Extract one user-selected archive into a registered category folder."""
         if category not in self.MOD_CATEGORIES:
@@ -822,9 +831,12 @@ class ModStorageService:
         )
         target_created = False
         try:
-            extract_mod_archive(source, temporary_dir)
+            extract_mod_archive(source, temporary_dir, check_continue=before_commit)
+            prepared_hashes = prepare_extracted(temporary_dir) if prepare_extracted is not None else None
             if not any(temporary_dir.iterdir()):
                 raise ValueError("The selected mod archive contains no files")
+            if before_commit is not None:
+                before_commit()
             temporary_dir.replace(target_dir)
             target_created = True
 
@@ -869,7 +881,7 @@ class ModStorageService:
         entries: List[SkinModEntry] = []
         mod_targets = mod_targets or {}
         for candidate in sorted(mod_directory.iterdir(), key=lambda p: p.name.lower()):
-            if candidate.name in {self.TARGET_METADATA, self.LEGACY_TARGET_METADATA}:
+            if candidate.name.startswith(self.IMPORT_TEMP_PREFIX) or candidate.name in {self.TARGET_METADATA, self.LEGACY_TARGET_METADATA}:
                 continue
             if candidate.is_dir():
                 mod_name = candidate.name

@@ -335,3 +335,18 @@ painel passam a permitir o LoL aberto. Não tocar na instalação ativa automati
 - Primeiro uso/preparação de novidades ainda pode levar tempo. Em partida ativa,
   manter biblioteca confirmada e adiar manutenção. UI/primeiro frame e desempenho
   no PC real ainda precisam conferência. Biblioteca em lote e AirDrop pendentes.
+
+### 1.6.0 — biblioteca própria em lote e exportação
+
+Implementada biblioteca no painel; detalhes em MODS_E_AIRDROP.md. Adicionar abre
+pasta por categoria, com análise e importação serial. Revisão de campeão/skin-base,
+alvos editáveis, nomes, remoção, exportação/restauração e originais preservados.
+Interrupção por blocos durante seleção/partida, baixa prioridade de recursos no
+Windows, histórico de entrada persistente e lista paginada. Corrigido registro de
+mods editados para reimportação não esconder a cópia antiga. Autoria/licença de
+modpkg guardadas separadamente sem mudar hash de conteúdo usado pela sala.
+
+Não abrir o LoL nem aplicar atualização automaticamente. Sem necessidade de fechar
+LoL para atualizar, como desde 1.5.3. Bases antigas continuam com deltas diretos;
+chave de assinatura local. AirDrop, conferência visual real e investigação dos
+crashes no PC real seguem pendentes.

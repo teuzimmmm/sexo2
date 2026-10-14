@@ -214,7 +214,7 @@ class ModPackage:
         if size != record.uncompressed_size or checksum.intdigest() != record.uncompressed_checksum:
             raise ModpkgError(f"Corrupted file in the .modpkg: {name}")
 
-    def write_record(self, record: _Record, destination: Path) -> None:
+    def write_record(self, record: _Record, destination: Path, *, check_continue=None) -> None:
         """Commit only a verified file; retain the original on extraction failure."""
         destination = Path(destination)
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -223,7 +223,9 @@ class ModPackage:
         try:
             with os.fdopen(fd, 'wb') as output:
                 for block in self.record_blocks(record):
+                    if check_continue is not None:check_continue()
                     output.write(block)
+            if check_continue is not None:check_continue()
             temporary.replace(destination)
         finally:
             temporary.unlink(missing_ok=True)
@@ -258,6 +260,7 @@ class ModPackage:
             if record is None:
                 continue
             try:
+                if record.uncompressed_size>4*1024*1024:raise ModpkgError("Package metadata exceeds the limit")
                 document = _unpack_msgpack(self.read(record))
             except ModpkgError as e:
                 log.warning(f"[MODPKG] Ignoring the package metadata: {e}")
@@ -303,7 +306,7 @@ class ModPackage:
             yield relative_path, source if isinstance(source, bytes) else self.read(source)
 
 
-def extract_modpkg(source: Union[str, Path], dest_dir: Union[str, Path]) -> None:
+def extract_modpkg(source: Union[str, Path], dest_dir: Union[str, Path], *, check_continue=None) -> None:
     """Unpack a .modpkg into *dest_dir* as a mod folder mod-tools can use"""
     source = Path(source)
     dest_dir = Path(dest_dir)
@@ -319,12 +322,13 @@ def extract_modpkg(source: Union[str, Path], dest_dir: Union[str, Path]) -> None
             log.warning(f"[MODPKG] {source.name}: skipping {package.unplaced_file_count} files that target no game WAD")
         file_count = 0
         for relative_path, content in sorted(package._layout().items()):
+            if check_continue is not None:check_continue()
             target = dest_dir.joinpath(*relative_path.split("/"))
             target.parent.mkdir(parents=True, exist_ok=True)
             if isinstance(content, bytes):
                 target.write_bytes(content)
             else:
-                package.write_record(content, target)
+                package.write_record(content, target, check_continue=check_continue)
             file_count += 1
     log.debug(f"[EXTRACT] Unpacked {file_count} files from {source.name} to {dest_dir}")
 

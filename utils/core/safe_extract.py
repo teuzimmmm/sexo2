@@ -51,6 +51,11 @@ def _validate_members(zf: zipfile.ZipFile, dest_resolved: Path) -> None:
             f"archive unpacks to {total / 1024 ** 3:.1f} GiB (limit {MAX_ARCHIVE_UNCOMPRESSED_BYTES / 1024 ** 3:.0f} GiB)"
         )
     for member in members:
+        spelling=member.filename.replace(chr(92),'/')
+        parts=spelling.split('/')
+        if spelling.startswith('/') or ':' in spelling or '..' in parts:
+            log.error('[SECURITY] Blocked absolute or parent path in archive')
+            raise UnsafePathError('Archive contains an absolute or parent path')
         target_path = dest_resolved / member.filename
         # Validate the path is safe (no path traversal)
         if not is_safe_path(dest_resolved, target_path):
@@ -92,7 +97,7 @@ def is_safe_path(base_dir: Path, target_path: Path) -> bool:
         return False
 
 
-def safe_extractall(zip_path: Union[str, Path], dest_dir: Union[str, Path]) -> None:
+def safe_extractall(zip_path: Union[str, Path], dest_dir: Union[str, Path], *, check_continue=None) -> None:
     """
     Safely extract all contents of a ZIP file to a destination directory.
     Validates each file path to prevent path traversal attacks (zip slip).
@@ -115,7 +120,19 @@ def safe_extractall(zip_path: Union[str, Path], dest_dir: Union[str, Path]) -> N
 
     with zipfile.ZipFile(zip_path, 'r') as zf:
         _validate_members(zf, dest_resolved)
-        zf.extractall(dest_dir)
+        if check_continue is None:
+            zf.extractall(dest_dir)
+        else:
+            for member in zf.infolist():
+                check_continue()
+                target=dest_resolved.joinpath(*member.filename.replace(chr(92),'/').split('/'))
+                if member.is_dir():target.mkdir(parents=True,exist_ok=True);continue
+                target.parent.mkdir(parents=True,exist_ok=True)
+                with zf.open(member) as source,target.open('wb') as output:
+                    while True:
+                        check_continue();block=source.read(1024*1024)
+                        if not block:break
+                        output.write(block)
         log.debug(f"[EXTRACT] Safely extracted {len(zf.namelist())} files to {dest_dir}")
 
 
@@ -191,9 +208,9 @@ def list_mod_archive(archive_path: Union[str, Path]) -> List[str]:
         return [info.filename for info in zf.infolist() if not info.is_dir()]
 
 
-def extract_mod_archive(archive_path: Union[str, Path], dest_dir: Union[str, Path]) -> None:
+def extract_mod_archive(archive_path: Union[str, Path], dest_dir: Union[str, Path], *, check_continue=None) -> None:
     """Extract a .zip/.fantome mod archive, or unpack a .modpkg, into dest_dir."""
     if Path(archive_path).suffix.lower() == MODPKG_SUFFIX:
-        extract_modpkg(archive_path, dest_dir)
+        extract_modpkg(archive_path, dest_dir, check_continue=check_continue)
     else:
-        safe_extractall(archive_path, dest_dir)
+        safe_extractall(archive_path, dest_dir, check_continue=check_continue)
