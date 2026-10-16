@@ -28,6 +28,13 @@ Builds seguintes recuperam esses binários da baseline anterior do projeto.
 Os testes de navegador usam cliente e servidor simulados. A aparência e o uso
 real ainda precisam ser observados no cliente LoL.
 
+## SEXO2 2.0 — arquitetura e instalação
+
+A versão 2.0 terá instalação, dados e runtime próprios, com migração e limpeza
+das versões antigas no instalador inicial. Isso é requisito para publicação;
+a dependência atual de pastas Rose ainda não foi removida. A arquitetura,
+as evidências e os critérios estão em [SEXO2_2_0.md](docs/SEXO2_2_0.md).
+
 ## Coletor LoLalytics (fase 1)
 
 Biblioteca e CLI independentes para Ranked, ARAM e Arena, sem integração no

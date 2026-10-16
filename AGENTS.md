@@ -4,6 +4,9 @@ Priorizar o menor consumo total necessário para entregar trabalho correto e
 verificável. Estas são as convenções atuais; planos históricos em `docs/` não
 obrigam a repetir agentes ou rodadas. Instruções explícitas do usuário prevalecem.
 
+Para a 2.0, seguir [docs/SEXO2_2_0.md](docs/SEXO2_2_0.md). Instalação própria e
+migração/limpeza do legado são critérios de publicação ainda não implementados.
+
 ## Execução e delegação
 
 - Resolver diretamente ajustes pequenos, trabalho coeso, documentação e pesquisa
