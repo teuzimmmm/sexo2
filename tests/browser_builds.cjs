@@ -3,6 +3,7 @@ const {chromium}=require('../ui-test-runtime/node_modules/playwright');
 const assert=require('node:assert/strict');
 const {execFileSync}=require('node:child_process');
 const path=require('node:path');
+const os=require('node:os');
 const fixture=JSON.parse(execFileSync('python',['-c',`
 import json
 from tests.test_build_workflow import service,query
@@ -47,7 +48,18 @@ print(json.dumps({'context':context,'result':result}));s.close()
   await page.getByRole('button',{name:'Importar runas',exact:true}).click();
   await page.getByText('Importação confirmada no cliente simulado.',{exact:true}).waitFor();
   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-import').at(-1).entryId),'wr');
-  await page.screenshot({path:'/tmp/sexo2-builds-1280x720.png'});
+  const notices=page.getByLabel('Avisos da fonte');
+  await notices.getByText('A WR exibida corresponde à runa principal, não à página inteira.',{exact:true}).waitFor();
+  assert.equal(await notices.getByText('keystone_conditioned',{exact:true}).count(),0,'internal warning codes must not appear in the product');
+  await page.getByRole('combobox',{name:'Sugestão',exact:true}).selectOption('common');
+  await notices.getByText('A WR exibida corresponde à runa principal, não à página inteira.',{exact:true}).waitFor();
+  await page.getByRole('combobox',{name:'Sugestão',exact:true}).selectOption('wr');
+  // Client carousels can establish transformed/clipped containing blocks.
+  await page.evaluate(()=>{const root=document.querySelector('.champion-select');root.style.transform='translateY(10px)';root.style.overflow='hidden';root.style.height='200px';});
+  await page.getByRole('button',{name:'Importar itens',exact:true}).click({trial:true});
+  assert.equal(await page.evaluate(()=>document.querySelector('#sexo2-builds').parentElement===document.body),true);
+  await page.evaluate(()=>document.querySelector('.champion-select').removeAttribute('style'));
+  await page.screenshot({path:path.join(os.tmpdir(),'sexo2-builds-1280x720.png')});
   // A late response from an older revision cannot restore obsolete recommendations.
   await page.evaluate(()=>{window.holdQueries=true;});
   await page.getByRole('button',{name:'Consultar',exact:true}).click();

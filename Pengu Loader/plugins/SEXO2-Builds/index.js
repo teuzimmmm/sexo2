@@ -5,7 +5,7 @@ if(window.__sexo2Builds)return;
 window.__sexo2Builds={};
 let bridge=null,host=null,panel=null,ctx=null,data=null,opened=false,sequence=0;
 let contextRequest=null,queryRequest=null,importRequest=null,queryTimer=null,lastQuery=null,pausedForGame=false;
-let summary,status,entries,enemy,position,tier,details,runesButton,itemsButton,queryButton;
+let summary,status,entries,enemy,position,tier,details,warnings,runesButton,itemsButton,queryButton;
 const selectors='.champion-select,.skin-selection-carousel'; // Selectors already used by ROSE-UI; always gated by LCU phase.
 const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
 function button(text,fn){const n=el('button',text);n.type='button';n.onclick=fn;return n;}
@@ -26,6 +26,7 @@ function lock(){
 function reset(){
  data=null;queryRequest=null;importRequest=null;lastQuery=null;clearTimeout(queryTimer);
  if(entries)entries.replaceChildren();if(details)details.replaceChildren();lock();
+ if(warnings)warnings.replaceChildren();
 }
 function requestContext(){
  if(!bridge?.ready||contextRequest)return;
@@ -44,7 +45,7 @@ function query(force){
  const signature=JSON.stringify(payload);
  if(!force&&signature===lastQuery)return;
  lastQuery=signature;data=null;entries.replaceChildren();details.replaceChildren();
- queryRequest={id:requestId(),at:Date.now()};lock();say('Consultando LoLalytics…');
+ warnings.replaceChildren();queryRequest={id:requestId(),at:Date.now()};lock();say('Consultando LoLalytics…');
  bridge.send({type:'sexo2-build-query',requestId:queryRequest.id,...payload});
 }
 function importPage(target){
@@ -57,8 +58,10 @@ function importPage(target){
 function renderPage(){
  details.replaceChildren();const row=selected();
  if(!row){lock();return;}
+ details.append(warnings);
  const page=row.page,metric=row.runeMetrics;
  const title=el('p',`${page.resolved.champion_name||ctx.champion.name} · patch ${page.resolved.patch}`);details.append(title);
+ if(row.id==='wr')details.append(el('p','WR ajustada ao risco: compara as duas sugestões disponíveis na fonte. Não prevê a chance de vencer a partida.'));
  details.append(el('p',`Primária: ${metric.win_rate??'—'}% · ${metric.games??'—'} jogos. Amostra da runa principal.`));
  const runeBox=el('div');runeBox.className='s2-build-runes';
  for(const key of ['pri','sec','mod'])runeBox.append(el('p',page.runes[key].map(id=>data.runeNames?.[id]||id).join(' · ')));
@@ -84,6 +87,7 @@ function renderPage(){
 }
 function arenaRows(result){
  details.replaceChildren();
+ details.append(warnings);
  for(const [key,rows]of Object.entries(result.arena||{})){
   const section=el('section');section.className='s2-build-block';
   section.append(el('strong',key.includes('augment')?'Aprimoramentos · popularidade':'Itens · popularidade'));
@@ -114,10 +118,24 @@ function receiveData(message){
  queryRequest=null;
  if(message.result.revision!==ctx?.revision){lock();return;}
  data=message.result;entries.replaceChildren();
+ warnings.replaceChildren();
+ const notices=new Set([...(data.warnings||[]),...data.entries.flatMap(row=>row.page.warnings||[])].map(sourceNotice).filter(Boolean));
+ for(const text of notices)warnings.append(el('p',text));
  for(const row of data.entries)entries.append(option(row.id,row.label));
  if(enemy.value&&[...entries.options].some(o=>o.value==='vs:'+enemy.value))entries.value='vs:'+enemy.value;
  if(data.arena)arenaRows(data);else renderPage();
  say(data.arena?'Arena · popularidade.':'Sugestões prontas. Itens reúne as opções preparadas em até dois conjuntos próprios.');lock();
+}
+function sourceNotice(code){
+ if(typeof code!=='string')return null;
+ if(['rune_scope_primary_not_joint_page','not_full_rune_page_joint_sample'].includes(code)||code.startsWith('Rune suggestions describe'))return 'A WR exibida corresponde à runa principal, não à página inteira.';
+ if(['only_two_upstream_layout_candidates','local_risk_not_draftgap_prediction','selected_keystone_then_refresh_layout','keystone_conditioned','opponent_conditioned','keystone_filter_unavailable','not_joint_build_sample','risk_not_applicable_to_arena_popularity'].includes(code))return null; // Explained beside the selected suggestion.
+ if(code==='missing_item_sample'||code==='low_item_sample')return 'Há itens com amostra pequena ou sem número de jogos disponível.';
+ if(/^(starting_items|item[1-6])_unavailable$/.test(code))return 'Algumas posições de itens estão indisponíveis nesta amostra.';
+ if(code.startsWith('Arena item, combination')||code.startsWith('Unrecognized Arena payload'))return 'Arena exibe somente popularidade; métricas restritas permanecem indisponíveis.';
+ if(code.startsWith('Rune suggestion layout'))return 'Uma sugestão incompleta foi omitida pela fonte.';
+ if(code.startsWith('Catálogo de nomes indisponível'))return 'Nomes indisponíveis no cliente; os itens e runas aparecem pelos IDs.';
+ return 'A fonte informou uma limitação adicional. Confira a página de origem.';
 }
 function receiveImported(message){
  if(message.requestId!==importRequest?.id)return;
@@ -158,7 +176,10 @@ function mount(){
  queryButton=button('Consultar',()=>query(true));runesButton=button('Importar runas',()=>importPage('runes'));itemsButton=button('Importar itens',()=>importPage('items'));
  actions.append(queryButton,runesButton,itemsButton);panel.append(actions);
  status=el('p');status.setAttribute('role','status');panel.append(status);details=el('div');details.className='s2-build-details';panel.append(details);
- screen.append(host);lock();
+ warnings=el('div');warnings.className='s2-build-help';warnings.setAttribute('aria-label','Avisos da fonte');
+ // The phase + recognized screen gate visibility. A viewport sibling avoids
+ // clipping/fixed-position containment from animated client carousel ancestors.
+ document.body.append(host);lock();
 }
 function attach(){
  if(bridge||!window.__roseBridge)return;

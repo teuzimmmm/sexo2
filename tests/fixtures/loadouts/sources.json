@@ -3,8 +3,8 @@
   "items": {
     "source_url": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/items.json",
     "source_sha256": "6b3e3479ae3c6ffba4d7845f95416897c891f392838ee5fb3671930ddec60c6b",
-    "fixture_sha256": "a41deb5f88f9e94e47945efe1146d4340c3af8b260cfb297afec28022356275e",
-    "projection": "id/name for items referenced by Ahri keystone fixtures"
+    "fixture_sha256": "351f46fa31571cc988b718303508db713c82f5527bdc8928cf14bc46689335a9",
+    "projection": "id/name for IDs referenced by Ahri Ranked/matchup and Jinx ARAM keystone fixtures"
   },
   "perkstyles": {
     "source_url": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/perkstyles.json",
@@ -14,8 +14,8 @@
   "perks": {
     "source_url": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/perks.json",
     "source_sha256": "dd0948288ac0293caf71675cabbd138a7ad512b7a7cbb15c084fa9662233c13a",
-    "fixture_sha256": "08d920eacf595a34a8ef1212d1e9136438e38c8325394fd33ed93c98610c4f92",
-    "projection": "id/name for rune IDs in Ahri keystone fixtures"
+    "fixture_sha256": "594daa2ddfac0fc05908b243b58ae585b6cacd39e88fc6bb80936c5617741b53",
+    "projection": "id/name for IDs referenced by Ahri Ranked and Jinx ARAM keystone fixtures"
   },
   "cherry-augments": {
     "source_url": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/cherry-augments.json",

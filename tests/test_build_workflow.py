@@ -45,6 +45,9 @@ class FakeLCU:
                          '/lol-gameflow/v1/session': self.game,
                          '/lol-game-data/assets/v1/champion-summary.json': self.champions}.get(path))
 
+    def draft_request(self, path):
+        return self.get(path)
+
     def loadout_request(self, method, path, payload=None):
         self.requests.append((method, path, deepcopy(payload)))
         if method == 'GET':

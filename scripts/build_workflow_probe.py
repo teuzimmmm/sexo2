@@ -15,7 +15,7 @@ class SyntheticDraft:
     def __init__(self):
         self.finalization=False
 
-    def get(self,path,**kwargs):
+    def draft_request(self,path):
         data={
             '/lol-gameflow/v1/gameflow-phase':'ChampSelect',
             '/lol-gameflow/v1/session':{'gameData':{'gameId':1,'gameMode':'CLASSIC','mapId':11,'queue':{'id':420}}},

@@ -18,8 +18,9 @@ O workflow atual prioriza execução direta; Luna atingiu a cota anteriormente.
 - Bridge: três ações explícitas, `sexo2-build-context`, `sexo2-build-query`,
   `sexo2-build-import`; filas pequenas, execução fora do loop WebSocket,
   payloads sem URLs/IDs de conta vindos do plugin e encerramento definido.
-- `SEXO2-Builds`: painel específico para ChampSelect, recolhível, somente anexado
-  à raiz de seleção reconhecida; sem inserir painel na navegação normal.
+- `SEXO2-Builds`: painel específico para ChampSelect, recolhível, somente exibido
+  com uma raiz de seleção reconhecida; sem painel na navegação normal. O nó fica
+  no `body` para evitar recorte por carrosséis/ancestrais transformados do cliente.
   Fonte de contexto é o backend; plugin não faz scraping nem decide importação.
 
 ## Critérios
@@ -142,7 +143,7 @@ consistente dos componentes será tratada com o instalador na fase final.
 ## Verificações reproduzidas
 
 ```sh
-PYSTRAY_BACKEND=dummy python -m unittest tests.test_build_workflow tests.test_build_bridge -q
+PYSTRAY_BACKEND=dummy python -m unittest tests.test_build_workflow tests.test_build_bridge tests.test_build_https -q
 PYSTRAY_BACKEND=dummy python -m unittest discover -s tests -q
 PYSTRAY_BACKEND=dummy python -m unittest discover -s lcu/tests -q
 PYSTRAY_BACKEND=dummy python -m unittest discover -s pengu/tests -q
@@ -154,17 +155,19 @@ python scripts/build_workflow_probe.py --live-source --output docs/build-workflo
 instalado. O teste usa navegador isolado, nunca o navegador pessoal do usuário.
 O ambiente `PYSTRAY_BACKEND=dummy` é para testes Linux, não execução normal.
 
-- 34 testes novos do fluxo/bridge/gateway passaram: contexto, cancelamento lógico,
+- 43 testes do fluxo/bridge/gateway/HTTPS passaram: contexto, cancelamento lógico,
   finalização, consultas, IDs de catálogo, propriedade por conta, limites,
   preservação de páginas, corrupção e confirmação de escrita.
-- Suíte geral: 415 testes, nenhuma falha de asserção, um erro preexistente ao
+- Suíte geral: 424 testes, nenhuma falha de asserção, um erro preexistente ao
   importar `test_startup_policy` por `ctypes.windll` ausente no Linux e um teste
   nativo de Windows ignorado. LCU: um teste passou. Pengu: 15 testes, dois ignorados,
   sem falhas.
 - Chromium isolado: tela normal sem painel, abertura sob demanda, importação pelo
   bridge simulado, finalização, descarte de resposta antiga, erro sem loop de
   retries, pausa em partida e dimensões 1024×576/1280×720. No cenário simulado,
-  o painel não cobre as listas dos times ou o botão de confirmação.
+  o painel não cobre as listas dos times ou o botão de confirmação. Os avisos
+  persistem ao trocar a sugestão; um ancestral com transform/overflow não recorta
+  os controles do painel.
 - Probe do coordenador com **fonte HTTP real e draft sintético**: quatro GETs
   de fonte, Ahri middle WR/8992 e Common/8112, mais Ahri vs Annie/8112, patch16.20.
   O [relatório](build-workflow-live-2026-10-16.json) registra URLs, runas, blocos e
@@ -172,6 +175,11 @@ O ambiente `PYSTRAY_BACKEND=dummy` é para testes Linux, não execução normal.
 - Catálogos atuais de runas, itens e aprimoramentos foram conferidos por HTTP no
   CommunityDragon 16.20. Projeções públicas e hashes estão em
   `tests/fixtures/loadouts/sources.json`. Sessões e contas dos testes são sintéticas.
+- Sete testes usam sockets HTTPS reais em loopback, certificado efêmero verificado
+  e o adaptador LCU do programa, com fonte LoLalytics offline. Cobrem WR/Common,
+  dois matchups separados, importação/releitura em SR e ARAM, capacidade recusada,
+  saída do draft, resposta perdida após aplicar a escrita e confirmação divergente.
+  O teste comprova nosso fluxo HTTP/JSON, sem comprovar o cliente Riot real.
 
 ## O que ainda precisa ser comprovado
 
@@ -185,3 +193,37 @@ O ambiente `PYSTRAY_BACKEND=dummy` é para testes Linux, não execução normal.
 - Build e distribuição Windows. Não houve compilação de executável, instalação,
   mudança de versão, push ou release. Os arquivos do PC do usuário não foram tocados.
 - Fase final de caminhos próprios, migração, limpeza e instalador continua pendente.
+
+## Fechamento sem depender de validação manual
+
+Autorizado pelo usuário em 16/10/2026. A ausência do cliente Windows não bloqueia
+estes ajustes; não equivale à comprovação de uma partida real.
+
+1. Usar transporte limitado e leitura fresca também nos endpoints do draft e
+   catálogo de campeões, sem alterar os consumidores antigos do LCU.
+2. Revisar invalidação e exibição de avisos no painel, mantendo consultas à fonte
+   sob demanda e ações de importação explícitas.
+3. Exercitar serviço, adaptador e importador por HTTPS real em loopback contra
+   um servidor sintético isolado, com identidades fictícias e certificado efêmero.
+   Cobrir aplicação, releitura e falhas, sem credenciais ou cliente pessoal.
+4. Incluir testes pertinentes no workflow Windows existente, sem publicar,
+   compilar instalador ou executar limpeza. Revisar e registrar commit local.
+
+Conclusão: verificações reproduzíveis passam, falhas não viram sucesso, páginas
+pessoais são preservadas e limites do teste sintético continuam explícitos.
+
+### Resultado do fechamento
+
+Os quatro itens acima foram implementados e revisados. O adaptador captura
+sessão e endereço sob o lock da conexão e usa leituras frescas de draft com
+timeout de conexão/leitura de 1/2 segundos, limite de 4 MiB e sem retries ou
+redirects. O transporte antigo dos outros recursos não foi alterado.
+
+O painel traduz os avisos relevantes e mantém o escopo das métricas visível;
+não mostra códigos internos da biblioteca. A montagem no `body` depende sempre
+da fase ChampSelect e dos seletores reconhecidos, e desaparece na saída.
+
+O workflow Windows existente agora inclui regressões de LCU/Pengu e o browser
+isolado. A configuração foi revisada; o job remoto não foi executado nesta rodada,
+pois não houve push. Esse workflow também usa servidor sintético, sem LoL instalado.
+Não é necessário aguardar uma ação do usuário para concluir estes itens de código.

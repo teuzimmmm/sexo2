@@ -86,7 +86,6 @@ class LCU:
 
     def loadout_request(self, method, path, payload=None):
         """Strict, bounded requests for explicit loadout actions; never retry writes."""
-        import json
         import re
         allowed_reads = {'/lol-summoner/v1/current-summoner', '/lol-perks/v1/pages',
                          '/lol-game-data/assets/v1/perkstyles.json',
@@ -98,10 +97,28 @@ class LCU:
                      or method == 'PUT' and (item_sets or re.fullmatch(r'/lol-perks/v1/pages/[1-9][0-9]*', path)))
         if not permitted:
             raise ValueError('Operação de páginas não permitida.')
-        if not self.ok or not re.fullmatch(r'https://127\.0\.0\.1:[0-9]{1,5}', self.base or ''):
+        return self._build_request(method, path, payload, timeout=(2, 5))
+
+    def draft_request(self, path):
+        """Fresh, bounded reads for builds, independent of the legacy GET cache."""
+        if path not in {'/lol-gameflow/v1/gameflow-phase', '/lol-gameflow/v1/session',
+                        '/lol-champ-select/v1/session',
+                        '/lol-game-data/assets/v1/champion-summary.json'}:
+            raise ValueError('Leitura de seleção não permitida.')
+        return self._build_request('GET', path, None, timeout=(1, 2))
+
+    def _build_request(self, method, path, payload, *, timeout):
+        import json
+        import re
+        # Capture the connection once: concurrent reconnects must not combine a
+        # session from one local client with the endpoint of another.
+        connection = self._connection
+        with connection._lock:
+            session, base, connected = connection.session, connection.base, connection.ok
+        if not connected or not re.fullmatch(r'https://127\.0\.0\.1:[0-9]{1,5}', base or ''):
             raise ValueError('O cliente LoL não está conectado localmente.')
         try:
-            with self.s.request(method, self.base + path, json=payload, timeout=(2, 5),
+            with session.request(method, base + path, json=payload, timeout=timeout,
                                 stream=True, allow_redirects=False) as response:
                 if not 200 <= response.status_code < 300:
                     raise ValueError(f'O cliente recusou a operação (HTTP {response.status_code}).')

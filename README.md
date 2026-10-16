@@ -42,8 +42,9 @@ validação no cliente Windows ainda está pendente. Consulte
 
 ## Coletor LoLalytics (fase 1)
 
-Biblioteca e CLI independentes para Ranked, ARAM e Arena, sem integração no
-cliente nesta fase. Veja [uso, fontes e limites](docs/lolalytics/README.md).
+A fase 1 entregou a biblioteca e CLI independentes para Ranked, ARAM e Arena;
+a integração ao aplicativo está descrita acima. Veja
+[uso, fontes e limites do coletor](docs/lolalytics/README.md).
 
 ## Créditos
 

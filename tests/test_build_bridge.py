@@ -19,7 +19,8 @@ class GatewayTests(unittest.TestCase):
     def setUp(self):
         self.client=LCU.__new__(LCU)
         self.session=MagicMock()
-        self.client._connection=SimpleNamespace(ok=True,base='https://127.0.0.1:12345',session=self.session)
+        self.client._connection=SimpleNamespace(ok=True,base='https://127.0.0.1:12345',session=self.session,
+                                                _lock=threading.RLock())
         self.client._api=Mock()
         self.response=Mock(status_code=200)
         self.response.iter_content.return_value=[b'[]']
@@ -54,6 +55,28 @@ class GatewayTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.client.loadout_request('GET','/lol-perks/v1/pages')
         self.response.iter_content.return_value=[b'[NaN]']
         with self.assertRaises(ValueError):self.client.loadout_request('GET','/lol-perks/v1/pages')
+
+    def test_draft_reads_are_bounded_fresh_and_allowlisted(self):
+        self.client._api.get.side_effect=AssertionError('Legacy cache must not be used')
+        self.response.iter_content.return_value=[b'"ChampSelect"']
+        self.assertEqual(self.client.draft_request('/lol-gameflow/v1/gameflow-phase'),'ChampSelect')
+        request=self.session.request.call_args
+        self.assertEqual(request.kwargs['timeout'],(1,2))
+        self.assertTrue(request.kwargs['stream'])
+        self.assertFalse(request.kwargs['allow_redirects'])
+        for path in ['/lol-summoner/v1/current-summoner','https://example.test',
+                     '/lol-champ-select/v1/session/../../']:
+            with self.subTest(path=path),self.assertRaises(ValueError):self.client.draft_request(path)
+
+    def test_reconnect_does_not_mix_the_captured_session_and_endpoint(self):
+        def respond(*args,**kwargs):
+            self.client._connection.base='https://127.0.0.1:54321'
+            self.client._connection.session=MagicMock()
+            return MagicMock(__enter__=Mock(return_value=self.response))
+        self.session.request.side_effect=respond
+        self.client.draft_request('/lol-gameflow/v1/gameflow-phase')
+        self.assertEqual(self.session.request.call_args.args[1],
+                         'https://127.0.0.1:12345/lol-gameflow/v1/gameflow-phase')
 
 
 class BuildBridgeTests(unittest.TestCase):

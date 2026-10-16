@@ -43,15 +43,21 @@ class DraftReader:
         self._previous = None
         self._champions = None
 
+    def _get(self, path):
+        try:
+            return self.lcu.draft_request(path)
+        except ValueError:
+            raise BuildError('Não foi possível ler a seleção do cliente. Aguarde ou reconecte.') from None
+
     def read(self):
         with self._lock:
-            phase = self.lcu.get('/lol-gameflow/v1/gameflow-phase', timeout=2, use_cache=False)
+            phase = self._get('/lol-gameflow/v1/gameflow-phase')
             if not isinstance(phase, str):
                 raise BuildError('Não foi possível ler o estado do cliente LoL.')
             cid, mode, own_lane, finalization, enemies, warning, session_id = 0, None, 'all', False, [], None, None
             if phase == 'ChampSelect':
-                session = self.lcu.get('/lol-champ-select/v1/session', timeout=2, use_cache=False)
-                game = self.lcu.get('/lol-gameflow/v1/session', timeout=2, use_cache=False)
+                session = self._get('/lol-champ-select/v1/session')
+                game = self._get('/lol-gameflow/v1/session')
                 if not isinstance(session, dict) or not isinstance(game, dict):
                     raise BuildError('A seleção de campeões ainda não está disponível.')
                 team, opponents = session.get('myTeam'), session.get('theirTeam')
@@ -108,7 +114,7 @@ class DraftReader:
     def champions(self):
         with self._lock:
             if self._champions is None:
-                rows = self.lcu.get('/lol-game-data/assets/v1/champion-summary.json', timeout=3)
+                rows = self._get('/lol-game-data/assets/v1/champion-summary.json')
                 if not isinstance(rows, list) or len(rows) > 2000:
                     raise BuildError('O catálogo de campeões do cliente não está disponível.')
                 catalog = {}
