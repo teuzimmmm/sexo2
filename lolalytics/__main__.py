@@ -6,6 +6,7 @@ import sys
 from .client import Client
 from .errors import CollectorError
 from .query import LANES, MODES, REGIONS, TIERS, Query
+from .risk import RISK_LEVELS
 
 
 def main(argv=None) -> int:
@@ -24,6 +25,8 @@ def main(argv=None) -> int:
     parser.add_argument("--opponent", help="explicit opponent champion slug for matchup data")
     parser.add_argument("--opponent-lane", choices=LANES, default="all")
     parser.add_argument("--matchup", action="store_true", help="collect one opponent-conditioned build page")
+    parser.add_argument("--recommend", action="store_true", help="rank one local risk-adjusted recommendation")
+    parser.add_argument("--risk-level", choices=RISK_LEVELS, help="local recommendation prior strength (requires --recommend)")
     parser.add_argument("--min-games", type=int, default=100, help="warn on item samples below this count (0 disables the low-sample threshold)")
     args = parser.parse_args(argv)
     try:
@@ -37,6 +40,10 @@ def main(argv=None) -> int:
             parser.error("--item-sets does not support --keystone")
         if args.matchup and not args.opponent:
             parser.error("--matchup requires --opponent")
+        if args.risk_level is not None and not args.recommend:
+            parser.error("--risk-level requires --recommend")
+        if args.recommend and (args.builds or args.item_sets or args.matchup):
+            parser.error("--recommend is incompatible with --builds, --item-sets, and --matchup")
         if args.opponent and args.builds:
             parser.error("--builds and --opponent are incompatible")
         if args.opponent and args.item_sets:
@@ -50,7 +57,9 @@ def main(argv=None) -> int:
             parser.error("--item-sets currently supports ranked only")
         with Client(cache_dir=args.cache_dir, ttl=args.ttl) as client:
             for query in queries:
-                if args.matchup:
+                if args.recommend:
+                    result = client.recommend(query, risk_level=args.risk_level or "medium").to_dict()
+                elif args.matchup:
                     result = client.collect_matchup(query, min_games=args.min_games).to_dict()
                 elif args.builds:
                     result = client.collect_builds(query).to_dict()

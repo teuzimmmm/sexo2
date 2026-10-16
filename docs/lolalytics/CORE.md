@@ -64,6 +64,31 @@ sequência de compra. IDs permanecem opacos, e o DTO da biblioteca não é forma
 de importação Riot. Consulte [RUNAS_E_ITENS.md](RUNAS_E_ITENS.md) e
 [FONTES.md](FONTES.md) para evidências e limites.
 
+## Recomendação com ajuste de risco
+
+`Client.recommend(query, risk_level="medium")` é uma API separada de
+`collect_builds` e `collect_matchup`; não altera os contratos dessas funções.
+Ela escolhe entre os layouts `summary.win` e `summary.pick` pela amostra da
+runa principal, pode coletar a página correspondente filtrada por essa
+keystone, e devolve `Recommendation.to_dict()` com candidatos, seleção,
+`build_page`, rankings de item por tabela, política e proveniência. Em Ranked e
+ARAM, use `--recommend` e, opcionalmente, `--risk-level`; sem nível explícito,
+usa `medium`.
+
+```sh
+python -m lolalytics ahri --lane middle --recommend --risk-level medium
+python -m lolalytics ahri --lane middle --recommend --risk-level high --opponent annie --opponent-lane middle
+python -m lolalytics jinx --mode aram --tier all --recommend --risk-level low
+python -m lolalytics jinx --mode arena --tier all --recommend
+```
+
+Com `--opponent`, a recomendação é somente condicionada ao adversário: não
+aplica keystone em conjunto. Em Arena, scores de WR não se aplicam e as tabelas
+usam pick rate. O nível é uma suavização local, não confiança nem previsão;
+fórmulas, priors, serviço/persistência e limites estão em [RISCO.md](RISCO.md).
+`--risk-level` exige `--recommend`; esse modo não combina com `--builds`,
+`--item-sets` ou `--matchup`.
+
 ## Matchup: uma sugestão contra adversário explícito
 
 Use `Query(opponent=..., opponent_lane=...)` e `Client.collect_matchup`. A rota

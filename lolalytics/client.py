@@ -17,6 +17,8 @@ from .query import Query
 from .transport import HTTPTransport
 from .builds import BuildCollection, BuildPage, build_page
 from .matchups import build_matchup_page
+from .recommendations import Recommendation, item_rankings, rune_candidates as get_rune_candidates
+from .risk import BUILD_PRIOR_GAMES, rank_candidates, score_observation, validate_risk_level
 
 
 def _reject_nonfinite(_):
@@ -199,7 +201,7 @@ class Client:
             pages.append(build_page(snapshots[keystone], selection, keystone))
         return BuildCollection(query=query.to_dict(), pages=pages)
 
-    def collect_matchup(self, query: Query, *, min_games: int = 100) -> BuildPage:
+    def collect_matchup(self, query: Query, *, min_games: int = 100, selection: str = "win") -> BuildPage:
         """Collect one validated ranked matchup suggestion for an explicit opponent."""
         if not isinstance(query, Query):
             raise QueryError("collect_matchup expects a Query")
@@ -209,7 +211,107 @@ class Client:
             raise QueryError("collect_matchup requires an opponent")
         if isinstance(min_games, bool) or not isinstance(min_games, int) or min_games < 0:
             raise QueryError("min_games must be a non-negative integer")
-        return build_matchup_page(self.collect(query), min_games=min_games)
+        if selection not in ("win", "pick"):
+            raise QueryError("selection must be 'win' or 'pick'")
+        return build_matchup_page(self.collect(query), min_games=min_games, selection=selection)
+
+    def recommend(self, query: Query, *, risk_level: str = "medium") -> Recommendation:
+        """Collect a bounded source snapshot and apply the local risk policy."""
+        if not isinstance(query, Query):
+            raise QueryError("recommend expects a Query")
+        level = validate_risk_level(risk_level)
+        # Input and policy validation happen above the first transport call.
+        base = self.collect(query)
+        if query.mode != "arena":
+            # The baseline is essential to every local risk score, including
+            # item tables and opponent-conditioned recommendations.
+            baseline = base.overview.get("win_rate")
+            if baseline is None:
+                raise DataUnavailable("champion overview win rate is unavailable for recommendation")
+            score_observation(None, None, baseline, level)
+        arena = query.mode == "arena"
+        policy = {"method": "pick_rate" if arena else "prior_weighted_mean",
+                  "prior_games": None if arena else BUILD_PRIOR_GAMES[level],
+                  "baseline": None if arena else base.overview.get("win_rate"),
+                  "baseline_source": None if arena else "champion_query_overview",
+                  "item_baseline": None,
+                  "item_baseline_source": None,
+                  "score_unit": None if arena else "percent",
+                  "not_calibrated": True}
+        warnings = list(base.warnings)
+        if query.mode != "arena":
+            warnings.extend(("rune_scope_primary_not_joint_page",
+                             "only_two_upstream_layout_candidates",
+                             "local_risk_not_draftgap_prediction"))
+        selected_page = None
+        selected = None
+        rune_candidates = []
+        working = base
+
+        if query.mode == "arena":
+            warnings.append("risk_not_applicable_to_arena_popularity")
+        elif query.opponent is not None:
+            # Opponent-conditioned pages never add a keystone filter.
+            rune_candidates = get_rune_candidates(base)
+            ranked = rank_candidates(rune_candidates, baseline, level)
+            winner = next((candidate for candidate in ranked if candidate["risk"]["score"] is not None), None)
+            if winner is None:
+                raise DataUnavailable("LoLalytics has no opponent summary with a usable primary-keystone sample")
+            rune_candidates = ranked
+            selected = winner["selection"]
+            selected_page = build_matchup_page(base, selection=selected)
+        else:
+            rune_candidates = get_rune_candidates(base)
+            if query.keystone is not None:
+                rune_candidates = [c for c in rune_candidates if c["keystone"] == query.keystone]
+                if not rune_candidates:
+                    raise DataUnavailable("LoLalytics has no complete summary layout for the requested keystone")
+            ranked = rank_candidates(rune_candidates, baseline, level)
+            if not ranked or ranked[0]["risk"]["score"] is None:
+                raise DataUnavailable("LoLalytics has no complete rune layout with an available keystone sample")
+            rune_candidates = ranked
+            winner = next((candidate for candidate in ranked if candidate["risk"]["score"] is not None), None)
+            if winner is None:
+                raise DataUnavailable("LoLalytics has no rune candidate with a usable sample")
+            selected = winner["selection"]
+            chosen_keystone = query.keystone if query.keystone is not None else winner["keystone"]
+            if query.keystone is None:
+                pinned_lane = query.lane
+                if query.mode == "ranked" and pinned_lane == "all":
+                    pinned_lane = base.resolved.get("effective_lane")
+                    if pinned_lane is None or pinned_lane == "all":
+                        raise DataUnavailable("LoLalytics did not resolve an effective ranked lane")
+                filtered = Query(query.champion, mode=query.mode, patch=base.resolved["patch"],
+                                 lane=pinned_lane, tier=query.tier, region=query.region,
+                                 keystone=chosen_keystone)
+                working = self.collect(filtered)
+            selected_page = build_page(working, selected, chosen_keystone)
+            source_layout = winner["runes"]
+            if any(source_layout.get(slot) != selected_page.runes.get(slot)
+                   for slot in ("pri", "sec", "mod")):
+                warnings.append("selected_keystone_then_refresh_layout")
+
+        if selected_page is not None:
+            warnings.extend(selected_page.warnings)
+        item_baseline = None
+        if not arena:
+            item_baseline = working.overview.get("win_rate")
+            if item_baseline is None:
+                raise DataUnavailable("item snapshot champion overview win rate is unavailable for recommendation")
+            score_observation(None, None, item_baseline, level)
+            policy["item_baseline"] = item_baseline
+            policy["item_baseline_source"] = "item_source.champion_query_overview"
+        item_rankings_result = item_rankings(working, item_baseline, level)
+        item_source = {"source_url": working.source_url, "query": deepcopy(working.query),
+                       "resolved": deepcopy(working.resolved), "collected_at": working.collected_at,
+                       "cache_hit": bool(working.cache_hit)}
+        return Recommendation(
+            query=query.to_dict(), resolved=deepcopy(base.resolved), source_url=base.source_url,
+            collected_at=base.collected_at, cache_hit=bool(base.cache_hit and working.cache_hit), risk_level=level,
+            policy=policy, rune_candidates=rune_candidates, recommended_selection=selected,
+            build_page=selected_page, item_source=item_source, item_rankings=item_rankings_result,
+            warnings=list(dict.fromkeys(warnings)),
+        )
 
     def collect_many(self, queries):
         """Collect up to 20 explicit queries; cached successes allow a rerun.

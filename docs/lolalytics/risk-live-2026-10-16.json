@@ -1,0 +1,1315 @@
+{
+  "checked_at": "2026-10-16T21:36:02.454591+00:00",
+  "checks": [
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "middle",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null,
+        "opponent": null,
+        "opponent_lane": "all"
+      },
+      "status": "passed",
+      "http_queries": 2,
+      "warm_repeat_reused": true,
+      "levels": [
+        {
+          "risk_level": "very-low",
+          "recommended_selection": "win",
+          "keystone": 8992,
+          "patch": "16.20",
+          "cache_hit": false,
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all",
+          "item_source": {
+            "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&patch=16.20&keystone=8992",
+            "query": {
+              "champion": "ahri",
+              "mode": "ranked",
+              "patch": "16.20",
+              "lane": "middle",
+              "tier": "emerald_plus",
+              "region": "all",
+              "keystone": 8992,
+              "opponent": null,
+              "opponent_lane": "all"
+            },
+            "resolved": {
+              "champion": "ahri",
+              "cid": 103,
+              "mode": "ranked",
+              "patch": "16.20",
+              "lane": "middle",
+              "tier": "emerald_plus",
+              "region": "all",
+              "status": 200,
+              "key": "ahri_middle_ranked_list_emerald_plus_16.20_all__all_k8992",
+              "keystone": 8992,
+              "champion_name": "Ahri",
+              "current_patch": "16.20",
+              "effective_lane": "middle"
+            },
+            "collected_at": "2026-10-16T21:36:04.525541+00:00",
+            "cache_hit": false
+          },
+          "policy": {
+            "method": "prior_weighted_mean",
+            "prior_games": 3000,
+            "baseline": 52.89,
+            "baseline_source": "champion_query_overview",
+            "item_baseline": 53.3,
+            "item_baseline_source": "item_source.champion_query_overview",
+            "score_unit": "percent",
+            "not_calibrated": true
+          },
+          "warnings": [
+            "Rune suggestions describe layouts and do not establish a joint sample or page-wide metrics.",
+            "rune_scope_primary_not_joint_page",
+            "only_two_upstream_layout_candidates",
+            "local_risk_not_draftgap_prediction",
+            "selected_keystone_then_refresh_layout",
+            "keystone_conditioned",
+            "not_full_rune_page_joint_sample"
+          ],
+          "rune_candidates": [
+            {
+              "selection": "win",
+              "keystone": 8992,
+              "metrics": {
+                "win_rate": 53.39,
+                "games": 20821
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all",
+              "risk": {
+                "score": 53.327030351370645,
+                "prior_games": 3000,
+                "observed_weight": 0.8740607027412787,
+                "reason": null,
+                "baseline": 52.89,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "selection": "pick",
+              "keystone": 8112,
+              "metrics": {
+                "win_rate": 52.8,
+                "games": 148461
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all",
+              "risk": {
+                "score": 52.8017826371145,
+                "prior_games": 3000,
+                "observed_weight": 0.9801929209499475,
+                "reason": null,
+                "baseline": 52.89,
+                "risk_level": "very-low"
+              }
+            }
+          ],
+          "item_table_count": 12,
+          "sample_table": "item_combination:joint_build_sample:payload.builtBootSet3",
+          "sample_rows": [
+            {
+              "identifiers": [
+                "3118",
+                "3020",
+                "3100"
+              ],
+              "metrics": {
+                "win_rate": 59.45,
+                "pick_rate": 5.37,
+                "games": 1095
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[4]",
+              "risk": {
+                "score": 54.9445054945055,
+                "prior_games": 3000,
+                "observed_weight": 0.2673992673992674,
+                "reason": null,
+                "baseline": 53.3,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "identifiers": [
+                "2503",
+                "3020",
+                "3100"
+              ],
+              "metrics": {
+                "win_rate": 58.36,
+                "pick_rate": 6.51,
+                "games": 1328
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[2]",
+              "risk": {
+                "score": 54.85260628465804,
+                "prior_games": 3000,
+                "observed_weight": 0.3068391866913124,
+                "reason": null,
+                "baseline": 53.3,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "identifiers": [
+                "2503",
+                "3158",
+                "3100"
+              ],
+              "metrics": {
+                "win_rate": 56.93,
+                "pick_rate": 7.07,
+                "games": 1442
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[1]",
+              "risk": {
+                "score": 54.47840162089149,
+                "prior_games": 3000,
+                "observed_weight": 0.32462854570013505,
+                "reason": null,
+                "baseline": 53.3,
+                "risk_level": "very-low"
+              }
+            }
+          ]
+        },
+        {
+          "risk_level": "very-high",
+          "recommended_selection": "win",
+          "keystone": 8992,
+          "patch": "16.20",
+          "cache_hit": true,
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all",
+          "item_source": {
+            "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&patch=16.20&keystone=8992",
+            "query": {
+              "champion": "ahri",
+              "mode": "ranked",
+              "patch": "16.20",
+              "lane": "middle",
+              "tier": "emerald_plus",
+              "region": "all",
+              "keystone": 8992,
+              "opponent": null,
+              "opponent_lane": "all"
+            },
+            "resolved": {
+              "champion": "ahri",
+              "cid": 103,
+              "mode": "ranked",
+              "patch": "16.20",
+              "lane": "middle",
+              "tier": "emerald_plus",
+              "region": "all",
+              "status": 200,
+              "key": "ahri_middle_ranked_list_emerald_plus_16.20_all__all_k8992",
+              "keystone": 8992,
+              "champion_name": "Ahri",
+              "current_patch": "16.20",
+              "effective_lane": "middle"
+            },
+            "collected_at": "2026-10-16T21:36:04.525541+00:00",
+            "cache_hit": true
+          },
+          "policy": {
+            "method": "prior_weighted_mean",
+            "prior_games": 500,
+            "baseline": 52.89,
+            "baseline_source": "champion_query_overview",
+            "item_baseline": 53.3,
+            "item_baseline_source": "item_source.champion_query_overview",
+            "score_unit": "percent",
+            "not_calibrated": true
+          },
+          "warnings": [
+            "Rune suggestions describe layouts and do not establish a joint sample or page-wide metrics.",
+            "rune_scope_primary_not_joint_page",
+            "only_two_upstream_layout_candidates",
+            "local_risk_not_draftgap_prediction",
+            "selected_keystone_then_refresh_layout",
+            "keystone_conditioned",
+            "not_full_rune_page_joint_sample"
+          ],
+          "rune_candidates": [
+            {
+              "selection": "win",
+              "keystone": 8992,
+              "metrics": {
+                "win_rate": 53.39,
+                "games": 20821
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all",
+              "risk": {
+                "score": 53.378274471178656,
+                "prior_games": 500,
+                "observed_weight": 0.9765489423573003,
+                "reason": null,
+                "baseline": 52.89,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "selection": "pick",
+              "keystone": 8112,
+              "metrics": {
+                "win_rate": 52.8,
+                "games": 148461
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all",
+              "risk": {
+                "score": 52.80030209249401,
+                "prior_games": 500,
+                "observed_weight": 0.9966434167332389,
+                "reason": null,
+                "baseline": 52.89,
+                "risk_level": "very-high"
+              }
+            }
+          ],
+          "item_table_count": 12,
+          "sample_table": "item_combination:joint_build_sample:payload.builtBootSet3",
+          "sample_rows": [
+            {
+              "identifiers": [
+                "3118",
+                "3020",
+                "3100"
+              ],
+              "metrics": {
+                "win_rate": 59.45,
+                "pick_rate": 5.37,
+                "games": 1095
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[4]",
+              "risk": {
+                "score": 57.522100313479626,
+                "prior_games": 500,
+                "observed_weight": 0.6865203761755486,
+                "reason": null,
+                "baseline": 53.3,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "identifiers": [
+                "2503",
+                "3020",
+                "3041"
+              ],
+              "metrics": {
+                "win_rate": 81.4,
+                "pick_rate": 0.42,
+                "games": 86
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[36]",
+              "risk": {
+                "score": 57.42389078498294,
+                "prior_games": 500,
+                "observed_weight": 0.14675767918088736,
+                "reason": null,
+                "baseline": 53.3,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "identifiers": [
+                "2503",
+                "3158",
+                "3041"
+              ],
+              "metrics": {
+                "win_rate": 77.42,
+                "pick_rate": 0.46,
+                "games": 93
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[31]",
+              "risk": {
+                "score": 57.08273187183811,
+                "prior_games": 500,
+                "observed_weight": 0.15682967959527824,
+                "reason": null,
+                "baseline": 53.3,
+                "risk_level": "very-high"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "query": {
+        "champion": "jinx",
+        "mode": "aram",
+        "patch": null,
+        "lane": "all",
+        "tier": "all",
+        "region": "all",
+        "keystone": null,
+        "opponent": null,
+        "opponent_lane": "all"
+      },
+      "status": "passed",
+      "http_queries": 2,
+      "warm_repeat_reused": true,
+      "levels": [
+        {
+          "risk_level": "very-low",
+          "recommended_selection": "win",
+          "keystone": 8008,
+          "patch": "16.20",
+          "cache_hit": false,
+          "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all",
+          "item_source": {
+            "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all&patch=16.20&keystone=8008",
+            "query": {
+              "champion": "jinx",
+              "mode": "aram",
+              "patch": "16.20",
+              "lane": "all",
+              "tier": "all",
+              "region": "all",
+              "keystone": 8008,
+              "opponent": null,
+              "opponent_lane": "all"
+            },
+            "resolved": {
+              "champion": "jinx",
+              "cid": 222,
+              "mode": "aram",
+              "patch": "16.20",
+              "lane": "all",
+              "tier": "all",
+              "region": "all",
+              "status": 200,
+              "key": "jinx_all_aram_list_all_16.20_all__all_k8008",
+              "keystone": 8008,
+              "champion_name": "Jinx",
+              "current_patch": "16.20"
+            },
+            "collected_at": "2026-10-16T21:36:06.868704+00:00",
+            "cache_hit": false
+          },
+          "policy": {
+            "method": "prior_weighted_mean",
+            "prior_games": 3000,
+            "baseline": 53.15,
+            "baseline_source": "champion_query_overview",
+            "item_baseline": 54.98,
+            "item_baseline_source": "item_source.champion_query_overview",
+            "score_unit": "percent",
+            "not_calibrated": true
+          },
+          "warnings": [
+            "Rune suggestions describe layouts and do not establish a joint sample or page-wide metrics.",
+            "rune_scope_primary_not_joint_page",
+            "only_two_upstream_layout_candidates",
+            "local_risk_not_draftgap_prediction",
+            "selected_keystone_then_refresh_layout",
+            "keystone_conditioned",
+            "not_full_rune_page_joint_sample"
+          ],
+          "rune_candidates": [
+            {
+              "selection": "win",
+              "keystone": 8008,
+              "metrics": {
+                "win_rate": 54.99,
+                "games": 76930
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all",
+              "risk": {
+                "score": 54.92093957212561,
+                "prior_games": 3000,
+                "observed_weight": 0.9624671587639184,
+                "reason": null,
+                "baseline": 53.15,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "selection": "pick",
+              "keystone": 8008,
+              "metrics": {
+                "win_rate": 54.99,
+                "games": 76930
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all",
+              "risk": {
+                "score": 54.92093957212561,
+                "prior_games": 3000,
+                "observed_weight": 0.9624671587639184,
+                "reason": null,
+                "baseline": 53.15,
+                "risk_level": "very-low"
+              }
+            }
+          ],
+          "item_table_count": 12,
+          "sample_table": "item_combination:joint_build_sample:payload.builtBootSet3",
+          "sample_rows": [
+            {
+              "identifiers": [
+                "2523",
+                "3006",
+                "3085"
+              ],
+              "metrics": {
+                "win_rate": 60.86,
+                "pick_rate": 4.13,
+                "games": 3191
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[4]",
+              "risk": {
+                "score": 58.01070263285414,
+                "prior_games": 3000,
+                "observed_weight": 0.5154256178323373,
+                "reason": null,
+                "baseline": 54.98,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "identifiers": [
+                "3032",
+                "3085",
+                "3006"
+              ],
+              "metrics": {
+                "win_rate": 59.68,
+                "pick_rate": 4.74,
+                "games": 3666
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[2]",
+              "risk": {
+                "score": 57.56478847884788,
+                "prior_games": 3000,
+                "observed_weight": 0.54995499549955,
+                "reason": null,
+                "baseline": 54.98,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "identifiers": [
+                "2523",
+                "3085",
+                "3006"
+              ],
+              "metrics": {
+                "win_rate": 63.4,
+                "pick_rate": 1.19,
+                "games": 918
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[10]",
+              "risk": {
+                "score": 56.95283307810107,
+                "prior_games": 3000,
+                "observed_weight": 0.2343032159264931,
+                "reason": null,
+                "baseline": 54.98,
+                "risk_level": "very-low"
+              }
+            }
+          ]
+        },
+        {
+          "risk_level": "very-high",
+          "recommended_selection": "win",
+          "keystone": 8008,
+          "patch": "16.20",
+          "cache_hit": true,
+          "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all",
+          "item_source": {
+            "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all&patch=16.20&keystone=8008",
+            "query": {
+              "champion": "jinx",
+              "mode": "aram",
+              "patch": "16.20",
+              "lane": "all",
+              "tier": "all",
+              "region": "all",
+              "keystone": 8008,
+              "opponent": null,
+              "opponent_lane": "all"
+            },
+            "resolved": {
+              "champion": "jinx",
+              "cid": 222,
+              "mode": "aram",
+              "patch": "16.20",
+              "lane": "all",
+              "tier": "all",
+              "region": "all",
+              "status": 200,
+              "key": "jinx_all_aram_list_all_16.20_all__all_k8008",
+              "keystone": 8008,
+              "champion_name": "Jinx",
+              "current_patch": "16.20"
+            },
+            "collected_at": "2026-10-16T21:36:06.868704+00:00",
+            "cache_hit": true
+          },
+          "policy": {
+            "method": "prior_weighted_mean",
+            "prior_games": 500,
+            "baseline": 53.15,
+            "baseline_source": "champion_query_overview",
+            "item_baseline": 54.98,
+            "item_baseline_source": "item_source.champion_query_overview",
+            "score_unit": "percent",
+            "not_calibrated": true
+          },
+          "warnings": [
+            "Rune suggestions describe layouts and do not establish a joint sample or page-wide metrics.",
+            "rune_scope_primary_not_joint_page",
+            "only_two_upstream_layout_candidates",
+            "local_risk_not_draftgap_prediction",
+            "selected_keystone_then_refresh_layout",
+            "keystone_conditioned",
+            "not_full_rune_page_joint_sample"
+          ],
+          "rune_candidates": [
+            {
+              "selection": "win",
+              "keystone": 8008,
+              "metrics": {
+                "win_rate": 54.99,
+                "games": 76930
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all",
+              "risk": {
+                "score": 54.97811830040037,
+                "prior_games": 500,
+                "observed_weight": 0.993542554565414,
+                "reason": null,
+                "baseline": 53.15,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "selection": "pick",
+              "keystone": 8008,
+              "metrics": {
+                "win_rate": 54.99,
+                "games": 76930
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all",
+              "risk": {
+                "score": 54.97811830040037,
+                "prior_games": 500,
+                "observed_weight": 0.993542554565414,
+                "reason": null,
+                "baseline": 53.15,
+                "risk_level": "very-high"
+              }
+            }
+          ],
+          "item_table_count": 12,
+          "sample_table": "item_combination:joint_build_sample:payload.builtBootSet3",
+          "sample_rows": [
+            {
+              "identifiers": [
+                "2523",
+                "3085",
+                "3006"
+              ],
+              "metrics": {
+                "win_rate": 63.4,
+                "pick_rate": 1.19,
+                "games": 918
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[10]",
+              "risk": {
+                "score": 60.43102961918195,
+                "prior_games": 500,
+                "observed_weight": 0.6473906911142454,
+                "reason": null,
+                "baseline": 54.98,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "identifiers": [
+                "2523",
+                "3006",
+                "3085"
+              ],
+              "metrics": {
+                "win_rate": 60.86,
+                "pick_rate": 4.13,
+                "games": 3191
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[4]",
+              "risk": {
+                "score": 60.06346789487944,
+                "prior_games": 500,
+                "observed_weight": 0.8645353562720131,
+                "reason": null,
+                "baseline": 54.98,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "identifiers": [
+                "3032",
+                "3085",
+                "3031"
+              ],
+              "metrics": {
+                "win_rate": 62.92,
+                "pick_rate": 0.84,
+                "games": 650
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtBootSet3[14]",
+              "risk": {
+                "score": 59.46782608695652,
+                "prior_games": 500,
+                "observed_weight": 0.5652173913043478,
+                "reason": null,
+                "baseline": 54.98,
+                "risk_level": "very-high"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "middle",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null,
+        "opponent": "annie",
+        "opponent_lane": "middle"
+      },
+      "status": "passed",
+      "http_queries": 1,
+      "warm_repeat_reused": true,
+      "levels": [
+        {
+          "risk_level": "very-low",
+          "recommended_selection": "win",
+          "keystone": 8112,
+          "patch": "16.20",
+          "cache_hit": false,
+          "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+          "item_source": {
+            "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+            "query": {
+              "champion": "ahri",
+              "mode": "ranked",
+              "patch": null,
+              "lane": "middle",
+              "tier": "emerald_plus",
+              "region": "all",
+              "keystone": null,
+              "opponent": "annie",
+              "opponent_lane": "middle"
+            },
+            "resolved": {
+              "champion": "ahri",
+              "cid": 103,
+              "mode": "ranked",
+              "patch": "16.20",
+              "lane": "middle",
+              "tier": "emerald_plus",
+              "region": "all",
+              "status": 200,
+              "key": "ahri_middle_ranked_list_emerald_plus_16.20_all_annie_middle",
+              "keystone": null,
+              "opponent": "annie",
+              "opponent_id": 1,
+              "opponent_name": "Annie",
+              "opponent_lane": "middle",
+              "effective_opponent_lane": "middle",
+              "champion_name": "Ahri",
+              "current_patch": "16.20",
+              "effective_lane": "middle"
+            },
+            "collected_at": "2026-10-16T21:36:07.729465+00:00",
+            "cache_hit": false
+          },
+          "policy": {
+            "method": "prior_weighted_mean",
+            "prior_games": 3000,
+            "baseline": 49.32,
+            "baseline_source": "champion_query_overview",
+            "item_baseline": 49.32,
+            "item_baseline_source": "item_source.champion_query_overview",
+            "score_unit": "percent",
+            "not_calibrated": true
+          },
+          "warnings": [
+            "Rune suggestions describe layouts and do not establish a joint sample or page-wide metrics.",
+            "rune_scope_primary_not_joint_page",
+            "only_two_upstream_layout_candidates",
+            "local_risk_not_draftgap_prediction",
+            "opponent_conditioned",
+            "keystone_filter_unavailable",
+            "not_joint_build_sample",
+            "low_item_sample"
+          ],
+          "rune_candidates": [
+            {
+              "selection": "win",
+              "keystone": 8112,
+              "metrics": {
+                "win_rate": 49.94,
+                "games": 1666
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+              "risk": {
+                "score": 49.541371624517794,
+                "prior_games": 3000,
+                "observed_weight": 0.35705100728675526,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "selection": "pick",
+              "keystone": 8112,
+              "metrics": {
+                "win_rate": 49.94,
+                "games": 1666
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+              "risk": {
+                "score": 49.541371624517794,
+                "prior_games": 3000,
+                "observed_weight": 0.35705100728675526,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-low"
+              }
+            }
+          ],
+          "item_table_count": 11,
+          "sample_table": "item_combination:joint_build_sample:payload.startSet",
+          "sample_rows": [
+            {
+              "identifiers": [
+                "1082",
+                "2031"
+              ],
+              "metrics": {
+                "win_rate": 75,
+                "pick_rate": 0.21,
+                "games": 4
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.startSet[1]",
+              "risk": {
+                "score": 49.354194407456724,
+                "prior_games": 3000,
+                "observed_weight": 0.0013315579227696406,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "identifiers": [
+                "1056",
+                "2003"
+              ],
+              "metrics": {
+                "win_rate": 100,
+                "pick_rate": 0.1,
+                "games": 2
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.startSet[3]",
+              "risk": {
+                "score": 49.35376415722852,
+                "prior_games": 3000,
+                "observed_weight": 0.0006662225183211193,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "identifiers": [
+                "2003",
+                "2003",
+                "2003"
+              ],
+              "metrics": {
+                "win_rate": 50,
+                "pick_rate": 0.1,
+                "games": 2
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.startSet[2]",
+              "risk": {
+                "score": 49.32045303131246,
+                "prior_games": 3000,
+                "observed_weight": 0.0006662225183211193,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-low"
+              }
+            }
+          ]
+        },
+        {
+          "risk_level": "very-high",
+          "recommended_selection": "win",
+          "keystone": 8112,
+          "patch": "16.20",
+          "cache_hit": true,
+          "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+          "item_source": {
+            "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+            "query": {
+              "champion": "ahri",
+              "mode": "ranked",
+              "patch": null,
+              "lane": "middle",
+              "tier": "emerald_plus",
+              "region": "all",
+              "keystone": null,
+              "opponent": "annie",
+              "opponent_lane": "middle"
+            },
+            "resolved": {
+              "champion": "ahri",
+              "cid": 103,
+              "mode": "ranked",
+              "patch": "16.20",
+              "lane": "middle",
+              "tier": "emerald_plus",
+              "region": "all",
+              "status": 200,
+              "key": "ahri_middle_ranked_list_emerald_plus_16.20_all_annie_middle",
+              "keystone": null,
+              "opponent": "annie",
+              "opponent_id": 1,
+              "opponent_name": "Annie",
+              "opponent_lane": "middle",
+              "effective_opponent_lane": "middle",
+              "champion_name": "Ahri",
+              "current_patch": "16.20",
+              "effective_lane": "middle"
+            },
+            "collected_at": "2026-10-16T21:36:07.729465+00:00",
+            "cache_hit": true
+          },
+          "policy": {
+            "method": "prior_weighted_mean",
+            "prior_games": 500,
+            "baseline": 49.32,
+            "baseline_source": "champion_query_overview",
+            "item_baseline": 49.32,
+            "item_baseline_source": "item_source.champion_query_overview",
+            "score_unit": "percent",
+            "not_calibrated": true
+          },
+          "warnings": [
+            "Rune suggestions describe layouts and do not establish a joint sample or page-wide metrics.",
+            "rune_scope_primary_not_joint_page",
+            "only_two_upstream_layout_candidates",
+            "local_risk_not_draftgap_prediction",
+            "opponent_conditioned",
+            "keystone_filter_unavailable",
+            "not_joint_build_sample",
+            "low_item_sample"
+          ],
+          "rune_candidates": [
+            {
+              "selection": "win",
+              "keystone": 8112,
+              "metrics": {
+                "win_rate": 49.94,
+                "games": 1666
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+              "risk": {
+                "score": 49.79687903970452,
+                "prior_games": 500,
+                "observed_weight": 0.7691597414589104,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "selection": "pick",
+              "keystone": 8112,
+              "metrics": {
+                "win_rate": 49.94,
+                "games": 1666
+              },
+              "metric_scope": "keystone_observation",
+              "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+              "risk": {
+                "score": 49.79687903970452,
+                "prior_games": 500,
+                "observed_weight": 0.7691597414589104,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-high"
+              }
+            }
+          ],
+          "item_table_count": 11,
+          "sample_table": "item_combination:joint_build_sample:payload.startSet",
+          "sample_rows": [
+            {
+              "identifiers": [
+                "1082",
+                "2031"
+              ],
+              "metrics": {
+                "win_rate": 75,
+                "pick_rate": 0.21,
+                "games": 4
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.startSet[1]",
+              "risk": {
+                "score": 49.523809523809526,
+                "prior_games": 500,
+                "observed_weight": 0.007936507936507936,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "identifiers": [
+                "1056",
+                "2003"
+              ],
+              "metrics": {
+                "win_rate": 100,
+                "pick_rate": 0.1,
+                "games": 2
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.startSet[3]",
+              "risk": {
+                "score": 49.52191235059761,
+                "prior_games": 500,
+                "observed_weight": 0.00398406374501992,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "identifiers": [
+                "2003",
+                "2003",
+                "2003"
+              ],
+              "metrics": {
+                "win_rate": 50,
+                "pick_rate": 0.1,
+                "games": 2
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.startSet[2]",
+              "risk": {
+                "score": 49.32270916334661,
+                "prior_games": 500,
+                "observed_weight": 0.00398406374501992,
+                "reason": null,
+                "baseline": 49.32,
+                "risk_level": "very-high"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "query": {
+        "champion": "jinx",
+        "mode": "arena",
+        "patch": null,
+        "lane": "all",
+        "tier": "all",
+        "region": "all",
+        "keystone": null,
+        "opponent": null,
+        "opponent_lane": "all"
+      },
+      "status": "passed",
+      "http_queries": 1,
+      "warm_repeat_reused": true,
+      "levels": [
+        {
+          "risk_level": "very-low",
+          "recommended_selection": null,
+          "keystone": null,
+          "patch": "16.20",
+          "cache_hit": false,
+          "source_url": "https://lolalytics.com/lol/jinx/arena/build/q-data.json?tier=all&region=all",
+          "item_source": {
+            "source_url": "https://lolalytics.com/lol/jinx/arena/build/q-data.json?tier=all&region=all",
+            "query": {
+              "champion": "jinx",
+              "mode": "arena",
+              "patch": null,
+              "lane": "all",
+              "tier": "all",
+              "region": "all",
+              "keystone": null,
+              "opponent": null,
+              "opponent_lane": "all"
+            },
+            "resolved": {
+              "champion": "jinx",
+              "cid": 222,
+              "mode": "arena",
+              "patch": "16.20",
+              "lane": "all",
+              "tier": "all",
+              "region": "all",
+              "status": 200,
+              "key": "jinx_all_arena_list_all_16.20_all__all",
+              "keystone": null,
+              "champion_name": "Jinx",
+              "current_patch": "16.20"
+            },
+            "collected_at": "2026-10-16T21:36:08.834959+00:00",
+            "cache_hit": false
+          },
+          "policy": {
+            "method": "pick_rate",
+            "prior_games": null,
+            "baseline": null,
+            "baseline_source": null,
+            "item_baseline": null,
+            "item_baseline_source": null,
+            "score_unit": null,
+            "not_calibrated": true
+          },
+          "warnings": [
+            "Arena item, combination, and augment win rates are suppressed by policy; pick rates and game counts remain available.",
+            "Unrecognized Arena payload fields were discarded by policy.",
+            "risk_not_applicable_to_arena_popularity"
+          ],
+          "rune_candidates": [],
+          "item_table_count": 18,
+          "sample_table": "item_combination:joint_build_sample:payload.builtItemSet3",
+          "sample_rows": [
+            {
+              "identifiers": [
+                "223006",
+                "223031",
+                "223085"
+              ],
+              "metrics": {
+                "win_rate": null,
+                "pick_rate": 7.66,
+                "games": 5309
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtItemSet3[0]",
+              "risk": {
+                "score": null,
+                "criterion": "pick_rate",
+                "reason": "risk_not_applicable_to_arena_popularity",
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "identifiers": [
+                "223006",
+                "220002",
+                "220002"
+              ],
+              "metrics": {
+                "win_rate": null,
+                "pick_rate": 4.51,
+                "games": 3128
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtItemSet3[1]",
+              "risk": {
+                "score": null,
+                "criterion": "pick_rate",
+                "reason": "risk_not_applicable_to_arena_popularity",
+                "risk_level": "very-low"
+              }
+            },
+            {
+              "identifiers": [
+                "223006",
+                "226676",
+                "223031"
+              ],
+              "metrics": {
+                "win_rate": null,
+                "pick_rate": 1.96,
+                "games": 1361
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtItemSet3[2]",
+              "risk": {
+                "score": null,
+                "criterion": "pick_rate",
+                "reason": "risk_not_applicable_to_arena_popularity",
+                "risk_level": "very-low"
+              }
+            }
+          ]
+        },
+        {
+          "risk_level": "very-high",
+          "recommended_selection": null,
+          "keystone": null,
+          "patch": "16.20",
+          "cache_hit": true,
+          "source_url": "https://lolalytics.com/lol/jinx/arena/build/q-data.json?tier=all&region=all",
+          "item_source": {
+            "source_url": "https://lolalytics.com/lol/jinx/arena/build/q-data.json?tier=all&region=all",
+            "query": {
+              "champion": "jinx",
+              "mode": "arena",
+              "patch": null,
+              "lane": "all",
+              "tier": "all",
+              "region": "all",
+              "keystone": null,
+              "opponent": null,
+              "opponent_lane": "all"
+            },
+            "resolved": {
+              "champion": "jinx",
+              "cid": 222,
+              "mode": "arena",
+              "patch": "16.20",
+              "lane": "all",
+              "tier": "all",
+              "region": "all",
+              "status": 200,
+              "key": "jinx_all_arena_list_all_16.20_all__all",
+              "keystone": null,
+              "champion_name": "Jinx",
+              "current_patch": "16.20"
+            },
+            "collected_at": "2026-10-16T21:36:08.834959+00:00",
+            "cache_hit": true
+          },
+          "policy": {
+            "method": "pick_rate",
+            "prior_games": null,
+            "baseline": null,
+            "baseline_source": null,
+            "item_baseline": null,
+            "item_baseline_source": null,
+            "score_unit": null,
+            "not_calibrated": true
+          },
+          "warnings": [
+            "Arena item, combination, and augment win rates are suppressed by policy; pick rates and game counts remain available.",
+            "risk_not_applicable_to_arena_popularity"
+          ],
+          "rune_candidates": [],
+          "item_table_count": 18,
+          "sample_table": "item_combination:joint_build_sample:payload.builtItemSet3",
+          "sample_rows": [
+            {
+              "identifiers": [
+                "223006",
+                "223031",
+                "223085"
+              ],
+              "metrics": {
+                "win_rate": null,
+                "pick_rate": 7.66,
+                "games": 5309
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtItemSet3[0]",
+              "risk": {
+                "score": null,
+                "criterion": "pick_rate",
+                "reason": "risk_not_applicable_to_arena_popularity",
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "identifiers": [
+                "223006",
+                "220002",
+                "220002"
+              ],
+              "metrics": {
+                "win_rate": null,
+                "pick_rate": 4.51,
+                "games": 3128
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtItemSet3[1]",
+              "risk": {
+                "score": null,
+                "criterion": "pick_rate",
+                "reason": "risk_not_applicable_to_arena_popularity",
+                "risk_level": "very-high"
+              }
+            },
+            {
+              "identifiers": [
+                "223006",
+                "226676",
+                "223031"
+              ],
+              "metrics": {
+                "win_rate": null,
+                "pick_rate": 1.96,
+                "games": 1361
+              },
+              "metric_scope": "joint_build_sample",
+              "source_path": "payload.builtItemSet3[2]",
+              "risk": {
+                "score": null,
+                "criterion": "pick_rate",
+                "reason": "risk_not_applicable_to_arena_popularity",
+                "risk_level": "very-high"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "total_source_gets": 6
+}

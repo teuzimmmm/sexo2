@@ -30,10 +30,12 @@ def _slot_block(slot: str, item: dict, path: str) -> ItemBlock:
     return ItemBlock(slot, [choice], {}, path, True)
 
 
-def build_matchup_page(snapshot, *, min_games: int = 100) -> BuildPage:
-    """Build one opponent-specific suggestion from summary.win in one snapshot."""
+def build_matchup_page(snapshot, *, min_games: int = 100, selection: str = "win") -> BuildPage:
+    """Build one opponent-specific suggestion from a summary selection."""
     if isinstance(min_games, bool) or not isinstance(min_games, int) or min_games < 0:
         raise _schema("min_games must be a non-negative integer")
+    if selection not in ("win", "pick"):
+        raise _schema("selection must be 'win' or 'pick'")
 
     query = _object(getattr(snapshot, "query", None), "snapshot.query")
     resolved = _object(getattr(snapshot, "resolved", None), "snapshot.resolved")
@@ -60,20 +62,20 @@ def build_matchup_page(snapshot, *, min_games: int = 100) -> BuildPage:
 
     raw = _object(getattr(snapshot, "raw", None), "snapshot.raw")
     summary = _object(raw.get("summary"), "payload.summary", missing_unavailable=True)
-    suggestion = _object(summary.get("win"), "payload.summary.win", missing_unavailable=True)
-    runes_source = _object(suggestion.get("runes"), "payload.summary.win.runes", missing_unavailable=True)
-    rune_set = _object(runes_source.get("set"), "payload.summary.win.runes.set", missing_unavailable=True)
+    suggestion = _object(summary.get(selection), f"payload.summary.{selection}", missing_unavailable=True)
+    runes_source = _object(suggestion.get("runes"), f"payload.summary.{selection}.runes", missing_unavailable=True)
+    rune_set = _object(runes_source.get("set"), f"payload.summary.{selection}.runes.set", missing_unavailable=True)
     runes = {}
     for slot, size in (("pri", 4), ("sec", 2), ("mod", 3)):
         values = rune_set.get(slot)
         if values is None:
             raise DataUnavailable(f"matchup rune layout is missing {slot}")
         if not isinstance(values, list):
-            raise _schema(f"payload.summary.win.runes.set.{slot} must be an array")
+            raise _schema(f"payload.summary.{selection}.runes.set.{slot} must be an array")
         if len(values) != size:
             raise DataUnavailable(f"matchup rune layout has incomplete {slot}")
         runes[slot] = [
-            _opaque_id(value, f"payload.summary.win.runes.set.{slot}[{index}]")
+            _opaque_id(value, f"payload.summary.{selection}.runes.set.{slot}[{index}]")
             for index, value in enumerate(values)
         ]
     primary = rune_set["pri"][0]
@@ -82,10 +84,10 @@ def build_matchup_page(snapshot, *, min_games: int = 100) -> BuildPage:
     if "page" in runes_source:
         page = runes_source["page"]
         if not isinstance(page, dict):
-            raise _schema("payload.summary.win.runes.page must be an object")
+            raise _schema(f"payload.summary.{selection}.runes.page must be an object")
         runes["page"] = deepcopy(page)
 
-    items = _object(suggestion.get("items"), "payload.summary.win.items", missing_unavailable=True)
+    items = _object(suggestion.get("items"), f"payload.summary.{selection}.items", missing_unavailable=True)
     blocks = []
     warnings = ["opponent_conditioned", "keystone_filter_unavailable", "not_joint_build_sample"]
 
@@ -93,11 +95,11 @@ def build_matchup_page(snapshot, *, min_games: int = 100) -> BuildPage:
     if starting is None:
         warnings.append("starting_items_unavailable")
     else:
-        starting = _object(starting, "payload.summary.win.items.start")
+        starting = _object(starting, f"payload.summary.{selection}.items.start")
         if starting.get("set") is None or starting.get("set") == []:
             warnings.append("starting_items_unavailable")
         else:
-            block = _items_block("starting", starting, "payload.summary.win.items.start", ordered=True)
+            block = _items_block("starting", starting, f"payload.summary.{selection}.items.start", ordered=True)
             blocks.append(block)
             games = block.metrics.get("games")
             if games is None:
@@ -110,8 +112,8 @@ def build_matchup_page(snapshot, *, min_games: int = 100) -> BuildPage:
         if item is None:
             warnings.append(f"{slot}_unavailable")
             continue
-        item = _object(item, f"payload.summary.win.items.{slot}")
-        block = _slot_block(slot, item, f"payload.summary.win.items.{slot}")
+        item = _object(item, f"payload.summary.{selection}.items.{slot}")
+        block = _slot_block(slot, item, f"payload.summary.{selection}.items.{slot}")
         blocks.append(block)
         games = block.choices[0].metrics.get("games")
         if games is None:
@@ -124,7 +126,7 @@ def build_matchup_page(snapshot, *, min_games: int = 100) -> BuildPage:
         if alternatives is None or alternatives == []:
             warnings.append(f"{slot}_unavailable")
             continue
-        block = _items_block(slot, alternatives, f"payload.summary.win.items.{slot}", ordered=False)
+        block = _items_block(slot, alternatives, f"payload.summary.{selection}.items.{slot}", ordered=False)
         blocks.append(block)
         for choice in block.choices:
             games = choice.metrics.get("games")

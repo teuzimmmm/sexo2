@@ -72,6 +72,18 @@ python -m lolalytics ahri --lane middle --builds
 python -m lolalytics ahri --lane middle --matchup --opponent annie --opponent-lane middle --min-games 100
 ```
 
+Para recomendações com ajuste local de risco, use `--recommend` e escolha
+`--risk-level very-low|low|medium|high|very-high`; o padrão é `medium`.
+Arena permanece orientada por pick rate. A preferência do SEXO2 fica em
+Configurações e o serviço de recomendações a aplica quando não há override.
+Fórmula, níveis, amostras, fontes e limites estão em [RISCO.md](RISCO.md).
+
+```sh
+python -m lolalytics ahri --lane middle --recommend --risk-level medium
+python -m lolalytics ahri --lane middle --recommend --risk-level high --opponent annie --opponent-lane middle
+python -m lolalytics jinx --mode arena --tier all --recommend
+```
+
 ## Usar em Python
 
 ```python
@@ -163,6 +175,9 @@ python -m unittest discover -s tests -p 'test_lolalytics_*.py' -q
 # Integração real explícita: 8 consultas públicas, até 3 tentativas por consulta.
 python scripts/lolalytics_probe.py --live
 
+# Risco real explícito: quatro cenários fixos, dois níveis por cenário.
+python scripts/lolalytics_risk_probe.py --live
+
 # Regressões padrão do SEXO2 no ambiente Windows suportado.
 python -m unittest discover -s tests -q
 ```
@@ -190,8 +205,8 @@ nem transforma endpoints internos em API pública autorizada/estável.
 
 ## Próximas fases
 
-1. Definir adaptador do serviço SEXO2 e o ciclo de vida do cliente/cache sem
-   bloquear a UI; levar fonte, filtros, patch, horário, availability e erros.
+1. Associar recomendações ao alvo atual do draft e descartar respostas antigas
+   quando a seleção de campeão ou adversário mudar.
 2. Resolver IDs/nomes com catálogo validado por modo; projetar cartinhas com
    pick rate, jogos e alternativas, respeitando as regras vigentes.
 3. Tratar importação de itens/runas como trabalho separado, validando IDs e o
@@ -199,8 +214,9 @@ nem transforma endpoints internos em API pública autorizada/estável.
 4. Pesquisar variantes adicionais de ARAM e filtros/regiões fora da allowlist
    apenas com reproduções novas e revisão das políticas.
 
-Pengu, importação, overlay, seleção de campeões, skins e atualizador não foram
-alterados. Nenhum instalador, atualização ou release foi produzido.
+Integração das recomendações ao draft/overlay, importação de runas/itens e
+escrita no cliente LoL não foram implementadas. Nenhum instalador, atualização
+ou release foi produzido.
 
 Arquitetura: [ARQUITETURA.md](ARQUITETURA.md). Evidências e matriz:
 [FONTES.md](FONTES.md). Plano e rodadas: [PLANO.md](PLANO.md).
