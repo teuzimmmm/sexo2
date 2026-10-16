@@ -25,6 +25,11 @@ Builds seguintes recuperam esses binários da baseline anterior do projeto.
 Os testes de navegador usam cliente e servidor simulados. A aparência e o uso
 real ainda precisam ser observados no cliente LoL.
 
+## Coletor LoLalytics (fase 1)
+
+Biblioteca e CLI independentes para Ranked, ARAM e Arena, sem integração no
+cliente nesta fase. Veja [uso, fontes e limites](docs/lolalytics/README.md).
+
 ## Créditos
 
 Base Rose, Pengu Loader, LTK e dependências mantêm suas licenças/atribuições.
