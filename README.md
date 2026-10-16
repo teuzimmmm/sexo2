@@ -35,6 +35,11 @@ das versões antigas no instalador inicial. Isso é requisito para publicação;
 a dependência atual de pastas Rose ainda não foi removida. A arquitetura,
 as evidências e os critérios estão em [SEXO2_2_0.md](docs/SEXO2_2_0.md).
 
+O fluxo de recomendações na seleção, importação e painel específico já está
+integrado no código. Testes isolados e fontes reais foram verificados; a
+validação no cliente Windows ainda está pendente. Consulte
+[DESENVOLVIMENTO_2_0.md](docs/DESENVOLVIMENTO_2_0.md) para uso, testes e limites.
+
 ## Coletor LoLalytics (fase 1)
 
 Biblioteca e CLI independentes para Ranked, ARAM e Arena, sem integração no

@@ -293,6 +293,8 @@ class MessageHandler:
 
     def _route(self, payload_type: Optional[str], payload: dict) -> None:
         # Route to appropriate handler
+        if payload_type in ('sexo2-build-context', 'sexo2-build-query', 'sexo2-build-import'):
+            self._handle_builds(payload); return
         if payload_type == 'sexo2-library-request':
             self._handle_library(payload); return
         if payload_type == 'sexo2-update-request':
@@ -641,6 +643,84 @@ class MessageHandler:
         if service is not None:service.watching=False;service.cancel.set()
         worker=getattr(self,'_library_worker',None)
         if worker is not None:worker.close(timeout=.3)
+
+    def _handle_builds(self, payload):
+        from sexo2.services.work_queue import SerialWorker
+        from sexo2.services.draft import BuildError
+        action = payload.get('type', '').removeprefix('sexo2-build-')
+        request_id = payload.get('requestId')
+        if not isinstance(request_id, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', request_id):
+            return
+
+        def send(kind, **data):
+            self._send_response(json.dumps(dict(type=kind, requestId=request_id, action=action, **data),
+                                           ensure_ascii=False, allow_nan=False))
+
+        def failed(error):
+            # Unknown exceptions may include HTTP credentials/paths: never echo them.
+            message = str(error) if isinstance(error, BuildError) else 'Não foi possível concluir a operação. Reconecte ou tente novamente.'
+            send('sexo2-build-error', error=message)
+
+        with self._background_lock:
+            if getattr(self, '_builds_closed', False):
+                return
+            if not hasattr(self, '_build_service'):
+                from lolalytics import Client
+                from sexo2.services.builds import BuildService
+                from sexo2.services.loadouts import LoadoutImporter
+                lcu = self.skin_scraper.lcu if self.skin_scraper else None
+                if lcu is None:
+                    failed(BuildError('O cliente LoL ainda não está conectado.')); return
+                self._build_service = BuildService(lcu, Client(cache_dir=get_user_data_dir() / 'lolalytics-cache'))
+                self._loadout_importer = LoadoutImporter(lcu, get_user_data_dir() / 'sexo2-loadouts.json')
+                self._build_context_worker = SerialWorker('SEXO2-Build-context', capacity=1)
+                self._build_worker = SerialWorker('SEXO2-Builds', capacity=2)
+            service, importer = self._build_service, self._loadout_importer
+        ticket = service.begin_query() if action == 'query' else None
+
+        def work():
+            if getattr(self, '_builds_closed', False):
+                return
+            if action == 'context':
+                send('sexo2-build-context-data', context=service.context())
+            elif action == 'query':
+                result = service.query(payload, ticket)
+                # Names are convenience metadata; missing names never fabricate statistics.
+                importer.catalog.bind_revision(result['revision'])
+                try:
+                    result['itemNames'] = importer.catalog.names('items')
+                    result['runeNames'] = importer.catalog.names('perks')
+                    if result.get('arena') is not None:
+                        result['augmentNames'] = importer.catalog.names('cherry-augments')
+                except Exception:
+                    result['warnings'].append('Catálogo de nomes indisponível; exibindo IDs da fonte.')
+                send('sexo2-build-data', result=result)
+            elif action == 'import':
+                result = service.import_selection(payload, importer)
+                send('sexo2-build-imported', result=result)
+        worker = self._build_context_worker if action == 'context' else self._build_worker
+        if not worker.submit(work, failed):
+            failed(BuildError('Há operações de builds em andamento. Aguarde e tente novamente.'))
+
+    def invalidate_builds(self):
+        service = getattr(self, '_build_service', None)
+        if service is not None:
+            service.invalidate()
+
+    def close_builds(self):
+        with self._background_lock:
+            self._builds_closed = True
+            service = getattr(self, '_build_service', None)
+            if service is not None:
+                service.stop()
+        if service is None:
+            return
+        for name in ('_build_context_worker', '_build_worker'):
+            worker = getattr(self, name, None)
+            if worker is not None:
+                worker.close(timeout=.1)
+        # HTTP requests have transport deadlines; waiting for them must not hold shutdown.
+        threading.Thread(target=service.close, name='SEXO2-Build-close', daemon=True).start()
 
     def _queue_library_scan(self):
         self._library_scan_pending=True

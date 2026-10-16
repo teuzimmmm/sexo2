@@ -209,17 +209,21 @@ existente e não repete a limpeza completa a cada versão.
 
 ## Ordem das próximas entregas e critérios de publicação
 
-1. **Fundação de caminhos:** layout central e configuração nativa consistente;
-   testes de perfis/sessões, elevação, caminhos personalizados e colisão 1.x.
-2. **Migração/instalador:** inventário e plano sem mutações, depois executor e
-   integração ao instalador. Reutilizar as garantias do updater sem confundir
-   rollback de patch com migração de dados/Registro.
-3. **Orquestração de sessão/recomendações:** contexto versionado, alvo explícito,
+Por orientação posterior do usuário, instalação própria e limpeza ficam na fase
+final. O desenvolvimento funcional segue [DESENVOLVIMENTO_2_0.md](DESENVOLVIMENTO_2_0.md).
+
+1. **Orquestração de sessão/recomendações:** contexto versionado, alvo explícito,
    risco salvo, cache, limites e descarte de respostas atrasadas.
-4. **Importação e UI:** contratos reais do LCU, orçamento de páginas, escolhas
+2. **Importação e UI:** contratos reais do LCU, orçamento de páginas, escolhas
    substituíveis e apresentação nativa no painel; sem alterar skins por acidente.
-5. **Validação final em Windows e publicação:** cumprir os itens abaixo antes
-   de gerar a versão inicial definitiva da 2.0.
+3. **Validação funcional em Windows:** fluxo real de seleção, importação e
+   regressões das funções existentes, antes de apresentar o programa como pronto.
+4. **Fase final — caminhos e migração/instalador:** layout central e configuração
+   nativa, inventário/plano, executor e integração ao instalador. Preservar também
+   `sexo2-loadouts.json`, que identifica as páginas gerenciadas no cliente.
+   Testar perfis/sessões, elevação e a colisão com a instalação 1.x. Reutilizar as
+   garantias do updater sem confundir rollback de patch com migração de Registro.
+5. **Publicação:** cumprir os critérios abaixo para a versão inicial definitiva.
 
 - Instalação limpa funciona em usuário sem nenhuma pasta Rose preexistente.
 - Migração cobre Local/Roaming e variantes comprovadas, inclusive as relatadas
@@ -236,10 +240,10 @@ existente e não repete a limpeza completa a cada versão.
 - Fluxo normal do programa e funções atuais passam pelas regressões pertinentes;
   o usuário confirma a experiência no cliente real antes da publicação.
 
-## Escopo desta rodada
+## Escopo da rodada de arquitetura
 
 Auditoria do checkout, arquitetura de destino e requisitos de release registrados.
 Não houve exclusão, consulta ao Registro do PC, mudança de caminhos em runtime,
 implementação do executor, compilação de instalador, alteração da versão ou release.
-O próximo bloco de implementação é a fundação de caminhos e o inventário/plano
-de migração, antes de habilitar qualquer remoção.
+A execução funcional posterior está registrada em
+[DESENVOLVIMENTO_2_0.md](DESENVOLVIMENTO_2_0.md). Nenhuma remoção foi habilitada.

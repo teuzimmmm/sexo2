@@ -116,6 +116,7 @@ class PenguSkinMonitorThread(threading.Thread):
     def stop(self) -> None:
         """Stop the server"""
         try:
+            self.message_handler.close_builds()
             self.message_handler.close_library()
             self.websocket_server.stop()
         finally:
@@ -171,6 +172,7 @@ class PenguSkinMonitorThread(threading.Thread):
     
     def _broadcast_phase_change(self, phase: str) -> None:
         """Broadcast phase change (delegates to broadcaster)"""
+        self.message_handler.invalidate_builds()
         self.broadcaster.broadcast_phase_change(phase)
     
     def _broadcast_language_changed(self) -> None:

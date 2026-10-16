@@ -1,0 +1,26 @@
+{
+  "patch": "16.20",
+  "items": {
+    "source_url": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/items.json",
+    "source_sha256": "6b3e3479ae3c6ffba4d7845f95416897c891f392838ee5fb3671930ddec60c6b",
+    "fixture_sha256": "a41deb5f88f9e94e47945efe1146d4340c3af8b260cfb297afec28022356275e",
+    "projection": "id/name for items referenced by Ahri keystone fixtures"
+  },
+  "perkstyles": {
+    "source_url": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/perkstyles.json",
+    "fixture_sha256": "c11aa743ef5283cb8b802bb7537aa3b065b17402f14ffcdc5d943668036f7a7b",
+    "projection": "schemaVersion and styles id/slots, observed HTTP 200 on 2026-10-16"
+  },
+  "perks": {
+    "source_url": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/perks.json",
+    "source_sha256": "dd0948288ac0293caf71675cabbd138a7ad512b7a7cbb15c084fa9662233c13a",
+    "fixture_sha256": "08d920eacf595a34a8ef1212d1e9136438e38c8325394fd33ed93c98610c4f92",
+    "projection": "id/name for rune IDs in Ahri keystone fixtures"
+  },
+  "cherry-augments": {
+    "source_url": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/cherry-augments.json",
+    "source_sha256": "7b6215ddd106a56ab65b76eb814781b6679bff7f0dcc524f5bbc3f0b6cb2448d",
+    "fixture_sha256": "9021711365581057564d8b8d8b4cacfb172724a0f8d34a58b04b971cbf153da3",
+    "projection": "id/nameTRA/rarity for augment IDs observed in Arena fixture"
+  }
+}
