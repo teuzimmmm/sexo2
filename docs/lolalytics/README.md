@@ -1,4 +1,4 @@
-# Coletor LoLalytics — fase 1
+# Coletor LoLalytics
 
 Biblioteca Python independente do SEXO2, com CLI JSON. Coleta dados agregados
 públicos de campeão em **Ranked/Summoner’s Rift, ARAM e Arena** por HTTP direto,
@@ -57,6 +57,20 @@ pelo servidor. A biblioteca verifica os filtros resolvidos e retorna erro
 se a fonte recusar, ignorar ou alterar a consulta. Não trata HTTP 200 sozinho
 como prova de dados válidos. ARAM rejeitou até `lane=all` explícito com 404;
 por isso o construtor monta parâmetros diferentes por modo.
+
+## Builds condicionadas e planejamento
+
+Para as sugestões estruturadas WR/Common filtradas pela keystone principal, use
+`--builds`; `--keystone ID` também pode ser usado sozinho para inspecionar um
+snapshot filtrado. A terceira sugestão disponível é Highest Win de um
+adversário explícito (`--matchup --opponent annie`). Matchup não aceita filtro
+de keystone nem produz core/taxa conjunta runas+itens. Exemplos Python, limites,
+metadados e semântica completa estão em [CORE.md](CORE.md).
+
+```sh
+python -m lolalytics ahri --lane middle --builds
+python -m lolalytics ahri --lane middle --matchup --opponent annie --opponent-lane middle --min-games 100
+```
 
 ## Usar em Python
 

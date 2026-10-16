@@ -15,6 +15,8 @@ from .errors import CollectorError, DataUnavailable, QueryError, SchemaError
 from .parsing import parse_payload, sanitize_payload
 from .query import Query
 from .transport import HTTPTransport
+from .builds import BuildCollection, BuildPage, build_page
+from .matchups import build_matchup_page
 
 
 def _reject_nonfinite(_):
@@ -149,6 +151,66 @@ class Client:
 
         return self._once(query.key, operation)
 
+    @staticmethod
+    def _summary_keystone(snapshot, selection):
+        """Read the primary rune from one validated summary selection."""
+        try:
+            value = snapshot.raw["summary"][selection]["runes"]["set"]["pri"][0]
+        except (KeyError, TypeError, IndexError):
+            raise DataUnavailable(f"LoLalytics has no primary keystone for {selection}") from None
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise SchemaError(f"LoLalytics returned an invalid {selection} keystone")
+        return value
+
+    def collect_builds(self, query: Query) -> BuildCollection:
+        """Collect win and common builds conditioned on their primary keystone."""
+        if not isinstance(query, Query):
+            raise QueryError("collect_builds expects a Query")
+        if getattr(query, "opponent", None) is not None:
+            raise QueryError("collect_builds does not support opponent-filtered queries")
+        if query.mode not in ("ranked", "aram"):
+            raise QueryError("structured builds currently support ranked and ARAM only")
+
+        base = self.collect(query)
+        if query.keystone is not None:
+            pages = [build_page(base, selection, query.keystone) for selection in ("win", "pick")]
+            return BuildCollection(query=query.to_dict(), pages=pages)
+
+        selections = {name: self._summary_keystone(base, name) for name in ("win", "pick")}
+
+        pinned_patch = base.resolved["patch"]
+        pinned_lane = query.lane
+        if query.mode == "ranked" and query.lane == "all":
+            pinned_lane = base.resolved.get("effective_lane")
+            if pinned_lane is None or pinned_lane == "all":
+                raise DataUnavailable("LoLalytics did not resolve an effective ranked lane")
+        filtered_query = Query(query.champion, mode=query.mode, patch=pinned_patch,
+                               lane=pinned_lane, tier=query.tier, region=query.region)
+        snapshots = {}
+        pages = []
+        for selection in ("win", "pick"):
+            keystone = selections[selection]
+            if keystone not in snapshots:
+                keyed_query = Query(filtered_query.champion, mode=filtered_query.mode,
+                                    patch=filtered_query.patch, lane=filtered_query.lane,
+                                    tier=filtered_query.tier, region=filtered_query.region,
+                                    keystone=keystone)
+                snapshots[keystone] = self.collect(keyed_query)
+            pages.append(build_page(snapshots[keystone], selection, keystone))
+        return BuildCollection(query=query.to_dict(), pages=pages)
+
+    def collect_matchup(self, query: Query, *, min_games: int = 100) -> BuildPage:
+        """Collect one validated ranked matchup suggestion for an explicit opponent."""
+        if not isinstance(query, Query):
+            raise QueryError("collect_matchup expects a Query")
+        if query.mode != "ranked":
+            raise QueryError("matchup collection currently supports ranked only")
+        if getattr(query, "opponent", None) is None:
+            raise QueryError("collect_matchup requires an opponent")
+        if isinstance(min_games, bool) or not isinstance(min_games, int) or min_games < 0:
+            raise QueryError("min_games must be a non-negative integer")
+        return build_matchup_page(self.collect(query), min_games=min_games)
+
     def collect_many(self, queries):
         """Collect up to 20 explicit queries; cached successes allow a rerun.
 
@@ -173,6 +235,10 @@ class Client:
         """
         if not isinstance(query, Query) or query.mode != "ranked":
             raise QueryError("lazy item sets currently support ranked only")
+        if query.keystone is not None:
+            raise QueryError("lazy item sets do not support keystone-filtered queries")
+        if getattr(query, "opponent", None) is not None:
+            raise QueryError("lazy item sets do not support opponent-filtered queries")
         base = self.collect(query)
         params = {"ep": "build-itemset", "v": 1, "patch": base.resolved["patch"],
                   "c": query.champion, "lane": query.lane, "tier": query.tier,

@@ -188,6 +188,32 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
         got = nav.get(key)
         if got != want:
             raise _schema(f"resolved {key} does not match the requested filter")
+    if query.opponent is None:
+        if nav.get("vs") not in (None, "") or any(nav.get(key) is not None for key in ("vsCid", "vsName")):
+            raise _schema("resolved opponent does not match the requested filter")
+    else:
+        if nav.get("vs") != query.opponent:
+            raise _schema("resolved opponent does not match the requested filter")
+        if nav.get("vsLane") != query.opponent_lane:
+            raise _schema("resolved opponent lane does not match the requested filter")
+        nav_vs_cid = nav.get("vsCid")
+        if isinstance(nav_vs_cid, bool) or not isinstance(nav_vs_cid, int) or nav_vs_cid <= 0:
+            raise _schema("resolved opponent ID must be a positive integer")
+        nav_vs_name = nav.get("vsName")
+        if not isinstance(nav_vs_name, str) or not nav_vs_name:
+            raise _schema("resolved opponent name must be a string")
+    nav_keystone = nav.get("keystone")
+    if query.keystone is None:
+        if "keystone" in nav and (
+            isinstance(nav_keystone, bool) or not isinstance(nav_keystone, int) or nav_keystone != -1
+        ):
+            raise _schema("resolved keystone does not match the requested filter")
+    elif (
+        isinstance(nav_keystone, bool)
+        or not isinstance(nav_keystone, int)
+        or nav_keystone != query.keystone
+    ):
+        raise _schema("resolved keystone does not match the requested filter")
     nav_patch = nav.get("patch")
     if not isinstance(nav_patch, str) or not re.fullmatch(r"\d{2}\.\d{1,2}", nav_patch):
         raise _schema("nav.patch must use the observed numeric patch format")
@@ -199,6 +225,46 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
     header = payload.get("header")
     if not isinstance(header, dict):
         raise _schema("payload.header is required and must be an object")
+    effective_opponent_lane = None
+    if query.opponent is None:
+        if header.get("vs") is not None:
+            raise _schema("header contains an unexpected opponent")
+    else:
+        header_vs = header.get("vs")
+        if isinstance(header_vs, bool) or not isinstance(header_vs, int) or header_vs <= 0:
+            raise _schema("header opponent ID must be a positive integer")
+        if header_vs != nav.get("vsCid"):
+            raise _schema("header opponent ID does not match resolved navigation")
+        from .query import LANES
+        header_vs_lane = header.get("vsLane")
+        if "vsLane" not in header and query.opponent_lane != "all":
+            raise _schema("header opponent lane is missing")
+        if header_vs_lane not in (None, "all"):
+            if header_vs_lane not in LANES:
+                raise _schema("header opponent lane is outside the supported positions")
+            effective_opponent_lane = header_vs_lane
+        else:
+            default_vs_lane = header.get("defaultVsLane")
+            if default_vs_lane is not None:
+                if default_vs_lane not in LANES:
+                    raise _schema("header default opponent lane is outside the supported positions")
+                if default_vs_lane != "all":
+                    effective_opponent_lane = default_vs_lane
+            if effective_opponent_lane is None and header_vs_lane == "all":
+                effective_opponent_lane = "all"
+        if query.opponent_lane != "all" and effective_opponent_lane != query.opponent_lane:
+            raise _schema("header opponent lane does not match the requested filter")
+    effective_lane = None
+    if query.mode == "ranked":
+        effective_lane = header.get("lane")
+        if effective_lane in (None, "all"):
+            effective_lane = header.get("defaultLane")
+        if effective_lane is not None and effective_lane != "all":
+            from .query import LANES
+            if effective_lane not in LANES:
+                raise _schema("header lane is outside the supported positions")
+            if query.lane != "all" and effective_lane != query.lane:
+                raise _schema("header effective lane does not match the requested filter")
     nav_cid = nav.get("cid")
     header_cid = header.get("cid")
     if isinstance(nav_cid, bool) or not isinstance(nav_cid, int):
@@ -430,16 +496,22 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
         for key in ("champion", "cid", "mode", "patch", "lane", "tier", "region", "status", "key")
         if key in nav
     }
+    resolved["keystone"] = query.keystone
+    if query.opponent is not None:
+        resolved.update({
+            "opponent": query.opponent,
+            "opponent_id": deepcopy(nav["vsCid"]),
+            "opponent_name": deepcopy(nav["vsName"]),
+            "opponent_lane": query.opponent_lane,
+        })
+        if effective_opponent_lane is not None and effective_opponent_lane != "all":
+            resolved["effective_opponent_lane"] = deepcopy(effective_opponent_lane)
     if isinstance(nav.get("champName"), str):
         resolved["champion_name"] = nav["champName"]
     if isinstance(nav.get("currentPatch"), str):
         resolved["current_patch"] = nav["currentPatch"]
     if query.mode == "ranked":
-        effective_lane = header.get("lane", header.get("defaultLane"))
-        if effective_lane is not None:
-            from .query import LANES
-            if effective_lane not in LANES:
-                raise _schema("header lane is outside the supported positions")
+        if effective_lane is not None and effective_lane != "all":
             resolved["effective_lane"] = effective_lane
     return Snapshot(
         query=query.to_dict(), resolved=resolved, source_url=source_url,

@@ -19,17 +19,43 @@ def main(argv=None) -> int:
     parser.add_argument("--cache-dir", help="optional private directory for a resumable disk cache")
     parser.add_argument("--ttl", type=float, default=900, help="cache lifetime in seconds, 0–86400 (default 900)")
     parser.add_argument("--item-sets", action="store_true", help="also fetch reproduced ranked lazy item sets; preserve raw counters")
+    parser.add_argument("--keystone", type=int, help="filter by a primary rune ID")
+    parser.add_argument("--builds", action="store_true", help="collect win and common keystone-conditioned builds")
+    parser.add_argument("--opponent", help="explicit opponent champion slug for matchup data")
+    parser.add_argument("--opponent-lane", choices=LANES, default="all")
+    parser.add_argument("--matchup", action="store_true", help="collect one opponent-conditioned build page")
+    parser.add_argument("--min-games", type=int, default=100, help="warn on item samples below this count (0 disables the low-sample threshold)")
     args = parser.parse_args(argv)
     try:
         if len(args.champions) > 20:
             parser.error("at most 20 explicit champions per batch")
+        if args.builds and args.item_sets:
+            parser.error("--builds and --item-sets are incompatible")
+        if args.builds and args.mode == "arena":
+            parser.error("--builds currently supports ranked and ARAM only")
+        if args.item_sets and args.keystone is not None:
+            parser.error("--item-sets does not support --keystone")
+        if args.matchup and not args.opponent:
+            parser.error("--matchup requires --opponent")
+        if args.opponent and args.builds:
+            parser.error("--builds and --opponent are incompatible")
+        if args.opponent and args.item_sets:
+            parser.error("--item-sets and --opponent are incompatible")
+        if args.min_games < 0:
+            parser.error("--min-games must be non-negative")
         queries = [Query(champion, mode=args.mode, patch=args.patch, lane=args.lane,
-                         tier=args.tier, region=args.region) for champion in args.champions]
+                         tier=args.tier, region=args.region, keystone=args.keystone,
+                         opponent=args.opponent, opponent_lane=args.opponent_lane) for champion in args.champions]
         if args.item_sets and args.mode != "ranked":
             parser.error("--item-sets currently supports ranked only")
         with Client(cache_dir=args.cache_dir, ttl=args.ttl) as client:
             for query in queries:
-                result = client.collect(query).to_dict()
+                if args.matchup:
+                    result = client.collect_matchup(query, min_games=args.min_games).to_dict()
+                elif args.builds:
+                    result = client.collect_builds(query).to_dict()
+                else:
+                    result = client.collect(query).to_dict()
                 if args.item_sets:
                     result["lazy_item_sets"] = client.collect_item_sets(query)
                 print(json.dumps(result, ensure_ascii=False, allow_nan=False), flush=True)

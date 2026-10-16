@@ -238,9 +238,15 @@ with requests.Session() as session:
             print(selection, payload["summary"][selection]["items"]["core"])
 ```
 
-Este teste usa transporte de investigação. `Query` e a CLI da biblioteca
-atualmente **não expõem keystone**. Acrescentar o filtro exige contrato de
-consulta/cache, validação do filtro resolvido e testes; não está implicitamente
-implementado por existir na fonte. Não foi encontrado filtro por página completa
-de nove runas nesta investigação, nem comprovada coocorrência dessa página com
-a itemização. Importação no LoL permanece fora da fase 1.
+Este trecho descreve o estado **na data da investigação**: naquele momento,
+`Query` e a CLI ainda não expunham keystone. Desde então, a API local passou a
+expor `Query.keystone`, `--keystone` e `Client.collect_builds`, com validação e
+cache por filtro; o uso atual está em [CORE.md](CORE.md). A existência do
+parâmetro na fonte, por si só, não comprova taxa conjunta da página completa de
+nove runas com a itemização. Importação no LoL continua fora do escopo atual.
+
+Uma investigação posterior reproduziu a rota `/vs/` sem keystone e confirmou
+404 para as combinações matchup+keystone testadas. A API atual oferece uma
+sugestão de matchup separada, sem filtro de keystone, sem core conjunto e sem
+taxa conjunta runas+itens; veja [INVESTIGACAO_MATCHUPS.md](INVESTIGACAO_MATCHUPS.md)
+e [CORE.md](CORE.md). Essas sugestões ainda não são importadas no cliente LoL.
