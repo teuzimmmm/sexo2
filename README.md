@@ -17,6 +17,9 @@ A primeira baseline é publicada a partir da compilação local verificada.
 
 ## Desenvolvimento
 
+O fluxo de trabalho com agentes, incluindo critérios para delegar e economizar
+cota, fica em [AGENTS.md](AGENTS.md).
+
 Python 3.14; dependências em `requirements.txt`. Binários Pengu/LTK/mod-tools e
 cloudflared são recursos de build/distribuição, não segredos ou fontes próprias.
 Builds seguintes recuperam esses binários da baseline anterior do projeto.
