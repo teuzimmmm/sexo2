@@ -201,7 +201,7 @@ class LoadoutImporter:
             raise BuildError('Suas páginas mudaram durante a importação. Tente novamente.')
         check()
         destination=chosen[0] if chosen else owned[0] if owned else None
-        if chosen:self._backup_rune_page(account_key,chosen[0])
+        if destination:self._backup_rune_page(account_key,destination)
         endpoint = path + '/' + str(destination['id']) if destination else path
         try:
             response = lcu_request(self.lcu,'PUT' if destination else 'POST', endpoint, body)

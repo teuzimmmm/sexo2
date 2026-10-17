@@ -79,3 +79,9 @@ Limites: sem LoL real neste ambiente, sem logs do PC nem reprodução do crash.
 A janela externa anterior foi retirada, não consertada/rebatizada como novo motor.
 Comparação de ouro e PR nas cartas ficam pendentes. Testes de contrato/UI e pacote
 não autorizam afirmar que importações ou estabilidade já foram validadas no jogo.
+
+Revisão adicional do fluxo: abrir antes de escolher campeão não fornece páginas
+ao frontend. Só uma mudança feita pelo usuário fixa o destino; o primeiro contexto
+com páginas escolhe a editável atual. Regressão Chromium remove `runePages` do
+contexto pré-pick para testar a transição real de ausência para disponibilidade.
+Opção vazia é “Página gerenciada SEXO2”, não promessa de criar uma página nova.

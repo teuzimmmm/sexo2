@@ -8,8 +8,8 @@ let contextRequest=null,queryRequest=null,importRequest=null,queryTimer=null,las
 let summary,status,entries,enemy,position,tier,details,warnings,runesButton,itemsButton,queryButton,runeTarget;
 const supportsPanel=context=>context?.phase==='ChampSelect'&&context.mode==='ranked';
 const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
-function button(text,fn){const n=el('lol-uikit-flat-button',text);n.className='lol-uikit-flat-button idle';n.setAttribute('role','button');n.setAttribute('tabindex','0');n.onclick=e=>{if(n.disabled){e?.preventDefault();return;}fn();};n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();n.click();}});return n;}
-function disable(node,value){if(!node)return;node.disabled=!!value;node.toggleAttribute('disabled',!!value);node.setAttribute('aria-disabled',String(!!value));}
+function button(text,fn){const n=el('lol-uikit-flat-button',text);n.className='lol-uikit-flat-button idle';n.setAttribute('role','button');n.setAttribute('tabindex','0');n.onclick=e=>{if(n.hasAttribute('disabled')){e?.preventDefault();return;}fn();};n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();n.click();}});return n;}
+function disable(node,value){if(!node)return;node.toggleAttribute('disabled',!!value);node.setAttribute('aria-disabled',String(!!value));}
 function close(){opened=false;if(panel)panel.hidden=true;}
 function unmount(){host?.remove();panel?.remove();host=panel=null;opened=false;document.body?.classList.remove('sexo2-builds-in-draft');}
 function option(value,label){const n=el('option',label);n.value=value;return n;}
@@ -20,8 +20,9 @@ function selectOverlay(){if(data&&ctx?.available&&bridge?.ready)bridge.send({typ
 function lock(){
  const available=!!ctx?.available&&bridge?.ready;
  disable(queryButton,!available||!!importRequest);
- disable(runesButton,!available||!selected()||!!queryRequest||!!importRequest);
- disable(itemsButton,runesButton?.disabled);
+ const blocked=!available||!selected()||!!queryRequest||!!importRequest;
+ disable(runesButton,blocked||!!runeTarget?.selectedOptions?.[0]?.disabled);
+ disable(itemsButton,blocked);
  if(enemy)enemy.disabled=!available||ctx.mode!=='ranked'||!ctx.finalization||!!importRequest;
  if(position)position.disabled=ctx?.mode!=='ranked'||!!importRequest;
  if(tier)tier.disabled=!!importRequest;
@@ -57,6 +58,7 @@ function query(force){
 function importPage(target){
  const page=selected();
  if(!page||!data||queryRequest||importRequest||!bridge?.ready)return;
+ if(target==='runes')runeTarget.dataset.userSelected='true';
  importRequest={id:requestId(),at:Date.now()};lock();say('Importando e verificando no cliente…');
  bridge.send({type:'sexo2-build-import',requestId:importRequest.id,revision:ctx.revision,
               resultId:data.resultId,entryId:page.id,target,...(target==='runes'&&Number(runeTarget.value)>0?{runePageId:Number(runeTarget.value)}:{})});
@@ -100,12 +102,14 @@ function receiveContext(message){
  summary.textContent=ctx.champion?`${ctx.champion.name} · ${({ranked:'SR · dados Ranked',aram:'ARAM',arena:'Arena'})[ctx.mode]||'modo indisponível'} · risco ${({ 'very-low':'muito baixo',low:'baixo',medium:'médio',high:'alto','very-high':'muito alto'})[ctx.riskLevel]||ctx.riskLevel}`:'Escolha seu campeão.';
  const chosen=enemy.value;
  enemy.replaceChildren(option('','Geral · WR / Common'));
- const previousRune=runeTarget.value,hadRuneChoice=runeTarget.dataset.initialized==='true';
- runeTarget.replaceChildren(option('','Nova página SEXO2 (requer espaço)'));
+ const previousRune=runeTarget.value,hadRuneChoice=runeTarget.dataset.userSelected==='true';
+ runeTarget.replaceChildren(option('','Página gerenciada SEXO2'));
  for(const row of ctx.runePages||[])runeTarget.append(option(String(row.id),row.name+(row.current?' · atual':'')));
- if(hadRuneChoice&&[...runeTarget.options].some(o=>o.value===previousRune))runeTarget.value=previousRune;
- else runeTarget.value=hadRuneChoice?'':String((ctx.runePages||[]).find(r=>r.current)?.id||'');
- runeTarget.dataset.initialized='true';
+ if(hadRuneChoice){
+  if(previousRune&&![...runeTarget.options].some(o=>o.value===previousRune)){const missing=option(previousRune,'Página escolhida indisponível');missing.disabled=true;runeTarget.append(missing);}
+  runeTarget.value=previousRune;
+ }else runeTarget.value=String((ctx.runePages||[]).find(r=>r.current)?.id||'');
+
  for(const row of ctx.enemies||[])enemy.append(option(String(row.id),`vs ${row.name}`));
  if([...enemy.options].some(o=>o.value===chosen))enemy.value=chosen;
  if(!ctx.finalization||ctx.mode!=='ranked')enemy.value='';
@@ -182,7 +186,7 @@ function mount(){
  enemy=select('Adversário',filterFields);enemy.append(option('','Geral · WR / Common'));enemy.title='Matchups disponíveis ao finalizar o draft de Summoner’s Rift.';
  for(const input of [position,tier,enemy])input.onchange=()=>{data=null;queryRequest=null;entries.replaceChildren();details.replaceChildren();lastQuery=null;lock();query(false);};
  entries=select('Sugestão');entries.onchange=()=>{renderPage();selectOverlay();};
- runeTarget=select('Página de runas no LoL');runeTarget.append(option('','Nova página SEXO2 (requer espaço)'));
+ runeTarget=select('Página de runas no LoL');runeTarget.append(option('','Página gerenciada SEXO2'));runeTarget.onchange=()=>{runeTarget.dataset.userSelected='true';};
  const explanation=el('p','Aplicar runas substitui a página escolhida. O conteúdo anterior é preservado em backup local.');explanation.className='s2-build-help';panel.append(explanation);
  const actions=el('div');actions.className='s2-build-actions';
  queryButton=button('Consultar',()=>query(true));runesButton=button('Aplicar runas',()=>importPage('runes'));itemsButton=button('Importar itens',()=>importPage('items'));
