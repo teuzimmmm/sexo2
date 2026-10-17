@@ -21,10 +21,10 @@ log = logging.getLogger(__name__)
 
 class SkinProcessor:
     """Processes skin names and updates shared state"""
-    
+
     def __init__(self, shared_state, skin_scraper=None, skin_mapping=None):
         """Initialize skin processor
-        
+
         Args:
             shared_state: Shared application state
             skin_scraper: LCU skin scraper instance
@@ -34,10 +34,10 @@ class SkinProcessor:
         self.skin_scraper = skin_scraper
         self.skin_mapping = skin_mapping
         self.last_skin_name: Optional[str] = None
-    
+
     def process_skin_name(self, skin_name: str, broadcaster=None) -> None:
         """Process a skin name and update shared state
-        
+
         Args:
             skin_name: Skin name to process
             broadcaster: Optional broadcaster for sending updates
@@ -45,15 +45,12 @@ class SkinProcessor:
         try:
             log.info("[SkinMonitor] Skin detected: '%s'", skin_name)
             self.shared_state.ui_last_text = skin_name
-            self.shared_state.ui_last_text_champion_id = (
-                getattr(self.shared_state, "locked_champ_id", None)
-                or getattr(self.shared_state, "hovered_champ_id", None)
+            self.shared_state.ui_last_text_champion_id = getattr(self.shared_state, "locked_champ_id", None) or getattr(
+                self.shared_state, "hovered_champ_id", None
             )
-            self.shared_state.ui_last_text_generation = getattr(
-                self.shared_state, "champ_select_generation", 0
-            )
+            self.shared_state.ui_last_text_generation = getattr(self.shared_state, "champ_select_generation", 0)
             self.shared_state.ui_last_text_timestamp = time.monotonic()
-            
+
             if getattr(self.shared_state, "is_swiftplay_mode", False):
                 self._process_swiftplay_skin_name(skin_name, broadcaster)
             else:
@@ -64,13 +61,13 @@ class SkinProcessor:
                 skin_name,
                 exc,
             )
-    
+
     def _process_swiftplay_skin_name(self, skin_name: str, broadcaster=None) -> None:
         """Process skin name for Swiftplay mode"""
         if not self.skin_mapping:
             log.warning("[SkinMonitor] No skin mapping available for Swiftplay")
             return
-        
+
         skin_id = self.skin_mapping.find_skin_id_by_name(skin_name)
         if skin_id is None:
             log.warning(
@@ -78,7 +75,7 @@ class SkinProcessor:
                 skin_name,
             )
             return
-        
+
         champion_id = get_champion_id_from_skin_id(skin_id)
         if not champion_id:
             log.warning(
@@ -88,6 +85,7 @@ class SkinProcessor:
             return
 
         from pengu.processing.swiftplay_pins import get_pins
+
         pins = get_pins(self.shared_state).snapshot()
         if getattr(self.shared_state, "current_queue_id", None) == 480 and champion_id in pins:
             # Browsing or the client's base-skin reset cannot overwrite an explicit pin.
@@ -111,16 +109,16 @@ class SkinProcessor:
             skin_id,
             tracking_snapshot,
         )
-        
+
         if broadcaster:
             broadcaster.broadcast_skin_state(skin_name, skin_id)
-    
+
     def _process_regular_skin_name(self, skin_name: str, broadcaster=None) -> None:
         """Process skin name for regular champion select"""
         if not self.skin_scraper:
             log.warning("[SkinMonitor] No skin scraper available")
             return
-        
+
         result = self._find_skin_id(skin_name)
         if result is None:
             log.debug(
@@ -128,7 +126,7 @@ class SkinProcessor:
                 skin_name,
             )
             return
-        
+
         skin_id, matched_name = result
 
         # The normal matcher maps localized chroma labels to their base skin.
@@ -145,7 +143,6 @@ class SkinProcessor:
                 selected_chroma_id,
                 skin_name,
             )
-
 
         # Reset chroma selection when switching to a different BASE skin.
         # Skin IDs are not numerically contiguous: 161002 and 161004 are
@@ -167,19 +164,13 @@ class SkinProcessor:
             new_is_chroma = new_base_skin_id != int(skin_id)
             selected_chroma_is_current_skin = False
             try:
-                selected_chroma_is_current_skin = (
-                    int(self.shared_state.selected_chroma_id) == int(skin_id)
-                )
+                selected_chroma_is_current_skin = int(self.shared_state.selected_chroma_id) == int(skin_id)
             except (TypeError, ValueError):
                 pass
 
             if (
-                (
-                    old_base_skin_id != new_base_skin_id
-                    or (old_is_chroma and not new_is_chroma)
-                )
-                and not selected_chroma_is_current_skin
-            ):
+                old_base_skin_id != new_base_skin_id or (old_is_chroma and not new_is_chroma)
+            ) and not selected_chroma_is_current_skin:
                 # Different base skin - reset chroma selection. A chroma
                 # selected through the Rose wheel is also reported as a skin
                 # change, so preserve it when it is the newly detected skin.
@@ -198,17 +189,15 @@ class SkinProcessor:
             skin_id,
             self.shared_state.last_hovered_skin_key,
         )
-        
+
         if broadcaster:
             # Broadcast the matched name, not the input name
             broadcaster.broadcast_skin_state(matched_name, skin_id)
-    
+
     @staticmethod
     def _normalize_skin_label(value: object) -> str:
         """Normalize labels before comparing a selected chroma with UI text."""
-        return " ".join(
-            unicodedata.normalize("NFKC", str(value or "")).casefold().split()
-        )
+        return " ".join(unicodedata.normalize("NFKC", str(value or "")).casefold().split())
 
     def _match_selected_chroma_id(self, skin_name: str) -> Optional[int]:
         """Return the selected chroma when the UI reports that chroma label.
@@ -240,17 +229,17 @@ class SkinProcessor:
 
     def _find_skin_id(self, skin_name: str) -> Optional[tuple[int, str]]:
         """Find skin ID and matched name using skin scraper
-        
+
         Returns:
             Tuple of (skin_id, matched_name) if found, None otherwise
         """
         champ_id = getattr(self.shared_state, "locked_champ_id", None)
         if not champ_id:
             return None
-        
+
         if not self.skin_scraper:
             return None
-        
+
         try:
             if not self.skin_scraper.scrape_champion_skins(champ_id):
                 return None
@@ -258,19 +247,18 @@ class SkinProcessor:
             # The hovered skin cannot be recognised, so nothing would be injected
             log.exception(f"[SkinMonitor] Skin {skin_name!r} ignored: could not load the skins of champion {champ_id}")
             return None
-        
+
         try:
             result = self.skin_scraper.find_skin_by_text(skin_name)
         except Exception:
             log.exception(f"[SkinMonitor] Skin {skin_name!r} ignored: name matching failed")
             return None
-        
+
         if result:
             skin_id, matched_name, similarity = result
             if similarity < SKIN_NAME_MIN_SIMILARITY:
                 log.warning(
-                    "[SkinMonitor] Rejecting weak match '%s' -> '%s' "
-                    "(ID=%s, similarity=%.4f < %.4f)",
+                    "[SkinMonitor] Rejecting weak match '%s' -> '%s' (ID=%s, similarity=%.4f < %.4f)",
                     skin_name,
                     matched_name,
                     skin_id,
@@ -287,13 +275,10 @@ class SkinProcessor:
             )
             return (skin_id, matched_name)
         else:
-            log.warning(
-                "[SkinMonitor] No match found for '%s'",
-                skin_name
-            )
-        
+            log.warning("[SkinMonitor] No match found for '%s'", skin_name)
+
         return None
-    
+
     def clear_cache(self) -> None:
         """Clear cached state"""
         self.last_skin_name = None
@@ -302,4 +287,3 @@ class SkinProcessor:
         self.shared_state.ui_last_text_champion_id = None
         self.shared_state.ui_last_text_generation = -1
         self.shared_state.ui_last_text_timestamp = 0.0
-

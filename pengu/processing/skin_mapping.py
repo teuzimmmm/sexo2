@@ -17,10 +17,10 @@ log = logging.getLogger(__name__)
 
 class SkinMapping:
     """Manages skin ID to name mappings"""
-    
+
     def __init__(self, shared_state):
         """Initialize skin mapping
-        
+
         Args:
             shared_state: Shared application state
         """
@@ -29,10 +29,10 @@ class SkinMapping:
         self.skin_id_name_mapping: dict[int, str] = {}  # Normalized (lowercase) names for backward compatibility
         self.skin_id_original_name_mapping: dict[int, str] = {}  # Original names with proper case
         self.skin_mapping_loaded = False
-    
+
     def load_mapping(self) -> bool:
         """Load skin ID mapping from file
-        
+
         Returns:
             True if loaded successfully, False otherwise
         """
@@ -40,20 +40,13 @@ class SkinMapping:
         if not language:
             log.warning("[SkinMonitor] No language detected; cannot load mapping")
             return False
-        
-        mapping_path = (
-            get_user_data_dir()
-            / "resources"
-            / language
-            / "skin_ids.json"
-        )
-        
+
+        mapping_path = get_user_data_dir() / "resources" / language / "skin_ids.json"
+
         if not mapping_path.exists():
-            log.warning(
-                "[SkinMonitor] Skin mapping file missing: %s", mapping_path
-            )
+            log.warning("[SkinMonitor] Skin mapping file missing: %s", mapping_path)
             return False
-        
+
         try:
             with open(mapping_path, "r", encoding="utf-8") as handle:
                 data = json.load(handle)
@@ -64,7 +57,7 @@ class SkinMapping:
                 exc,
             )
             return False
-        
+
         self.skin_id_mapping.clear()
         self.skin_id_original_name_mapping.clear()
         for skin_id_str, name in data.items():
@@ -78,7 +71,7 @@ class SkinMapping:
                 self.skin_id_mapping[normalized] = skin_id
                 self.skin_id_name_mapping[skin_id] = normalized
                 self.skin_id_original_name_mapping[skin_id] = original_name  # Store original case
-        
+
         self.skin_mapping_loaded = True
         log.info(
             "[SkinMonitor] Loaded %s skin mappings for '%s'",
@@ -86,30 +79,31 @@ class SkinMapping:
             language,
         )
         return True
-    
+
     def find_skin_id_by_name(self, skin_name: str) -> Optional[int]:
         """Find skin ID by name using mapping
-        
+
         Args:
             skin_name: Skin name to look up
-            
+
         Returns:
             Skin ID if found, None otherwise
         """
         if not self.skin_mapping_loaded:
             if not self.load_mapping():
                 return None
-        
+
         normalized = skin_name.strip().lower()
         if normalized in self.skin_id_mapping:
             return self.skin_id_mapping[normalized]
-        
+
         # Try partial matching
         for mapped_name, skin_id in self.skin_id_mapping.items():
             if normalized in mapped_name or mapped_name in normalized:
                 return skin_id
-        
+
         return None
+
     def find_skin_name_by_skin_id(self, skin_id: int) -> Optional[str]:
         """Find skin name by id using mapping
 
@@ -136,4 +130,3 @@ class SkinMapping:
         self.skin_mapping_loaded = False
         self.skin_id_mapping.clear()
         self.skin_id_original_name_mapping.clear()
-

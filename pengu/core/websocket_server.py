@@ -32,7 +32,7 @@ BLOCKED_LOOP_REPEAT_S = 60.0
 
 class WebSocketServer:
     """Manages WebSocket server lifecycle and connections"""
-    
+
     def __init__(
         self,
         host: str = "127.0.0.1",
@@ -41,7 +41,7 @@ class WebSocketServer:
         http_handler: Optional[Callable[[str, dict], Optional[tuple]]] = None,
     ):
         """Initialize WebSocket server
-        
+
         Args:
             host: Server host address
             port: Server port (will find free port if None)
@@ -52,14 +52,14 @@ class WebSocketServer:
         self.port = port or 50000  # Default port if not specified (high port range like LCU)
         self.message_handler = message_handler
         self.http_handler = http_handler
-        
+
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._server = None
         self._shutdown_event: Optional[asyncio.Event] = None
         self._connections: Set[WebSocketServerProtocol] = set()
         self._stop_event = threading.Event()
         self.ready_event = threading.Event()
-    
+
         # Watchdog: the loop beats while it's free; the message being handled
         # is logged if it blocks
         self._last_beat = time.monotonic()
@@ -67,14 +67,14 @@ class WebSocketServer:
         self._heartbeat_task: Optional[asyncio.Task] = None
         self._handling: Optional[str] = None
         self.watchdog_interval_s = 1.0
-    
+
     def run(self) -> None:
         """Run the WebSocket server in an event loop"""
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
         self._loop_thread_id = threading.get_ident()
         self._shutdown_event = asyncio.Event()
-        
+
         try:
             # Create server that handles both HTTP and WebSocket
             self._server = self._loop.run_until_complete(
@@ -86,7 +86,7 @@ class WebSocketServer:
                     # The plugin can reconnect, but we prefer to avoid reconnects in the first place.
                     ping_interval=20,
                     ping_timeout=20,
-                    process_request=self._process_http_request if self.http_handler else None
+                    process_request=self._process_http_request if self.http_handler else None,
                 )
             )
             log.info(
@@ -108,7 +108,7 @@ class WebSocketServer:
             self._loop.run_until_complete(self._shutdown())
             self._loop.close()
             log.info("[SkinMonitor] Thread terminated")
-    
+
     async def _shutdown(self) -> None:
         """Shutdown server and close all connections"""
         if self._heartbeat_task is not None:
@@ -124,9 +124,9 @@ class WebSocketServer:
                 await ws.close()
             except Exception as e:
                 log.debug(f"[SkinMonitor] Error closing connection during shutdown: {e}")
-        
+
         self._connections.clear()
-        
+
         if self._server is not None:
             self._server.close()
             try:
@@ -134,23 +134,21 @@ class WebSocketServer:
             except Exception as e:
                 log.debug(f"[SkinMonitor] Error waiting for server close: {e}")
             self._server = None
-    
+
     def stop(self) -> None:
         """Stop the server"""
         self._stop_event.set()
         if self._loop and self._shutdown_event:
             try:
-                asyncio.run_coroutine_threadsafe(
-                    self._signal_shutdown(), self._loop
-                )
+                asyncio.run_coroutine_threadsafe(self._signal_shutdown(), self._loop)
             except RuntimeError:
                 pass
-    
+
     async def _signal_shutdown(self) -> None:
         """Signal shutdown event"""
         if self._shutdown_event and not self._shutdown_event.is_set():
             self._shutdown_event.set()
-    
+
     async def _handler(self, websocket: WebSocketServerProtocol) -> None:
         """Handle WebSocket connection"""
         client = websocket.remote_address
@@ -167,14 +165,10 @@ class WebSocketServer:
         except (ConnectionClosedError, ConnectionClosedOK):
             pass
         except Exception as exc:  # noqa: BLE001
-            log.warning(
-                "[SkinMonitor] Error handling client %s: %s", client, exc
-            )
+            log.warning("[SkinMonitor] Error handling client %s: %s", client, exc)
         finally:
             self._connections.discard(websocket)
-            log.info(
-                "[SkinMonitor] Client disconnected: %s (code %s)", client, websocket.close_code
-            )
+            log.info("[SkinMonitor] Client disconnected: %s (code %s)", client, websocket.close_code)
 
     async def _heartbeat(self) -> None:
         """Beat while the loop is free (read by the watchdog)"""
@@ -234,7 +228,7 @@ class WebSocketServer:
         if frame is None:
             return "  (loop thread not running)"
         return "".join(traceback.format_stack(frame)).rstrip()
-    
+
     async def _process_http_request(self, path: str, request_headers) -> Optional[tuple]:
         """Process HTTP requests (delegates to http_handler)"""
         host = request_headers.get("Host")
@@ -251,7 +245,7 @@ class WebSocketServer:
         if self.http_handler:
             return self.http_handler(path, request_headers)
         return None
-    
+
     async def broadcast(self, message: str) -> None:
         """Broadcast message to all connected clients"""
         stale: list[WebSocketServerProtocol] = []
@@ -263,14 +257,13 @@ class WebSocketServer:
                 stale.append(ws)
         for ws in stale:
             self._connections.discard(ws)
-    
+
     @property
     def connections(self) -> Set[WebSocketServerProtocol]:
         """Get set of active connections"""
         return self._connections
-    
+
     @property
     def loop(self) -> Optional[asyncio.AbstractEventLoop]:
         """Get event loop"""
         return self._loop
-

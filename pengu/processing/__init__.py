@@ -10,8 +10,7 @@ from .skin_mapping import SkinMapping
 from .flow_controller import FlowController
 
 __all__ = [
-    'SkinProcessor',
-    'SkinMapping',
-    'FlowController',
+    "SkinProcessor",
+    "SkinMapping",
+    "FlowController",
 ]
-

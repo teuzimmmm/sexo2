@@ -16,22 +16,30 @@ class MessageIsolationTests(unittest.TestCase):
         self.handler._background_lock = threading.Lock()
 
     def test_a_failing_handler_does_not_raise_to_the_connection(self):
-        with patch.object(MessageHandler, "_handle_request_skin_mods", side_effect=KeyError("skinId")), \
-                self.assertLogs(level="ERROR"):
+        with (
+            patch.object(MessageHandler, "_handle_request_skin_mods", side_effect=KeyError("skinId")),
+            self.assertLogs(level="ERROR"),
+        ):
             self.handler.handle_message(json.dumps({"type": "request-skin-mods"}))
 
     def test_the_next_message_is_still_handled(self):
         handled = []
-        with patch.object(MessageHandler, "_handle_request_skin_mods",
-                          side_effect=[KeyError("skinId"), None]) as request_skin_mods, \
-                self.assertLogs(level="ERROR"):
+        with (
+            patch.object(
+                MessageHandler, "_handle_request_skin_mods", side_effect=[KeyError("skinId"), None]
+            ) as request_skin_mods,
+            self.assertLogs(level="ERROR"),
+        ):
             self.handler.handle_message(json.dumps({"type": "request-skin-mods"}))
             self.handler.handle_message(json.dumps({"type": "request-skin-mods", "skinId": 1}))
             handled.append(request_skin_mods.call_count)
         self.assertEqual(handled, [2])
 
     def test_a_handler_that_keeps_failing_is_reported_once(self):
-        with patch.object(MessageHandler, "_handle_request_skin_mods", side_effect=KeyError("skinId")),                 self.assertLogs(level="ERROR") as logs:
+        with (
+            patch.object(MessageHandler, "_handle_request_skin_mods", side_effect=KeyError("skinId")),
+            self.assertLogs(level="ERROR") as logs,
+        ):
             for _ in range(20):
                 self.handler.handle_message(json.dumps({"type": "request-skin-mods"}))
         self.assertEqual(len(logs.output), 1)

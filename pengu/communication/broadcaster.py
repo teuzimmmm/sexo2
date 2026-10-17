@@ -32,10 +32,10 @@ SPECIAL_CHROMA_SKIN_IDS = {
 
 class Broadcaster:
     """Broadcasts messages to WebSocket clients"""
-    
+
     def __init__(self, websocket_server, shared_state, skin_mapping, skin_scraper=None):
         """Initialize broadcaster
-        
+
         Args:
             websocket_server: WebSocket server instance
             shared_state: Shared application state
@@ -44,18 +44,14 @@ class Broadcaster:
         self.websocket_server = websocket_server
         self.shared_state = shared_state
         self.skin_scraper = skin_scraper
-        self.skin_mapping = skin_mapping;
-    
+        self.skin_mapping = skin_mapping
+
     def broadcast_skin_state(self, skin_name: str, skin_id: Optional[int]) -> None:
         """Broadcast skin state to clients"""
         if not self.websocket_server.loop or not self.websocket_server.connections:
             return
-        
-        champion_id = (
-            get_champion_id_from_skin_id(skin_id)
-            if skin_id is not None
-            else None
-        )
+
+        champion_id = get_champion_id_from_skin_id(skin_id) if skin_id is not None else None
         has_chromas = self._skin_has_chromas(skin_id)
         payload = {
             "type": "skin-state",
@@ -72,16 +68,17 @@ class Broadcaster:
             has_chromas,
         )
         self._send_message(json.dumps(payload))
-    
+
     def broadcast_chroma_state(self) -> None:
         """Broadcast current chroma selection state to JavaScript"""
         if not self.websocket_server.loop or not self.websocket_server.connections:
             return
-        
+
         # Get chroma state from ChromaPanelManager
         from ui.chroma.panel import get_chroma_panel
+
         panel = get_chroma_panel(state=self.shared_state)
-        
+
         if panel:
             with panel.lock:
                 selected_chroma_id = panel.current_selected_chroma_id
@@ -93,7 +90,7 @@ class Broadcaster:
             chroma_color = None
             chroma_colors = None
             current_skin_id = None
-        
+
         payload = {
             "type": "chroma-state",
             "selectedChromaId": selected_chroma_id,
@@ -102,34 +99,33 @@ class Broadcaster:
             "currentSkinId": current_skin_id,
             "timestamp": int(time.time() * 1000),
         }
-        
+
         log.debug(
             "[SkinMonitor] Broadcasting chroma state → selectedChromaId=%s chromaColor=%s",
             selected_chroma_id,
             chroma_color,
         )
-        
+
         self._send_message(json.dumps(payload))
-    
+
     def broadcast_historic_state(self) -> None:
         """Broadcast current historic mode state to JavaScript"""
         if not self.websocket_server.loop or not self.websocket_server.connections:
             return
-        
-        historic_mode_active = getattr(self.shared_state, 'historic_mode_active', False)
-        historic_skin_id = getattr(self.shared_state, 'historic_skin_id', None)
-        locked_champ_id = getattr(self.shared_state, 'locked_champ_id', None)
+
+        historic_mode_active = getattr(self.shared_state, "historic_mode_active", False)
+        historic_skin_id = getattr(self.shared_state, "historic_skin_id", None)
+        locked_champ_id = getattr(self.shared_state, "locked_champ_id", None)
         historic_entry_available = bool(historic_mode_active)
         historic_base_skin_id = (
-            int(locked_champ_id) * 1000
-            if historic_entry_available and locked_champ_id is not None
-            else None
+            int(locked_champ_id) * 1000 if historic_entry_available and locked_champ_id is not None else None
         )
         # Handle chroma IDs - they're not in the skin mapping, need to get from chroma cache
         skin_name = None
         if historic_skin_id is not None:
             # Check if this is a custom mod path
             from utils.core.historic import is_custom_mod_path
+
             if is_custom_mod_path(historic_skin_id):
                 # Custom mod popups are handled by the custom-mod-state broadcast
                 # (which goes through ROSE-CustomWheel's skin-matching logic).
@@ -142,9 +138,7 @@ class Broadcaster:
                     custom_path = get_custom_mod_path(historic_skin_id)
                     storage = ModStorageService()
                     for entry in storage.list_mods_for_champion(int(locked_champ_id)):
-                        relative_path = str(
-                            entry.path.relative_to(storage.mods_root)
-                        ).replace(chr(92), "/")
+                        relative_path = str(entry.path.relative_to(storage.mods_root)).replace(chr(92), "/")
                         if relative_path.casefold() == str(custom_path).casefold():
                             skin_name = entry.mod_name
                             break
@@ -158,12 +152,12 @@ class Broadcaster:
                 chroma_id_map = None
                 if self.skin_scraper and self.skin_scraper.cache:
                     chroma_id_map = getattr(self.skin_scraper.cache, "chroma_id_map", None)
-                
+
                 if is_chroma_id(historic_skin_id, chroma_id_map):
                     # It's a chroma - get chroma name from cache
                     if chroma_id_map and historic_skin_id in chroma_id_map:
                         chroma_info = chroma_id_map[historic_skin_id]
-                        chroma_name = chroma_info.get('name', '')
+                        chroma_name = chroma_info.get("name", "")
                         skin_name = chroma_name if chroma_name else None
                     else:
                         # Chroma ID detected but not in cache - fallback to skin mapping
@@ -171,7 +165,7 @@ class Broadcaster:
                 else:
                     # Not a chroma - use regular skin mapping lookup
                     skin_name = self.skin_mapping.find_skin_name_by_skin_id(historic_skin_id)
-        
+
         payload = {
             "type": "historic-state",
             "active": historic_mode_active,
@@ -181,29 +175,27 @@ class Broadcaster:
             "historicBaseSkinId": historic_base_skin_id,
             "timestamp": int(time.time() * 1000),
         }
-        
+
         log.debug(
             "[SkinMonitor] Broadcasting historic state → active=%s historicSkinId=%s historicSkinName=%s",
             historic_mode_active,
             historic_skin_id,
             skin_name,
         )
-        
+
         self._send_message(json.dumps(payload))
-    
+
     def broadcast_custom_mod_state(self) -> None:
         """Broadcast current custom mod selection state to JavaScript"""
         if not self.websocket_server.loop or not self.websocket_server.connections:
             return
 
-        selected_custom_mod = getattr(self.shared_state, 'selected_custom_mod', None)
+        selected_custom_mod = getattr(self.shared_state, "selected_custom_mod", None)
         active = selected_custom_mod is not None
         mod_name = selected_custom_mod.get("mod_name") if selected_custom_mod else None
         raw_display_name = selected_custom_mod.get("display_name") if selected_custom_mod else None
         display_name = (
-            raw_display_name.strip()
-            if isinstance(raw_display_name, str) and raw_display_name.strip()
-            else None
+            raw_display_name.strip() if isinstance(raw_display_name, str) and raw_display_name.strip() else None
         )
         skin_id = selected_custom_mod.get("skin_id") if selected_custom_mod else None
         champion_id = selected_custom_mod.get("champion_id") if selected_custom_mod else None
@@ -237,11 +229,11 @@ class Broadcaster:
         """Broadcast phase change to JavaScript plugins"""
         if not self.websocket_server.loop or not self.websocket_server.connections:
             return
-        
+
         game_mode = getattr(self.shared_state, "current_game_mode", None)
         map_id = getattr(self.shared_state, "current_map_id", None)
         queue_id = getattr(self.shared_state, "current_queue_id", None)
-        
+
         payload = {
             "type": "phase-change",
             "phase": phase,
@@ -250,7 +242,7 @@ class Broadcaster:
             "queueId": queue_id,
             "timestamp": int(time.time() * 1000),
         }
-        
+
         log.debug(
             "[SkinMonitor] Broadcasting phase change → phase=%s, gameMode=%s, mapId=%s, queueId=%s",
             phase,
@@ -258,36 +250,36 @@ class Broadcaster:
             map_id,
             queue_id,
         )
-        
+
         self._send_message(json.dumps(payload))
-    
+
     def broadcast_champion_locked(self, locked: bool) -> None:
         """Broadcast champion lock state to JavaScript plugins"""
         if not self.websocket_server.loop or not self.websocket_server.connections:
             return
-        
+
         payload = {
             "type": "champion-locked",
             "locked": locked,
             "timestamp": int(time.time() * 1000),
         }
-        
+
         log.debug(
             "[SkinMonitor] Broadcasting champion lock state → locked=%s",
             locked,
         )
-        
+
         self._send_message(json.dumps(payload))
-    
+
     def broadcast_random_mode_state(self) -> None:
         """Broadcast random mode state to JavaScript plugins"""
         if not self.websocket_server.loop or not self.websocket_server.connections:
             return
-        
-        random_mode_active = getattr(self.shared_state, 'random_mode_active', False)
-        random_skin_id = getattr(self.shared_state, 'random_skin_id', None)
-        dice_state = 'enabled' if random_mode_active else 'disabled'
-        
+
+        random_mode_active = getattr(self.shared_state, "random_mode_active", False)
+        random_skin_id = getattr(self.shared_state, "random_skin_id", None)
+        dice_state = "enabled" if random_mode_active else "disabled"
+
         payload = {
             "type": "random-mode-state",
             "active": random_mode_active,
@@ -295,14 +287,14 @@ class Broadcaster:
             "diceState": dice_state,
             "timestamp": int(time.time() * 1000),
         }
-        
+
         log.debug(
             "[SkinMonitor] Broadcasting random mode state → active=%s diceState=%s randomSkinId=%s",
             random_mode_active,
             dice_state,
             random_skin_id,
         )
-        
+
         self._send_message(json.dumps(payload))
 
     def broadcast_skip_base_skin(self) -> None:
@@ -319,7 +311,7 @@ class Broadcaster:
         )
 
         self._send_message(json.dumps(payload))
-    
+
     def broadcast_language_changed(self) -> None:
         """Tell the plugins to load the texts of Rose's new menu language (ROSE-I18n)"""
         self._send_message(json.dumps({"type": "language-changed"}))
@@ -337,7 +329,7 @@ class Broadcaster:
         if not self.websocket_server.loop or not self.websocket_server.connections:
             return
 
-        party_manager = getattr(self.shared_state, 'party_manager', None)
+        party_manager = getattr(self.shared_state, "party_manager", None)
         if not party_manager:
             # Party mode not initialized - send disabled state
             payload = {
@@ -374,34 +366,30 @@ class Broadcaster:
         if running_loop is self.websocket_server.loop:
             self.websocket_server.loop.create_task(self.websocket_server.broadcast(message))
         else:
-            asyncio.run_coroutine_threadsafe(
-                self.websocket_server.broadcast(message), self.websocket_server.loop
-            )
-    
+            asyncio.run_coroutine_threadsafe(self.websocket_server.broadcast(message), self.websocket_server.loop)
+
     def _skin_has_chromas(self, skin_id: Optional[int]) -> bool:
         """Check if skin has chromas"""
         if skin_id is None:
             return False
-        
+
         if skin_id == 99007:
             return True
-        
+
         if 99991 <= skin_id <= 99999:
             return True
-        
+
         if skin_id in SPECIAL_BASE_SKIN_IDS:
             return True
-        
+
         if skin_id in SPECIAL_CHROMA_SKIN_IDS:
             return True
-        
+
         if self.skin_scraper and self.skin_scraper.cache:
-            chroma_id_map = getattr(
-                self.skin_scraper.cache, "chroma_id_map", None
-            )
+            chroma_id_map = getattr(self.skin_scraper.cache, "chroma_id_map", None)
             if chroma_id_map and skin_id in chroma_id_map:
                 return True
-            
+
             try:
                 chromas = self.skin_scraper.get_chromas_for_skin(skin_id)
                 if chromas:
@@ -409,6 +397,5 @@ class Broadcaster:
             except Exception as e:
                 log.debug(f"[SkinMonitor] Could not load chromas for skin {skin_id}: {e}")
                 return False
-        
-        return False
 
+        return False

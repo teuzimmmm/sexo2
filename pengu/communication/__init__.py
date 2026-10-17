@@ -9,7 +9,6 @@ from .message_handler import MessageHandler
 from .broadcaster import Broadcaster
 
 __all__ = [
-    'MessageHandler',
-    'Broadcaster',
+    "MessageHandler",
+    "Broadcaster",
 ]
-

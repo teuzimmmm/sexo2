@@ -11,8 +11,16 @@ class LoopbackHostTests(unittest.TestCase):
             self.assertTrue(is_loopback_host(host), host)
 
     def test_rejects_rebound_and_malformed_hosts(self):
-        for host in (None, "", "evil.example:50000", "127.0.0.1.evil.example", "localhost:abc",
-                     "[::1]x", "[::2]:50000", "127.0.0.2:50000"):
+        for host in (
+            None,
+            "",
+            "evil.example:50000",
+            "127.0.0.1.evil.example",
+            "localhost:abc",
+            "[::1]x",
+            "[::2]:50000",
+            "127.0.0.2:50000",
+        ):
             self.assertFalse(is_loopback_host(host), host)
 
 
@@ -38,7 +46,9 @@ class BridgeHostCheckTests(unittest.TestCase):
         self.assertEqual(self.served, ["/i18n"])
 
     def test_foreign_origin_websocket_is_still_refused(self):
-        response = self.request({"Host": "127.0.0.1:50000", "Origin": "https://attacker.example", "Upgrade": "websocket"})
+        response = self.request(
+            {"Host": "127.0.0.1:50000", "Origin": "https://attacker.example", "Upgrade": "websocket"}
+        )
         self.assertEqual(response[0], 403)
 
 
