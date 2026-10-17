@@ -300,9 +300,11 @@ com escalas diferentes e a geometria das cartas do LoL não foram testados.
 
 SHA-256 do helper compilado/staged nesse job:
 `785e87555945f1338fe39510457c2298f551b4d08f0c46a48d22dee270f06419`.
-Não foi gerado instalador nem realizado teste do pacote PyInstaller completo.
-A construção futura do instalador compila o helper e a auditoria compara seu
-conteúdo e avisos, além dos novos módulos Python, com o staging.
+Nesse job não foi gerado instalador nem testado o pacote PyInstaller completo.
+Posteriormente, a edição 2.0.0.5 compilou e auditou o helper, avisos e módulos
+Python no pacote final; instalação/reinstalação/desinstalação passaram. Veja
+[INSTALADOR_TESTE_2_0.md](INSTALADOR_TESTE_2_0.md#validação-windows--2005).
+Isso não altera as limitações de validação no jogo abaixo.
 
 Passaram 88 testes locais de regressão dos serviços/overlay, dois testes Node
 de configurações e 58 testes focados após a correção final de DPI. São cobertos

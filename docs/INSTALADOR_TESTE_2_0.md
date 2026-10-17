@@ -171,3 +171,20 @@ O renderer visual continua sendo o anterior, que falhou no teste do usuário.
 Este instalador não comprova correção de visibilidade no LoL nem leitura de
 cartas reais; o host DX11 experimental não é integrado ou injetado no jogo.
 A migração/limpeza de Rose continua reservada à fase final.
+
+### Validação Windows — 2.0.0.5
+
+O [job privado 39003468347](https://github.com/teuzimmmm/sexo2/actions/runs/39003468347)
+compilou o commit `ec69311758873441aff78f63ec23c365fd710244`. A suíte executou
+499 testes (sete ignorados), sem falhas; passaram também quatro testes da janela
+Windows e os testes do painel em Chromium isolado. A auditoria confirmou módulos,
+plugins, helper OCR e avisos de dependências no pacote PyInstaller. Instalação,
+reinstalação e desinstalação passaram, preservando sentinelas sintéticas do legado.
+Nenhum SEXO2, Pengu ou LoL foi aberto pelo teste do instalador.
+
+Artefato privado `12089573335`: `SEXO2-2.0.0.5-Teste-ec693117.exe` (61.027.346 bytes).
+O download foi conferido contra checksum, identidade e relatórios de compilação/
+instalação: SHA-256 `e22534d8c0a32fe818d87de42923d6663d77fa99aacc8b39a289dd47145ebfb6`.
+O helper incluído tem SHA-256
+`57b9d49766b36e4c1adf8294dc029dba596fbfc7b76df15becc7efca212fdb0d`.
+Os limites visuais/no jogo descritos no plano da edição continuam pendentes.
