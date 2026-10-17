@@ -82,15 +82,15 @@ class OverlayTests(unittest.TestCase):
         self.assertIsNone(self.store._data)
 
     def test_unknown_modes_never_show(self):
-        for data in [{'gameId': 10, 'queue': {'id': 2400}}]:
+        for data in [{'gameId': 10, 'queue': {'id': 999999}}]:
             self.lcu.game['gameData'] = data
             self.assertFalse(self.playing().active)
             self.assertEqual(self.store.view(self.key, 'ranked').cards, ())
 
-    def test_arena_is_active_during_game_without_selection_panel_or_champion(self):
+    def test_arena_hides_until_offers_and_local_champion_are_known(self):
         self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}}
-        self.assertTrue(self.playing().active)
-        self.assertIn('aguardando campeão', self.runtime.frame().view.cards[0].title)
+        self.assertFalse(self.playing().active)
+        self.assertFalse(self.runtime.frame().active)
         self.assertEqual(self.store.view(self.key, 'ranked').cards, ())
 
     def test_preview_is_explicit_temporary_and_independent_of_client(self):

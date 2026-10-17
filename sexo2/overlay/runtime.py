@@ -20,7 +20,7 @@ class Frame:
 
 class OverlayRuntime:
     def __init__(self, lcu, *, enabled, champion=lambda: None, window_factory=None,
-                 arena_factory=None, clock=time.monotonic):
+                 arena_factory=None, offer_reader_factory=None, clock=time.monotonic):
         self.lcu, self.enabled = lcu, enabled
         self.champion = champion
         self.store = OverlayStore(clock=clock)
@@ -35,6 +35,9 @@ class OverlayRuntime:
         self._arena_factory = arena_factory
         self._arena = None
         self._arena_champion = None
+        self._offer_factory = offer_reader_factory
+        self._offers = None
+        self._offer_context = None
         self._preview_until = float('-inf')
         self._diagnostic = {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}
 
@@ -43,6 +46,10 @@ class OverlayRuntime:
             result = dict(self._diagnostic)
         if self._window is not None and hasattr(self._window, 'diagnostic'):
             result['window'] = self._window.diagnostic()
+        if self._offers is not None:
+            result['offers'] = self._offers.diagnostic()
+            if result.get('code') == 'offers' and result['offers'] == 'unavailable':
+                result['message'] = 'Leitura das cartas indisponível. Confira o helper OCR, o idioma do Windows e o jogo em primeiro plano.'
         return result
 
     def preview(self):
@@ -59,6 +66,7 @@ class OverlayRuntime:
     def poll(self):
         """Public seam for deterministic tests; never called by the GDI thread."""
         frame = Frame()
+        offer_context = None
         status = {'code': 'disabled', 'message': 'Overlay desativado nas configurações.'}
         try:
             enabled = self.enabled()
@@ -78,14 +86,19 @@ class OverlayRuntime:
                             and game['gameId'] != data['gameId']):
                         raise ValueError('Conflicting game identity')
                     mode = game_mode(data)
+                    queue = data.get('queue') if isinstance(data.get('queue'), dict) else {}
+                    # Riot's public queues.json confirms 2400 as ARAM: Mayhem.
+                    if (data.get('queueId', queue.get('id')) == 2400
+                            or str(data.get('gameMode', queue.get('gameMode', ''))).upper() == 'KIWI'):
+                        mode = 'mayhem'
                     if key is None:
                         raise ValueError('Unknown game identity')
                     self.store.observe(phase, key, mode)
                     self.store.verify_champion(self.champion())
                     status = {'code': 'draft', 'message': 'Aguardando a partida; não há overlay na seleção.'}
                     if phase in ('InProgress', 'Reconnect'):
-                        if mode == 'arena':
-                            if self._arena is None:
+                        if mode in ('arena', 'mayhem'):
+                            if mode == 'arena' and self._arena is None:
                                 from .arena import ArenaFeed
                                 self._arena = self._arena_factory() if self._arena_factory else ArenaFeed(self.lcu)
                             cid = self.champion()
@@ -101,14 +114,16 @@ class OverlayRuntime:
                                 else:
                                     cid = self._arena_champion[1]
                             if positive(cid):
-                                self._arena.ensure(key, cid)
-                                view = self._arena.view(key, cid)
-                            else:
-                                from .model import Card
-                                view = View(key, (Card('Arena · aguardando campeão',
-                                                      ('Seu campeão ainda não foi identificado pelo cliente.',)),))
-                            frame = Frame(True, view)
-                            status = {'code': 'arena', 'message': 'Arena habilitado: popularidade por campeão, sem WR.'}
+                                if mode == 'arena':
+                                    self._arena.ensure(key, cid)
+                                offer_context = (key, cid, mode)
+                                if self._offers is None and (self._offer_factory or os.name == 'nt'):
+                                    from .reader import OfferReader
+                                    self._offers = self._offer_factory() if self._offer_factory else OfferReader(self.lcu)
+                                if self._offers is not None:
+                                    self._offers.ensure(offer_context)
+                                frame = self._offered_frame(offer_context)
+                            status = {'code': 'offers', 'message': 'Leitura local: aguardando cartas na tela; nenhuma lista geral será exibida.'}
                         elif mode in ('ranked', 'aram'):
                             frame = Frame(True, self.store.view(key, mode))
                             status = {'code': 'match', 'message': 'Partida reconhecida; aguardando a janela do jogo em primeiro plano.'}
@@ -127,9 +142,24 @@ class OverlayRuntime:
             status = {'code': 'client-unavailable', 'message': 'Não foi possível confirmar a partida pelo LCU. Confira se o cliente permanece aberto.'}
         with self._lock:
             self._frame = frame
+            self._offer_context = offer_context
             self._diagnostic = status
             self._observed_at = self._clock()
+        if offer_context is None and self._offers is not None:
+            self._offers.clear()
         return frame
+
+    def _offered_frame(self, context):
+        offer = self._offers.current(context) if self._offers is not None else None
+        if offer is None:
+            return Frame()
+        key, cid, mode = context
+        if mode == 'arena':
+            view = self._arena.offered_view(key, cid, offer)
+        else:
+            from .offers import offer_view
+            view = offer_view(key, offer, mode='mayhem')
+        return Frame(bool(view.cards), view)
 
     def frame(self):
         with self._lock:
@@ -143,6 +173,8 @@ class OverlayRuntime:
             # If the observer blocks/disappears, fail closed rather than displaying stale UI.
             if self._stop.is_set() or self._clock() - self._observed_at > 8:
                 return Frame()
+            if self._offer_context is not None:
+                return self._offered_frame(self._offer_context)
             return self._frame
 
     def start(self):
@@ -170,6 +202,8 @@ class OverlayRuntime:
     def stop(self):
         self._stop.set()
         self.store.close()
+        if self._offers is not None:
+            self._offers.close()
         if self._arena is not None:
             self._arena.close()
         if self._window is not None:

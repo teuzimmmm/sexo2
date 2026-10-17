@@ -109,17 +109,27 @@ jobs:
         run: |
           rustup default stable
           if ($LASTEXITCODE -ne 0) { throw 'Rust toolchain failed.' }
+      - name: Install screen test dependencies
+        shell: pwsh
+        run: python -m pip install Pillow==12.3.0 requests==2.34.2
       - name: Test protocol and compile isolated DX11 host
         shell: pwsh
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
         run: |
-          python -m unittest tests.test_overlay_wire -v
+          python -m unittest tests.test_overlay_wire tests.test_overlay_offers -v
           if ($LASTEXITCODE -ne 0) { throw 'Python protocol tests failed.' }
           cargo test --manifest-path native/overlay-host/Cargo.toml --locked
           if ($LASTEXITCODE -ne 0) { throw 'Rust protocol tests failed.' }
           cargo build --manifest-path native/overlay-host/Cargo.toml --release --locked
           if ($LASTEXITCODE -ne 0) { throw 'Native host compilation failed.' }
+      - name: Test local OCR and bounded screen crops
+        shell: pwsh
+        env:
+          SEXO2_TEST_SCREEN_OCR: '1'
+        run: |
+          python -m unittest tests.test_overlay_screen_windows -v
+          if ($LASTEXITCODE -ne 0) { throw 'Screen/OCR test failed; no League validation.' }
       - name: Exercise own-process rendering, expiry and disconnect
         shell: pwsh
         run: |

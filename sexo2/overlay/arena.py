@@ -83,6 +83,8 @@ class ArenaFeed:
         self._desired = self._attempted = self._complete = None
         self._busy = self._closed = False
         self._cards = ()
+        self._offer_metrics = {}
+        self._source = None
         self._error = False
         self._last_retry = float('-inf')
 
@@ -115,9 +117,21 @@ class ArenaFeed:
                     except Exception:
                         names[field] = {}
                 prepared = cards(recommendation, champion['name'], names)
+                # The general table is not the table for acquisition position 1..4.
+                metric_rows = next((rows for name, rows in recommendation.item_rankings.items()
+                    if name.startswith('augment_statistics:') and name.endswith(':payload.augment.augment0')), [])
+                offer_metrics = {str(row['identifiers'][0]):
+                    {key: row.get('metrics', {}).get(key) for key in ('pick_rate', 'games')}
+                    for row in metric_rows if len(row.get('identifiers', [])) == 1}
+                source = ('LoLalytics · Arena · patch ' + text(recommendation.resolved.get('patch'), 12)
+                          + ' · ' + text(recommendation.query.get('tier'), 24)
+                          + ' · região ' + text(recommendation.query.get('region'), 24)
+                          + ' · coleta ' + text(recommendation.collected_at, 32)
+                          + (' · cache' if recommendation.cache_hit else ''))
                 with self._lock:
                     if not self._closed and self._desired == signature:
                         self._cards, self._complete = prepared, signature
+                        self._offer_metrics, self._source = offer_metrics, source
             except Exception:
                 with self._lock:
                     if self._desired == signature:
@@ -146,6 +160,18 @@ class ArenaFeed:
         with self._lock:
             self._desired = self._complete = self._attempted = None
             self._cards = ()
+            self._offer_metrics, self._source = {}, None
+
+    def offered_view(self, key, cid, offer):
+        from .offers import offer_view
+        with self._lock:
+            if offer.context != (key, cid, 'arena') or self._desired != (key, cid):
+                return View(key, ())
+            ready = self._complete == (key, cid)
+            metrics = {c.identifier: self._offer_metrics.get(c.identifier, {})
+                       for c in offer.choices if c.identifier} if ready else {}
+            source = self._source if ready else 'Estatísticas Arena ainda indisponíveis.'
+        return offer_view(key, offer, metrics, mode='arena', source=source)
 
     def retry(self):
         with self._lock:

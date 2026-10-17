@@ -94,12 +94,69 @@ class ArenaOverlayTests(unittest.TestCase):
         runtime = OverlayRuntime(self.lcu, enabled=lambda: True, champion=lambda: 222,
                                  arena_factory=lambda: self.feed)
         self.addCleanup(runtime.stop)
-        self.assertTrue(runtime.poll().active)
+        self.assertFalse(runtime.poll().active)  # A general list is not an offer.
         self.wait()
-        self.assertIn('Jinx', runtime.poll().view.cards[0].title)
-        self.lcu.game['gameData']['queue'] = {'id': 2400}
+        self.assertFalse(runtime.poll().active)
+        self.lcu.game['gameData']['queue'] = {'id': 999999}
         self.assertFalse(runtime.poll().active)
         self.assertEqual(game_mode({'queue': {'gameMode': 'CHERRY'}}), 'arena')
+
+    def test_offered_view_uses_only_current_choices_general_table_and_same_mode(self):
+        from sexo2.overlay.offers import Choice, Offer
+        self.feed.ensure('match', 222); self.wait()
+        offer = Offer(('match', 222, 'arena'), 1, 1,
+                      (Choice('1328', 'Critical Rhythm'), Choice('9999999', 'Without statistics'), Choice(None, None)))
+        view = self.feed.offered_view('match', 222, offer)
+        self.assertIn('Critical Rhythm ·', str(self.feed.view('match', 222)))
+        self.assertIn('35.29%', str(view))
+        self.assertIn('5130', str(view))
+        self.assertIn('Without statistics', str(view))
+        self.assertEqual(len(view.cards), 1)
+        self.assertNotIn('Todos os aprimoramentos', str(view))
+        self.assertEqual(self.feed.offered_view('other', 222, offer).cards, ())
+        self.feed.clear()
+        self.assertEqual(self.feed.offered_view('match', 222, offer).cards, ())
+
+    def test_runtime_current_offer_expires_without_waiting_for_lcu_poll(self):
+        from sexo2.overlay.offers import Choice, OfferState
+        now = [0]
+        class Reader:
+            def __init__(self): self.state = OfferState()
+            def ensure(self, context): self.context = context
+            def current(self, context): return self.state.current(context, now[0])
+            def clear(self): self.state.clear()
+            def close(self): self.clear()
+            def diagnostic(self): return 'reading'
+        reader = Reader()
+        self.lcu.phase = 'InProgress'
+        self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}}
+        runtime = OverlayRuntime(self.lcu, enabled=lambda: True, champion=lambda: 222,
+            arena_factory=lambda: self.feed, offer_reader_factory=lambda: reader, clock=lambda: now[0])
+        self.addCleanup(runtime.stop)
+        self.assertFalse(runtime.poll().active)
+        self.wait()
+        choices = (Choice('1328', 'Critical Rhythm'), Choice('999999', 'Unknown stats'), Choice(None, None))
+        reader.state.observe(reader.context, choices, 0)
+        now[0] = 1
+        reader.state.observe(reader.context, choices, 1)
+        frame = runtime.frame()
+        self.assertTrue(frame.active)
+        self.assertIn('35.29%', str(frame.view))
+        now[0] = 3
+        self.assertFalse(runtime.frame().active)
+        self.lcu.game['gameData']['queue'] = {'id': 2400}
+        self.assertFalse(runtime.poll().active)
+        reader.state.observe(reader.context, choices, 3)
+        now[0] = 4
+        reader.state.observe(reader.context, choices, 4)
+        mayhem = runtime.frame()
+        self.assertTrue(mayhem.active)
+        self.assertIn('Mayhem', str(mayhem.view))
+        self.assertNotIn('35.29', str(mayhem.view))
+        self.assertIn('indisponíveis', str(mayhem.view))
+        self.lcu.phase = 'EndOfGame'
+        runtime.poll()
+        self.assertFalse(runtime.frame().active)
 
     def test_brave_random_pick_resolves_only_local_summoner(self):
         game = {'gameData': {'teamOne': [{'summonerId': 999, 'championId': 103},

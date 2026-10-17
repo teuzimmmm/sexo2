@@ -44,6 +44,10 @@ injection_data_files = [
 ]
 # Verify and add injection binaries
 binaries = []
+offer_reader = 'sexo2/overlay/bin/sexo2-offer-reader.exe'
+if os.path.isfile(offer_reader):
+    binaries.append((offer_reader, 'sexo2/overlay/bin'))
+    datas += [('sexo2/overlay/licenses', 'sexo2/overlay/licenses')]
 missing_binaries = []
 for tool in injection_binaries:
     if Path(tool).exists():

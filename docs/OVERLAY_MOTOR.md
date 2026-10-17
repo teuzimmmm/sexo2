@@ -209,3 +209,30 @@ resoluções diferentes, idioma/escala de UI, rerrolagem e escolha, identificaç
 parcial/ambígua, perda da janela e respostas atrasadas. Confirmar visualmente que
 cada métrica pertence à opção correspondente; não confundir o teste de render
 DX11 com esse teste de reconhecimento. Nenhuma escolha automática é necessária.
+
+### Implementação da leitura local — contratos da rodada
+
+- `screen.py`: recortes GDI diretos do cliente do jogo em primeiro plano, sem
+  capturar todo o desktop. Conferir HWND/PID/retângulo antes e depois; descartar
+  em alt-tab, mudança de janela ou tamanho. Sem salvar imagens ou texto OCR.
+- `offers.py`: resolução conservadora de nomes, estado de confirmação de duas
+  leituras, expiração e invalidação por contexto. Preservar três posições, IDs
+  desconhecidos e métricas indisponíveis. Nunca publicar a lista geral como oferta.
+- `reader.py` e `sexo2-offer-reader` (novo binário Rust): um processo OCR Windows
+  reutilizável, pipes privados, mensagens/imagens limitadas, timeout que encerra
+  o filho e estados de erro estáticos. Usar modelos OCR instalados no Windows,
+  sem modelo remoto, navegador, screenshots em disco ou OCR em serviço externo.
+- `ArenaFeed` passa a oferecer uma projeção de estatísticas só dos IDs reconhecidos
+  na tabela geral do campeão. As tabelas de posição 1–4 não são a oferta atual.
+  Mayhem pode identificar nomes sem consultar Arena como substituto estatístico.
+- `OverlayRuntime` conecta um worker de leitura separado à projeção. Só funciona
+  em partida e modo elegível, captura no máximo uma vez por segundo e expira a
+  oferta em 2 s. Sem leituras sobrepostas ou rede no worker OCR.
+- Geometria inicial dos títulos, em unidades da altura, é referência do projeto
+  MIT [ARAM Mayhem Tracker](https://github.com/Sygnano/aram-mayhem-tracker/tree/7c28471bf5b511e545d8d1c38b63707157edb134),
+  `crates/mayhem-core/src/layout.rs`: centros -0.3346/0.0062/0.3470, banda
+  vertical 0.348–0.427 e largura 0.25. Isso é evidência do projeto de referência,
+  não calibração reproduzida no LoL deste ambiente; Arena precisa de validação.
+- Testes: matching, ambiguidade, rerrolagem, expiração, contexto, métricas apenas
+  das opções, captura limitada e falhas; Windows OCR real com imagem sintética
+  renderizada pelo teste. Não declarar esse teste como leitura de cartas reais.
