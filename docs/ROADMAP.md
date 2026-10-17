@@ -12,15 +12,15 @@ conferir no cliente LoL ou na instalação do usuário. As decisões citadas (D-
 | M3 | Formatação (ruff, AST verificada), remoção de scripts obsoletos, tracebacks preservados em injeção e monitor | M0 | verificado; remoção parcial (ver abaixo) |
 | M4 | `CLAUDE.md`, skill `sexo2-ui`, registro de decisões, tokens, fontes, protótipo tipográfico | M0 | verificado; D-101 a D-103 pendentes |
 | M5 | Rebrand dos textos visíveis | M2, M4, D-107 | nome trocado nos textos (ver abaixo, `test_no_visible_rose`); validação real pendente; demais textos aguardam D-107 |
-| M6a | Mensagens do assistente na ponte, push do estado da seleção, adaptador LoLalytics | M0 | tabela de despacho da ponte feita (teste de contrato com os 53 tipos); o resto aguarda D-104 e D-105, para não criar mensagens sem consumidor |
-| M6b | Ticker de 1 kHz, filtro de eventos do LCU, polling JS, inbox, cliente WS único | linha de base (D-108) | bloqueado em medição |
-| M7 | Assistente, fase leitura | M4, M6a, D-104, D-105, D-101–103 | bloqueado em decisões |
-| M8 | Importação de runas | M7, D-106 | — |
-| M9 | Conjuntos de itens | M8 | — |
+| M6 | Infraestrutura funcional: tabela de despacho; LCU de runas e conjuntos; validação pelas regras do cliente; controlador de importação; adaptador LoLalytics; serviço do assistente com mensagens `assistant-*` na ponte | M0 | verificado por testes com cliente simulado; validação real pendente (contratos do LCU listados em `docs/VALIDACAO_WINDOWS.md`) |
+| M13 (antigo M6b) | Desempenho: ticker de 1 kHz, filtro de eventos do LCU, polling JS, inbox, cliente WS único | linha de base (D-108), depois da 1.0 | adiado |
+| M7 | Assistente na seleção (interface Pengu) | protótipo aprovado (D-101 a D-105) | protótipo pronto em `design/propostas/sexo2-v1`; interface real aguarda aprovação |
+| M8 | Importação de runas | M6 | serviço pronto; falta a interface (M7) e a validação no cliente |
+| M9 | Conjuntos de itens | M6 | serviço pronto; falta a interface (M7) e a validação no cliente |
 | M10 | Inferência de rotas e matchup | M9 | — |
-| M11 | Overlay: experimento ADR-5 e ouro | M0, Practice Tool | bloqueado em validação real |
+| M11 | Overlay de valor dos itens | M0 | janela pronta, desligada por padrão; calibração das linhas e teste em partida pendentes |
 | M12 | Aprimoramentos (Arena e Mayhem) | M11 | — |
-| M13 | Identificadores e caminhos (`Rose` → `SEXO2`) com migração | M5 | — |
+| M5b (antigo M13) | Identificadores e caminhos (`Rose` → `SEXO2`) com migração | M5, validação no Windows | pendente; arriscado |
 
 ## M5: nacionalização dos textos
 
