@@ -35,7 +35,7 @@ def sanitize(text, secrets=()):
 def export_report(directory, snapshot, log_dir, secrets=()):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    name = "Rose-diagnostico-" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") + ".zip"
+    name = "SEXO2-diagnostico-" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") + ".zip"
     target = directory / name
     # Report deliberately excludes player names, IDs, preferences and server links.
     summary = {k: snapshot.get(k) for k in ("version", "phase", "queueId", "readiness")}

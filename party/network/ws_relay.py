@@ -91,7 +91,7 @@ def _describe_error(error: Optional[BaseException]) -> str:
     if status == 409:
         return "this party is full (10 players max)"
     if status == UPDATE_REQUIRED_STATUS:
-        return "this version of Rose is too old for party mode, please update Rose"
+        return "this version of SEXO2 is too old for party mode, please update SEXO2"
     if status == 403:
         return "Link da sala inválido ou expirado. Peça o endereço atual ao anfitrião."
     if status and status >= 500:
@@ -322,7 +322,7 @@ class PartyRelay:
                         self._stop("the room is full")
                         return
                     if self._update_required:
-                        self._stop("the party server needs a newer Rose")
+                        self._stop("the party server needs a newer SEXO2")
                         return
                     continue
 

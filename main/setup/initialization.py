@@ -57,7 +57,7 @@ def setup_logging_and_cleanup(args: argparse.Namespace) -> None:
         # Detailed startup for verbose/debug
         log_section(
             log,
-            "Rose Starting",
+            "SEXO2 Starting",
             "",
             {
                 "Verbose Mode": "Enabled" if args.verbose else "Disabled",

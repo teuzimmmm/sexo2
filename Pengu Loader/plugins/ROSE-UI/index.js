@@ -12,45 +12,6 @@
   const CHROMA_CONTAINER_CLASS = "lpp-chroma-container";
   const VISIBLE_OFFSETS = new Set([0, 1, 2, 3, 4]);
 
-  const DISCORD_INVITE_URL = "https://discord.com/invite/roseskins";
-  const ROSE_DISCORD_GUILD_ID = "1490473857075642621";
-  const ROSE_GITHUB_REPO_API_URL =
-    "https://api.github.com/repos/Alban1911/Rose";
-  const ROSE_GITHUB_BADGE_FALLBACK_URL =
-    "https://img.shields.io/badge/GitHub-Stars-32A832?style=flat&logo=github&logoColor=white";
-  let roseGithubStarsPromise = null;
-
-  // The welcome modal is rendered by Pengu's signed core module. Keep its
-  // links working without modifying the signed binary when external badge
-  // providers change or the embedded server ID becomes stale.
-  function getRoseGithubStars() {
-    if (roseGithubStarsPromise) return roseGithubStarsPromise;
-
-    roseGithubStarsPromise = fetch(ROSE_GITHUB_REPO_API_URL, {
-      cache: "no-store",
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("GitHub API request failed");
-        return response.json();
-      })
-      .then((repository) => {
-        const stars = Number(repository && repository.stargazers_count);
-        return Number.isSafeInteger(stars) && stars >= 0 ? stars : null;
-      })
-      .catch(() => null);
-
-    return roseGithubStarsPromise;
-  }
-
-  function getRoseGithubBadgeUrl(stars) {
-    const message = encodeURIComponent(stars + " stars");
-    return (
-      "https://img.shields.io/badge/GitHub-" +
-      message +
-      "-32A832?style=flat&logo=github&logoColor=white"
-    );
-  }
-
   function fixPenguWelcomeBadges(shadowRoot) {
     // Replace only the presentation of the signed core's welcome surface.
     const walker=document.createTreeWalker(shadowRoot,NodeFilter.SHOW_TEXT);
@@ -741,7 +702,7 @@
           cancelable: true,
         });
         window.dispatchEvent(event);
-        log.info("Dispatched rose-open-settings event from Golden Rose button");
+        log.info("Dispatched rose-open-settings event from the SEXO2 nav button");
       },
       true
     ); // Use capture phase to intercept early
@@ -766,7 +727,7 @@
             });
             window.dispatchEvent(event);
             log.info(
-              "Dispatched rose-open-settings event from Golden Rose section"
+              "Dispatched rose-open-settings event from the SEXO2 nav section"
             );
 
             // Prevent active class
@@ -883,7 +844,7 @@
     // Attach Discord click listeners
     attachGoldenRoseListeners(navItem);
 
-    log.info("Golden Rose navigation item injected");
+    log.info("SEXO2 navigation item injected");
     return true;
   }
 

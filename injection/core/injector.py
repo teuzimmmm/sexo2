@@ -292,7 +292,7 @@ class SkinInjector:
                     "result_code": str(result),
                     "result_meaning": result_codes.describe(result),
                 },
-                hint="Check Rose logs for details, then retry.",
+                hint="Check SEXO2 logs for details, then retry.",
             )
 
         return result == 0

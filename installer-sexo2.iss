@@ -117,7 +117,7 @@ begin
     Service := Locator.ConnectServer('', 'root\CIMV2');
     Processes := Service.ExecQuery('SELECT Name FROM Win32_Process WHERE Name="SEXO2.exe" OR Name="Rose.exe" OR Name="Rose Sala.exe" OR Name="LeagueClient.exe" OR Name="League of Legends.exe"');
     if Processes.Count > 0 then begin
-      Result := 'Feche Rose, Rose Sala e o cliente LoL antes de instalar.'; exit;
+      Result := 'Feche o SEXO2 e o cliente LoL antes de instalar.'; exit;
     end;
     NeededMB := 400;
     if (FileExists(AddBackslash(AppDir) + 'Rose.exe') or FileExists(AddBackslash(AppDir) + 'SEXO2.exe')) then

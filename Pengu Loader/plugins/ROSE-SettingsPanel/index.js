@@ -1,14 +1,11 @@
 /**
  * @name Rose-SettingsPanel
  * @author Rose Team
- * @description Settings panel for Rose
+ * @description Settings panel for SEXO2
  * @link https://github.com/FlorentTariolle/ROSE-SettingsPanel
  */
 (function initSettingsPanel() {
   const LOG_PREFIX = "[Rose-SettingsPanel]";
-  const DISCORD_INVITE_URL = "https://discord.com/invite/roseskins";
-  const KOFI_URL = "https://ko-fi.com/roseapp";
-  const GITHUB_URL = "https://github.com/Alban1911/Rose";
 
   const PANEL_ID = "rose-settings-panel";
   const FLYOUT_ID = "rose-settings-flyout";
@@ -1633,8 +1630,8 @@
   }
 
   function labelStopInjectionButton(button) {
-    button.title = t("Stop Rose's injection, then reconnect without mods (use this if a mod crashes your game)");
-    button.textContent = button.hasAttribute("disabled") ? t("Mods disabled") : t("Disable Rose mods");
+    button.title = t("Stop SEXO2's injection, then reconnect without mods (use this if a mod crashes your game)");
+    button.textContent = button.hasAttribute("disabled") ? t("Mods disabled") : t("Disable SEXO2 mods");
   }
 
   function resetStopInjectionButton(button) {
@@ -2969,33 +2966,6 @@
       saveSettings();
     });
     form.appendChild(saveButton);
-
-    // Links section
-    const linksSection = document.createElement("div");
-    linksSection.className = "settings-links";
-
-    const discordLink = document.createElement("a");
-    discordLink.className = "settings-link";
-    discordLink.href = DISCORD_INVITE_URL;
-    discordLink.target = "_blank";
-    discordLink.textContent = "Discord";
-    linksSection.appendChild(discordLink);
-
-    const kofiLink = document.createElement("a");
-    kofiLink.className = "settings-link";
-    kofiLink.href = KOFI_URL;
-    kofiLink.target = "_blank";
-    kofiLink.textContent = "Ko-Fi";
-    linksSection.appendChild(kofiLink);
-
-    const githubLink = document.createElement("a");
-    githubLink.className = "settings-link";
-    githubLink.href = GITHUB_URL;
-    githubLink.target = "_blank";
-    githubLink.textContent = "GitHub";
-    linksSection.appendChild(githubLink);
-
-    if(window.__roseHub){const credits=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Créditos da base';credits.append(summary,linksSection);form.appendChild(credits);}else form.appendChild(linksSection);
 
     flyoutContent.appendChild(form);
     flyoutFrame.appendChild(flyoutContent);
@@ -4782,7 +4752,7 @@
 
           let fixText;
           if (thresholdAtMax) {
-            fixText = t("Fix: you're already at the maximum Injection Threshold. This usually means the injection is extremely slow. Try lighter mods, close heavy apps, move League/mods to an SSD, and consider adding antivirus exclusions for the League and Rose folders. Then retry.");
+            fixText = t("Fix: you're already at the maximum Injection Threshold. This usually means the injection is extremely slow. Try lighter mods, close heavy apps, move League/mods to an SSD, and consider adding antivirus exclusions for the League and SEXO2 folders. Then retry.");
           } else if (hasTrackerData) {
             fixText = t('Fix: based on {games} game(s), base skin confirmation takes up to {ms}ms (p90). Recommended threshold: {seconds}s. Use the "Apply recommended" button below, or increase "Injection Threshold" manually.', { games: stats.confirmed_count, ms: stats.p90_ms, seconds: recS });
           } else {
@@ -4811,9 +4781,9 @@
           return {
             title: t("Injection exceeded the timeout (process was stopped)"),
             details: [
-              t("What it means: injection took longer than the allowed time, so ROSE stopped the process."),
+              t("What it means: injection took longer than the allowed time, so SEXO2 stopped the process."),
               timeoutAtMax
-                ? t("Fix: you're already at the maximum Monitor Auto-Resume Timeout. This usually means the injection is extremely slow. Try lighter mods, close heavy apps, move League/mods to an SSD, and consider adding antivirus exclusions for the League and Rose folders. Then retry.")
+                ? t("Fix: you're already at the maximum Monitor Auto-Resume Timeout. This usually means the injection is extremely slow. Try lighter mods, close heavy apps, move League/mods to an SSD, and consider adding antivirus exclusions for the League and SEXO2 folders. Then retry.")
                 : t('Fix: increase "Monitor Auto-Resume Timeout (seconds)" and click Save. If the warning is still there, increase it again and Save again. Once the warning is gone, try again.'),
             ],
           };
@@ -4826,7 +4796,7 @@
             title: t('Not enough disk space for injection'),
             details: [
               t('What it means: SEXO2 could not create the overlay for the selected skin.'),
-              t('Fix: free up space on the drive containing Rose injection files, then retry. Map mods can require several GB.'),
+              t('Fix: free up space on the drive containing SEXO2 injection files, then retry. Map mods can require several GB.'),
             ],
           };
         }
@@ -4836,7 +4806,7 @@
             title: t('LTK patcher is outdated (end of life reached)'),
             details: [
               t('What it means: your ltk_patcher_dll.dll no longer supports the current game build, so skins cannot be injected.'),
-              t("Fix: update LTK Manager, copy its new ltk_patcher_host.exe and ltk_patcher_dll.dll into SEXO2's tools folder, then restart Rose."),
+              t("Fix: update LTK Manager, copy its new ltk_patcher_host.exe and ltk_patcher_dll.dll into SEXO2's tools folder, then restart SEXO2."),
             ],
           };
         }
@@ -4846,7 +4816,7 @@
             title: t('LTK patcher files are missing'),
             details: [
               t('What it means: SEXO2 needs ltk_patcher_host.exe and ltk_patcher_dll.dll to inject skins.'),
-              t("Fix: copy both files from your LTK Manager install into SEXO2's tools folder, then restart Rose."),
+              t("Fix: copy both files from your LTK Manager install into SEXO2's tools folder, then restart SEXO2."),
             ],
           };
         }
@@ -4857,7 +4827,7 @@
             title: t('LTK patcher failed during injection'),
             details: [
               detail ? t('What happened: {detail}', { detail }) : t('What happened: the LTK patcher reported an error.'),
-              t('Fix: make sure your LTK patcher files are up to date, then retry. Full output is in rose_runoverlay_*.log in the Rose logs folder.'),
+              t('Fix: make sure your LTK patcher files are up to date, then retry. Full output is in rose_runoverlay_*.log in the SEXO2 logs folder.'),
             ],
           };
         }
@@ -5105,7 +5075,7 @@
     } else {
       log(
         "warn",
-        "Could not find Golden Rose nav item to position settings panel"
+        "Could not find the SEXO2 nav item to position settings panel"
       );
     }
   });

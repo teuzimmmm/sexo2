@@ -13,7 +13,7 @@ from pathlib import Path
 MIN_PYTHON = (3, 11)
 if sys.version_info < MIN_PYTHON:
     raise RuntimeError(
-        f"Rose requires Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer. "
+        f"SEXO2 requires Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer. "
         "Please upgrade your interpreter and rebuild the application."
     )
 
@@ -49,23 +49,23 @@ def _dll_dialog_text(reason: str, detail: str = ""):
         return (
             "SEXO2 - Patcher Outdated",
             "The LTK patcher has reached its end of life",
-            f"The ltk_patcher_dll.dll in Rose's tools folder does not support game builds released after {detail}, and League has updated since.",
+            f"The ltk_patcher_dll.dll in SEXO2's tools folder does not support game builds released after {detail}, and League has updated since.",
             f"1. Update LTK Manager, then get both files from it.\n"
-            "2. Open Rose's tools folder.\n"
-            "3. Replace both files, then restart Rose.",
+            "2. Open SEXO2's tools folder.\n"
+            "3. Replace both files, then restart SEXO2.",
         )
     if reason == "invalid":
         return (
             "SEXO2 - Broken Patcher",
-            "One Rose component needs replacing",
-            "The ltk_patcher_dll.dll in Rose's tools folder is not a recognized LTK patcher DLL.",
-            f"1. {source}\n2. Open Rose's tools folder.\n3. Replace both files, then restart Rose.",
+            "One SEXO2 component needs replacing",
+            "The ltk_patcher_dll.dll in SEXO2's tools folder is not a recognized LTK patcher DLL.",
+            f"1. {source}\n2. Open SEXO2's tools folder.\n3. Replace both files, then restart SEXO2.",
         )
     return (
         "SEXO2 - Missing Patcher",
-        "One Rose component is missing",
+        "One SEXO2 component is missing",
         f"SEXO2 needs {detail or 'the LTK patcher'} in its tools folder before it can start.",
-        f"1. {source}\n2. Open Rose's tools folder.\n3. Place both files there, then restart Rose.",
+        f"1. {source}\n2. Open SEXO2's tools folder.\n3. Place both files there, then restart SEXO2.",
     )
 
 
@@ -124,7 +124,7 @@ def _show_native_dll_dialog(tools_dir, reason="missing", detail=""):
         TaskDialogButton(button_close, "Close SEXO2"),
     )
     content = f"{status_body}\n\nHow to fix it:\n{steps}"
-    footer = "Please do not request or share this file in Discord. Rose cannot distribute it because of licensing restrictions."
+    footer = "Please do not request or share this file. SEXO2 cannot distribute it because of licensing restrictions."
     assets_dirs = []
     if hasattr(sys, "_MEIPASS"):
         assets_dirs.append(Path(sys._MEIPASS) / "assets")
@@ -268,9 +268,8 @@ def _show_dll_dialog(tools_dir, reason="missing", detail="") -> bool:
     title, status_title, status_body, steps = _dll_dialog_text(reason, detail)
     message = (
         f"{status_title}\n\n{status_body}\n\nHow to fix it:\n{steps}\n\n"
-        "Please do not request or share this file in Discord.\n"
-        "Discord: https://discord.gg/roseskins\n\n"
-        "Press OK to open the tools folder, or Cancel to close Rose."
+        "Please do not request or share this file.\n\n"
+        "Press OK to open the tools folder, or Cancel to close SEXO2."
     )
     response = ctypes.windll.user32.MessageBoxW(0, message, title, 0x00000001 | 0x00000030 | 0x00040000)
     if response == 1:
@@ -372,12 +371,12 @@ def _warn_pengu_activation_failed() -> None:
     startup goes on while it is open.
     """
     log = get_logger()
-    log.error("[Pengu] Activation failed - Rose will not appear in the League client")
+    log.error("[Pengu] Activation failed - SEXO2 will not appear in the League client")
     report_issue(
         "PENGU_ACTIVATION_FAILED",
         "error",
         "Pengu Loader could not be activated, so SEXO2 did not appear in the League client.",
-        hint="Close the League client, then restart Rose. If it happens again, make sure your antivirus is not blocking Pengu Loader.",
+        hint="Close the League client, then restart SEXO2. If it happens again, make sure your antivirus is not blocking Pengu Loader.",
     )
     if sys.platform != "win32":
         return
@@ -389,7 +388,7 @@ def _warn_pengu_activation_failed() -> None:
             ctypes.windll.user32.MessageBoxW(
                 0,
                 "SEXO2 could not activate Pengu Loader, so it will not appear in the League client.\n\n"
-                "Close the League client, then restart Rose.\n"
+                "Close the League client, then restart SEXO2.\n"
                 "If it happens again, make sure your antivirus is not blocking Pengu Loader.\n\n"
                 "Details are in %LOCALAPPDATA%\\Rose\\logs\\",
                 "SEXO2 - Pengu Loader",
@@ -656,7 +655,7 @@ def run_league_unlock(args: Optional[argparse.Namespace] = None, injection_thres
             """Callback for tray restart - relaunch Rose after this process exits"""
             log.info("Restart requested from tray - scheduling relaunch")
             if not _schedule_restart():
-                log.warning("Restart scheduling failed; Rose will quit without relaunching")
+                log.warning("Restart scheduling failed; SEXO2 will quit without relaunching")
             service = getattr(state, "friends_service", None)
             if service:
                 service.room.host.stop()
@@ -789,7 +788,7 @@ if __name__ == "__main__":
 
         error_msg = f"""
 ================================================================================
-FATAL ERROR - Rose Crashed
+FATAL ERROR - SEXO2 Crashed
 ================================================================================
 Error: {e}
 Type: {type(e).__name__}

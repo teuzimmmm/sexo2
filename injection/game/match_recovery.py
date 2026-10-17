@@ -112,4 +112,4 @@ class MatchRecovery:
                 injection_manager.game_monitor.stop()
             except Exception as exc:
                 log.warning("[RECOVERY] Could not release the game: %s", exc)
-        log.warning("[RECOVERY] Rose stopped for this match; game released")
+        log.warning("[RECOVERY] SEXO2 stopped for this match; game released")
