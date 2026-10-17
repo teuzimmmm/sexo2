@@ -14,11 +14,11 @@ def signature(code):
 for name in ['main','main.setup.initialization','main.setup.arguments','main.core.lockfile','sexo2.update.lifecycle','main.runtime.loop','injection.mods.zip_resolver','sexo2.version','state.core.app_status','utils.integration.tray_manager','friends.room','friends.arena_bravery','threads.core.phase_thread','threads.websocket.websocket_event_handler','injection.overlay.overlay_manager','friends.auto_accept','friends.preferences','friends.service','friends.selection_guard','lcu.core.client','lcu.core.request_error','party.hosting.controller','utils.download.verified_file','utils.core.atomic_file','config','injection.game.game_monitor','party.core.party_manager','pengu.communication.message_handler','sexo2.services.work_queue','sexo2.services.settings','sexo2.update.engine','sexo2.update.client','sexo2.update.trust','utils.download.hash_updater','injection.mods.storage','launcher.core.launcher','launcher.core.startup_policy','launcher.sequences.hash_check_sequence','launcher.sequences.skin_sync_sequence','utils.core.modpkg','party.discovery.custom_mods','sexo2.services.mod_library','pengu.core.skin_monitor','utils.core.safe_extract',
              'sexo2.services.plugin_sync','sexo2.services.auto_items','sexo2.services.session','sexo2.sources.mayhem','sexo2.overlay.mayhem',
              'sexo2.services.draft','sexo2.services.builds','sexo2.services.loadouts',
-             'sexo2.overlay.model','sexo2.overlay.runtime','sexo2.overlay.win32',
+             'sexo2.overlay.model','sexo2.overlay.runtime',
              'sexo2.overlay.display','sexo2.overlay.layered','sexo2.overlay.software','sexo2.overlay.isolated',
              'sexo2.overlay.worker_entry','sexo2.overlay.worker','sexo2.overlay.worker_wire','sexo2.overlay.readiness',
              'sexo2.overlay.arena','sexo2.overlay.processes',
-             'sexo2.overlay.gold','sexo2.overlay.composition','sexo2.overlay.offers','sexo2.overlay.reader','sexo2.overlay.screen','sexo2.overlay.wire',
+             'sexo2.overlay.gold','sexo2.overlay.offers','sexo2.overlay.reader','sexo2.overlay.screen','sexo2.overlay.wire',
              'sexo2.install.identity','lolalytics.client','lolalytics.builds','lolalytics.matchups','lolalytics.risk']:
     source=root/'main/__init__.py' if name=='main' else root/(name.replace('.','/')+'.py')
     expected=compile(source.read_text(encoding='utf-8-sig'),str(source),'exec')
@@ -36,6 +36,7 @@ for name in ['galo.png','galo.ico','bork-black-v3.png','sexo2.ico','golden_rose.
 print('PASS: release visual assets and update source match.')
 
 if (bundle/'sexo2-test-build.json').exists():
+    assert not any(name in pyz.toc for name in ['sexo2.overlay.win32','sexo2.overlay.composition']),'Legacy GPU modules present'
     assert not (bundle/'_internal/sexo2/overlay/bin/sexo2-overlay-renderer.dll').exists(),'Obsolete renderer DLL present'
     reader=Path('sexo2/overlay/bin/sexo2-offer-reader.exe')
     assert (bundle/'_internal'/reader).read_bytes()==(root/reader).read_bytes(),'OCR helper differs'

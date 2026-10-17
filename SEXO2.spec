@@ -343,6 +343,9 @@ hiddenimports = [
 
 # Exclusions - modules we don't need (reduces size and build time)
 excludes = [
+    'sexo2.overlay.win32',
+    'sexo2.overlay.composition',
+
     'matplotlib',
     'pytest',
     'setuptools',
@@ -414,7 +417,7 @@ a = Analysis(
     pathex=[str(Path.cwd()), str(Path.cwd() / "build-dependencies")],  # Add current directory to Python path
     binaries=binaries,  # Include injection tool executables
     datas=datas,
-    hiddenimports=hiddenimports + collect_submodules('sexo2') + ['friends.room','friends.selection_guard','party.hosting.controller','party.hosting.friends_relay'],
+    hiddenimports=hiddenimports + [name for name in collect_submodules('sexo2') if name not in {'sexo2.overlay.win32','sexo2.overlay.composition'}] + ['friends.room','friends.selection_guard','party.hosting.controller','party.hosting.friends_relay'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

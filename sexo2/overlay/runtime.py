@@ -64,7 +64,7 @@ class OverlayRuntime:
 
     def preview(self):
         with self._lock:
-            if self._stop.is_set() or self._production_suspended:
+            if self._stop.is_set() or self._production_suspended or self._readiness is not None:
                 return False
             self._preview_until = self._clock() + 20
             self._diagnostic = {'code': 'preview', 'message': 'Prévia solicitada por 20 segundos; não é um teste dentro do LoL.'}
@@ -200,7 +200,7 @@ class OverlayRuntime:
                         self._arena.clear()
                     if self._mayhem is not None:
                         self._mayhem.clear()
-                    status = {'code': 'not-in-game', 'message': 'Aguardando uma partida. Use Testar janela para verificar a exibição.'}
+                    status = {'code': 'not-in-game', 'message': 'Aguardando uma partida. O overlay só inicia depois do carregamento.'}
             # Disabling hides immediately; retain prepared pages until an observed exit.
         except Exception:
             # No false empty success, no exception repr (may contain local credentials).

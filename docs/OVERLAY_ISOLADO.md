@@ -60,3 +60,22 @@ momento tardio da leitura. Frames guardam a expiração original das ofertas e d
 inventários; inicialização lenta não renova dados antigos. O início do auxiliar
 tem até 8s de tolerância; depois do primeiro diagnóstico, escrita travada tem
 limite de 1s. A tolerância inicial nunca estende a validade de uma métrica.
+
+O pacote novo também exclui os módulos Python win32/composition legados, além
+da DLL antiga. A auditoria verifica sua ausência no PYZ. A prévia fora de partida
+permanece apenas como seam de laboratório; a produção não informa aceite de
+uma prévia que não poderia mostrar durante o carregamento.
+
+## Validação do auxiliar — 39045921708
+
+Commit 55e4b53142d9ce123dfdab59a48be10c490a99cc: job Windows aprovado.
+Passaram pixels reais em janelas próprias, regiões transparentes, passagem de
+cliques, foco, z-order, TAB, expiração e falhas reais de processos/pipes.
+O entrypoint de laboratório foi movido para fora da raiz que contém __init__.py;
+a auditoria do PYZ confirma renderer e Pillow e o executável --windowed respondeu
+pelo pipe e encerrou por EOF. Isso resolve a falha de empacotamento do laboratório.
+Não houve LoL/Vanguard nessa validação.
+
+A edição 2.0.0.9 deve repetir testes gráficos/OCR, todas as regressões e verificar
+o mesmo modo worker do SEXO2 efetivamente instalado. A instalação deve excluir
+DLL/módulos legados, incluir o OCR compilado/notices e preservar os dados antigos.
