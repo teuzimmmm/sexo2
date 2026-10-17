@@ -10,7 +10,7 @@ import subprocess
 def build(source):
     source = Path(source).resolve()
     manifest = source / 'native/overlay-host/Cargo.toml'
-    target = source / 'build-native-offers'
+    target = manifest.parent / 'target'
     command = ['cargo', 'build', '--manifest-path', str(manifest), '--locked',
                '--release', '--bin', 'sexo2-offer-reader', '--target-dir', str(target)]
     subprocess.run(command, cwd=source, check=True)

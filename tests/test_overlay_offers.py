@@ -1,10 +1,11 @@
 import time
+import threading
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 from sexo2.overlay.offers import Choice, Matcher, Offer, OfferState, offer_view
-from sexo2.overlay.reader import OfferReader
+from sexo2.overlay.reader import OfferReader, OcrProcess
 from sexo2.overlay.screen import title_rects
 
 
@@ -87,6 +88,21 @@ class OffersTests(unittest.TestCase):
         reader.close()
         self.assertTrue(reader._stop.is_set())
         self.assertIsNone(reader.current(second))
+
+    def test_ocr_timeout_covers_a_blocked_write_and_kills_child(self):
+        from PIL import Image
+        release = threading.Event()
+        child = Mock()
+        child.poll.return_value = None
+        child.stdin.write.side_effect = lambda data: release.wait(1)
+        child.stdout.readline.return_value = b''
+        child.kill.side_effect = release.set
+        ocr = OcrProcess(timeout=.03)
+        ocr._child = child  # A warm owned child; no process or network used.
+        with self.assertRaisesRegex(OSError, 'timed out or failed'):
+            ocr.recognize([Image.new('RGBA', (20, 20))] * 3)
+        child.kill.assert_called_once()
+        self.assertFalse(ocr._io.is_alive())
 
 
 if __name__ == '__main__':

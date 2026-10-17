@@ -37,7 +37,8 @@ class OcrProcess:
         with self._lock:
             if self._closed or (self._io is not None and self._io.is_alive()):
                 raise OSError('OCR reader unavailable.')
-            if self._child is None:
+            cold = self._child is None
+            if cold:
                 if os.name != 'nt' or not self.path.is_file():
                     raise OSError('Local OCR helper unavailable.')
                 self._child = subprocess.Popen([str(self.path)], stdin=subprocess.PIPE,
@@ -62,7 +63,7 @@ class OcrProcess:
                     done.set()
             self._io = threading.Thread(target=exchange, name='SEXO2-OCR-pipe', daemon=True)
             self._io.start()
-        if not done.wait(self.timeout) or not result:
+        if not done.wait(max(self.timeout, 8) if cold else self.timeout) or not result:
             self.close()
             raise OSError('Local OCR timed out or failed.')
         row = result[0]
@@ -145,6 +146,7 @@ class OfferReader:
         blocked_until = 0
         while not self._stop.is_set():
             started = self._clock()
+            images = None
             with self._lock:
                 if self._context is not None and self._clock() - self._renewed > 8:
                     self._context = None
@@ -158,22 +160,30 @@ class OfferReader:
                 elif self._clock() >= blocked_until:
                     if current_generation != generation:
                         self.catalog.bind_revision(context[0])
+                        # Shared official ID/name catalog, not statistics. Mode
+                        # separation is enforced when looking up the metrics.
                         matcher = Matcher(self.catalog.names('cherry-augments'))
                         generation = current_generation
                     if screen is None:
                         screen = self._screen_factory() if self._screen_factory else Screen()
+                    captured_at = self._clock()
                     target, images = screen.capture()
                     if self._ocr is None:
                         self._ocr = self._ocr_factory()
                     titles = self._ocr.recognize(images)
+                    images = None
                     choices = tuple(matcher.match(s) for s in titles)
                     if not screen.valid(target):
                         raise OSError('Window changed during OCR.')
                     with self._lock:
                         if (self._context == context and self._generation == current_generation
                                 and self._clock() - self._renewed <= 8 and not self._stop.is_set()):
-                            self._state.observe(context, choices, self._clock())
-                            self._status = 'reading'
+                            if self._clock() - captured_at >= 2:
+                                self._state.clear()
+                                self._status = 'slow'
+                            else:
+                                self._state.observe(context, choices, captured_at)
+                                self._status = 'reading'
             except Exception:
                 # No image, OCR text, names, account fields, paths or exception repr in logs.
                 with self._lock:
@@ -182,6 +192,7 @@ class OfferReader:
                 if self._ocr:
                     self._ocr.close(); self._ocr = None
                 blocked_until = self._clock() + 5
+            images = None  # Never retain pixels while paused or between iterations.
             self._stop.wait(max(.05, 1 - (self._clock() - started)))
         ocr = self._ocr
         if ocr:

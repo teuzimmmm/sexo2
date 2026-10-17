@@ -24,9 +24,13 @@ class WindowsScreenTests(unittest.TestCase):
             images.append(image)
         ocr = OcrProcess(timeout=8)
         self.addCleanup(ocr.close)
+        child = None
         for _ in range(2):
             result = ocr.recognize(images)
             self.assertEqual([normalized(x) for x in result], [normalized(x) for x in expected])
+            if child is not None:
+                self.assertIs(ocr._child, child)
+            child = ocr._child
         child = ocr._child
         ocr.close()
         self.assertIsNotNone(child.poll())

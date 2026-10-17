@@ -130,6 +130,11 @@ jobs:
         run: |
           python -m unittest tests.test_overlay_screen_windows -v
           if ($LASTEXITCODE -ne 0) { throw 'Screen/OCR test failed; no League validation.' }
+      - name: Stage OCR helper with dependency notices
+        shell: pwsh
+        run: |
+          python scripts/build_offer_reader.py
+          if ($LASTEXITCODE -ne 0) { throw 'OCR helper/license staging failed.' }
       - name: Exercise own-process rendering, expiry and disconnect
         shell: pwsh
         run: |

@@ -1,7 +1,9 @@
 //! Local OCR only. Input is three bounded in-memory title crops, never a path.
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::Deserialize;
-use std::io::{BufRead, Write};
+use std::io::BufRead;
+#[cfg(windows)]
+use std::io::Write;
 
 const MAX_BYTES: usize = 4 * 1024 * 1024;
 

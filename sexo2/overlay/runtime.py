@@ -139,6 +139,7 @@ class OverlayRuntime:
         except Exception:
             # No false empty success, no exception repr (may contain local credentials).
             # Keep bounded snapshot for same-match reconnect; frame expires/hides.
+            offer_context = None
             status = {'code': 'client-unavailable', 'message': 'Não foi possível confirmar a partida pelo LCU. Confira se o cliente permanece aberto.'}
         with self._lock:
             self._frame = frame
