@@ -99,6 +99,18 @@ def initialize_threads(
         t_gold = GoldOverlayThread(state, lcu, geometry)
         thread_manager.register("Gold overlay", t_gold, stop_method=t_gold.stop)
 
+    # Statistics under augment cards (Arena, ARAM Mayhem): off unless enabled in config.ini
+    if (get_config_option("Overlay", "augments_enabled", "false") or "").lower() == "true":
+        from sexo2.augments.vision import Layout
+        from sexo2.overlay.augment_overlay import AugmentOverlayThread
+
+        layout = Layout(
+            card_top=get_config_float("Overlay", "augments_card_top", Layout.card_top),
+            icon_top=get_config_float("Overlay", "augments_icon_top", Layout.icon_top),
+        )
+        t_augments = AugmentOverlayThread(state, lcu, layout)
+        thread_manager.register("Augment overlay", t_augments, stop_method=t_augments.stop)
+
     # Start all threads
     thread_manager.start_all()
 

@@ -18,8 +18,6 @@ otherwise it stays unknown and the player can name it by hand.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
-
 from PIL import Image, ImageStat
 
 from sexo2.augments.offers import CardRead
@@ -111,25 +109,54 @@ class IconMatcher:
         return CardRead(best_id, max(0.0, min(1.0, best)))
 
 
-def cards_present(frame: Image.Image, layout: Layout = Layout(), *, border_min=150, inside_max=90) -> bool:
+def card_area(width: int, height: int, layout: Layout = Layout()) -> tuple[int, int, int, int]:
+    """The smallest box holding every card place and its top edge, to capture only that."""
+    boxes = layout.cards(width, height)
+    margin = max(2, round(0.01 * height))
+    return (
+        max(0, min(b[0] for b in boxes)),
+        max(0, min(b[1] for b in boxes) - margin),
+        min(width, max(b[2] for b in boxes)),
+        min(height, max(b[3] for b in boxes)),
+    )
+
+
+def _shift(box: tuple[int, int, int, int], origin: tuple[int, int]) -> tuple[int, int, int, int]:
+    return (box[0] - origin[0], box[1] - origin[1], box[2] - origin[0], box[3] - origin[1])
+
+
+def cards_present(
+    frame: Image.Image,
+    layout: Layout = Layout(),
+    *,
+    screen: tuple[int, int] | None = None,
+    origin: tuple[int, int] = (0, 0),
+    border_min=150,
+    inside_max=90,
+) -> bool:
     """True when every card place shows a card: a light frame edge above a dark card face.
 
-    Measured on the reference captures: card tops 178-233 and faces 22-66 in grey level,
-    against at most one such place on frames without cards (champion select, the map).
+    ``frame`` is the whole screen, or the part of a ``screen``-sized one that starts at
+    ``origin`` (see :func:`card_area`). Measured on the reference captures: card tops
+    178-233 and faces 22-66 in grey level, against at most one such place on frames
+    without cards (champion select, the map).
     """
-    width, height = frame.size
+    width, height = screen or frame.size
     grey = frame.convert("L")
     for left, top, right, bottom in layout.cards(width, height):
         inset = round(0.1 * (right - left))
         half = max(1, round(0.006 * height))
-        border = grey.crop((left + inset, top - half, right - inset, top + half + 1))
+        border = grey.crop(_shift((left + inset, top - half, right - inset, top + half + 1), origin))
         face_inset = round(0.25 * (right - left))
         face = grey.crop(
-            (
-                left + face_inset,
-                top + round(0.55 * (bottom - top)),
-                right - face_inset,
-                top + round(0.75 * (bottom - top)),
+            _shift(
+                (
+                    left + face_inset,
+                    top + round(0.55 * (bottom - top)),
+                    right - face_inset,
+                    top + round(0.75 * (bottom - top)),
+                ),
+                origin,
             )
         )
         if ImageStat.Stat(border).mean[0] < border_min or ImageStat.Stat(face).mean[0] > inside_max:
@@ -137,12 +164,26 @@ def cards_present(frame: Image.Image, layout: Layout = Layout(), *, border_min=1
     return True
 
 
-def read_offer(frame: Image.Image, matcher: IconMatcher, layout: Layout = Layout()) -> list[CardRead] | None:
+def crops(
+    frame: Image.Image,
+    layout: Layout = Layout(),
+    *,
+    screen: tuple[int, int] | None = None,
+    origin: tuple[int, int] = (0, 0),
+) -> list[Image.Image]:
+    """The icon area of each card place."""
+    return [frame.crop(_shift(box, origin)) for box in layout.icons(*(screen or frame.size))]
+
+
+def read_offer(
+    frame: Image.Image,
+    matcher: IconMatcher,
+    layout: Layout = Layout(),
+    *,
+    screen: tuple[int, int] | None = None,
+    origin: tuple[int, int] = (0, 0),
+) -> list[CardRead] | None:
     """One reading for :class:`OfferTracker`: None without cards, else one read per card."""
-    if not cards_present(frame, layout):
+    if not cards_present(frame, layout, screen=screen, origin=origin):
         return None
-    return [matcher.read(frame.crop(box)) for box in layout.icons(*frame.size)]
-
-
-def crops(frame: Image.Image, layout: Layout = Layout()) -> Iterable[Image.Image]:
-    return (frame.crop(box) for box in layout.icons(*frame.size))
+    return [matcher.read(icon) for icon in crops(frame, layout, screen=screen, origin=origin)]

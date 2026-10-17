@@ -16,7 +16,7 @@ from sexo2.augments.stats import (
     parse_lolalytics_arena,
 )
 from sexo2.augments.view import card_views
-from sexo2.augments.vision import IconMatcher, Layout, cards_present, crops, read_offer
+from sexo2.augments.vision import IconMatcher, Layout, card_area, cards_present, crops, read_offer
 
 CAPTURES = Path(__file__).parent / "fixtures" / "augments"
 
@@ -249,6 +249,14 @@ class VisionTests(unittest.TestCase):
                 self.assertIsNotNone(reading)
                 self.assertEqual([r.augment_id for r in reading], [IDS[letter] for letter in letters])
 
+    def test_reading_only_the_card_area_gives_the_same_result(self):
+        frame = capture("1440x900_rerolls")
+        area = card_area(*frame.size)
+        part = frame.crop(area)
+        self.assertLess(part.size[0] * part.size[1], frame.size[0] * frame.size[1] * 0.5)
+        reading = read_offer(part, self.matcher, screen=frame.size, origin=area[:2])
+        self.assertEqual([r.augment_id for r in reading], [IDS["G"], IDS["H"], IDS["I"]])
+
     def test_frames_without_cards_give_no_reading(self):
         self.assertFalse(cards_present(capture("no_cards_champ_select")))
         self.assertIsNone(read_offer(capture("no_cards_champ_select"), self.matcher))
@@ -265,8 +273,99 @@ class VisionTests(unittest.TestCase):
     def test_a_hand_named_card_teaches_the_matcher(self):
         pool = {i: t for i, t in self.matcher._templates.items() if i != IDS["G"]}
         matcher = IconMatcher(pool)
-        matcher.add(IDS["G"], next(iter(crops(capture("1440x900_rerolls")))))
+        matcher.add(IDS["G"], crops(capture("1440x900_rerolls"))[0])
         self.assertEqual(read_offer(capture("3440x1440_rerolls"), matcher)[0].augment_id, IDS["G"])
+
+
+class SessionTests(unittest.TestCase):
+    """Catalog and icons from a fake client, readings from a real capture."""
+
+    def setUp(self):
+        import io
+
+        from sexo2.augments.session import AugmentSession, load_catalog, load_templates
+
+        icons = {}
+        cherry, names = [], []
+        for name in ("1920x1080_rerolls", "1920x1080_gold"):
+            for letter, icon in zip(LABELS[name], crops(capture(name))):
+                buffer = io.BytesIO()
+                icon.save(buffer, format="PNG")
+                path = f"/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/{letter}_small.png"
+                icons[path] = buffer.getvalue()
+                cherry.append(
+                    {
+                        "id": 100 + IDS[letter],
+                        "augmentNameId": f"A_{letter}",
+                        "nameTRA": letter,
+                        "augmentSmallIconPath": path,
+                        "rarity": "kGold",
+                    }
+                )
+                names.append(f"Maps/x/A_{letter}")
+        cherry.append(
+            {"id": 999, "augmentNameId": "A_noicon", "nameTRA": "Sem ícone", "augmentSmallIconPath": "/missing.png"}
+        )
+        names.append("Maps/x/A_noicon")
+
+        class FakeLCU:
+            def get(self, path, timeout=1.0):
+                return {
+                    "/lol-game-data/assets/v1/cherry-augments.json": cherry,
+                    "/lol-game-data/assets/v1/augment-lists.json": [{"modeName": "KIWI", "augmentList": names}],
+                }.get(path)
+
+            def get_bytes(self, path, timeout=2.0):
+                return icons.get(path)
+
+        lcu = FakeLCU()
+        self.catalog = load_catalog(lcu, "mayhem")
+        templates = load_templates(lcu, self.catalog)
+        self.assertEqual(len(templates), 6)  # the augment without an icon is left out
+        figures = {100 + IDS["G"]: stat(100 + IDS["G"], 51.0, 800), 100 + IDS["I"]: stat(100 + IDS["I"], 54.0, 900)}
+        self.session = AugmentSession(self.catalog, IconMatcher(templates), figures)
+
+    def feed(self, name, times=2):
+        frame = capture(name)
+        for _ in range(times):
+            self.session.observe(read_offer(frame, self.session.matcher), crops(frame))
+
+    def test_offer_on_screen_becomes_three_cards_with_their_figures(self):
+        self.feed("3440x1440_rerolls")
+        cards = self.session.cards()
+        self.assertEqual([c.name for c in cards], ["G", "H", "I"])
+        self.assertEqual([c.state for c in cards], ["ok", "no_data", "ok"])
+        self.assertEqual([c.highlight for c in cards], [False, False, True])
+        for _ in range(3):
+            self.session.observe(read_offer(capture("no_cards_champ_select"), self.session.matcher))
+        self.assertEqual(self.session.cards(), ())
+
+    def test_correction_names_the_card_and_is_refused_outside_the_pool(self):
+        self.feed("1440x900_rerolls")
+        self.assertFalse(self.session.correct(0, 12345))
+        self.assertTrue(self.session.correct(1, 100 + IDS["A"]))
+        self.assertEqual(self.session.cards()[1].name, "A")
+        self.assertTrue(self.session.cards()[1].manual)
+
+
+class OverlayTextTests(unittest.TestCase):
+    def test_texts_never_invent_a_figure(self):
+        from sexo2.overlay.augment_overlay import HIGHLIGHT, MUTED, card_text, text_positions
+
+        catalog = build_catalog(CHERRY, LISTS, "mayhem")
+        tracker = OfferTracker()
+        for _ in range(2):
+            tracker.observe([CardRead(1205, 0.9), CardRead(1141, 0.9), CardRead(None, 0.2)])
+        views = card_views(tracker.offer, catalog, {1205: stat(1205, 53.12, 812, pr=4.1), 1141: stat(1141, 50.0, 300)})
+        self.assertEqual(card_text(views[0]), ("WR 53,1% · PR 4,1% · 812", HIGHLIGHT))
+        self.assertEqual(card_text(views[2]), ("Não reconhecida", MUTED))
+        arena = AugmentStat(1205, "mayhem", "lolalytics", "16.20", "champion_choice_1", None, 17.74, 9777)
+        views = card_views(tracker.offer, catalog, {1205: arena})
+        self.assertEqual(card_text(views[0])[0], "PR 17,7% · 9.777")
+        self.assertEqual(card_text(views[1]), ("Sem dados", MUTED))
+        positions = text_positions(1920, 1080)
+        self.assertEqual(len(positions), 3)
+        self.assertGreater(positions[0][1], Layout().cards(1920, 1080)[0][3])
 
 
 if __name__ == "__main__":
