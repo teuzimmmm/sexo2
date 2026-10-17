@@ -25,6 +25,12 @@ Builds seguintes recuperam esses binários da baseline anterior do projeto.
 Os testes de navegador usam cliente e servidor simulados. A aparência e o uso
 real ainda precisam ser observados no cliente LoL.
 
+## API LoLalytics
+
+Coletor independente com CLI, builds/runas, matchups, cache e filtro de risco.
+Consulte [como executar e os limites](docs/lolalytics/README.md).
+Esta integração não adiciona overlay nem importação no cliente LoL.
+
 ## Créditos
 
 Base Rose, Pengu Loader, LTK e dependências mantêm suas licenças/atribuições.

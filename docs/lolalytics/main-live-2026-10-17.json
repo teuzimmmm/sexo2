@@ -1,0 +1,107 @@
+{
+  "checked_at": "2026-10-17T15:16:01.250899+00:00",
+  "attempts_per_request": 1,
+  "checks": [
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "middle",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null,
+        "opponent": null,
+        "opponent_lane": "all"
+      },
+      "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all",
+      "operation": "builds",
+      "patch": "16.20",
+      "pages": 2,
+      "conditioning": [
+        "keystone",
+        "keystone"
+      ],
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "jinx",
+        "mode": "aram",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null,
+        "opponent": null,
+        "opponent_lane": "all"
+      },
+      "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=emerald_plus&region=all",
+      "operation": "snapshot",
+      "patch": "16.20",
+      "records": 1486,
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "arena",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null,
+        "opponent": null,
+        "opponent_lane": "all"
+      },
+      "source_url": "https://lolalytics.com/lol/ahri/arena/build/q-data.json?tier=emerald_plus&region=all",
+      "operation": "recommend",
+      "patch": "16.20",
+      "ranking_rows": 2306,
+      "restricted_win_rates": false,
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "jinx",
+        "mode": "swift",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null,
+        "opponent": null,
+        "opponent_lane": "all"
+      },
+      "source_url": "https://lolalytics.com/lol/jinx/swift/build/q-data.json?tier=emerald_plus&region=all",
+      "operation": "builds",
+      "patch": "16.20",
+      "pages": 2,
+      "conditioning": [
+        "mode",
+        "mode"
+      ],
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "middle",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null,
+        "opponent": "annie",
+        "opponent_lane": "middle"
+      },
+      "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+      "operation": "matchup",
+      "patch": "16.20",
+      "blocks": 7,
+      "conditioning": "opponent",
+      "status": "passed"
+    }
+  ],
+  "http_requests": 7
+}

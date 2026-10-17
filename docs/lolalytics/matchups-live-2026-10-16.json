@@ -1,0 +1,130 @@
+{
+  "checked_at": "2026-10-16T16:55:26.219577+00:00",
+  "status": "passed",
+  "logical_query_budget": 5,
+  "max_http_attempts_per_get": 3,
+  "checks": {
+    "general": {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "middle",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null,
+        "opponent": null,
+        "opponent_lane": "all"
+      },
+      "patch": "16.20",
+      "logical_queries": 3,
+      "pages": [
+        {
+          "selection": "win",
+          "title": "WR 59.3% / 1.077 jogos",
+          "patch": "16.20",
+          "block_count": 5,
+          "warnings": [
+            "keystone_conditioned",
+            "not_full_rune_page_joint_sample"
+          ],
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&patch=16.20&keystone=8992"
+        },
+        {
+          "selection": "pick",
+          "title": "Common 53.6% / 26.214 jogos",
+          "patch": "16.20",
+          "block_count": 5,
+          "warnings": [
+            "keystone_conditioned",
+            "not_full_rune_page_joint_sample"
+          ],
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&patch=16.20&keystone=8112"
+        }
+      ]
+    },
+    "matchups": {
+      "queries": [
+        {
+          "champion": "ahri",
+          "mode": "ranked",
+          "patch": "16.20",
+          "lane": "middle",
+          "tier": "emerald_plus",
+          "region": "all",
+          "keystone": null,
+          "opponent": "annie",
+          "opponent_lane": "middle"
+        },
+        {
+          "champion": "ahri",
+          "mode": "ranked",
+          "patch": "16.20",
+          "lane": "middle",
+          "tier": "emerald_plus",
+          "region": "all",
+          "keystone": null,
+          "opponent": "ryze",
+          "opponent_lane": "middle"
+        }
+      ],
+      "logical_queries": 2,
+      "pages": [
+        {
+          "selection": "vs",
+          "conditioning": "opponent",
+          "opponent": "annie",
+          "title": "WR vs Annie / taxa conjunta indisponível",
+          "patch": "16.20",
+          "rune_count": 9,
+          "block_count": 7,
+          "core_metrics_available": false,
+          "cache_hit": false,
+          "warnings": [
+            "opponent_conditioned",
+            "keystone_filter_unavailable",
+            "not_joint_build_sample",
+            "low_item_sample"
+          ],
+          "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus&patch=16.20"
+        },
+        {
+          "selection": "vs",
+          "conditioning": "opponent",
+          "opponent": "ryze",
+          "title": "WR vs Ryze / taxa conjunta indisponível",
+          "patch": "16.20",
+          "rune_count": 9,
+          "block_count": 7,
+          "core_metrics_available": false,
+          "cache_hit": false,
+          "warnings": [
+            "opponent_conditioned",
+            "keystone_filter_unavailable",
+            "not_joint_build_sample",
+            "low_item_sample"
+          ],
+          "source_url": "https://lolalytics.com/lol/ahri/vs/ryze/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus&patch=16.20"
+        }
+      ],
+      "annie_repeat": {
+        "cache_hit": true,
+        "logical_queries": 0,
+        "opponent": "annie"
+      }
+    },
+    "item_pages": {
+      "three_suggestions": 3,
+      "three_suggestion_blocks": 17,
+      "single_page_overflow_rejected": true,
+      "four_suggestions": 4,
+      "four_suggestion_blocks": 24,
+      "packed_pages": 2,
+      "packed_block_counts": [
+        20,
+        4
+      ]
+    }
+  },
+  "logical_queries": 5
+}

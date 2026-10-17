@@ -1,0 +1,223 @@
+{
+  "checked_at": "2026-10-16T16:02:18.019048+00:00",
+  "checks": [
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all"
+      },
+      "resolved": {
+        "champion": "ahri",
+        "cid": 103,
+        "mode": "ranked",
+        "patch": "16.20",
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "status": 200,
+        "key": "ahri_all_ranked_list_emerald_plus_16.20_all__all"
+      },
+      "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=all&tier=emerald_plus&region=all",
+      "records": 1051,
+      "categories": [
+        "item_combination",
+        "item_statistics",
+        "rune_statistics",
+        "rune_suggestion"
+      ],
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "jinx",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all"
+      },
+      "resolved": {
+        "champion": "jinx",
+        "cid": 222,
+        "mode": "ranked",
+        "patch": "16.20",
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "status": 200,
+        "key": "jinx_all_ranked_list_emerald_plus_16.20_all__all"
+      },
+      "source_url": "https://lolalytics.com/lol/jinx/build/q-data.json?lane=all&tier=emerald_plus&region=all",
+      "records": 933,
+      "categories": [
+        "item_combination",
+        "item_statistics",
+        "rune_statistics",
+        "rune_suggestion"
+      ],
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "aram",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all"
+      },
+      "resolved": {
+        "champion": "ahri",
+        "cid": 103,
+        "mode": "aram",
+        "patch": "16.20",
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "status": 200,
+        "key": "ahri_all_aram_list_emerald_plus_16.20_all__all"
+      },
+      "source_url": "https://lolalytics.com/lol/ahri/aram/build/q-data.json?tier=emerald_plus&region=all",
+      "records": 1188,
+      "categories": [
+        "item_combination",
+        "item_statistics",
+        "rune_statistics",
+        "rune_suggestion"
+      ],
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "jinx",
+        "mode": "aram",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all"
+      },
+      "resolved": {
+        "champion": "jinx",
+        "cid": 222,
+        "mode": "aram",
+        "patch": "16.20",
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "status": 200,
+        "key": "jinx_all_aram_list_emerald_plus_16.20_all__all"
+      },
+      "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=emerald_plus&region=all",
+      "records": 1414,
+      "categories": [
+        "item_combination",
+        "item_statistics",
+        "rune_statistics",
+        "rune_suggestion"
+      ],
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "arena",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all"
+      },
+      "resolved": {
+        "champion": "ahri",
+        "cid": 103,
+        "mode": "arena",
+        "patch": "16.20",
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "status": 200,
+        "key": "ahri_all_arena_list_emerald_plus_16.20_all__all"
+      },
+      "source_url": "https://lolalytics.com/lol/ahri/arena/build/q-data.json?tier=emerald_plus&region=all",
+      "records": 2259,
+      "categories": [
+        "augment_statistics",
+        "item_combination",
+        "item_statistics"
+      ],
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "jinx",
+        "mode": "arena",
+        "patch": null,
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all"
+      },
+      "resolved": {
+        "champion": "jinx",
+        "cid": 222,
+        "mode": "arena",
+        "patch": "16.20",
+        "lane": "all",
+        "tier": "emerald_plus",
+        "region": "all",
+        "status": 200,
+        "key": "jinx_all_arena_list_emerald_plus_16.20_all__all"
+      },
+      "source_url": "https://lolalytics.com/lol/jinx/arena/build/q-data.json?tier=emerald_plus&region=all",
+      "records": 2161,
+      "categories": [
+        "augment_statistics",
+        "item_combination",
+        "item_statistics"
+      ],
+      "status": "passed"
+    },
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": "16.19",
+        "lane": "middle",
+        "tier": "gold",
+        "region": "br"
+      },
+      "resolved": {
+        "champion": "ahri",
+        "cid": 103,
+        "mode": "ranked",
+        "patch": "16.19",
+        "lane": "middle",
+        "tier": "gold",
+        "region": "br",
+        "status": 200,
+        "key": "ahri_middle_ranked_list_gold_16.19_br__all"
+      },
+      "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=gold&region=br&patch=16.19",
+      "status": "passed"
+    },
+    {
+      "source_url": "https://a1.lolalytics.com/mega/?ep=build-itemset&v=1&patch=16.20&c=ahri&lane=all&tier=emerald_plus&queue=ranked&region=all",
+      "tables": [
+        "itemBootSet1",
+        "itemBootSet2",
+        "itemBootSet3",
+        "itemBootSet4",
+        "itemBootSet5",
+        "itemBootSet6",
+        "itemSet1",
+        "itemSet2",
+        "itemSet3",
+        "itemSet4",
+        "itemSet5"
+      ],
+      "status": "passed"
+    }
+  ]
+}

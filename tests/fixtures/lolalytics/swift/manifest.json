@@ -1,0 +1,13 @@
+{
+  "collected_at": "2026-10-17",
+  "kind": "sanitized projections of real public aggregate responses",
+  "source": {
+    "url": "https://lolalytics.com/lol/ahri/swift/build/q-data.json?tier=emerald_plus&region=all&patch=16.20",
+    "status": 200,
+    "unsupported_keystone_status": 404
+  },
+  "files": {
+    "ahri-swift.json": "966f4380dd345f27e9b8fb4fd8d9ef68d47636acce67cb5607c06fd57fda220c",
+    "jinx-swift.json": "a2ba0a6d5ff431c98df1b9e48b7015c6f6027f00976ddd328dff8a68c066c2d4"
+  }
+}
