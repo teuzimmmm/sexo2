@@ -1,4 +1,5 @@
 """The inherited Rose telemetry stays removed (master plan, milestone M1)."""
+
 import unittest
 from pathlib import Path
 

@@ -41,7 +41,10 @@ from injection.overlay.match_context import MatchContext
 
 
 from party.core.party_manager import (
-    PartyManager, PERMANENT_PARTY_ROOM_KEY, PERMANENT_PARTY_NAME, get_party_room,
+    PartyManager,
+    PERMANENT_PARTY_ROOM_KEY,
+    PERMANENT_PARTY_NAME,
+    get_party_room,
 )
 
 
@@ -155,8 +158,7 @@ class ResultCodeTests(unittest.TestCase):
         return injector
 
     def test_expected_stops_are_separated_from_real_failures(self):
-        for code in (result_codes.SAFETY_RELEASE, result_codes.GAME_NEVER_SEEN,
-                     result_codes.EMERGENCY_STOP):
+        for code in (result_codes.SAFETY_RELEASE, result_codes.GAME_NEVER_SEEN, result_codes.EMERGENCY_STOP):
             self.assertTrue(result_codes.is_expected_stop(code), code)
         for code in (1, 7, result_codes.BUILD_TIMEOUT, result_codes.MISSING_PREREQUISITE):
             self.assertFalse(result_codes.is_expected_stop(code), code)
@@ -208,12 +210,14 @@ class MatchContextTests(unittest.TestCase):
 
     def test_phase_and_cancellation_come_from_the_manager(self):
         recovery = MatchRecovery(SimpleNamespace(phase="InProgress"))
-        ctx = MatchContext(SimpleNamespace(
-            recovery=recovery,
-            shared_state=SimpleNamespace(phase="InProgress"),
-            safety_resume_triggered=False,
-            report_match_issue=Mock(),
-        ))
+        ctx = MatchContext(
+            SimpleNamespace(
+                recovery=recovery,
+                shared_state=SimpleNamespace(phase="InProgress"),
+                safety_resume_triggered=False,
+                report_match_issue=Mock(),
+            )
+        )
         self.assertEqual(ctx.phase, "InProgress")
         self.assertTrue(ctx.in_active_phase)
         self.assertFalse(ctx.cancelled)
@@ -294,5 +298,3 @@ class MatchReportTests(unittest.TestCase):
         ctx.report_issue("GAME_EXIT", "resumo", "detalhe")
         ctx.report_issue("GAME_EXIT", "resumo", "detalhe")
         self.assertEqual(ctx.report.avisos, ["GAME_EXIT"])
-
-

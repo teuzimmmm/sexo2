@@ -14,20 +14,38 @@ def make_snapshot(mode="ranked"):
         resolved={"champion": "ahri", "mode": mode, "patch": "16.20", "keystone": 8992},
         source_url="https://example.invalid/filtered",
         collected_at="2026-10-16T00:00:00Z",
-        overview={}, records=[], availability={}, raw={"summary": {
-            "win": {"runes": {"page": {"pri": 2, "sec": 3}, "set": {
-                "pri": [8992, 8226, 8210, 8237], "sec": [8473, 8451], "mod": [5008, 5010, 5011]}},
-                "items": {"start": {"set": [1056, 2003, 2003], "wr": 53.25, "n": 19477,
-                                     "future": "preserved"},
-                          "core": {"set": [3118, 3020, 3100], "wr": 59.33, "n": 1077},
-                          "item4": [{"id": 3041, "n": 711, "wr": 77.78}, {"id": 3089, "n": 2748, "wr": 60.23}],
-                          "item5": [{"id": 3041, "n": 430, "wr": 73.72}],
-                          "item6": [{"id": 3089, "n": 328, "wr": 62.5}]}},
-            "pick": {"runes": {"page": {"pri": 2, "sec": 3}, "set": {
-                "pri": [8992, 8226, 8210, 8237], "sec": [8473, 8451], "mod": [5008, 5010, 5011]}},
-                "items": {"core": {"set": [3118, 3020, 4645], "wr": 52.67, "n": 1927},
-                          "item4": [{"id": 3157, "n": 3318, "wr": 56.39}]}}}},
-        warnings=[], cache_hit=True,
+        overview={},
+        records=[],
+        availability={},
+        raw={
+            "summary": {
+                "win": {
+                    "runes": {
+                        "page": {"pri": 2, "sec": 3},
+                        "set": {"pri": [8992, 8226, 8210, 8237], "sec": [8473, 8451], "mod": [5008, 5010, 5011]},
+                    },
+                    "items": {
+                        "start": {"set": [1056, 2003, 2003], "wr": 53.25, "n": 19477, "future": "preserved"},
+                        "core": {"set": [3118, 3020, 3100], "wr": 59.33, "n": 1077},
+                        "item4": [{"id": 3041, "n": 711, "wr": 77.78}, {"id": 3089, "n": 2748, "wr": 60.23}],
+                        "item5": [{"id": 3041, "n": 430, "wr": 73.72}],
+                        "item6": [{"id": 3089, "n": 328, "wr": 62.5}],
+                    },
+                },
+                "pick": {
+                    "runes": {
+                        "page": {"pri": 2, "sec": 3},
+                        "set": {"pri": [8992, 8226, 8210, 8237], "sec": [8473, 8451], "mod": [5008, 5010, 5011]},
+                    },
+                    "items": {
+                        "core": {"set": [3118, 3020, 4645], "wr": 52.67, "n": 1927},
+                        "item4": [{"id": 3157, "n": 3318, "wr": 56.39}],
+                    },
+                },
+            }
+        },
+        warnings=[],
+        cache_hit=True,
     )
 
 
@@ -35,8 +53,15 @@ class BuildPageTests(unittest.TestCase):
     def test_build_page_preserves_blocks_metrics_and_repeated_start_counts(self):
         page = build_page(make_snapshot(), "win", 8992)
         self.assertEqual(page.title, "WR 59.3% / 1.077 jogos")
-        self.assertEqual(page.runes, {"pri": ["8992", "8226", "8210", "8237"], "sec": ["8473", "8451"],
-                                     "mod": ["5008", "5010", "5011"], "page": {"pri": 2, "sec": 3}})
+        self.assertEqual(
+            page.runes,
+            {
+                "pri": ["8992", "8226", "8210", "8237"],
+                "sec": ["8473", "8451"],
+                "mod": ["5008", "5010", "5011"],
+                "page": {"pri": 2, "sec": 3},
+            },
+        )
         blocks = {block.kind: block for block in page.blocks}
         self.assertEqual([(c.identifier, c.count) for c in blocks["starting"].choices], [("1056", 1), ("2003", 2)])
         self.assertEqual(blocks["starting"].choices[1].raw["future"], "preserved")

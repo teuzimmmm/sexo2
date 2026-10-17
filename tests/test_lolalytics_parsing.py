@@ -1,4 +1,5 @@
 """Contract tests for decoding, validation, normalization, and Arena redaction."""
+
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -27,7 +28,9 @@ class ParsingFixtureTests(unittest.TestCase):
         for entry in MANIFEST:
             with self.subTest(fixture=entry["fixture"]):
                 snapshot = parse_page(
-                    fixture_bytes(entry), fixture_query(entry), entry["source_url"],
+                    fixture_bytes(entry),
+                    fixture_query(entry),
+                    entry["source_url"],
                     entry["collected_on"],
                 )
                 self.assertEqual(snapshot.resolved["champion"], entry["filters"]["champion"])
@@ -56,7 +59,18 @@ class ParsingFixtureTests(unittest.TestCase):
             before = deepcopy(payload)
             sanitized = sanitize_payload(payload, "arena")
             self.assertEqual(payload, before)
-            for key in ("builtItemSet3", "item", "item1", "item2", "item3", "item4", "item5", "item6", "startItem", "prismatic"):
+            for key in (
+                "builtItemSet3",
+                "item",
+                "item1",
+                "item2",
+                "item3",
+                "item4",
+                "item5",
+                "item6",
+                "startItem",
+                "prismatic",
+            ):
                 for row in sanitized.get(key, []):
                     self.assertIsNone(row[1], (name, key, row))
             for rows in sanitized.get("augment", {}).values():
@@ -90,7 +104,8 @@ class ParsingValidationTests(unittest.TestCase):
             deepcopy(self.nav if nav is None else nav),
             deepcopy(self.payload if payload is None else payload),
             self.query if query is None else query,
-            "https://example.invalid/source", "2026-10-16T00:00:00Z",
+            "https://example.invalid/source",
+            "2026-10-16T00:00:00Z",
         )
 
     def test_rejects_query_filter_ignored_by_server(self):
@@ -128,10 +143,18 @@ class ParsingValidationTests(unittest.TestCase):
 
     def test_validates_nav_status_cid_patch_and_mode_queue(self):
         cases = []
-        nav = deepcopy(self.nav); nav["status"] = 403; cases.append((nav, deepcopy(self.payload)))
-        nav = deepcopy(self.nav); nav["cid"] = 0; cases.append((nav, deepcopy(self.payload)))
-        nav = deepcopy(self.nav); nav["patch"] = "current"; cases.append((nav, deepcopy(self.payload)))
-        payload = deepcopy(self.payload); payload["header"]["queue"] = 450; cases.append((deepcopy(self.nav), payload))
+        nav = deepcopy(self.nav)
+        nav["status"] = 403
+        cases.append((nav, deepcopy(self.payload)))
+        nav = deepcopy(self.nav)
+        nav["cid"] = 0
+        cases.append((nav, deepcopy(self.payload)))
+        nav = deepcopy(self.nav)
+        nav["patch"] = "current"
+        cases.append((nav, deepcopy(self.payload)))
+        payload = deepcopy(self.payload)
+        payload["header"]["queue"] = 450
+        cases.append((deepcopy(self.nav), payload))
         for nav, payload in cases:
             with self.subTest(nav=nav, queue=payload["header"].get("queue")), self.assertRaises(SchemaError):
                 self.parse_copy(nav=nav, payload=payload)
@@ -168,7 +191,9 @@ class ParsingValidationTests(unittest.TestCase):
         payload["summary"]["pick"]["runes"]["set"]["pri"] = [1, 2]
         snapshot = self.parse_copy(payload=payload)
         self.assertEqual(snapshot.availability["rune_suggestion:pick"], "unavailable")
-        self.assertFalse(any(r.category == "rune_suggestion" and r.raw.get("result") == "pick" for r in snapshot.records))
+        self.assertFalse(
+            any(r.category == "rune_suggestion" and r.raw.get("result") == "pick" for r in snapshot.records)
+        )
 
     def test_rejects_boolean_header_games(self):
         payload = deepcopy(self.payload)
@@ -206,7 +231,11 @@ class ParsingValidationTests(unittest.TestCase):
         payload = deepcopy(self.payload)
         payload["startSet"] = [["0_100_100", "xx.xx", 1.25, 8]]
         snapshot = self.parse_copy(payload=payload)
-        record = next(r for r in snapshot.records if r.category == "item_combination" and r.source_path.startswith("payload.startSet"))
+        record = next(
+            r
+            for r in snapshot.records
+            if r.category == "item_combination" and r.source_path.startswith("payload.startSet")
+        )
         self.assertEqual(record.identifiers, ["0", "100", "100"])
         self.assertIsNone(record.metrics["win_rate"])
 

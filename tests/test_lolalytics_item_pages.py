@@ -9,8 +9,18 @@ from lolalytics.parsing import parse_page
 from lolalytics.query import Query
 
 
-def make_page(selection="win", *, champion="ahri", patch="16.20", mode="ranked", tier="emerald_plus",
-              region="all", lane="middle", blocks=5, label=None):
+def make_page(
+    selection="win",
+    *,
+    champion="ahri",
+    patch="16.20",
+    mode="ranked",
+    tier="emerald_plus",
+    region="all",
+    lane="middle",
+    blocks=5,
+    label=None,
+):
     label = label or {"win": "WR", "pick": "Common", "vs": "vs Annie"}.get(selection, selection)
     conditioning = "opponent" if selection == "vs" else "keystone"
     return BuildPage(
@@ -19,15 +29,28 @@ def make_page(selection="win", *, champion="ahri", patch="16.20", mode="ranked",
         title=f"ignored full title for {label}",
         keystone=8992,
         runes={"pri": ["8992"]},
-        blocks=[ItemBlock("core" if i == 0 else f"item{i}",
-                          [ItemChoice("1001", 1, {"win_rate": 55.0, "games": 23}, {"raw": i})],
-                          {"win_rate": 60.0, "games": 5}, f"payload.block{i}", True)
-                for i in range(blocks)],
+        blocks=[
+            ItemBlock(
+                "core" if i == 0 else f"item{i}",
+                [ItemChoice("1001", 1, {"win_rate": 55.0, "games": 23}, {"raw": i})],
+                {"win_rate": 60.0, "games": 5},
+                f"payload.block{i}",
+                True,
+            )
+            for i in range(blocks)
+        ],
         core_metrics={"win_rate": 60.0, "games": 5},
         source_url="https://example.invalid/build",
         query={"champion": champion, "mode": mode, "patch": patch, "tier": tier, "region": region, "lane": lane},
-        resolved={"champion": champion, "mode": mode, "patch": patch, "tier": tier, "region": region,
-                  "effective_lane": lane, "champion_name": champion.title()},
+        resolved={
+            "champion": champion,
+            "mode": mode,
+            "patch": patch,
+            "tier": tier,
+            "region": region,
+            "effective_lane": lane,
+            "champion_name": champion.title(),
+        },
         collected_at="2026-10-16T00:00:00Z",
         cache_hit=False,
         warnings=["source-warning"],
@@ -56,8 +79,12 @@ class PlanItemPagesTests(unittest.TestCase):
         self.assertEqual(prepared[0].to_dict()["blocks"][0]["block"]["choices"][0]["identifier"], "1001")
 
     def test_capacity_is_prevalidated_and_can_be_raised_explicitly(self):
-        pages = [make_page("win", blocks=6), make_page("pick", blocks=6),
-                 make_page("vs", blocks=6), make_page("vs", blocks=6, label="vs Ryze")]
+        pages = [
+            make_page("win", blocks=6),
+            make_page("pick", blocks=6),
+            make_page("vs", blocks=6),
+            make_page("vs", blocks=6, label="vs Ryze"),
+        ]
         with self.assertRaisesRegex(QueryError, "require 2 pages"):
             plan_item_pages(pages)
         prepared = plan_item_pages(pages, max_pages=2)
@@ -119,9 +146,14 @@ class PlanItemPagesTests(unittest.TestCase):
             plan_item_pages([page])
 
     def test_bad_inputs_and_limits_are_rejected(self):
-        for kwargs in ({"max_pages": True}, {"max_pages": 0}, {"max_pages": 21},
-                       {"max_blocks_per_page": True}, {"max_blocks_per_page": 0},
-                       {"max_blocks_per_page": 101}):
+        for kwargs in (
+            {"max_pages": True},
+            {"max_pages": 0},
+            {"max_pages": 21},
+            {"max_blocks_per_page": True},
+            {"max_blocks_per_page": 0},
+            {"max_blocks_per_page": 101},
+        ):
             with self.subTest(kwargs=kwargs):
                 with self.assertRaises(QueryError):
                     plan_item_pages([make_page(blocks=1)], **kwargs)
@@ -147,7 +179,9 @@ class PlanItemPagesTests(unittest.TestCase):
         matchup_query = Query("ahri", lane="middle", opponent="annie", opponent_lane="middle")
         matchup_snapshot = parse_page(
             (fixture_root / "matchups" / "ahri-vs-annie.json").read_bytes(),
-            matchup_query, matchup_query.url, "2026-10-16T00:00:00Z",
+            matchup_query,
+            matchup_query.url,
+            "2026-10-16T00:00:00Z",
         )
         matchup = build_matchup_page(matchup_snapshot)
         pages.append(matchup)
@@ -156,10 +190,18 @@ class PlanItemPagesTests(unittest.TestCase):
         self.assertEqual(len(planned), 1)
         self.assertEqual(planned[0].title, "Builds de Ahri")
         self.assertEqual(len(planned[0].blocks), 17)
-        self.assertEqual([block.label for block in planned[0].blocks[10:]], [
-            "vs Annie · Starting", "vs Annie · Item 1", "vs Annie · Item 2", "vs Annie · Item 3",
-            "vs Annie · Item 4", "vs Annie · Item 5", "vs Annie · Item 6",
-        ])
+        self.assertEqual(
+            [block.label for block in planned[0].blocks[10:]],
+            [
+                "vs Annie · Starting",
+                "vs Annie · Item 1",
+                "vs Annie · Item 2",
+                "vs Annie · Item 3",
+                "vs Annie · Item 4",
+                "vs Annie · Item 5",
+                "vs Annie · Item 6",
+            ],
+        )
         for entry in planned[0].blocks[10:]:
             self.assertEqual(entry.source["conditioning"], "opponent")
             self.assertEqual(entry.source["resolved"]["opponent"], "annie")

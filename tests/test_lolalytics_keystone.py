@@ -1,4 +1,5 @@
 """Keystone query and resolved-navigation contracts."""
+
 from copy import deepcopy
 import json
 from pathlib import Path

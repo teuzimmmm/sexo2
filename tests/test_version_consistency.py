@@ -1,4 +1,5 @@
 """Every place that shows or stamps the release version agrees with sexo2/version.py (M2)."""
+
 import re
 import unittest
 from pathlib import Path
@@ -27,8 +28,12 @@ class VersionConsistencyTests(unittest.TestCase):
         self.assertEqual(re.findall(r'#define MyAppVersion "([^"]*)"', text), [RELEASE_VERSION + ".0"])
 
     def test_settings_panel_shows_the_release(self):
-        service = SettingsService(validate_path=lambda p: False, autostart_status=lambda: False,
-                                  set_autostart=lambda v: None, infer_client_path=lambda p: p)
+        service = SettingsService(
+            validate_path=lambda p: False,
+            autostart_status=lambda: False,
+            set_autostart=lambda v: None,
+            infer_client_path=lambda p: p,
+        )
         self.assertEqual(service.snapshot()["version"], RELEASE_VERSION)
 
     def test_http_requests_identify_the_release(self):
