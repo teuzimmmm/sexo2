@@ -13,6 +13,7 @@ from typing import Optional
 from injection.game.game_monitor import make_game_ended_callback
 from lcu import LCU
 from lcu.core.lockfile import SWIFTPLAY_MODES, SWIFTPLAY_QUEUE_IDS
+from sexo2.services import assistant_runtime
 from state import SharedState
 from pengu.processing.swiftplay_pins import get_pins, read_lobby, base_slots_ready
 from utils.core.historic import clear_historic_entry, get_historic_skin_for_champion, write_historic_entry
@@ -219,6 +220,7 @@ class SwiftplayHandler:
                 self.state.locked_champ_id = champion_id
                 self.state.locked_champ_timestamp = time.time()
                 self.state.own_champion_locked = True
+                assistant_runtime.champion_confirmed(self.lcu, self.state, champion_id, swiftplay=True)
 
                 # Trigger skin scraping
                 if self.skin_scraper:

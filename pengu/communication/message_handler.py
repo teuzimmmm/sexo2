@@ -231,7 +231,7 @@ class MessageHandler:
 
     def _handle_assistant(self, payload):
         """Champion-select assistant: runes and item sets (sexo2/services/assistant.py)."""
-        from sexo2.services.assistant import AssistantService
+        from sexo2.services import assistant_runtime
 
         with self._background_lock:
             if not hasattr(self, "_assistant"):
@@ -239,14 +239,10 @@ class MessageHandler:
                 if lcu is None:
                     self._send_response(json.dumps({"type": "assistant-state", "error": "no_client"}))
                     return
-                self._assistant = AssistantService(
-                    lcu,
-                    lambda state: self._send_response(json.dumps(state, ensure_ascii=False)),
-                    queue_id=lambda: getattr(self.shared_state, "current_queue_id", None),
-                    in_champ_select=lambda: (
-                        getattr(self.shared_state, "phase", None) in ("ChampSelect", "FINALIZATION")
-                    ),
+                assistant_runtime.set_publisher(
+                    lambda state: self._send_response(json.dumps(state, ensure_ascii=False))
                 )
+                self._assistant = assistant_runtime.get(lcu, self.shared_state)
         try:
             self._assistant.handle(payload)
         except ValueError as error:

@@ -10,6 +10,7 @@ import time
 from typing import Optional
 
 from lcu import LCU, compute_locked
+from sexo2.services import assistant_runtime
 from state import SharedState
 from ui.chroma.selector import get_chroma_selector
 from utils.core.logging import get_logger, log_status, log_event
@@ -80,6 +81,7 @@ class ChampionLockHandler:
                     )
                     self.handle_champion_exchange(self.last_locked_champion_id, new_champ_id, champ_label)
                     self.last_locked_champion_id = new_champ_id
+                    assistant_runtime.champion_confirmed(self.lcu, self.state, new_champ_id)
                 else:
                     # New champion lock
                     champ_label = f"#{new_champ_id}"
@@ -101,6 +103,7 @@ class ChampionLockHandler:
                     self.on_own_champion_locked(new_champ_id, champ_label, old_champ_id)
 
                     self.last_locked_champion_id = new_champ_id
+                    assistant_runtime.champion_confirmed(self.lcu, self.state, new_champ_id)
 
         # Log other players' locks
         for cid in added:
