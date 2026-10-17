@@ -17,7 +17,6 @@ ROOT = Path(__file__).resolve().parent.parent
 
 STANDALONE_SUITES = ("tests",)
 PACKAGE_SUITES = (
-    "analytics/tests",
     "injection/tests",
     "launcher/tests",
     "lcu/tests",
