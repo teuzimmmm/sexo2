@@ -123,6 +123,64 @@ def _choose_mod_file() -> Optional[Path]:
                 pass
 
 
+# Message type -> handler method. Special cases live in MessageHandler._route.
+_ROUTES = {
+    "sexo2-library-request": "_handle_library",
+    "sexo2-update-request": "_handle_sexo2_update",
+    "sexo2-update-open": "_open_sexo2_updater",
+    "friends-request": "_handle_friends",
+    "swiftplay-pins-request": "_handle_swiftplay_pins",
+    "swiftplay-pins-save": "_handle_swiftplay_pins",
+    "chroma-log": "_handle_chroma_log",
+    "request-local-preview": "_handle_request_local_preview",
+    "request-local-asset": "_handle_request_local_asset",
+    "chroma-selection": "_handle_chroma_selection",
+    "dice-button-click": "_handle_dice_button_click",
+    "settings-request": "_enqueue_settings",
+    "path-validate": "_handle_path_validate",
+    "open-mods-folder": "_handle_open_mods_folder",
+    "request-skin-mods": "_handle_request_skin_mods",
+    "request-manage-champion-mods": "_handle_request_manage_champion_mods",
+    "request-manage-category-mods": "_handle_request_manage_category_mods",
+    "request-maps": "_handle_request_maps",
+    "request-fonts": "_handle_request_fonts",
+    "request-announcers": "_handle_request_announcers",
+    "request-category-mods": "_handle_request_category_mods",
+    "select-skin-mod": "_handle_select_skin_mod",
+    "select-map": "_handle_select_map",
+    "select-font": "_handle_select_font",
+    "select-announcer": "_handle_select_announcer",
+    "select-other": "_handle_select_other",
+    "open-logs-folder": "_handle_open_logs_folder",
+    "diagnostics-request": "_handle_diagnostics_request",
+    "diagnostics-clear": "_handle_diagnostics_clear",
+    "stop-injection": "_handle_stop_injection",
+    "diagnostics-delete": "_handle_diagnostics_delete",
+    "diagnostics-clear-category": "_handle_diagnostics_clear_category",
+    "diagnostics-clear-tracker": "_handle_diagnostics_clear_tracker",
+    "diagnostics-apply-recommended": "_handle_diagnostics_apply_recommended",
+    "open-pengu-loader-ui": "_handle_open_pengu_loader_ui",
+    "settings-save": "_enqueue_settings",
+    "language-save": "_handle_language_save",
+    "add-custom-mods-category-selected": "_handle_add_custom_mods_category_selected",
+    "add-custom-mods-champion-selected": "_handle_add_custom_mods_champion_selected",
+    "add-custom-mods-skin-selected": "_handle_add_custom_mods_skin_selected",
+    "find-match-hover": "_handle_find_match_hover",
+    "dismiss-custom-mod": "_handle_dismiss_custom_mod",
+    "delete-champion-mod": "_handle_delete_champion_mod",
+    "delete-category-mod": "_handle_delete_category_mod",
+    "rename-champion-mod": "_handle_rename_champion_mod",
+    "rename-category-mod": "_handle_rename_category_mod",
+    "dismiss-historic": "_handle_dismiss_historic",
+    "party-enable": "_handle_party_enable",
+    "party-disable": "_handle_party_disable",
+    "party-add-peer": "_handle_party_add_peer",
+    "party-remove-peer": "_handle_party_remove_peer",
+    "party-reconnect": "_handle_party_reconnect",
+    "party-get-state": "_handle_party_get_state",
+}
+
+
 class MessageHandler:
     """Handles routing and processing of WebSocket messages"""
 
@@ -303,126 +361,18 @@ class MessageHandler:
                 self._background_queue.task_done()
 
     def _route(self, payload_type: Optional[str], payload: dict) -> None:
-        # Route to appropriate handler
-        if payload_type == "sexo2-library-request":
-            self._handle_library(payload)
-            return
-        if payload_type == "sexo2-update-request":
-            self._handle_sexo2_update(payload)
-            return
-        if payload_type == "sexo2-update-open":
-            self._open_sexo2_updater(payload)
-            return
-
         if payload_type == "manual-skin-choice":
             from friends.selection_guard import mark_manual
 
             mark_manual(self.shared_state)
             return
-        if payload_type == "friends-request":
-            self._handle_friends(payload)
-            return
-        if payload_type in ("swiftplay-pins-request", "swiftplay-pins-save"):
-            self._handle_swiftplay_pins(payload)
-            return
-        if payload_type == "chroma-log":
-            self._handle_chroma_log(payload)
-        elif payload_type == "request-local-preview":
-            self._handle_request_local_preview(payload)
-        elif payload_type == "request-local-asset":
-            self._handle_request_local_asset(payload)
-        elif payload_type == "chroma-selection":
-            self._handle_chroma_selection(payload)
-        elif payload_type == "dice-button-click":
-            self._handle_dice_button_click(payload)
-        elif payload_type == "settings-request":
-            self._enqueue_settings(payload)
-        elif payload_type == "path-validate":
-            self._handle_path_validate(payload)
-        elif payload_type == "open-mods-folder":
-            self._handle_open_mods_folder(payload)
-        elif payload_type == "request-skin-mods":
-            self._handle_request_skin_mods(payload)
-        elif payload_type == "request-manage-champion-mods":
-            self._handle_request_manage_champion_mods(payload)
-        elif payload_type == "request-manage-category-mods":
-            self._handle_request_manage_category_mods(payload)
-        elif payload_type == "request-maps":
-            self._handle_request_maps(payload)
-        elif payload_type == "request-fonts":
-            self._handle_request_fonts(payload)
-        elif payload_type == "request-announcers":
-            self._handle_request_announcers(payload)
-        elif payload_type == "request-category-mods":
-            self._handle_request_category_mods(payload)
-        elif payload_type == "request-others":
+        if payload_type == "request-others":
             # Backwards compatible: treat as a request for the "others" category only
             self._handle_request_category_mods({"category": self.mod_storage.CATEGORY_OTHERS})
-        elif payload_type == "select-skin-mod":
-            self._handle_select_skin_mod(payload)
-        elif payload_type == "select-map":
-            self._handle_select_map(payload)
-        elif payload_type == "select-font":
-            self._handle_select_font(payload)
-        elif payload_type == "select-announcer":
-            self._handle_select_announcer(payload)
-        elif payload_type == "select-other":
-            self._handle_select_other(payload)
-        elif payload_type == "open-logs-folder":
-            self._handle_open_logs_folder(payload)
-        elif payload_type == "diagnostics-request":
-            self._handle_diagnostics_request(payload)
-        elif payload_type == "diagnostics-clear":
-            self._handle_diagnostics_clear(payload)
-        elif payload_type == "stop-injection":
-            self._handle_stop_injection(payload)
-        elif payload_type == "diagnostics-delete":
-            self._handle_diagnostics_delete(payload)
-        elif payload_type == "diagnostics-clear-category":
-            self._handle_diagnostics_clear_category(payload)
-        elif payload_type == "diagnostics-clear-tracker":
-            self._handle_diagnostics_clear_tracker(payload)
-        elif payload_type == "diagnostics-apply-recommended":
-            self._handle_diagnostics_apply_recommended(payload)
-        elif payload_type == "open-pengu-loader-ui":
-            self._handle_open_pengu_loader_ui(payload)
-        elif payload_type == "settings-save":
-            self._enqueue_settings(payload)
-        elif payload_type == "language-save":
-            self._handle_language_save(payload)
-        elif payload_type == "add-custom-mods-category-selected":
-            self._handle_add_custom_mods_category_selected(payload)
-        elif payload_type == "add-custom-mods-champion-selected":
-            self._handle_add_custom_mods_champion_selected(payload)
-        elif payload_type == "add-custom-mods-skin-selected":
-            self._handle_add_custom_mods_skin_selected(payload)
-        elif payload_type == "find-match-hover":
-            self._handle_find_match_hover(payload)
-        elif payload_type == "dismiss-custom-mod":
-            self._handle_dismiss_custom_mod(payload)
-        elif payload_type == "delete-champion-mod":
-            self._handle_delete_champion_mod(payload)
-        elif payload_type == "delete-category-mod":
-            self._handle_delete_category_mod(payload)
-        elif payload_type == "rename-champion-mod":
-            self._handle_rename_champion_mod(payload)
-        elif payload_type == "rename-category-mod":
-            self._handle_rename_category_mod(payload)
-        elif payload_type == "dismiss-historic":
-            self._handle_dismiss_historic(payload)
-        # Party mode messages
-        elif payload_type == "party-enable":
-            self._handle_party_enable(payload)
-        elif payload_type == "party-disable":
-            self._handle_party_disable(payload)
-        elif payload_type == "party-add-peer":
-            self._handle_party_add_peer(payload)
-        elif payload_type == "party-remove-peer":
-            self._handle_party_remove_peer(payload)
-        elif payload_type == "party-reconnect":
-            self._handle_party_reconnect(payload)
-        elif payload_type == "party-get-state":
-            self._handle_party_get_state(payload)
+            return
+        method = _ROUTES.get(payload_type)
+        if method:
+            getattr(self, method)(payload)
         elif payload.get("skin"):
             # Handle skin detection message
             self._handle_skin_detection(payload)
