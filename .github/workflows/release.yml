@@ -1,7 +1,7 @@
 name: Validate SEXO2
 on:
   push:
-    branches: ['main']
+    branches: ['**']
     tags: ['v*']
   pull_request:
 permissions:
@@ -14,12 +14,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Install test dependencies
-        run: python -m pip install -r requirements.txt
-      - name: Test services and update recovery
+        run: python -m pip install -r requirements.txt ruff==0.17.1
+      - name: Lint (blocking set)
+        run: ruff check .
+      - name: Lint report (informational)
+        run: ruff check --select F --statistics --exit-zero .
+      - name: Python tests (all suites)
         shell: pwsh
         run: |
-          python -m unittest discover -s tests -q
-          if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
+          python scripts/run_tests.py -q
+          if ($LASTEXITCODE -ne 0) { throw 'Python tests failed.' }
+      - name: Plugin tests (node:test)
+        shell: pwsh
+        run: |
+          node --test (Get-ChildItem tests -Filter 'test_*.cjs').FullName
+          if ($LASTEXITCODE -ne 0) { throw 'Plugin tests failed.' }
 # Releases are compiled and signed locally by scripts/release_local.ps1.
 # The private signing key is never stored in GitHub Actions.
