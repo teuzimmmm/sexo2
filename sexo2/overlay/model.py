@@ -111,6 +111,7 @@ class OverlayStore:
             if self._closed:
                 return
             self._data = {'key': key, 'mode': context['mode'], 'revision': result['revision'],
+                          'champion_id': context['champion_id'],
                           'result_id': result['resultId'], 'context': safe_context,
                           'result': projected, 'cards': cards, 'selected': 0,
                           'at': self._clock()}
@@ -150,6 +151,13 @@ class OverlayStore:
                     or mode not in ('ranked', 'aram') or key != self._data['key']
                     or mode != self._data['mode']
                     or self._clock() - self._data['at'] > 6 * 3600):
+                self._data = None
+
+    def verify_champion(self, champion_id):
+        """The existing champion monitor can invalidate a late trade at handoff."""
+        with self._lock:
+            if (type(champion_id) is int and champion_id > 0 and self._data
+                    and champion_id != self._data['champion_id']):
                 self._data = None
 
     def view(self, key, mode):

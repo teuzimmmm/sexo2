@@ -111,7 +111,9 @@ class PenguSkinMonitorThread(threading.Thread):
         # Separate, read-only Windows window; never runs HTTP on the GUI thread.
         from sexo2.overlay.runtime import OverlayRuntime
         from sexo2.services.settings import get_overlay_enabled
-        self._build_overlay = OverlayRuntime(lcu, enabled=get_overlay_enabled)
+        self._build_overlay = OverlayRuntime(lcu, enabled=get_overlay_enabled,
+                                            champion=lambda: getattr(shared_state, 'locked_champ_id', None)
+                                            or getattr(shared_state, 'hovered_champ_id', None))
         self.message_handler.overlay_store = self._build_overlay.store
 
     def run(self) -> None:

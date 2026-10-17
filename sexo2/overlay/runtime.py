@@ -18,8 +18,9 @@ class Frame:
 
 
 class OverlayRuntime:
-    def __init__(self, lcu, *, enabled, window_factory=None, clock=time.monotonic):
+    def __init__(self, lcu, *, enabled, champion=lambda: None, window_factory=None, clock=time.monotonic):
         self.lcu, self.enabled = lcu, enabled
+        self.champion = champion
         self.store = OverlayStore(clock=clock)
         self._clock = clock
         self._lock = threading.Lock()
@@ -54,6 +55,7 @@ class OverlayRuntime:
                     if key is None:
                         raise ValueError('Unknown game identity')
                     self.store.observe(phase, key, mode)
+                    self.store.verify_champion(self.champion())
                     if phase in ('InProgress', 'Reconnect') and mode in ('ranked', 'aram'):
                         frame = Frame(True, self.store.view(key, mode))
                 else:

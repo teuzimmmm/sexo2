@@ -145,6 +145,10 @@ class OverlayTests(unittest.TestCase):
         self.store.prepare(self.context, self.result)
         self.assertEqual(self.store.view(self.key, 'ranked').cards, ())
 
+    def test_late_trade_detected_by_existing_champion_monitor_discards_cards(self):
+        self.runtime.champion = lambda: 222
+        self.assertEqual(self.playing().view.cards, ())
+
     def test_conflicting_native_match_identifiers_hide(self):
         self.lcu.game['gameId'] = 11
         self.assertFalse(self.playing().active)

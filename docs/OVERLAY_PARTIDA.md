@@ -17,7 +17,8 @@ a janela durante a partida é um componente Windows separado, no mesmo programa.
    F10 percorre as páginas de texto. A barra compacta continua visível; a opção
    nas configurações desativa também a barra.
    Registrar os atalhos somente com a janela do jogo ativa e liberar ao sair.
-   Não injetar DLL, ler memória do jogo ou interceptar teclado globalmente.
+   Não injetar DLL, ler memória do jogo ou instalar hooks de teclado.
+   Usar somente os atalhos registrados no Windows enquanto o jogo estiver ativo.
 4. Integrar criação/encerramento ao monitor existente. Uma falha do overlay não
    deve impedir skins, painel, importações ou o encerramento do aplicativo.
    Configuração persistente permite desativar o componente.
@@ -51,6 +52,8 @@ Migração e limpeza do Rose continuam na fase final.
 `runtime.py` observa o LCU a cada dois segundos, oculta em erro/observação vencida
 e limita a retenção a seis horas. `win32.py` cria/destrói janela, fonte, brush,
 timer e atalhos na mesma thread. Sem Qt, Chromium ou dependência adicional.
+O campeão observado pelo monitor existente também invalida uma preparação de
+outro campeão, inclusive em uma troca tardia na passagem para a partida.
 Falha na projeção ou na janela é isolada do coletor, painel e importador.
 
 As sugestões mostram nomes do catálogo, patch, filtros, momento de coleta, risco,
