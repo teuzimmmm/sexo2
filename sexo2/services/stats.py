@@ -56,14 +56,16 @@ def champion_slug(alias: str | None, name: str | None = None) -> str:
 class ChampionDirectory:
     """Champion id to slug, from ``/lol-game-data/assets/v1/champion-summary.json``."""
 
-    def __init__(self, slugs: dict[int, str]) -> None:
+    def __init__(self, slugs: dict[int, str], names: dict[int, str] | None = None) -> None:
         self._slugs = dict(slugs)
+        self._names = dict(names or {})
 
     @classmethod
     def from_summary(cls, payload: Any) -> ChampionDirectory:
         if not isinstance(payload, list):
             raise StatsError("schema", "champion summary must be a list")
         slugs = {}
+        names = {}
         for entry in payload:
             if not isinstance(entry, dict):
                 continue
@@ -71,7 +73,13 @@ class ChampionDirectory:
             if isinstance(champion_id, bool) or not isinstance(champion_id, int) or champion_id <= 0:
                 continue  # the summary lists id -1 for "None"
             slugs[champion_id] = champion_slug(entry.get("alias"), entry.get("name"))
-        return cls(slugs)
+            if isinstance(entry.get("name"), str) and entry["name"].strip():
+                names[champion_id] = entry["name"].strip()
+        return cls(slugs, names)
+
+    def name(self, champion_id: int) -> str | None:
+        """Display name as the client's summary gives it (localised), if known."""
+        return self._names.get(champion_id)
 
     def slug(self, champion_id: int) -> str:
         try:

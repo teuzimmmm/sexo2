@@ -4,17 +4,25 @@ The plugin asks (bridge messages ``assistant-*``); this service reads the champi
 session from the client, fetches LoLalytics statistics, and drives the rune import
 controller and the item set import. State changes are published as ``assistant-state``.
 All client and network calls run on one serial worker, never on the bridge loop.
+
+The item set is imported automatically when the local player's champion is
+confirmed (lock, trade or Swiftplay choice), without the panel being open:
+:meth:`AssistantService.champion_confirmed` is called by the champion lock
+handlers. Calls are debounced and the latest confirmation wins; a write is
+skipped when the same session, champion and opponent were already confirmed.
 """
 
 from __future__ import annotations
 
 import logging
+import threading
 from dataclasses import dataclass
 from typing import Any, Callable
 
 from lcu.features.lcu_item_sets import LCUItemSets
 from lcu.features.lcu_perks import LCUPerks
-from sexo2.services.item_sets import build_item_sets, import_item_sets
+from lolalytics.errors import QueryError
+from sexo2.services.item_sets import build_item_set, import_item_set
 from sexo2.services.rune_import import RuneImportController, RuneImportSnapshot, SessionKey
 from sexo2.services.rune_rules import PageSpec, StyleCatalog
 from sexo2.services.stats import ChampionDirectory, RuneLayout, StatsError, StatsService
@@ -36,6 +44,7 @@ class ChampSelectContext:
     mode: str | None
     enemies: tuple[int, ...]
     can_edit: bool
+    locked: bool = False
 
 
 def read_context(session: Any, queue_id: int | None) -> ChampSelectContext | None:
@@ -46,7 +55,8 @@ def read_context(session: Any, queue_id: int | None) -> ChampSelectContext | Non
     me = next((p for p in session.get("myTeam") or [] if isinstance(p, dict) and p.get("cellId") == local), None)
     if me is None:
         return None
-    champion = me.get("championId") or me.get("championPickIntent") or 0
+    locked = me.get("championId") or 0
+    champion = locked or me.get("championPickIntent") or 0
     if not isinstance(champion, int) or isinstance(champion, bool) or champion <= 0:
         return None
     session_id = str(session.get("id") or session.get("gameId") or "")
@@ -65,6 +75,7 @@ def read_context(session: Any, queue_id: int | None) -> ChampSelectContext | Non
         mode=QUEUE_MODES.get(queue_id) if isinstance(queue_id, int) else None,
         enemies=enemies,
         can_edit=phase != "GAME_STARTING",
+        locked=isinstance(locked, int) and not isinstance(locked, bool) and locked > 0,
     )
 
 
@@ -104,6 +115,8 @@ class AssistantService:
         stats_factory: Callable[[ChampionDirectory], StatsService] = StatsService,
         worker: SerialWorker | None = None,
         controller: RuneImportController | None = None,
+        schedule: Callable[[float, Callable[[], None]], None] | None = None,
+        auto_delay: float = 0.5,
     ) -> None:
         self._lcu = lcu
         self._publish = publish
@@ -122,6 +135,13 @@ class AssistantService:
         self._items: dict = {}
         self._error: str | None = None
         self._last_rune_sequence = -1
+        self._directory: ChampionDirectory | None = None
+        self._schedule = schedule or _timer
+        self._auto_delay = auto_delay
+        self._auto_lock = threading.Lock()
+        self._auto_generation = 0
+        self._auto_target: tuple[int, bool] | None = None
+        self._items_key: tuple | None = None
 
     # Bridge entry points (return quickly; work goes to the worker) ----------
 
@@ -133,6 +153,9 @@ class AssistantService:
             opponent = payload.get("championId")
             self._opponent = opponent if isinstance(opponent, int) and opponent > 0 else None
             self._submit(self._refresh)
+            target = self._auto_target
+            if target is not None:
+                self.champion_confirmed(target[0], swiftplay=target[1])
         elif kind == "assistant-runes-choose":
             self._choose(str(payload.get("selection") or ""), bool(payload.get("matchup")))
         elif kind == "assistant-runes-edit":
@@ -142,8 +165,25 @@ class AssistantService:
         elif kind == "assistant-runes-back":
             self._controller.back()
         elif kind == "assistant-items-import":
-            selections = [s for s in payload.get("selections") or [] if isinstance(s, str)]
-            self._submit(lambda: self._import_items(selections))
+            self._submit(self._import_items)
+
+    def champion_confirmed(self, champion_id: int, *, swiftplay: bool = False) -> None:
+        """The local player's champion is confirmed: import its item set (debounced).
+
+        Safe to call from any thread; returns at once.
+        """
+        if isinstance(champion_id, bool) or not isinstance(champion_id, int) or champion_id <= 0:
+            return
+        with self._auto_lock:
+            self._auto_generation += 1
+            generation = self._auto_generation
+            self._auto_target = (champion_id, swiftplay)
+
+        def fire() -> None:
+            if generation == self._auto_generation:
+                self._submit(lambda: self._auto_import(generation, champion_id, swiftplay))
+
+        self._schedule(self._auto_delay, fire)
 
     def _submit(self, work: Callable[[], None]) -> None:
         def failed(error: BaseException) -> None:
@@ -161,20 +201,26 @@ class AssistantService:
         context = self._context
         return bool(context and context.can_edit and self._in_champ_select())
 
+    def _ensure_stats(self) -> StatsService:
+        if self._stats is None:
+            self._directory = ChampionDirectory.from_summary(
+                self._lcu.get("/lol-game-data/assets/v1/champion-summary.json")
+            )
+            self._stats = self._stats_factory(self._directory)
+        return self._stats
+
     def _refresh(self) -> None:
         context = read_context(self._lcu.get("/lol-champ-select/v1/session"), self._queue_id())
         self._context = context
         if context is None:
             self._controller.set_session(None)
-            self._runes, self._items, self._error = {}, {}, None
+            self._runes, self._error = {}, None
             self._publish_state()
             return
         if self._catalog is None:
             self._catalog = StyleCatalog.from_payload(self._lcu.get("/lol-perks/v1/styles"))
             self._controller.set_catalog(self._catalog)
-        if self._stats is None:
-            directory = ChampionDirectory.from_summary(self._lcu.get("/lol-game-data/assets/v1/champion-summary.json"))
-            self._stats = self._stats_factory(directory)
+        self._ensure_stats()
         self._controller.set_session(SessionKey(context.session_id, context.champion_id))
         self._error = None
         if context.mode is None:
@@ -215,28 +261,83 @@ class AssistantService:
             return
         self._controller.choose(page)
 
-    def _import_items(self, selections: list[str]) -> None:
+    def _auto_import(self, generation: int, champion_id: int, swiftplay: bool) -> None:
+        if generation != self._auto_generation:
+            return  # a newer confirmation is queued
+        if swiftplay:
+            queue_id = self._queue_id()
+            context = ChampSelectContext(
+                session_id="swiftplay",
+                champion_id=champion_id,
+                lane="all",
+                mode=QUEUE_MODES.get(queue_id) if isinstance(queue_id, int) else None,
+                enemies=(),
+                can_edit=True,
+                locked=True,
+            )
+        else:
+            context = read_context(self._lcu.get("/lol-champ-select/v1/session"), self._queue_id())
+            if context is None or not context.locked or context.champion_id != champion_id:
+                return  # provisional pick, another player's champion, or the session is gone
+            self._context = context
+        if context.mode is None:
+            self._items = {"error": "unsupported_mode"}
+            self._publish_state()
+            return
+        key = (context.session_id, champion_id, self._opponent)
+        if key == self._items_key:
+            return  # this champion's set is already confirmed
+        self._write_items(context, generation)
+
+    def _import_items(self) -> None:
+        """Import on request from the panel (same set as the automatic import)."""
         context = self._context
-        if context is None or context.mode is None or self._stats is None:
+        if context is None or context.mode is None:
             self._items = {"error": "no_session"}
             self._publish_state()
             return
-        if not self._can_edit():
-            self._items = {"error": "cannot_edit"}
+        self._write_items(context, None)
+
+    def _write_items(self, context: ChampSelectContext, generation: int | None) -> None:
+        self._items = {"pending": True, "championId": context.champion_id}
+        self._publish_state()
+        try:
+            stats = self._ensure_stats()
+            builds = stats.builds(context.champion_id, context.mode, context.lane, opponent_id=self._opponent)
+        except StatsError as error:
+            self._items = {"error": f"stats_{error.code}"}
             self._publish_state()
             return
-        self._items = {"pending": True}
-        self._publish_state()
-        builds = self._stats.builds(context.champion_id, context.mode, context.lane, opponent_id=self._opponent)
-        pages = [page for page in builds.pages if page.selection in selections]
-        if not pages:
+        except Exception:
+            log.exception("[ASSISTANT] build statistics unavailable")
+            self._items = {"error": "stats_unavailable"}
+            self._publish_state()
+            return
+        if generation is not None and generation != self._auto_generation:
+            return  # the champion changed while the statistics loaded
+        by_selection = {page.selection: page for page in builds.pages}
+        try:
+            item_set = build_item_set(
+                context.champion_id,
+                by_selection.get("win"),
+                by_selection.get("pick"),
+                by_selection.get("vs"),
+                champion_name=self._directory.name(context.champion_id) if self._directory else None,
+            )
+        except (QueryError, ValueError) as error:
+            log.info("[ASSISTANT] no item set for champion %s: %s", context.champion_id, error)
             self._items = {"error": "no_builds"}
             self._publish_state()
             return
-        result = import_item_sets(
-            LCUItemSets(self._lcu), context.champion_id, build_item_sets(context.champion_id, pages)
-        )
-        self._items = {"confirmed": result.confirmed, "count": len(pages), "error": result.error}
+        result = import_item_set(LCUItemSets(self._lcu), item_set)
+        if result.confirmed:
+            self._items_key = (context.session_id, context.champion_id, self._opponent)
+        self._items = {
+            "confirmed": result.confirmed,
+            "championId": context.champion_id,
+            "sections": [block["type"] for block in item_set["blocks"]],
+            "error": result.error,
+        }
         self._publish_state()
 
     # State -------------------------------------------------------------------
@@ -276,3 +377,9 @@ class AssistantService:
             },
             "items": dict(self._items),
         }
+
+
+def _timer(delay: float, action: Callable[[], None]) -> None:
+    timer = threading.Timer(delay, action)
+    timer.daemon = True
+    timer.start()

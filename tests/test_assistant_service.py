@@ -1,8 +1,10 @@
 """Champion-select assistant wiring (sexo2/services/assistant.py) with fake client and statistics."""
 
+import copy
 import json
 import unittest
 from pathlib import Path
+from unittest.mock import MagicMock
 
 from sexo2.services.assistant import AssistantService, page_from_json, read_context
 from sexo2.services.rune_rules import PageSpec
@@ -28,19 +30,37 @@ def session(champion=103, position="middle", phase="FINALIZATION", session_id="c
     }
 
 
+PERSONAL = {"title": "Minha Ahri", "uid": "personal-1", "associatedChampions": [103], "blocks": []}
+
+
 class FakeLCU:
     def __init__(self):
         self.session = session()
+        self.item_sets = {"accountId": 1, "itemSets": [copy.deepcopy(PERSONAL)], "timestamp": 1}
+        self.puts = []
 
     def get(self, path, **kwargs):
+        if path == "/lol-item-sets/v1/item-sets/7/sets":
+            return copy.deepcopy(self.item_sets)
         return {
             "/lol-champ-select/v1/session": self.session,
             "/lol-perks/v1/styles": STYLES["styles"],
-            "/lol-game-data/assets/v1/champion-summary.json": [{"id": 103, "alias": "Ahri", "name": "Ahri"}],
+            "/lol-summoner/v1/current-summoner": {"summonerId": 7},
+            "/lol-game-data/assets/v1/champion-summary.json": [
+                {"id": 103, "alias": "Ahri", "name": "Ahri"},
+                {"id": 86, "alias": "Garen", "name": "Garen"},
+            ],
         }.get(path)
+
+    def put(self, path, json_data, timeout, headers=None):
+        self.puts.append(copy.deepcopy(json_data))
+        self.item_sets = copy.deepcopy(json_data)
+        return MagicMock(status_code=204)
 
 
 class FakeStats:
+    with_builds = False
+
     def __init__(self, directory):
         self.calls = []
         self.fail = None
@@ -63,7 +83,13 @@ class FakeStats:
         )
 
     def builds(self, champion_id, mode, lane, opponent_id=None):
-        return BuildStats(pages=())
+        self.calls.append(("builds", champion_id, mode, lane, opponent_id))
+        if not self.with_builds:
+            return BuildStats(pages=())
+        from tests.test_item_sets import ahri_pages, annie_matchup
+
+        pages = tuple(ahri_pages()) + ((annie_matchup(),) if opponent_id else ())
+        return BuildStats(pages=pages)
 
 
 class InlineWorker:
@@ -175,8 +201,108 @@ class AssistantServiceTests(unittest.TestCase):
 
     def test_items_without_builds_report_it(self):
         self.service.handle({"type": "assistant-request"})
-        self.service.handle({"type": "assistant-items-import", "selections": ["win"]})
+        self.service.handle({"type": "assistant-items-import"})
         self.assertEqual(self.published[-1]["items"], {"error": "no_builds"})
+
+
+class AutomaticItemImportTests(unittest.TestCase):
+    def setUp(self):
+        FakeStats.with_builds = True
+        self.addCleanup(setattr, FakeStats, "with_builds", False)
+        self.lcu = FakeLCU()
+        self.published = []
+        self.queue = 420
+        self.timers = []
+        self.service = AssistantService(
+            self.lcu,
+            self.published.append,
+            queue_id=lambda: self.queue,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=FakeController(),
+            schedule=lambda delay, action: self.timers.append(action),
+        )
+
+    def fire(self):
+        timers, self.timers = self.timers, []
+        for action in timers:
+            action()
+
+    def managed(self):
+        return [s for s in self.lcu.item_sets["itemSets"] if s.get("uid") == "sexo2-managed"]
+
+    def test_lock_imports_the_set_without_opening_the_panel(self):
+        self.service.champion_confirmed(103)
+        self.assertEqual(self.lcu.puts, [])  # debounced
+        self.fire()
+        self.assertEqual(len(self.lcu.puts), 1)
+        (item_set,) = self.managed()
+        self.assertEqual(item_set["title"], "SEXO2 — Ahri")
+        self.assertEqual(len(item_set["blocks"]), 6)
+        self.assertEqual(self.lcu.item_sets["itemSets"][0], PERSONAL)
+        self.assertTrue(self.published[-1]["items"]["confirmed"])
+
+    def test_repeated_confirmation_of_the_same_champion_does_not_rewrite(self):
+        self.service.champion_confirmed(103)
+        self.fire()
+        self.service.champion_confirmed(103)
+        self.fire()
+        self.assertEqual(len(self.lcu.puts), 1)
+
+    def test_quick_trade_writes_only_the_latest_champion(self):
+        self.service.champion_confirmed(103)
+        self.lcu.session = session(champion=86)
+        self.service.champion_confirmed(86)
+        self.fire()
+        self.assertEqual(len(self.lcu.puts), 1)
+        self.assertEqual(self.managed()[0]["title"], "SEXO2 — Garen")
+        self.assertEqual(self.managed()[0]["associatedChampions"], [86])
+
+    def test_champion_change_reuses_the_same_managed_set(self):
+        self.service.champion_confirmed(103)
+        self.fire()
+        self.lcu.session = session(champion=86)
+        self.service.champion_confirmed(86)
+        self.fire()
+        self.assertEqual(len(self.lcu.puts), 2)
+        self.assertEqual(len(self.managed()), 1)
+        self.assertEqual(self.managed()[0]["associatedChampions"], [86])
+
+    def test_provisional_or_other_players_champion_is_not_imported(self):
+        provisional = session(champion=0)
+        provisional["myTeam"][1]["championPickIntent"] = 103
+        self.lcu.session = provisional
+        self.service.champion_confirmed(103)
+        self.fire()
+        self.lcu.session = session()
+        self.service.champion_confirmed(86)  # not the local player's champion
+        self.fire()
+        self.assertEqual(self.lcu.puts, [])
+
+    def test_swiftplay_choice_imports_without_a_champ_select_session(self):
+        self.queue = 480
+        self.lcu.session = None
+        self.service.champion_confirmed(103, swiftplay=True)
+        self.fire()
+        self.assertEqual(len(self.lcu.puts), 1)
+        self.assertEqual(self.service._stats.calls[-1], ("builds", 103, "swift", "all", None))
+
+    def test_unsupported_mode_writes_nothing(self):
+        self.queue = 1700
+        self.service.champion_confirmed(103)
+        self.fire()
+        self.assertEqual(self.lcu.puts, [])
+        self.assertEqual(self.published[-1]["items"], {"error": "unsupported_mode"})
+
+    def test_choosing_an_opponent_rewrites_with_the_counter_group(self):
+        self.service.champion_confirmed(103)
+        self.fire()
+        self.service.handle({"type": "assistant-opponent", "championId": 1})
+        self.fire()
+        self.assertEqual(len(self.lcu.puts), 2)
+        types = [block["type"] for block in self.managed()[0]["blocks"]]
+        self.assertEqual(types[6], "Counter Annie — 49,57% — 1.852 partidas")
 
 
 if __name__ == "__main__":
