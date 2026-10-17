@@ -89,7 +89,7 @@ class SessionLCU:
     phase='InProgress'
     def draft_request(self,path):
         if path=='/lol-gameflow/v1/gameflow-phase':return self.phase
-        if path=='/lol-gameflow/v1/session':return {'gameData':{'gameId':10,'queue':{'id':400,'gameMode':'CLASSIC'}}}
+        if path=='/lol-gameflow/v1/session':return {'gameData':{'gameId':10,'queue':{'id':400,'gameMode':'CLASSIC','mapId':11}}}
         raise AssertionError('Unexpected test request')
 
 class SessionContinuityTests(unittest.TestCase):
