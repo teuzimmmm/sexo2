@@ -8,7 +8,7 @@ from threads import PhaseThread, WSEventThread, LCUMonitorThread
 from pengu import PenguSkinMonitorThread
 from utils.threading.thread_manager import ThreadManager
 from utils.core.logging import get_logger
-from config import PHASE_POLL_INTERVAL_DEFAULT, WS_PING_TIMEOUT_DEFAULT
+from config import PHASE_POLL_INTERVAL_DEFAULT, WS_PING_TIMEOUT_DEFAULT, get_config_float, get_config_option
 
 log = get_logger()
 
@@ -87,6 +87,17 @@ def initialize_threads(
         reconnect_callback=on_lcu_reconnected,
     )
     thread_manager.register("LCU Monitor", t_lcu_monitor)
+
+    # Item value over the scoreboard: off unless enabled in config.ini (row positions need calibration)
+    if (get_config_option("Overlay", "gold_enabled", "false") or "").lower() == "true":
+        from sexo2.overlay.gold_overlay import Geometry, GoldOverlayThread
+
+        geometry = Geometry(
+            rows_top=get_config_float("Overlay", "gold_rows_top", Geometry.rows_top),
+            row_step=get_config_float("Overlay", "gold_row_step", Geometry.row_step),
+        )
+        t_gold = GoldOverlayThread(state, lcu, geometry)
+        thread_manager.register("Gold overlay", t_gold, stop_method=t_gold.stop)
 
     # Start all threads
     thread_manager.start_all()
