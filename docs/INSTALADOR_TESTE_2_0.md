@@ -77,6 +77,10 @@ quando o workflow estiver disponível no repositório remoto.
 O workflow precisa que a baseline contenha os componentes nativos já usados pelo
 projeto, incluindo o patcher existente; não baixa substitutos de outras origens.
 Nenhum build usa o pacote de atualização para sobrepor plugins ao código novo.
+Após compilar, o job instala, reinstala e desinstala em um usuário descartável,
+sem abrir SEXO2/Pengu/LoL. Confere versão, commit, plugin instalado, ausência de
+credenciais e preservação de sentinelas sintéticas em Local/Roaming/Registro.
+O relatório `installer-smoke.json` é incluído somente se a verificação passar.
 
 ## Instalação e teste
 
@@ -109,7 +113,7 @@ O suporte final a instalação independente e limpeza permanece pendente.
 - O YAML do workflow foi analisado: repositório somente leitura no job, token
   limitado à etapa de download e publicação restrita ao artefato de teste.
 - Compilação efetiva de PyInstaller/Inno Setup permanece dependente de Windows.
-  Não foi produzido um `.exe` neste ambiente Linux.
+  Não foi produzido um `.exe` por compilação neste ambiente Linux.
 
 O primeiro job Windows identificou a mudança do limite de recursão JSON no Python
 3.14 e a normalização de nomes ZIP pela stdlib no Windows. O cliente agora limita
