@@ -28,3 +28,11 @@ print('PASS: compiled modules and every plugin match source; integrated tunnel b
 for name in ['galo.png','galo.ico','bork-black-v3.png','sexo2.ico','golden_rose.png','update-source.json']:
     assert (bundle/'_internal/assets'/name).read_bytes()==(root/'assets'/name).read_bytes(),name
 print('PASS: release visual assets and update source match.')
+
+if (bundle/'sexo2-test-build.json').exists():
+    for source,target in [('LICENSE','LICENSE-Rose.txt'),
+                          ('vendor/PenguLoader-1.1.6/LICENSE','LICENSE-PenguLoader.txt'),
+                          ('hosting-tools/LICENSE-cloudflared.txt','_internal/hosting-tools/LICENSE-cloudflared.txt'),
+                          ('hosting-tools/provenance.json','_internal/hosting-tools/provenance.json')]:
+        assert (bundle/target).read_bytes()==(root/source).read_bytes(),target
+    print('PASS: test package includes Rose, Pengu and cloudflared notices/provenance.')

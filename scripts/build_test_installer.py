@@ -96,7 +96,13 @@ def build(base, version, output, iscc):
             shutil.copyfile(stage / 'injection' / 'tools' / name_part,
                             app / '_internal' / 'injection' / 'tools' / name_part)
         identity = write_identity(app, version, commit)
-        shutil.copyfile(stage / 'LICENSE', app / 'LICENSE-Rose.txt')
+        for source, target in [
+            ('LICENSE', 'LICENSE-Rose.txt'),
+            ('vendor/PenguLoader-1.1.6/LICENSE', 'LICENSE-PenguLoader.txt'),
+            ('hosting-tools/LICENSE-cloudflared.txt', '_internal/hosting-tools/LICENSE-cloudflared.txt'),
+            ('hosting-tools/provenance.json', '_internal/hosting-tools/provenance.json'),
+        ]:
+            shutil.copyfile(stage / source, app / target)
         run([sys.executable, 'audit_frozen.py', app], cwd=stage)
         run([iscc, '/DSourceDir=' + str(app), '/DOutputDir=' + str(output),
              '/DBuildVersion=' + version, '/DOutputName=' + name, spec], cwd=stage)
