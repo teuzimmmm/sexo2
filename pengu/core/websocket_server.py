@@ -15,7 +15,7 @@ import traceback
 from typing import Optional, Set, Callable
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from websockets.server import WebSocketServerProtocol, serve
-from utils.core.security import is_loopback_origin
+from utils.core.security import is_loopback_host, is_loopback_origin
 
 log = logging.getLogger(__name__)
 
@@ -237,6 +237,11 @@ class WebSocketServer:
     
     async def _process_http_request(self, path: str, request_headers) -> Optional[tuple]:
         """Process HTTP requests (delegates to http_handler)"""
+        host = request_headers.get("Host")
+        if not is_loopback_host(host):
+            log.warning("[SkinMonitor] Blocked request for host: %s", host)
+            return (403, {"Content-Type": "text/plain"}, b"Forbidden")
+
         origin = request_headers.get("Origin")
         upgrade = (request_headers.get("Upgrade") or "").lower()
         if upgrade == "websocket" and origin and not is_loopback_origin(origin):

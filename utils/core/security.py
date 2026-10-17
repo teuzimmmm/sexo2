@@ -30,6 +30,26 @@ def is_loopback_origin(origin: str | None) -> bool:
     return host.lower() in _LOOPBACK_HOSTS
 
 
+def is_loopback_host(host: str | None) -> bool:
+    """Return True only when the Host header names this machine.
+
+    Browsers omit Origin on same-origin GETs, so a DNS-rebound page would pass
+    the Origin check; its Host header still carries the attacker's name.
+    """
+    if not host:
+        return False
+    host = host.strip().lower()
+    if host.startswith("["):
+        name, _, rest = host[1:].partition("]")
+        if rest and not (rest.startswith(":") and rest[1:].isdigit()):
+            return False
+    else:
+        name, _, port = host.partition(":")
+        if port and not port.isdigit():
+            return False
+    return name in _LOOPBACK_HOSTS
+
+
 def cors_headers_for_origin(origin: str | None) -> dict[str, str]:
     """Build CORS headers for an allowed loopback origin."""
     if not is_loopback_origin(origin):
