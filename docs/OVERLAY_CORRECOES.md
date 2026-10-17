@@ -96,3 +96,26 @@ do teste, lê PID e geometria de um HWND real e verifica que os nomes de produç
 rejeitam esse processo. Só a escolha do HWND e do executável permitido é controlada
 nesse cenário. Outro teste reserva F8 de propósito e exige janela visível.
 Isso melhora a cobertura do caminho de produção, sem declarar que há LoL no runner.
+
+## Resultado da compilação
+
+Código `083d0dda425426687051ddd58741b76472ff7ce8`. O
+[job privado 38998600752](https://github.com/teuzimmmm/sexo2/actions/runs/38998600752)
+passou: 483 testes gerais, quatro testes nativos da janela executados separadamente,
+browser do painel de seleção, compilação/auditoria dos módulos e plugins,
+instalação/reinstalação/desinstalação. Regressões locais de LCU/Pengu passaram;
+a suíte Linux mantém o erro preexistente de importação de `ctypes.windll` em
+`test_startup_policy`. A suíte Windows passou sem esse erro.
+
+[Artefato 12087972231](https://github.com/teuzimmmm/sexo2/actions/runs/38998600752/artifacts/12087972231):
+`SEXO2-2.0.0.4-Teste-083d0dda.exe`, 60.864.262 bytes.
+SHA-256 `098a1b4e5958493fbc769318359ead7d5c8ff68d660bb4c3d567a779bae1a790`.
+Download, checksum, cabeçalho PE, commit e recibo de instalação foram conferidos;
+sentinelas sintéticas do legado foram preservadas. Não houve validação no LoL real.
+
+Para testar, fechar SEXO2/Rose e cliente LoL antes de instalar e reabri-los depois.
+Nas configurações, **Testar janela (20 s)** exercita a janela sem partida. O estado
+ao lado informa indisponibilidade do LCU, detecção do jogo e exibição solicitada
+ao Windows. No Arena, a consulta começa durante a partida após identificar o
+campeão; F8/F9/F10 controlam a janela/listas/texto. A detecção automática das três
+cartas oferecidas e uma fonte de Mayhem permanecem indisponíveis.
