@@ -54,3 +54,9 @@ os testes de continuidade LCU usam as dependências completas no CI do aplicativ
 O probe windowed passa --paths . explicitamente: a análise anterior não coletou
 os módulos do renderer/Pillow; a entrada também agora captura falhas de import
 sem abrir diálogo modal. O pacote final deve repetir o probe no SEXO2 instalado.
+
+A validade do pipe usa relógio monotônico compartilhado entre processos, não o
+momento tardio da leitura. Frames guardam a expiração original das ofertas e dos
+inventários; inicialização lenta não renova dados antigos. O início do auxiliar
+tem até 8s de tolerância; depois do primeiro diagnóstico, escrita travada tem
+limite de 1s. A tolerância inicial nunca estende a validade de uma métrica.

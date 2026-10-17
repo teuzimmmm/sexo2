@@ -198,9 +198,12 @@ jobs:
       - name: Build windowed worker entry and verify private standard handles
         shell: pwsh
         run: |
-          Set-Content -LiteralPath worker-probe-entry.py -Value 'from sexo2.overlay.worker_entry import entry; raise SystemExit(entry())'
-          python -m PyInstaller --noconfirm --windowed --paths . --name OverlayProbe --distpath display-probe --workpath display-probe-work --specpath display-probe-work worker-probe-entry.py
+          $workerEntry = Join-Path $env:RUNNER_TEMP 'sexo2_overlay_probe_entry.py'
+          Set-Content -LiteralPath $workerEntry -Value 'from sexo2.overlay.worker_entry import entry; raise SystemExit(entry())'
+          python -m PyInstaller --noconfirm --windowed --paths . --name OverlayProbe --distpath display-probe --workpath display-probe-work --specpath display-probe-work $workerEntry
           if ($LASTEXITCODE -ne 0) { throw 'Windowed worker build failed.' }
+          python -c "from PyInstaller.archive.readers import CArchiveReader; a=CArchiveReader('display-probe/OverlayProbe/OverlayProbe.exe').open_embedded_archive('PYZ.pyz'); assert all(n in a.toc for n in ['sexo2.overlay.worker_entry','sexo2.overlay.worker','sexo2.overlay.layered','PIL.Image']); print('PASS: display modules and Pillow exist in the executable')"
+          if ($LASTEXITCODE -ne 0) { throw 'Worker modules absent from executable.' }
           python scripts/probe_overlay_worker.py --worker display-probe/OverlayProbe/OverlayProbe.exe
           if ($LASTEXITCODE -ne 0) { throw 'Windowed entry/private pipes failed.' }
 # This job starts only its own windows/processes; it does not run League or Pengu.

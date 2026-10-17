@@ -17,11 +17,19 @@ def sample(active=True):return Frame(active,View('a'*24,(Card('Inventário',('It
 class ProtocolTests(unittest.TestCase):
     def test_roundtrip_omits_private_context_and_expires_without_renewal(self):
         clock=[0.0];inbox=Inbox(clock=lambda:clock[0]);frame=sample()
-        raw=encode(frame,1,2);self.assertNotIn(b'a'*24,raw)
+        raw=encode(frame,1,2,now=0);self.assertNotIn(b'a'*24,raw)
         inbox.accept(raw);self.assertTrue(inbox.frame().active)
         clock[0]=2;self.assertFalse(inbox.frame().active)
-        inbox.accept(encode(Frame(),2,2));self.assertFalse(inbox.frame().active)
+        inbox.accept(encode(Frame(),2,2,now=2));self.assertFalse(inbox.frame().active)
         inbox.close();self.assertFalse(inbox.frame().active)
+
+    def test_delayed_delivery_cannot_extend_original_source_lifetime(self):
+        clock=[3.0];inbox=Inbox(clock=lambda:clock[0])
+        inbox.accept(encode(sample(),1,1,now=0))
+        self.assertFalse(inbox.frame().active)
+        frame=Frame(True,sample().view,expires_at=4)
+        inbox.accept(encode(frame,2,1,now=3));self.assertTrue(inbox.frame().active)
+        clock[0]=4;self.assertFalse(inbox.frame().active)
 
     def test_invalid_or_out_of_order_message_closes_inbox_immediately(self):
         for raw in [b'{}\n',b'null\n',b'{',b'x'*(256*1024+1),encode(sample(),1,0)]:
@@ -81,7 +89,7 @@ class ChildTests(unittest.TestCase):
         started=time.monotonic();renderer.tick();child=renderer._child
         self.assertLess(time.monotonic()-started,1)
         self.assertFalse(renderer._write_done.wait(.1))
-        clock[0]=2;renderer.tick()
+        clock[0]=9;renderer.tick()
         self.assertIsNotNone(child.poll());self.assertIsNone(renderer._child)
         self.assertEqual(renderer.diagnostic()['code'],'worker-failed')
 

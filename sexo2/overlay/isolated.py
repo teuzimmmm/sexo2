@@ -18,6 +18,7 @@ class IsolatedOverlay:
         self._stop=threading.Event();self._thread=None;self._child=None;self._writer=None
         self._write_done=threading.Event();self._write_done.set();self._write_at=0
         self._attempts=0;self._key=None;self._context=self._sequence=0;self._action=None
+        self._spawned_at=0;self._has_status=False
         self._next=0;self._status={'code':'waiting-game','engine':'isolated-layered-cpu','windowShown':False}
 
     def diagnostic(self):
@@ -48,6 +49,7 @@ class IsolatedOverlay:
                     allowed={'not-started','inactive','waiting-tab','not-game-foreground','visible','window-error','show-failed','process-unavailable'}
                     code=event.get('code')
                     if code not in allowed:continue
+                    self._has_status=True
                     self._status={'code':code,'engine':'isolated-layered-cpu','windowShown':event.get('windowShown') is True}
         except (OSError,ValueError,AttributeError):pass
 
@@ -90,7 +92,8 @@ class IsolatedOverlay:
         if frame.active and re.fullmatch('[a-f0-9]{24}',key or '') and key!=self._key:
             self._key=key;self._attempts=0;self._context+=1
         if self._child is not None and (self._child.poll() is not None or
-                (not self._write_done.is_set() and now-self._write_at>1)):
+                (not self._has_status and now-self._spawned_at>8) or
+                (not self._write_done.is_set() and now-self._write_at>(1 if self._has_status else 8))):
             self._end();self._next=now+2
             self._status={'code':'worker-failed','engine':'isolated-layered-cpu','windowShown':False}
         if not frame.active:
@@ -101,7 +104,7 @@ class IsolatedOverlay:
             return
         if self._child is None:
             if self._attempts>=2 or now<self._next or not self._write_done.is_set():return
-            self._attempts+=1;self._sequence=0
+            self._attempts+=1;self._sequence=0;self._has_status=False;self._spawned_at=now
             try:
                 child=self.popen(self.command,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,
                                  bufsize=0,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
@@ -113,7 +116,7 @@ class IsolatedOverlay:
             except OSError:
                 self._next=now+2;self._status={'code':'worker-failed','engine':'isolated-layered-cpu','windowShown':False};return
         if self._write_done.is_set():
-            self._sequence+=1;raw=encode(frame,self._sequence,self._context)
+            self._sequence+=1;raw=encode(frame,self._sequence,self._context,now=now)
             self._write_done.clear();self._write_at=now
             self._pending.put_nowait(raw)
 

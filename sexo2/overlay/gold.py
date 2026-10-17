@@ -232,6 +232,10 @@ class GoldFeed:
         return (not self._closed and context == self._context and self._snapshot is not None
                 and self._clock() - self._at < TTL)
 
+    def expires_at(self,context):
+        with self._lock:
+            return self._at+TTL if self._current(context) else None
+
     def cycle(self, context):
         with self._lock:
             if not self._current(context) or not self._snapshot.enemies:

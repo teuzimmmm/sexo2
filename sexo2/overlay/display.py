@@ -9,4 +9,5 @@ class Frame:
     preview: bool = False
     opponent_switch: bool = False
     offer_layout: bool = False
+    expires_at: float | None = None
 

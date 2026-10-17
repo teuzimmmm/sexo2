@@ -7,19 +7,22 @@ from .display import Frame
 from .wire import MAX_BYTES,MAX_CARDS,MAX_LINES,MAX_SEQUENCE,_text,ProtocolError
 
 
-def encode(frame,sequence,context):
+def encode(frame,sequence,context,*,now=None):
+    now=time.monotonic() if now is None else now
     if type(sequence) is not int or not 1<=sequence<=MAX_SEQUENCE:raise ProtocolError('Invalid sequence')
     if type(context) is not int or not 0<=context<=MAX_SEQUENCE:raise ProtocolError('Invalid context')
     for flag in (frame.active,frame.offer_layout,frame.opponent_switch):
         if type(flag) is not bool:raise ProtocolError('Invalid display flags')
+    remaining=2 if frame.expires_at is None else min(2,frame.expires_at-now)
+    active=frame.active and remaining>0
     cards=[]
-    if frame.active:
+    if active:
         if len(frame.view.cards)>MAX_CARDS:raise ProtocolError('Too many cards')
         for card in frame.view.cards:
             if len(card.lines)>MAX_LINES:raise ProtocolError('Too many lines')
             cards.append({'title':_text(card.title),'lines':[_text(v) for v in card.lines]})
     selected=frame.view.selected if cards else 0
-    data={'v':2,'seq':sequence,'context':context,'ttlMs':2000,'active':frame.active,
+    data={'v':2,'seq':sequence,'context':context,'ttlMs':max(1,int(remaining*1000)),'sentMs':int(now*1000),'active':active,
           'offers':frame.offer_layout,'opponent':frame.opponent_switch,'selected':selected,'cards':cards}
     raw=(json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n').encode()
     decode(raw)
@@ -30,8 +33,8 @@ def decode(raw):
     if not isinstance(raw,bytes) or len(raw)>MAX_BYTES or not raw.endswith(b'\n'):raise ProtocolError('Frame size or terminator invalid')
     try:data=json.loads(raw)
     except (ValueError,UnicodeError,RecursionError):raise ProtocolError('Malformed frame') from None
-    if not isinstance(data,dict) or set(data)!={'v','seq','context','ttlMs','active','offers','opponent','selected','cards'} or data['v']!=2:raise ProtocolError('Unknown schema')
-    for key,lo,hi in [('seq',1,MAX_SEQUENCE),('context',0,MAX_SEQUENCE),('ttlMs',1,2000)]:
+    if not isinstance(data,dict) or set(data)!={'v','seq','context','ttlMs','sentMs','active','offers','opponent','selected','cards'} or data['v']!=2:raise ProtocolError('Unknown schema')
+    for key,lo,hi in [('seq',1,MAX_SEQUENCE),('context',0,MAX_SEQUENCE),('ttlMs',1,2000),('sentMs',0,MAX_SEQUENCE)]:
         if type(data[key]) is not int or not lo<=data[key]<=hi:raise ProtocolError('Invalid numeric field')
     if any(type(data[k]) is not bool for k in ('active','offers','opponent')):raise ProtocolError('Invalid flags')
     cards=data['cards']
@@ -55,7 +58,8 @@ class Inbox:
             data=decode(raw)
             with self.lock:
                 if self.closed or data['seq']<=self.sequence:raise ProtocolError('Out of order frame')
-                self.data=data;self.sequence=data['seq'];self.until=self.clock()+data['ttlMs']/1000
+                self.data=data;self.sequence=data['seq'];self.until=(data['sentMs']+data['ttlMs'])/1000
+                if data['sentMs']/1000-self.clock()>.1:raise ProtocolError('Future frame timestamp')
         except ProtocolError:
             self.close();raise
 

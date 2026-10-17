@@ -244,7 +244,7 @@ class OverlayRuntime:
         else:
             from .offers import offer_view
             view = offer_view(key, offer, mode='mayhem', positioned=True)
-        return Frame(bool(view.cards), view, offer_layout=len(view.cards) == 3)
+        return Frame(bool(view.cards), view, offer_layout=len(view.cards) == 3,expires_at=offer.observed_at+2)
 
     def frame(self):
         if self._production_suspended or (self._readiness is not None and not self._readiness.fresh()):return Frame()
@@ -264,7 +264,7 @@ class OverlayRuntime:
             if self._gold_context is not None and self._gold is not None and self._frame.active:
                 view = self._frame.view
                 return Frame(True, View(view.key, (self._gold.card(self._gold_context), *view.cards)),
-                             opponent_switch=True)
+                             opponent_switch=True,expires_at=getattr(self._gold,'expires_at',lambda c:None)(self._gold_context))
             return self._frame
 
     def display_frame(self):
