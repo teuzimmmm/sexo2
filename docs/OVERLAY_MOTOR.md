@@ -28,9 +28,10 @@ ou validado no LoL.** Não entregar novamente a janela anterior como correção.
 | [GameOverlay.Net](https://github.com/michel-pi/GameOverlay.Net/tree/b43c9d9a2dc3e3423b63732f279a357d8fb1f263) | Direct2D/SharpDX em janela externa transparente; repositório arquivado | MIT | Não selecionado: trocar GDI por Direct2D não comprova resolver a falha; há limitações documentadas de tela cheia |
 | [Open League Overlay](https://github.com/bossNilac/Open-League-Overlay/tree/2bca5917ce7b249eaad6024be8a7d64090ec534a) | Projeto C++ específico para LoL; README declara janela externa e Live Client Data API, sem hooks | MIT | Referência para investigar, não prova independente de funcionamento no PC do usuário ou de suporte a tela cheia |
 
-As referências são commits fixos, não dependências adicionadas. A revisão leu
-README, licença e, no hudhook, o injetor. Nenhum desses motores foi compilado
-ou executado neste ambiente. Para reproduzir a inspeção sem credenciais:
+Na investigação inicial, as referências foram fixadas em commits e a revisão leu
+README, licença e, no hudhook, o injetor. Depois, a rodada do host abaixo adicionou
+o hudhook como dependência exclusiva do laboratório, com versão travada. Os demais
+motores não foram compilados. Para reproduzir a inspeção sem credenciais:
 
 ```sh
 curl --fail --max-time 30 https://raw.githubusercontent.com/veeenu/hudhook/72e1cc062c35df847b703e5507b82eb21d80d82c/LICENSE
@@ -95,9 +96,9 @@ tela cheia exclusiva.
 ## Critério de encerramento
 
 Motor/licença definidos; código e empacotamento revisados; falhas isoladas do
-programa; validação real no LoL documentada; custos medidos em Windows. Esta
-investigação atende somente à primeira etapa. O overlay continua pendente,
-e nenhum instalador novo foi gerado nesta rodada.
+programa; validação real no LoL documentada; custos medidos em Windows.
+O laboratório abaixo valida o candidato somente no próprio processo.
+O overlay continua pendente, e nenhum instalador novo foi gerado nesta rodada.
 
 ## Rodada do host isolado — contrato registrado antes do código
 
@@ -124,3 +125,45 @@ Contadores de callback comprovam passagem pelo renderer, não leitura de pixels.
 Critérios desta rodada: protocolo testado offline, compilação Windows do candidato,
 host recebe dados e executa o callback de desenho, expira/esconde dados e encerra.
 Compatibilidade com o jogo e medição comparativa de recursos continuam separadas.
+
+## Resultado do laboratório
+
+Código `4530b256e2db0dec56d3bb6c753f83ed8b625f10`. O
+[job Windows privado 39001443126](https://github.com/teuzimmmm/sexo2/actions/runs/39001443126)
+passou em 17/10/2026: cinco testes do produtor Python, quatro do consumidor Rust,
+compilação debug/release do host e execução DX11 no próprio processo. O job do
+instalador foi ignorado; somente o relatório de teste foi disponibilizado.
+
+O relatório registrou driver `hardware`, 212 apresentações/callbacks, 42 callbacks
+com frame ativo, 170 ocultos, uma expiração, duas mensagens válidas e uma mensagem
+rejeitada. O teste verificou o encerramento do filho. Isso comprova o fluxo pelo
+callback de renderização, não a inspeção de pixels, qualidade visual ou atalhos.
+`leagueValidated: false` e `injectionFeature: false` fazem parte do resultado.
+
+A árvore de features para `x86_64-pc-windows-msvc` confirmou somente `dx11` no
+hudhook, sem `inject`. Localmente passaram 64 testes Python de overlay/serviços,
+dois testes Node de configurações e os quatro testes Rust portáveis. Quinze testes
+locais adicionais do instalador passaram após a alteração do workflow. Foram
+revisados os limites de leitura, expiração, esquema, ciclo de vida e projeção sem
+conta/chave de partida; a licença MIT acompanha o código do candidato.
+
+Reprodução do job sem gerar instalador, no branch privado de testes autorizado:
+
+```sh
+gh workflow run 387235855 --ref test/installer-2.0 -f native_host_only=true
+```
+
+### O que falta para substituir a edição atual
+
+1. Demonstrar um carregamento compatível com LoL/Vanguard em Windows real.
+   O laboratório não contém essa via e não abre o processo do LoL. Não adicionar
+   o injetor genérico como se essa compatibilidade estivesse comprovada.
+2. Depois dessa demonstração, integrar o adaptador ao `OverlayRuntime`, com
+   encerramento/diagnóstico e protocolo de renovação de frames adequados à partida.
+   O laboratório limitado a 4 s não deve ser convertido em host permanente por
+   simplesmente remover o timeout.
+3. Validar desenho, interação e consumo em jogo; cobrir modos/fontes de dados
+   efetivamente confirmados. Sem isso, não empacotar uma alegada correção.
+
+A versão de teste instalada pelo usuário continua com o motor anterior. Nenhuma
+mudança desta rodada consertou ou substituiu silenciosamente esse motor.
