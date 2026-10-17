@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escala tipográfica — proposta D-101</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  /* Fundo e cinzas provisórios só para leitura: as cores do SEXO2 estão pendentes (D-102). */
+  :root { --bg: #111214; --panel: #17181b; --line: #2a2c30; --fg: #ececec; --muted: #8e939a; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--s2-font-text); padding: 32px 16px; }
+  main { max-width: 1120px; margin: 0 auto; }
+  .intro { color: var(--muted); font-size: 14px; line-height: 1.5; margin-bottom: 32px; max-width: 720px; }
+  .intro strong { color: var(--fg); font-weight: 600; }
+  .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+  .option { background: var(--panel); border: 1px solid var(--line); padding: var(--pad); }
+  .option > header { display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 20px; }
+  .option > header span { color: var(--muted); font-size: 12px; }
+  .spec { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 24px;
+    border-top: 1px solid var(--line); padding-top: 12px; font-variant-numeric: tabular-nums; }
+
+  /* Papéis tipográficos. Cada opção define só as variáveis. */
+  .display  { font-family: var(--s2-font-display); font-size: var(--display); font-weight: var(--display-w);
+              text-transform: uppercase; letter-spacing: .01em; line-height: 1.05; }
+  .heading  { font-family: var(--s2-font-display); font-size: var(--heading); font-weight: var(--heading-w);
+              text-transform: uppercase; letter-spacing: .02em; line-height: 1.15; }
+  .category { font-family: var(--s2-font-display); font-size: var(--category); font-weight: 500;
+              text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .body     { font-size: var(--body); line-height: 1.45; }
+  .small    { font-size: var(--small); line-height: 1.4; color: var(--muted); }
+  .stat     { font-size: var(--stat); font-weight: 600; font-variant-numeric: var(--s2-numeric-stats); }
+  .stat-big { font-family: var(--s2-font-display); font-size: var(--stat-big); font-weight: 500;
+              font-variant-numeric: var(--s2-numeric-stats); line-height: 1; }
+  .button   { font-size: var(--body); font-weight: 600; padding: var(--btn-pad); border: 1px solid var(--line);
+              background: transparent; color: var(--fg); font-family: var(--s2-font-text); }
+
+  .stack > * + * { margin-top: var(--gap); }
+  .row { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: baseline;
+         padding: var(--row-pad) 0; border-bottom: 1px solid var(--line); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+  .card { border: 1px solid var(--line); padding: var(--gap); }
+
+  .a { --pad: 20px; --gap: 12px; --row-pad: 8px; --btn-pad: 6px 14px;
+       --display: 32px; --display-w: 600; --heading: 18px; --heading-w: 500; --category: 11px;
+       --body: 13px; --small: 12px; --stat: 13px; --stat-big: 28px; }
+  .b { --pad: 24px; --gap: 16px; --row-pad: 10px; --btn-pad: 8px 16px;
+       --display: 40px; --display-w: 600; --heading: 20px; --heading-w: 500; --category: 12px;
+       --body: 14px; --small: 12px; --stat: 14px; --stat-big: 34px; }
+</style>
+</head>
+<body>
+<main>
+  <p class="intro">
+    <strong>Proposta para aprovação (D-101): só a escala tipográfica.</strong> As famílias já estão aprovadas
+    (Oswald e Inter, D-007). Cores, componentes, nomes e textos abaixo são provisórios e servem apenas
+    para mostrar tamanho, peso e espaçamento em uso real. Escolha A, B ou peça ajustes por papel
+    (título, cabeçalho, categoria, texto, número).
+  </p>
+
+  <div class="options">
+    <section class="option a">
+      <header><span class="heading">Opção A</span><span>compacta · texto 13 px · grade de 4 px</span></header>
+      <div class="stack">
+        <div class="display">Ahri</div>
+        <div class="category">Runas</div>
+        <div class="pair">
+          <div class="card stack">
+            <div class="small">Maior WR</div>
+            <div class="stat-big">56,8%</div>
+            <div class="body">Eletrocutar · Dominação</div>
+            <div class="small">7.505 partidas</div>
+          </div>
+          <div class="card stack">
+            <div class="small">Mais comum</div>
+            <div class="stat-big">52,1%</div>
+            <div class="body">Primeiro Ataque · Feitiçaria</div>
+            <div class="small">41.212 partidas</div>
+          </div>
+        </div>
+        <div class="heading">Contra Annie</div>
+        <div>
+          <div class="row body"><span>Ignorar Obstáculos</span><span class="stat">55,9</span><span class="small">1.606</span></div>
+          <div class="row body"><span>Tempestade Crescente</span><span class="stat">53,2</span><span class="small">1.104</span></div>
+          <div class="row body"><span>Coleta Tenebrosa</span><span class="stat">51,7</span><span class="small">978</span></div>
+        </div>
+        <button class="button">Importar</button>
+      </div>
+      <p class="spec">Título 32/600 · cabeçalho 18/500 · categoria 11/500 +6% · texto 13/400 ·
+        número 13/600 · número grande 28/500 · rótulo 12/400</p>
+    </section>
+
+    <section class="option b">
+      <header><span class="heading">Opção B</span><span>confortável · texto 14 px · grade de 4 px</span></header>
+      <div class="stack">
+        <div class="display">Ahri</div>
+        <div class="category">Runas</div>
+        <div class="pair">
+          <div class="card stack">
+            <div class="small">Maior WR</div>
+            <div class="stat-big">56,8%</div>
+            <div class="body">Eletrocutar · Dominação</div>
+            <div class="small">7.505 partidas</div>
+          </div>
+          <div class="card stack">
+            <div class="small">Mais comum</div>
+            <div class="stat-big">52,1%</div>
+            <div class="body">Primeiro Ataque · Feitiçaria</div>
+            <div class="small">41.212 partidas</div>
+          </div>
+        </div>
+        <div class="heading">Contra Annie</div>
+        <div>
+          <div class="row body"><span>Ignorar Obstáculos</span><span class="stat">55,9</span><span class="small">1.606</span></div>
+          <div class="row body"><span>Tempestade Crescente</span><span class="stat">53,2</span><span class="small">1.104</span></div>
+          <div class="row body"><span>Coleta Tenebrosa</span><span class="stat">51,7</span><span class="small">978</span></div>
+        </div>
+        <button class="button">Importar</button>
+      </div>
+      <p class="spec">Título 40/600 · cabeçalho 20/500 · categoria 12/500 +6% · texto 14/400 ·
+        número 14/600 · número grande 34/500 · rótulo 12/400</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>
