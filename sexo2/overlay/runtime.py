@@ -43,6 +43,7 @@ class OverlayRuntime:
         self._live_started = False
         self._production_suspended = False
         self._readiness = None
+        self._cached_session = None
         self._preview_until = float('-inf')
         self._diagnostic = {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}
 
@@ -72,6 +73,36 @@ class OverlayRuntime:
     def retry_arena(self):
         return bool(not self._stop.is_set() and self._arena is not None and self._arena.retry())
 
+    def _session(self):
+        """LCU identifies the mode; Live Client can bridge a frontend disconnect."""
+        try:
+            phase=self.lcu.draft_request('/lol-gameflow/v1/gameflow-phase')
+            if phase not in ('ChampSelect','GameStart','InProgress','Reconnect'):
+                self._cached_session=None
+                return phase,None
+            game=self.lcu.draft_request('/lol-gameflow/v1/session')
+            after=self.lcu.draft_request('/lol-gameflow/v1/gameflow-phase')
+            if phase!=after or not isinstance(game,dict):
+                self._cached_session=None
+                raise ValueError('Unstable session')
+            data=game.get('gameData')
+            self._cached_session=None
+            if isinstance(data,dict):
+                from sexo2.services.session import play_mode
+                key=game_key(game.get('gameId') or data.get('gameId'));mode=play_mode(data)
+                conflict=positive(game.get('gameId')) and positive(data.get('gameId')) and game['gameId']!=data['gameId']
+                if key and mode and not conflict:
+                    safe={k:data[k] for k in ('gameId','queue','queueId','map','mapId','gameMode') if k in data}
+                    self._cached_session=({'gameId':game.get('gameId'),'gameData':safe},(key,mode))
+            return phase,game
+        except Exception:
+            cached=self._cached_session;gate=self._readiness
+            if (cached is not None and gate is not None and 0<=self._clock()-gate.at<8
+                    and gate.check(cached[1])):
+                return 'InProgress',cached[0]
+            self._cached_session=None
+            raise
+
     def poll(self):
         """Public seam for deterministic tests; never called by the GDI thread."""
         if self._items is not None:
@@ -90,13 +121,8 @@ class OverlayRuntime:
         try:
             enabled = self.enabled()
             if enabled:
-                phase = self.lcu.draft_request('/lol-gameflow/v1/gameflow-phase')
+                phase,game = self._session()
                 if phase in ('ChampSelect', 'GameStart', 'InProgress', 'Reconnect'):
-                    game = self.lcu.draft_request('/lol-gameflow/v1/session')
-                    # Avoid publishing a session observed across a phase transition.
-                    after = self.lcu.draft_request('/lol-gameflow/v1/gameflow-phase')
-                    if phase != after or not isinstance(game, dict):
-                        raise ValueError('Unstable game context')
                     data = game.get('gameData')
                     if not isinstance(data, dict):
                         raise ValueError('Unknown game session')
@@ -129,7 +155,7 @@ class OverlayRuntime:
                             if self._arena_champion is None or self._arena_champion[0] != key:
                                 from .arena import own_champion
                                 try:
-                                    cid = own_champion(self.lcu, game)
+                                    cid = own_champion(self.lcu, game, self.champion())
                                 except Exception:
                                     cid = None
                                 if positive(cid):
@@ -291,7 +317,11 @@ class OverlayRuntime:
 
     def _run(self):
         while not self._stop.is_set():
-            self.poll()
+            try:self.poll()
+            except Exception:
+                with self._lock:
+                    self._frame=Frame()
+                    self._diagnostic={'code':'observer-error','message':'Falha no observador; nova tentativa limitada ao próximo ciclo.'}
             self._stop.wait(2)
 
     def stop(self):

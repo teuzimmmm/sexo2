@@ -40,6 +40,8 @@ class ReadinessTests(unittest.TestCase):
         client.get.return_value={'gameTime':1};self.assertTrue(gate.check('match'))
         clock[0]=3;self.assertFalse(gate.fresh())
         client.get.return_value={'gameTime':.5};self.assertFalse(gate.check('match'))
+        client.get.return_value={'gameTime':5};self.assertFalse(gate.check('match'))
+        self.assertTrue(gate.check('new-match'))
         client.get.side_effect=OSError('synthetic timeout');self.assertFalse(gate.check('match'))
         gate.close();client.close.assert_called_once()
 
@@ -82,3 +84,28 @@ class ChildTests(unittest.TestCase):
         clock[0]=2;renderer.tick()
         self.assertIsNotNone(child.poll());self.assertIsNone(renderer._child)
         self.assertEqual(renderer.diagnostic()['code'],'worker-failed')
+
+class SessionContinuityTests(unittest.TestCase):
+    def test_confirmed_session_can_bridge_lcu_loss_only_with_fresh_game_signal(self):
+        from sexo2.overlay.runtime import OverlayRuntime
+        from tests.test_build_workflow import FakeLCU
+        clock=[0.0];lcu=FakeLCU();lcu.phase='InProgress'
+        runtime=OverlayRuntime(lcu,enabled=lambda:True,clock=lambda:clock[0])
+        self.addCleanup(runtime.stop)
+        client=Mock();client.get.return_value={'gameTime':5}
+        runtime._readiness=GameReadiness(client=client,clock=lambda:clock[0])
+        self.assertTrue(runtime.poll().active)
+        lcu.draft_request=Mock(side_effect=OSError('synthetic disconnected LCU'))
+        clock[0]=2;client.get.return_value={'gameTime':7}
+        self.assertTrue(runtime.poll().active)
+        clock[0]=11
+        self.assertFalse(runtime.poll().active)
+        self.assertIsNone(runtime._cached_session)
+
+    def test_end_of_game_never_reuses_a_previous_mode(self):
+        from sexo2.overlay.runtime import OverlayRuntime
+        from tests.test_build_workflow import FakeLCU
+        lcu=FakeLCU();runtime=OverlayRuntime(lcu,enabled=lambda:True)
+        self.addCleanup(runtime.stop)
+        lcu.phase='InProgress';runtime.poll();self.assertIsNotNone(runtime._cached_session)
+        lcu.phase='EndOfGame';runtime.poll();self.assertIsNone(runtime._cached_session)

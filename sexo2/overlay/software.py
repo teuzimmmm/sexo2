@@ -167,7 +167,8 @@ class SoftwareOverlay:
                 self._status('process-unavailable', 'Não foi possível enumerar os processos; tentando novamente.')
                 return
         # Item-value comparison belongs to the scoreboard, visible while TAB is held.
-        if frame.opponent_switch and not frame.preview and not (self.tab_pressed() if self.tab_pressed else self.u.GetAsyncKeyState(0x09) & 0x8000):
+        tab_hidden=bool(bounds and frame.opponent_switch and not frame.preview and not (self.tab_pressed() if self.tab_pressed else self.u.GetAsyncKeyState(0x09) & 0x8000))
+        if tab_hidden:
             bounds = None
         active = bounds is not None
         self._hotkeys(active, frame.opponent_switch, frame.offer_layout)
@@ -176,7 +177,7 @@ class SoftwareOverlay:
             if self._visible:
                 self.u.ShowWindow(self.hwnd, 0)
                 self._visible = False
-            self._status('not-game-foreground' if frame.active else 'inactive',
+            self._status('waiting-tab' if tab_hidden else 'not-game-foreground' if frame.active else 'inactive',
                          'Jogo não detectado em primeiro plano.' if frame.active else 'Aguardando contexto da partida ou uma prévia.')
             return
         if self._view != frame.view:

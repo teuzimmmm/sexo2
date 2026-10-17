@@ -34,6 +34,12 @@ def main():
         child.wait(timeout=5)
         assert child.returncode==0,'Worker did not close cleanly on EOF'
         print(json.dumps({'workerEntry':True,'privatePipes':True,'eofExit':True,'leagueValidated':False}))
+    except (queue.Empty,AssertionError,RuntimeError):
+        if child.poll() is None:child.kill();child.wait(timeout=3)
+        error=child.stderr.read(4096).decode('utf-8',errors='replace')
+        # stderr from the display-only entry has no source paths or data.
+        print('Worker exit:',child.returncode,'status:',error[:200])
+        raise
     finally:
         if child.poll() is None:child.kill();child.wait(timeout=3)
         for stream in (child.stdin,child.stdout,child.stderr):

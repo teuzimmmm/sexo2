@@ -7,19 +7,20 @@ from .gold import LiveClient
 class GameReadiness:
     def __init__(self,*,client=None,clock=time.monotonic):
         self.client=client or LiveClient();self.clock=clock
-        self.at=float('-inf');self.last_time=None;self.context=None;self.available=False
+        self.at=float('-inf');self.last_time=None;self.context=None;self.available=False;self.reset=False
 
     def check(self,context):
         if context!=self.context:
-            self.context=context;self.last_time=None
+            self.context=context;self.last_time=None;self.reset=False
         self.available=False
+        if self.reset:return False
         try:
             started=self.clock()
             data=self.client.get('gamestats',started+2)
             value=data.get('gameTime') if isinstance(data,dict) else None
             if type(value) not in (int,float) or not math.isfinite(value) or not 0<value<86400:return False
             if self.last_time is not None and value<self.last_time:
-                self.last_time=value;return False
+                self.reset=True;return False
             if self.clock()-started>=2:return False
             self.last_time=value;self.at=started;self.available=True
         except Exception:pass

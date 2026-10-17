@@ -34,3 +34,15 @@ renderização visível no diagnóstico; pacote testado em Windows. Compatibilid
 no LoL e geometria das cartas reais continuam dependentes de execução real.
 Não alterar a main contendo a API nem publicar release. Usar branch privada de
 experimentos e instalador de teste já autorizados.
+
+Continuidade sem frontend: guardar em memória apenas modo/fila/mapa e chave
+anônima de uma sessão já validada. Se o LCU cair, reutilizar esse contexto somente
+enquanto a API do jogo continuar renovando um relógio crescente. Gap maior que
+8s, reinício do relógio, modo desconhecido ou saída confirmada invalidam a ponte.
+Não guardar roster, conta ou credenciais nem reutilizar contexto de outra partida.
+
+Primeira rodada Windows (39044967272): testes reais de pixels/click-through,
+foco, z-order, TAB, processos e protocolo passaram. A execução do auxiliar
+compilado sem console não respondeu pelo pipe; empacotamento bloqueado. Adicionado
+tratamento estático para impedir diálogo modal de exceção do bootloader e obter
+a classe do erro pelo pipe privado; a rodada deve ser repetida.

@@ -20,7 +20,17 @@ class IsolatedOverlay:
         self._attempts=0;self._key=None;self._context=self._sequence=0;self._action=None
         self._next=0;self._status={'code':'waiting-game','engine':'isolated-layered-cpu','windowShown':False}
 
-    def diagnostic(self):return dict(self._status,attempts=self._attempts)
+    def diagnostic(self):
+        messages={'waiting-game':'Aguardando a partida começar.',
+                  'waiting-tab':'Segure TAB para comparar o valor dos itens.',
+                  'not-game-foreground':'O jogo precisa estar em primeiro plano.',
+                  'visible':'A janela CPU foi desenhada; confira a exibição sobre o jogo.',
+                  'worker-failed':'O auxiliar do overlay falhou e foi isolado do aplicativo.',
+                  'window-error':'O Windows recusou criar ou desenhar a janela.',
+                  'show-failed':'O Windows recusou exibir a janela.',
+                  'process-unavailable':'Não foi possível identificar a janela do jogo.',
+                  'inactive':'Aguardando dados atuais da partida.'}
+        return dict(self._status,attempts=self._attempts,message=messages.get(self._status['code'],'Iniciando o auxiliar do overlay.'))
     def set_opponent_action(self,action):self._action=action
     def start(self):
         if self._thread is None:
@@ -35,7 +45,7 @@ class IsolatedOverlay:
                 if not isinstance(event,dict):break
                 if event.get('event')=='cycle-opponent' and self._action:self._action()
                 elif event.get('event')=='status' and event.get('engine')=='isolated-layered-cpu':
-                    allowed={'not-started','inactive','not-game-foreground','visible','window-error','show-failed','process-unavailable'}
+                    allowed={'not-started','inactive','waiting-tab','not-game-foreground','visible','window-error','show-failed','process-unavailable'}
                     code=event.get('code')
                     if code not in allowed:continue
                     self._status={'code':code,'engine':'isolated-layered-cpu','windowShown':event.get('windowShown') is True}
@@ -84,7 +94,11 @@ class IsolatedOverlay:
             self._end();self._next=now+2
             self._status={'code':'worker-failed','engine':'isolated-layered-cpu','windowShown':False}
         if not frame.active:
-            self._end();return
+            if self._child is not None and self._child.poll() is None:
+                self._attempts=max(0,self._attempts-1)
+            self._end()
+            self._status={'code':'waiting-game','engine':'isolated-layered-cpu','windowShown':False}
+            return
         if self._child is None:
             if self._attempts>=2 or now<self._next or not self._write_done.is_set():return
             self._attempts+=1;self._sequence=0
