@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import threading
+import time
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from sexo2.overlay.display import Frame
 from sexo2.overlay.model import View,Card
@@ -27,14 +28,19 @@ def main():
     try:
         frame=Frame(True,View('a'*24,(Card('Teste isolado',('Sem LoL; sem dados pessoais.',)),)))
         child.stdin.write(encode(frame,1,1));child.stdin.flush()
-        raw=lines.get(timeout=15)
-        if raw is None:raise RuntimeError('Display child exited before status')
-        status=json.loads(raw)
-        assert status.get('event')=='status' and status.get('engine')=='isolated-layered-cpu','Invalid display status schema'
+        deadline=time.monotonic()+15
+        while True:
+            raw=lines.get(timeout=max(.01,deadline-time.monotonic()))
+            if raw is None:raise RuntimeError('Display child exited before readiness')
+            status=json.loads(raw)
+            assert status.get('event')=='status' and status.get('engine')=='isolated-layered-cpu','Invalid display status schema'
+            if status.get('code')=='not-started':continue
+            assert status.get('code') in {'inactive','not-game-foreground','waiting-tab','visible'},'Display window initialization failed'
+            break
         child.stdin.close();child.stdin=None
         child.wait(timeout=5)
         assert child.returncode==0,'Worker did not close cleanly on EOF'
-        print(json.dumps({'workerEntry':True,'privatePipes':True,'eofExit':True,'leagueValidated':False}))
+        print(json.dumps({'workerEntry':True,'windowInitialized':True,'privatePipes':True,'eofExit':True,'leagueValidated':False}))
     except (queue.Empty,AssertionError,RuntimeError):
         if child.poll() is None:child.kill();child.wait(timeout=3)
         error=child.stderr.read(4096).decode('utf-8',errors='replace')

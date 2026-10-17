@@ -79,3 +79,10 @@ Não houve LoL/Vanguard nessa validação.
 A edição 2.0.0.9 deve repetir testes gráficos/OCR, todas as regressões e verificar
 o mesmo modo worker do SEXO2 efetivamente instalado. A instalação deve excluir
 DLL/módulos legados, incluir o OCR compilado/notices e preservar os dados antigos.
+
+Verificação final reforçada: o probe espera um estado posterior a not-started,
+com a superfície inicializada, antes de aceitar o worker. Como só muda o script
+de validação, revalidar o artefato já compilado em um job separado evita recompilar
+o mesmo programa e o OCR. Esse job baixa somente um run numérico deste repositório,
+confere SHA-256 e recibo/commit e repete instalação, worker e desinstalação.
+Nenhuma mudança no runtime requer novo binário nesta etapa.

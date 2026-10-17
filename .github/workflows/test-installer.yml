@@ -10,6 +10,10 @@ on:
         description: Test edition (2.0.0.1 through 2.0.0.65535)
         default: 2.0.0.9
         required: true
+      verify_worker_run:
+        description: Existing installer run to revalidate without rebuilding binaries
+        type: string
+        default: ''
       software_only:
         description: Validate isolated CPU display worker without building an installer
         type: boolean
@@ -26,7 +30,7 @@ permissions:
 
 jobs:
   build:
-    if: inputs.native_host_only != true && inputs.software_only != true
+    if: inputs.native_host_only != true && inputs.software_only != true && !inputs.verify_worker_run
     runs-on: windows-latest
     timeout-minutes: 35
     steps:
@@ -207,3 +211,39 @@ jobs:
           python scripts/probe_overlay_worker.py --worker display-probe/OverlayProbe/OverlayProbe.exe
           if ($LASTEXITCODE -ne 0) { throw 'Windowed entry/private pipes failed.' }
 # This job starts only its own windows/processes; it does not run League or Pengu.
+
+  verify-installed-worker:
+    if: inputs.verify_worker_run != ''
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Download and verify this repository's existing test installer
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          INSTALLER_RUN: ${{ inputs.verify_worker_run }}
+        run: |
+          if ($env:INSTALLER_RUN -notmatch '^[0-9]{1,15}$') { throw 'Expected a numeric run ID.' }
+          $run = gh run view $env:INSTALLER_RUN --json headSha,conclusion | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or $run.conclusion -ne 'success') { throw 'Installer build did not succeed.' }
+          gh run download $env:INSTALLER_RUN --name SEXO2-2.0-Teste --dir build-test-installer/verify
+          if ($LASTEXITCODE -ne 0) { throw 'Private installer download failed.' }
+          $installer = Get-ChildItem -LiteralPath build-test-installer/verify -Filter '*.exe'
+          if (@($installer).Count -ne 1) { throw 'Expected exactly one installer.' }
+          $sha = (Get-Content -LiteralPath ($installer.FullName + '.sha256') -Raw).Split(' ')[0].Trim()
+          if ($sha -notmatch '^[a-f0-9]{64}$' -or (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne $sha) { throw 'Installer checksum mismatch.' }
+          ./scripts/test_installer.ps1 -Installer $installer.FullName -ExpectedCommit $run.headSha -ReportPath build-test-installer/worker-verified.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEXO2-installed-worker-verification
+          path: build-test-installer/worker-verified.json
+          if-no-files-found: error
+          retention-days: 7
