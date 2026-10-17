@@ -18,7 +18,7 @@ try {
     $env:SEXO2_SIGNING_KEY_HEX = [Convert]::ToHexString([IO.File]::ReadAllBytes($keyFile))
     python scripts/prepare_release.py --base $previousFolder --version $releaseVersion
     if ($LASTEXITCODE -ne 0) { throw 'Preparation failed.' }
-    python -m unittest discover -s tests -q
+    python scripts/run_tests.py -q
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
     $appDist = "dist-sexo2-$releaseVersion$BuildSuffix"
     $helperDist = "dist-updater-$releaseVersion$BuildSuffix"
