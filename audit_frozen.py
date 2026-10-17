@@ -12,7 +12,7 @@ def signature(code):
         return(code.co_code,tuple(signature(x)for x in code.co_consts),code.co_names,code.co_varnames,code.co_freevars,code.co_cellvars)
     return code
 for name in ['main','main.setup.initialization','main.setup.arguments','main.core.lockfile','sexo2.update.lifecycle','main.runtime.loop','injection.mods.zip_resolver','sexo2.version','state.core.app_status','utils.integration.tray_manager','friends.room','friends.arena_bravery','threads.core.phase_thread','threads.websocket.websocket_event_handler','injection.overlay.overlay_manager','friends.auto_accept','friends.preferences','friends.service','friends.selection_guard','lcu.core.client','lcu.core.request_error','party.hosting.controller','utils.download.verified_file','utils.core.atomic_file','config','injection.game.game_monitor','party.core.party_manager','pengu.communication.message_handler','sexo2.services.work_queue','sexo2.services.settings','sexo2.update.engine','sexo2.update.client','sexo2.update.trust','utils.download.hash_updater','injection.mods.storage','launcher.core.launcher','launcher.core.startup_policy','launcher.sequences.hash_check_sequence','launcher.sequences.skin_sync_sequence','utils.core.modpkg','party.discovery.custom_mods','sexo2.services.mod_library','pengu.core.skin_monitor','utils.core.safe_extract',
-             'sexo2.services.auto_items','sexo2.services.session','sexo2.sources.mayhem','sexo2.overlay.mayhem',
+             'sexo2.services.plugin_sync','sexo2.services.auto_items','sexo2.services.session','sexo2.sources.mayhem','sexo2.overlay.mayhem',
              'sexo2.services.draft','sexo2.services.builds','sexo2.services.loadouts',
              'sexo2.overlay.model','sexo2.overlay.runtime','sexo2.overlay.win32',
              'sexo2.overlay.arena','sexo2.overlay.processes',
@@ -29,7 +29,7 @@ for file in (root/'Pengu Loader/plugins').rglob('*'):
 assert (bundle/'_internal/hosting-tools/cloudflared.exe').is_file()
 print('PASS: compiled modules and every plugin match source; integrated tunnel binary exists.')
 
-for name in ['galo.png','galo.ico','bork-black-v3.png','sexo2.ico','golden_rose.png','update-source.json']:
+for name in ['galo.png','galo.ico','bork-black-v3.png','sexo2.ico','golden_rose.png','sexo2-managed-plugins.json','update-source.json']:
     assert (bundle/'_internal/assets'/name).read_bytes()==(root/'assets'/name).read_bytes(),name
 print('PASS: release visual assets and update source match.')
 

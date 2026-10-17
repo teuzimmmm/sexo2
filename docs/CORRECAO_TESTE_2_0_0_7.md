@@ -85,3 +85,26 @@ ao frontend. Só uma mudança feita pelo usuário fixa o destino; o primeiro con
 com páginas escolhe a editável atual. Regressão Chromium remove `runePages` do
 contexto pré-pick para testar a transição real de ausência para disponibilidade.
 Opção vazia é “Página gerenciada SEXO2”, não promessa de criar uma página nova.
+
+Etapa adicional justificada pela revisão de inicialização: `activate_on_start`
+adota um Pengu externo com ROSE-UI/ROSE-SkinMonitor e retorna antes de atualizar
+plugins. Assim, um executável novo pode manter frontend antigo mesmo com pacote
+correto. Corrigir atualização somente de entrypoints conhecidos do projeto, com
+prova por hash histórico, preservando plugins alterados, datastore, core/EXE e
+Registro do loader externo. Sem cópia genérica de pastas; reinício apenas na fase
+segura já usada pelo aplicativo. Não afirmar que esse foi o caminho no PC sem
+inventário/logs. Fixtures de teste só usam scripts públicos e diretórios temporários.
+
+Atualização externa implementada: manifesto de SHA-256 dos entrypoints públicos
+atual/históricos, preflight de todos os scripts, backup limitado aos conteúdos
+reconhecidos e substituição atômica com rollback em erro. Plugins desativados
+permanecem desativados. Core, EXE, datastore, plugins particulares e Registro
+externos não são copiados nem substituídos. Alterações próprias desconhecidas
+bloqueiam a atualização com erro; não declarar atualização concluída nesse caso.
+O reinício usa somente o fluxo LCU existente, fora da partida e do draft.
+
+Validação local adicional: 13 testes focados de sincronização/importação passaram;
+cobrem rollback após falha de escrita, script particular, symlink, manifesto
+malformado, preservação do datastore e idempotência. O manifesto é auditado no
+pacote e testado contra os scripts efetivamente entregues. Isso não reproduz
+a instalação do Pengu no PC do usuário.

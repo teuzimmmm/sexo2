@@ -388,7 +388,7 @@ def _warn_pengu_activation_failed() -> None:
         try:
             ctypes.windll.user32.MessageBoxW(
                 0,
-                "SEXO2 could not activate Pengu Loader, so it will not appear in the League client.\n\n"
+                "SEXO2 could not prepare its Pengu Loader plugins. The client may still be using older plugins.\n\n"
                 "Close the League client, then restart SEXO2.\n"
                 "If it happens again, make sure your antivirus is not blocking Pengu Loader.\n\n"
                 "Details are in %LOCALAPPDATA%\\Rose\\logs\\",

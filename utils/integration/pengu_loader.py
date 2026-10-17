@@ -796,11 +796,33 @@ def _external_pengu_with_rose_plugins() -> Optional[Path]:
     return None
 
 
+def _prepare_external_plugins(external, *, restart=False):
+    """Keep the user's core/registry; refresh only recognized project entrypoints."""
+    global _restart_pending
+    from sexo2.services.plugin_sync import sync_project_plugins, PluginSyncError
+    from utils.core.paths import get_asset_path
+    bundled=_get_bundled_pengu_dir() or PENGU_DIR
+    try:
+        result=sync_project_plugins(bundled/'plugins',external/'plugins',
+            get_asset_path('sexo2-managed-plugins.json'),get_state_dir()/'pengu-plugin-backups')
+    except PluginSyncError as error:
+        log.error('Plugins externos não atualizados; arquivos particulares preservados (code=%s).',error.code)
+        from utils.core.issue_reporter import report_issue
+        report_issue('PENGU_PLUGIN_SYNC_FAILED','error',str(error),
+            hint='Há um plugin modificado, desativado ou indisponível. A configuração do Pengu externo foi preservada.')
+        return False
+    if (restart or result.changed) and _process_running(('LeagueClientUx.exe',)):
+        _restart_pending=frozenset() if restart_client() else _process_ids(('LeagueClientUx.exe',))
+    return True
+
+
 def ensure_active_for_client() -> None:
     """The client just started: enable Rose's loader if none is active any more
     (a standalone Pengu disabled while Rose runs). Runs on that event, no polling."""
     with _operation_lock:
-        if _external_pengu_with_rose_plugins() is not None:
+        external=_external_pengu_with_rose_plugins()
+        if external is not None:
+            _prepare_external_plugins(external)
             return
         core = _registered_pengu_core()
         if core is not None and core.parent.resolve() == PENGU_DIR.resolve():
@@ -842,7 +864,8 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
     with _operation_lock:
         external = _external_pengu_with_rose_plugins()
         if external is not None:
-            log.info('Using existing external Pengu Loader with Rose plugins: %s', external)
+            log.info('Pengu externo identificado; conferindo plugins do projeto.')
+            if not _prepare_external_plugins(external,restart=True):return False
             # This activation belongs to the user, so Rose must not remove it
             # on exit or replace its registry entry with the bundled loader.
             return _write_session(was_active=True, rose_activated=False)
