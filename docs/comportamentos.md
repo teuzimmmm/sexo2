@@ -30,6 +30,9 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Dados do usuário em `%LOCALAPPDATA%\Rose` | `utils/core/paths.py` | **sem teste** de caminho; só de conteúdo |
 | Diagnóstico sem segredos | `friends/diagnostics.py` | `test_friends_features` (sanitização) |
 | Biblioteca LoLalytics | `lolalytics/` | `tests/test_lolalytics_*` (fixtures reais) |
+| Importação de runas: só a página gerenciada, confirmação por leitura, sessão e campeão invalidam o pendente | `sexo2/services/rune_import.py`, `sexo2/services/rune_rules.py`, `lcu/features/lcu_perks.py` | `test_rune_import`, `test_rune_rules`, `lcu/tests/test_lcu_perks` (cliente simulado; **sem teste** no cliente real) |
+| Conjuntos de itens: troca só os gerenciados do campeão, os demais ficam idênticos | `sexo2/services/item_sets.py`, `lcu/features/lcu_item_sets.py` | `test_item_sets` (cliente simulado; **sem teste** no cliente real) |
+| Estatísticas do assistente (slug do campeão, runas por runa-chave) | `sexo2/services/stats.py` | `test_stats_service` (fixtures LoLalytics) |
 
 Lacunas que os marcos devem cobrir antes de mexer na área: precisão do disparo
 da injeção (M6b), mensagens `mod-*` (M7), instância única e caminhos de dados (M13).
