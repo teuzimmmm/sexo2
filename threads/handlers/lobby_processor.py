@@ -17,7 +17,7 @@ log = get_logger()
 
 class LobbyProcessor:
     """Processes lobby state and detects Swiftplay mode"""
-    
+
     def __init__(
         self,
         lcu: LCU,
@@ -27,7 +27,7 @@ class LobbyProcessor:
         swiftplay_handler=None,
     ):
         """Initialize lobby processor
-        
+
         Args:
             lcu: LCU client instance
             state: Shared application state
@@ -40,13 +40,13 @@ class LobbyProcessor:
         self.injection_manager = injection_manager
         self.skin_scraper = skin_scraper
         self.swiftplay_handler = swiftplay_handler
-        
+
         # Lobby mode monitoring (poll at 5 Hz)
         self._lobby_mode_check_interval = 0.2
         self._last_lobby_check = 0.0
         self._last_lobby_mode = None
         self._last_lobby_queue = None
-    
+
     def process_lobby_state(self, force: bool = False):
         """Monitor lobby state and detect Swiftplay mode changes."""
         now = time.time()
@@ -80,10 +80,16 @@ class LobbyProcessor:
                 detected_mode = "SWIFTPLAY"
         # Stored queue ID fallback: only trust if we were already in Swiftplay mode
         # (prevents stale queue ID from a previous session from triggering false detection)
-        elif detected_queue is None and self.state.current_queue_id in SWIFTPLAY_QUEUE_IDS and self.state.is_swiftplay_mode:
+        elif (
+            detected_queue is None
+            and self.state.current_queue_id in SWIFTPLAY_QUEUE_IDS
+            and self.state.is_swiftplay_mode
+        ):
             is_swiftplay = True
             detected_queue = self.state.current_queue_id
-            log.debug(f"[phase] lobby: Swiftplay via stored queue {detected_queue} fallback (already in swiftplay mode)")
+            log.debug(
+                f"[phase] lobby: Swiftplay via stored queue {detected_queue} fallback (already in swiftplay mode)"
+            )
             if not detected_mode:
                 detected_mode = "SWIFTPLAY"
         elif detected_mode is None and self.lcu.ok and self.lcu.is_swiftplay:
@@ -101,8 +107,10 @@ class LobbyProcessor:
         queue_changed = detected_queue is not None and detected_queue != previous_queue
         swiftplay_changed = is_swiftplay != swiftplay_previous
 
-        effective_mode = detected_mode if detected_mode is not None else (
-            self.lcu.game_mode if (is_swiftplay and self.lcu.ok and self.lcu.game_mode) else previous_mode
+        effective_mode = (
+            detected_mode
+            if detected_mode is not None
+            else (self.lcu.game_mode if (is_swiftplay and self.lcu.ok and self.lcu.game_mode) else previous_mode)
         )
 
         if mode_changed or queue_changed or swiftplay_changed:
@@ -110,7 +118,9 @@ class LobbyProcessor:
             new_mode_label = effective_mode or prev_mode_label
             prev_queue_label = previous_queue if previous_queue is not None else "-"
             new_queue_label = detected_queue if detected_queue is not None else prev_queue_label
-            log.info(f"[phase] Lobby game mode updated: {prev_mode_label} → {new_mode_label} (queue: {prev_queue_label} → {new_queue_label})")
+            log.info(
+                f"[phase] Lobby game mode updated: {prev_mode_label} → {new_mode_label} (queue: {prev_queue_label} → {new_queue_label})"
+            )
 
         if is_swiftplay:
             if swiftplay_changed or force or mode_changed or queue_changed:
@@ -142,6 +152,7 @@ class LobbyProcessor:
 
                 try:
                     from ui.core.user_interface import get_user_interface
+
                     user_interface = get_user_interface(self.state, self.skin_scraper)
                     user_interface.request_ui_destruction()
                     log_action(log, "UI destruction requested for Lobby", "")
@@ -154,10 +165,9 @@ class LobbyProcessor:
             self._last_lobby_mode = effective_mode
         if detected_queue is not None:
             self._last_lobby_queue = detected_queue
-    
+
     def reset_lobby_tracking(self):
         """Reset lobby tracking when leaving the lobby phase"""
         self._last_lobby_mode = None
         self._last_lobby_queue = None
         self._last_lobby_check = 0.0
-

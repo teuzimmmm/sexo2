@@ -16,11 +16,11 @@ class SwiftplayHistoricTests(unittest.TestCase):
         self.saved = {ANIVIA: 34062}
         # Never touch the developer's real historic.json
         patches = {
-            'get_historic_skin_for_champion': patch.object(
-                swiftplay_module, 'get_historic_skin_for_champion', side_effect=self.saved.get
+            "get_historic_skin_for_champion": patch.object(
+                swiftplay_module, "get_historic_skin_for_champion", side_effect=self.saved.get
             ),
-            'write_historic_entry': patch.object(swiftplay_module, 'write_historic_entry'),
-            'clear_historic_entry': patch.object(swiftplay_module, 'clear_historic_entry'),
+            "write_historic_entry": patch.object(swiftplay_module, "write_historic_entry"),
+            "clear_historic_entry": patch.object(swiftplay_module, "clear_historic_entry"),
         }
         self.mocks = {name: p.start() for name, p in patches.items()}
         for p in patches.values():
@@ -58,23 +58,23 @@ class SwiftplayHistoricTests(unittest.TestCase):
         self.assertEqual(self.tracking[ANIVIA], 34062)
 
     def test_saved_custom_mods_are_left_alone(self):
-        self.saved[ANIVIA] = 'path:skins/34000/Mod'
+        self.saved[ANIVIA] = "path:skins/34000/Mod"
         self.handler._apply_historic_skins({ANIVIA})
         self.assertEqual(self.tracking, {})
 
     def test_skins_a_game_used_are_saved(self):
         self.handler._last_injected_tracking = {ANIVIA: 34062, 1: 1000}
         self.handler._remember_injected_skins()
-        self.mocks['write_historic_entry'].assert_called_once_with(ANIVIA, 34062)
+        self.mocks["write_historic_entry"].assert_called_once_with(ANIVIA, 34062)
 
     def test_queueing_with_the_default_skin_by_choice_forgets_the_saved_skin(self):
         self.handler.mark_champion_changed(ANIVIA, 34005)
         self.handler._forget_declined_historic_skins({ANIVIA: 34000})
-        self.mocks['clear_historic_entry'].assert_called_once_with(ANIVIA)
+        self.mocks["clear_historic_entry"].assert_called_once_with(ANIVIA)
 
-        self.mocks['clear_historic_entry'].reset_mock()
+        self.mocks["clear_historic_entry"].reset_mock()
         self.handler._forget_declined_historic_skins({ANIVIA: 34005})
-        self.mocks['clear_historic_entry'].assert_not_called()
+        self.mocks["clear_historic_entry"].assert_not_called()
 
     def test_base_skin_is_forced_for_a_saved_skin(self):
         self.handler._last_sync_active_ids = frozenset({ANIVIA})
@@ -83,5 +83,5 @@ class SwiftplayHistoricTests(unittest.TestCase):
         self.assertEqual(tracking, {ANIVIA: 34062})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

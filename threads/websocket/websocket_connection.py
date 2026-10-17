@@ -36,7 +36,7 @@ logging.getLogger("websocket").setLevel(logging.WARNING)
 
 class WebSocketConnection:
     """Manages WebSocket connection lifecycle"""
-    
+
     def __init__(
         self,
         lcu: LCU,
@@ -50,7 +50,7 @@ class WebSocketConnection:
         app_status_callback: Optional[Callable] = None,
     ):
         """Initialize WebSocket connection manager
-        
+
         Args:
             lcu: LCU client instance
             state: Shared application state
@@ -71,7 +71,7 @@ class WebSocketConnection:
         self.on_error = on_error
         self.on_close = on_close
         self.app_status_callback = app_status_callback
-        
+
         self.ws = None
         self.is_connected = False
         self._stop_event = threading.Event()
@@ -79,7 +79,7 @@ class WebSocketConnection:
         self._last_error = None
         # Reason of the last retry logged as a warning (repeats go to debug)
         self._warned_retry_reason: Optional[str] = None
-    
+
     def run(self):
         """Main WebSocket connection loop"""
         if websocket is None:
@@ -150,31 +150,31 @@ class WebSocketConnection:
     def _on_open(self, ws):
         """WebSocket connection opened"""
         from utils.core.logging import log_status
-        
+
         separator = "=" * 80
         log.info(separator)
         log.info("WEBSOCKET CONNECTED")
         log.info("   Status: Active")
         log.info(separator)
-        
+
         self.is_connected = True
         self._retry_attempt = 0
         self._warned_retry_reason = None
-        
+
         # Update app status
         if self.app_status_callback:
             self.app_status_callback()
-        
+
         try:
             ws.send('[5,"OnJsonApiEvent"]')
         except Exception as e:
             log.debug(f"WebSocket: Subscribe error: {e}")
-    
+
     def _on_message(self, ws, msg):
         """WebSocket message received"""
         if self.on_message:
             self.on_message(ws, msg)
-    
+
     def _on_error(self, ws, err):
         """WebSocket error"""
         self.is_connected = False
@@ -182,7 +182,7 @@ class WebSocketConnection:
         log.debug(f"WebSocket: Error: {err}")
         if self.on_error:
             self.on_error(ws, err)
-    
+
     def _on_close(self, ws, status, msg):
         """WebSocket connection closed"""
         separator = "=" * 80
@@ -191,16 +191,16 @@ class WebSocketConnection:
         log.info(f"   Status Code: {status}")
         log.info(f"   Message: {msg}")
         log.info(separator)
-        
+
         self.is_connected = False
-        
+
         # Update app status
         if self.app_status_callback:
             self.app_status_callback()
-        
+
         if self.on_close:
             self.on_close(ws, status, msg)
-    
+
     def stop(self):
         """Stop the WebSocket connection"""
         self._stop_event.set()

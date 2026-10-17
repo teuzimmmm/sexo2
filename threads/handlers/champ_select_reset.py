@@ -67,6 +67,7 @@ def perform_champ_select_reset(state, lcu) -> bool:
 
     try:
         from ui.core.user_interface import get_user_interface
+
         user_interface = get_user_interface(state, None)
         user_interface.reset_skin_state()
         user_interface._force_reinitialize = True

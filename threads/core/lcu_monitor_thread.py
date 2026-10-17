@@ -22,11 +22,19 @@ log = get_logger()
 
 class LCUMonitorThread(threading.Thread):
     """Thread for monitoring LCU connection and language changes"""
-    
-    def __init__(self, lcu: LCU, state: SharedState, language_callback: Callable[[str], None], ws_thread=None,
-                 db=None, skin_scraper=None, injection_manager=None,
-                 disconnect_callback: Optional[Callable[[], None]] = None,
-                 reconnect_callback: Optional[Callable[[], None]] = None):
+
+    def __init__(
+        self,
+        lcu: LCU,
+        state: SharedState,
+        language_callback: Callable[[str], None],
+        ws_thread=None,
+        db=None,
+        skin_scraper=None,
+        injection_manager=None,
+        disconnect_callback: Optional[Callable[[], None]] = None,
+        reconnect_callback: Optional[Callable[[], None]] = None,
+    ):
         super().__init__(daemon=True)
         self.lcu = lcu
         self.state = state
@@ -54,7 +62,7 @@ class LCUMonitorThread(threading.Thread):
             try:
                 current_lcu_ok = self.lcu.ok
                 current_ws_connected = self._is_ws_connected()
-                
+
                 # Connection lost
                 if self.last_lcu_ok and not current_lcu_ok:
                     log.info("LCU connection lost - waiting for reconnection...")
@@ -62,11 +70,11 @@ class LCUMonitorThread(threading.Thread):
                     self.last_language = None
                     self.ws_connected = False
                     self.language_initialized = False
-                    
+
                     # Notify about disconnection to reset app status
                     if self.disconnect_callback:
                         self.disconnect_callback()
-                
+
                 # Connection restored
                 elif not self.last_lcu_ok and current_lcu_ok:
                     if self.waiting_for_connection:
@@ -85,6 +93,7 @@ class LCUMonitorThread(threading.Thread):
                     # restart. The first connection is handled by startup.
                     if self._initial_ws_done and not self.state.stop:
                         from utils.integration import pengu_loader
+
                         threading.Thread(
                             target=pengu_loader.ensure_active_for_client,
                             name="PenguLoaderCheck",
@@ -111,7 +120,7 @@ class LCUMonitorThread(threading.Thread):
                         except Exception as e:
                             log.warning(f"[LCU Monitor] Reconnection callback failed: {e}")
                     self._initial_ws_done = True
-                
+
                 # Language not yet initialized - retry detection
                 elif current_lcu_ok and current_ws_connected and self.ws_connected and not self.language_initialized:
                     now = time.time()
@@ -119,7 +128,7 @@ class LCUMonitorThread(threading.Thread):
                     if now - self.last_language_check >= 2.0:
                         log.info("Retrying language detection...")
                         self._try_detect_language()
-                
+
                 # Periodic language change check (every 30 seconds when stable)
                 # Skip during InProgress – the client rarely changes language mid-match
                 # and the LCU HTTP call adds needless overhead during gameplay.
@@ -178,7 +187,9 @@ class LCUMonitorThread(threading.Thread):
                     self.language_callback(new_language)
             else:
                 self.language_retry_count += 1
-                log.warning(f"[LCU] Failed to get LCU language - client returned None (attempt {self.language_retry_count}/{self.max_language_retries})")
+                log.warning(
+                    f"[LCU] Failed to get LCU language - client returned None (attempt {self.language_retry_count}/{self.max_language_retries})"
+                )
 
                 # After max retries, stop retrying — the app works without language
                 # detection (phases, skins, injection all work via WebSocket).
@@ -189,30 +200,30 @@ class LCUMonitorThread(threading.Thread):
                     self.language_retry_count = 0
         except Exception as e:
             log.warning(f"[LCU] Failed to get LCU language: {e}")
-    
+
     def _check_language_change(self):
         """Periodically check if language has changed"""
         self.last_language_check = time.time()
-        
+
         try:
             current_language = self.lcu.client_language
             if current_language and current_language != self.last_language:
                 log.info(f"[LCU] Language changed during session: {self.last_language} → {current_language}")
-                
+
                 # Update database language if available
                 if self.db:
                     log.info(f"[LCU] Updating database for language change: {current_language}")
                     self.db.update_language(current_language)
-                
+
                 self.last_language = current_language
                 if self.language_callback:
                     self.language_callback(current_language)
         except Exception as e:
             log.debug(f"[LCU] Error checking language change: {e}")
-    
+
     def _check_initial_champion_state(self):
         """Check if we're already in ChampSelect with a locked champion (Issue #29)
-        
+
         This handles the case where the app is launched after the user has already
         locked in a champion.
         """
@@ -221,25 +232,25 @@ class LCUMonitorThread(threading.Thread):
             phase = self.lcu.phase if self.lcu.ok else None
             if phase != "ChampSelect":
                 return
-            
+
             # Get current session
             sess = self.lcu.session or {}
             if not sess:
                 return
-            
+
             # Get local player's cell ID
             my_cell = sess.get("localPlayerCellId")
             if my_cell is None:
                 return
             self.state.local_cell_id = my_cell
-            
+
             # Check if there are any locked champions
             locked_champions = compute_locked(sess)
-            
+
             # Check if the local player has locked a champion
             if my_cell in locked_champions:
                 locked_champ_id = locked_champions[my_cell]
-                
+
                 if self._needs_late_lock_bootstrap(locked_champ_id):
                     self._bootstrap_late_locked_champion(
                         locked_champ_id=locked_champ_id,
@@ -263,10 +274,7 @@ class LCUMonitorThread(threading.Thread):
 
     def _needs_late_lock_bootstrap(self, locked_champ_id: int) -> bool:
         """Return True when late-start lock recovery still needs to run."""
-        return (
-            self.state.locked_champ_id != locked_champ_id
-            or not self.state.own_champion_locked
-        )
+        return self.state.locked_champ_id != locked_champ_id or not self.state.own_champion_locked
 
     def _bootstrap_late_locked_champion(self, locked_champ_id: int, locked_champions: dict) -> None:
         """Restore the same state a normal champion-lock event would set up."""
@@ -294,9 +302,7 @@ class LCUMonitorThread(threading.Thread):
         self._notify_injection_manager(champ_name, locked_champ_id)
         self._sync_ui_for_late_lock()
 
-        log.info(
-            f"[init-state] App will start after initialization (champion: {champ_name})"
-        )
+        log.info(f"[init-state] App will start after initialization (champion: {champ_name})")
 
     def _broadcast_historic_reset(self) -> None:
         """Hide historic-mode UI after late-start lock recovery."""
@@ -389,8 +395,7 @@ class LCUMonitorThread(threading.Thread):
 
         if cached_champ_id is not None and cached_champ_id != locked_champ_id:
             log.warning(
-                "[init-state] Discarding cached skin '%s': champion mismatch "
-                "(cached=%s, locked=%s)",
+                "[init-state] Discarding cached skin '%s': champion mismatch (cached=%s, locked=%s)",
                 cached_skin_name,
                 cached_champ_id,
                 locked_champ_id,
@@ -399,8 +404,7 @@ class LCUMonitorThread(threading.Thread):
 
         if cached_generation != current_generation:
             log.warning(
-                "[init-state] Discarding cached skin '%s': ChampSelect generation mismatch "
-                "(cached=%s, current=%s)",
+                "[init-state] Discarding cached skin '%s': ChampSelect generation mismatch (cached=%s, current=%s)",
                 cached_skin_name,
                 cached_generation,
                 current_generation,
@@ -419,18 +423,22 @@ class LCUMonitorThread(threading.Thread):
                 "[init-state] Replaying cached skin after late lock bootstrap: '%s'",
                 cached_skin_name,
             )
-            ui_thread.message_handler.handle_message(json.dumps({
-                "skin": cached_skin_name,
-                "originalName": cached_skin_name,
-                "timestamp": int(time.time() * 1000),
-            }))
+            ui_thread.message_handler.handle_message(
+                json.dumps(
+                    {
+                        "skin": cached_skin_name,
+                        "originalName": cached_skin_name,
+                        "timestamp": int(time.time() * 1000),
+                    }
+                )
+            )
         except Exception as e:
             log.debug(f"[init-state] Failed to replay cached skin state: {e}")
-    
+
     def _is_ws_connected(self) -> bool:
         """Check if WebSocket is connected"""
         if not self.ws_thread:
             return True  # If no WS thread, consider it always connected
-        
+
         # Use the is_connected flag from WebSocket thread
-        return getattr(self.ws_thread, 'is_connected', False)
+        return getattr(self.ws_thread, "is_connected", False)

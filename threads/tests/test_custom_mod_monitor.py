@@ -80,10 +80,12 @@ class CustomModInjectionMonitorTests(unittest.TestCase):
         def link(source, dest, cache_dir=None):
             dest.mkdir(parents=True)
 
-        with patch("threads.handlers.injection_trigger.link_or_extract", side_effect=link), \
-                patch("utils.core.mod_historic.write_historic_mod"), \
-                patch("utils.core.historic.write_historic_entry"), \
-                patch("utils.core.historic.write_historic_target"):
+        with (
+            patch("threads.handlers.injection_trigger.link_or_extract", side_effect=link),
+            patch("utils.core.mod_historic.write_historic_mod"),
+            patch("utils.core.historic.write_historic_entry"),
+            patch("utils.core.historic.write_historic_target"),
+        ):
             self.inject(self.custom_mod(mod_source))
         self.injector.overlay_manager.mk_run_overlay.assert_called_once()
 

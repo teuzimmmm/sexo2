@@ -10,8 +10,7 @@ from .timer_manager import TimerManager
 from .skin_name_resolver import SkinNameResolver
 
 __all__ = [
-    'LoadoutTicker',
-    'TimerManager',
-    'SkinNameResolver',
+    "LoadoutTicker",
+    "TimerManager",
+    "SkinNameResolver",
 ]
-

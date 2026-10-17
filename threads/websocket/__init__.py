@@ -9,7 +9,6 @@ from .websocket_connection import WebSocketConnection
 from .websocket_event_handler import WebSocketEventHandler
 
 __all__ = [
-    'WebSocketConnection',
-    'WebSocketEventHandler',
+    "WebSocketConnection",
+    "WebSocketEventHandler",
 ]
-
