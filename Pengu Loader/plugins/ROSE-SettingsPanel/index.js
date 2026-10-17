@@ -6,9 +6,6 @@
  */
 (function initSettingsPanel() {
   const LOG_PREFIX = "[Rose-SettingsPanel]";
-  const DISCORD_INVITE_URL = "https://discord.com/invite/roseskins";
-  const KOFI_URL = "https://ko-fi.com/roseapp";
-  const GITHUB_URL = "https://github.com/Alban1911/Rose";
 
   const PANEL_ID = "rose-settings-panel";
   const FLYOUT_ID = "rose-settings-flyout";
@@ -2969,33 +2966,6 @@
       saveSettings();
     });
     form.appendChild(saveButton);
-
-    // Links section
-    const linksSection = document.createElement("div");
-    linksSection.className = "settings-links";
-
-    const discordLink = document.createElement("a");
-    discordLink.className = "settings-link";
-    discordLink.href = DISCORD_INVITE_URL;
-    discordLink.target = "_blank";
-    discordLink.textContent = "Discord";
-    linksSection.appendChild(discordLink);
-
-    const kofiLink = document.createElement("a");
-    kofiLink.className = "settings-link";
-    kofiLink.href = KOFI_URL;
-    kofiLink.target = "_blank";
-    kofiLink.textContent = "Ko-Fi";
-    linksSection.appendChild(kofiLink);
-
-    const githubLink = document.createElement("a");
-    githubLink.className = "settings-link";
-    githubLink.href = GITHUB_URL;
-    githubLink.target = "_blank";
-    githubLink.textContent = "GitHub";
-    linksSection.appendChild(githubLink);
-
-    if(window.__roseHub){const credits=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Créditos da base';credits.append(summary,linksSection);form.appendChild(credits);}else form.appendChild(linksSection);
 
     flyoutContent.appendChild(form);
     flyoutFrame.appendChild(flyoutContent);
