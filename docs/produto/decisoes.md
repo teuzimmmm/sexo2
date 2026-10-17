@@ -30,6 +30,10 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-014 | Escala tipográfica: opção B de `design/propostas/tipografia.html`, compactada para o cliente. O dimensionamento final segue em avaliação no protótipo `sexo2-v1`. | usuário, sessão v1.0 |
 | D-015 | Fluxo de runas: recomendação exibida não importa nada. Clicar num card importa a página original na hora. Edições válidas são aplicadas sozinhas, agrupadas, uma de cada vez; a mais recente vence. A última página confirmada é preservada se a seleção terminar. Uma operação antiga nunca afeta outra sessão ou campeão. Páginas pessoais não são sobrescritas. | usuário, sessão v1.0 |
 | D-016 | Não há rótulos de origem dos dados, mas a natureza da estatística aparece no tooltip: WR da runa-chave, do trio de itens ou de cada item. O valor no placar é o preço dos itens, não o ouro obtido. | usuário, sessão v1.0 |
+| D-017 | O visual do protótipo `sexo2-v1` (tipografia, cores, componentes, ícones de runas, organização) está aprovado; só ajustes, sem novo redesenho. O assistente abre logo acima do botão SEXO2 da seleção: borda direita alinhada à do botão, 8 px de distância, abrindo para cima, sempre dentro da janela, sem cobrir o botão. | usuário, sessão 1.0b |
+| D-018 | Conjunto de itens: uma única página gerenciada “SEXO2 — {Campeão}”, reaproveitada entre campeões, com até nove seções em três grupos: `{WR}% — {N} partidas` (maior WR; WR do trio core observado), `Itens iniciais`, `Alternativas`; o mesmo para a mais jogada; `Counter {Campeão} — {WR}% — {N} partidas` (WR do confronto), `Itens iniciais`, `Alternativas`. Sem o confronto, o terceiro grupo não aparece. Conjuntos pessoais nunca são alterados nem apagados; os gerenciados são reconhecidos pelo `uid`. | usuário, sessão 1.0b |
+| D-019 | A importação do conjunto de itens é automática ao confirmar o campeão (SR, ARAM, Swiftplay), sem abrir o assistente, e se repete quando o campeão muda. Campeão provisório ou de outro jogador não importa. | usuário, sessão 1.0b |
+| D-020 | Aprimoramentos de Arena e ARAM Mayhem: só as cartas realmente oferecidas, com correção manual; nada é escolhido pelo SEXO2; números de Arena e Mayhem nunca se misturam; sem WR inventada; com só PR e partidas, mostram-se só esses. Destaque discreto das estatisticamente melhores. | usuário, sessão 1.0b |
 
 ## Pendentes
 
@@ -38,16 +42,18 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-101 | Dimensionamento final da escala B compactada | protótipo `design/propostas/sexo2-v1` |
 | D-102 | Cores, incluindo a cor de sinal | proposta futura (M4) |
 | D-103 | Componentes base: botão, lista, cartão, seletor, aviso | proposta futura, com `design/wireframes.md` |
+| D-115 | Overlay dos aprimoramentos: textos sob cada carta (nome lido, “WR · PR · partidas”, “Sem dados”, “Não reconhecida”), cor do destaque e como corrigir uma carta durante a partida (a janela atual não recebe cliques) | protótipo `sexo2-v1`, aba Aprimoramentos |
+| D-116 | WR de Arena: D-010 manda exibir, mas `docs/lolalytics/FONTES.md` registra a WR de Arena suprimida por política e o pedido da sessão 1.0b diz para respeitar as limitações documentadas. Hoje a Arena mostra só PR e partidas. Liberar a WR é uma mudança pequena em `lolalytics/parsing.py` | usuário |
 | D-104 | Navegação e menus (Hub, assistente, configurações) | antes do M7 |
 | D-105 | Destino das funções de mods (opções A, B ou C do plano) | antes do M7 |
-| D-106 | Automatismos: critério de “maior WR”, nível de risco, amostra mínima, uso do adversário inferido | antes do M8 |
+| D-106 | Automatismos: critério de “maior WR”, nível de risco, amostra mínima, uso do adversário inferido (a importação automática de itens foi decidida em D-019) | antes do M8 |
 | D-107 | Linguagem e textos visíveis | inventário de textos (M4/M5) |
 | D-108 | Limites aceitáveis de RAM, CPU e FPS | depois da linha de base (`docs/MEDICAO.md`) |
 | D-109 | Oferecer “voltar à versão anterior” | M2 ou posterior |
 | D-110 | Fila (queue ID) do novo modo competitivo | informação do usuário |
 | D-111 | Opt-in para Dynamic Workflows | por marco |
 | D-112 | Papel do Galo e do BORK na nova identidade | com D-102 |
-| D-113 | Nome da página de runas gerenciada e prefixo dos títulos dos conjuntos de itens (provisório: “SEXO2”; rótulos de bloco reaproveitam os de `lolalytics/item_pages.py`) | antes do M8 |
+| D-113 | Nome da página de runas gerenciada (provisório: “SEXO2”). O conjunto de itens foi decidido em D-018 | antes do M8 |
 | D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
 
 ## Rejeitadas

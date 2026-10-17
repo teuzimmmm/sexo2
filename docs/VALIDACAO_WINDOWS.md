@@ -24,9 +24,30 @@ atualiza sozinha para a 1.6.4.
    - que "página livre" significa páginas editáveis menores que `ownedPageCount`;
    - que a página criada com `current: true` fica ativa e é lida de volta igual;
    - os slugs de campeões com nome especial no LoLalytics (Wukong, Nunu, Renata).
-6. **Conjuntos de itens:** os mesmos cuidados; conferir que os seus conjuntos pessoais continuam
-   intactos depois da importação.
-7. **Valor dos itens no placar:** acrescente em `%LOCALAPPDATA%\Rose\config.ini`:
+6. **Conjuntos de itens (automático):** confirme o campeão numa partida personalizada ou normal
+   (e depois em ARAM e Swiftplay), sem abrir o assistente. Na loja da partida, confira:
+   - uma única página "SEXO2 — {Campeão}", com as seções na ordem aprovada (D-018);
+   - que ela aparece também em ARAM e Swiftplay (o conjunto é salvo para todos os mapas);
+   - que os seus conjuntos pessoais continuam intactos, e que nenhuma página nova aparece a cada
+     campeão;
+   - trocando de campeão na seleção, que a página passa a ser a do novo campeão.
+   O log mostra `[ASSISTANT]` com o resultado. Uma resposta HTTP de sucesso não prova que a loja exibe
+   a página: só a conferência visual vale.
+7. **Posição do painel:** na seleção, abra o painel do botão SEXO2 e rode no console do cliente
+   (DevTools do Pengu) `window.__sexo2AnchorDiagnostics()`. O resultado mostra se os seletores
+   `.champion-select` e `.bottom-right-buttons` existem, os retângulos do botão e do painel e a posição
+   esperada. Copie a saída se a borda direita não estiver alinhada ao botão ou se o painel sair da
+   janela. Repita depois de mudar a escala do cliente.
+8. **Aprimoramentos (Arena e ARAM Mayhem):** acrescente em `config.ini`:
+   ```
+   [Overlay]
+   augments_enabled = true
+   ```
+   Jogue em **sem bordas**. A cada oferta, confira se o nome lido abaixo de cada carta é o da carta;
+   anote as erradas e "Não reconhecida", e a resolução e a escala do HUD. Confirme também que o
+   cliente responde `/lol-game-data/assets/v1/cherry-augments.json` e `augment-lists.json` (o log
+   mostra quantos aprimoramentos e ícones foram carregados) e as filas 1700 (Arena) e 2400 (Mayhem).
+9. **Valor dos itens no placar:** acrescente em `%LOCALAPPDATA%\Rose\config.ini`:
    ```
    [Overlay]
    gold_enabled = true
@@ -36,4 +57,4 @@ atualiza sozinha para a 1.6.4.
      `gold_row_step`, frações da altura da tela);
    - se a ordem das linhas corresponde à do placar;
    - se o modo tela cheia também mostra o overlay.
-8. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.
+10. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.

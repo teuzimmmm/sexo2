@@ -31,7 +31,11 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Diagnóstico sem segredos | `friends/diagnostics.py` | `test_friends_features` (sanitização) |
 | Biblioteca LoLalytics | `lolalytics/` | `tests/test_lolalytics_*` (fixtures reais) |
 | Importação de runas: só a página gerenciada, confirmação por leitura, sessão e campeão invalidam o pendente | `sexo2/services/rune_import.py`, `sexo2/services/rune_rules.py`, `lcu/features/lcu_perks.py` | `test_rune_import`, `test_rune_rules`, `lcu/tests/test_lcu_perks` (cliente simulado; **sem teste** no cliente real) |
-| Conjuntos de itens: troca só os gerenciados do campeão, os demais ficam idênticos | `sexo2/services/item_sets.py`, `lcu/features/lcu_item_sets.py` | `test_item_sets` (cliente simulado; **sem teste** no cliente real) |
+| Conjuntos de itens: uma página gerenciada (uid fixo) com as nove seções aprovadas; os demais conjuntos ficam idênticos; releitura antes de gravar | `sexo2/services/item_sets.py`, `lolalytics/item_pages.py`, `lcu/features/lcu_item_sets.py` | `test_item_sets` (fixtures LoLalytics, cliente simulado; **sem teste** na loja real) |
+| Importação automática dos itens ao confirmar o campeão (travamento, troca, Swiftplay) | `sexo2/services/assistant.py`, `sexo2/services/assistant_runtime.py`, `threads/handlers/champion_lock_handler.py`, `threads/handlers/swiftplay_handler.py` | `test_assistant_service` (debounce, último vence, provisório ignorado) |
+| Fachada do LCU com as chamadas do assistente (`get` sem cache, `put`, `post`) | `lcu/core/client.py` | `lcu/tests/test_lcu_facade` |
+| Painel acima do botão SEXO2 | `ROSE-CustomWheel` (`computeAnchor`), protótipo `js/anchor.js` | `test_anchor.cjs`; **sem teste** do DOM real |
+| Aprimoramentos: catálogo por modo, estatísticas, ofertas, reconhecimento | `sexo2/augments/`, `sexo2/overlay/augment_overlay.py` | `test_augments` (capturas reais MIT); **sem teste** em partida real |
 | Estatísticas do assistente (slug do campeão, runas por runa-chave) | `sexo2/services/stats.py` | `test_stats_service` (fixtures LoLalytics) |
 
 Lacunas que os marcos devem cobrir antes de mexer na área: precisão do disparo
