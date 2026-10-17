@@ -81,3 +81,27 @@ O teste nativo confirma criação/pintura, estilos de passagem de cliques/sem fo
 expansão, troca, paginação, ocultação quando o jogo simulado perde primeiro plano
 e encerramento. O retângulo do jogo é sintético; não comprova renderização no LoL,
 tela cheia exclusiva, DPI em vários monitores ou uso real dos atalhos no jogo.
+
+## Resultado da edição 2.0.0.3
+
+Código implementado em `f3a026c`, com verificação adicional de troca tardia em
+`af70f8aa12f41f6cd622783515d740c28f87741e`. O
+[job privado 38996446540](https://github.com/teuzimmmm/sexo2/actions/runs/38996446540)
+passou: 470 testes gerais (três ignorados), os dois testes nativos da janela
+executados separadamente, browser isolado, auditoria dos módulos congelados e
+instalação/reinstalação/desinstalação. Dezenove testes offline específicos do
+overlay cobrem transições, identidade, trocas tardias, falhas e encerramento.
+As regressões LCU/Pengu locais também passaram. A suíte Linux tem o erro anterior
+de importação de `ctypes.windll` em `test_startup_policy`; o job Windows passou.
+
+[Artefato 12086494355](https://github.com/teuzimmmm/sexo2/actions/runs/38996446540/artifacts/12086494355):
+`SEXO2-2.0.0.3-Teste-af70f8aa.exe`, 60.850.504 bytes.
+SHA-256 `f8ae581d2df7b22e17935cda06cff60ec397bc063310c6d43f3d4aee4c55dd90`.
+Download, checksum, commit e recibo de instalação foram conferidos. Marcadores
+sintéticos do legado foram preservados. Não houve validação com o LoL real.
+
+Fechar SEXO2/Rose e cliente LoL antes de instalar, reabrir ambos, consultar as
+sugestões na seleção e entrar em uma partida SR/ARAM em janela/sem bordas.
+A barra deve aparecer somente com o jogo em primeiro plano. F8 expande/recolhe;
+F9 troca a sugestão e F10 percorre o texto. Sem consulta preparada, aparece um
+aviso, sem fabricar itens ou iniciar scraping durante a partida.
