@@ -1,7 +1,7 @@
 """Generate design/tokens.css from design/tokens.json (approved values only).
 
-    python design/build_tokens.py           write tokens.css
-    python design/build_tokens.py --check   exit 1 if tokens.css is stale
+python design/build_tokens.py           write tokens.css
+python design/build_tokens.py --check   exit 1 if tokens.css is stale
 """
 
 from __future__ import annotations

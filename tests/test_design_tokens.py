@@ -1,4 +1,5 @@
 """The design system holds only approved values and its generated CSS is current (M4)."""
+
 import json
 import subprocess
 import sys
@@ -13,7 +14,9 @@ class DesignTokensTests(unittest.TestCase):
         self.tokens = json.loads((DESIGN / "tokens.json").read_text(encoding="utf-8"))
 
     def test_generated_css_is_current(self):
-        result = subprocess.run([sys.executable, str(DESIGN / "build_tokens.py"), "--check"], capture_output=True, text=True)
+        result = subprocess.run(
+            [sys.executable, str(DESIGN / "build_tokens.py"), "--check"], capture_output=True, text=True
+        )
         self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_only_the_two_approved_families(self):
