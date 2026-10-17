@@ -172,7 +172,7 @@ class AutoItems:
                         if math.isnan(delay):delay=math.inf
                         self._retry_at=self._clock()+max(delay,10*self._attempts)
                         if writing or not isinstance(error,CollectorError):self._attempts=3
-                        self._status={'code':'unavailable','message':'Não foi possível confirmar os itens; conjuntos pessoais preservados.'}
+                        self._status={'code':'unavailable','message':str(error) if isinstance(error,BuildError) else 'Não foi possível confirmar os itens; conjuntos pessoais preservados.'}
             finally:
                 with self._lock:
                     self._busy=False

@@ -48,6 +48,7 @@ class OverlayRuntime:
         self.item_plans = ItemPlans()
         self._items = items_factory(self.item_plans) if items_factory else None
         self._live_started = False
+        self._production_suspended = False
         self._preview_until = float('-inf')
         self._diagnostic = {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}
 
@@ -68,7 +69,7 @@ class OverlayRuntime:
 
     def preview(self):
         with self._lock:
-            if self._stop.is_set():
+            if self._stop.is_set() or self._production_suspended:
                 return False
             self._preview_until = self._clock() + 20
             self._diagnostic = {'code': 'preview', 'message': 'Prévia solicitada por 20 segundos; não é um teste dentro do LoL.'}
@@ -81,6 +82,13 @@ class OverlayRuntime:
         """Public seam for deterministic tests; never called by the GDI thread."""
         if self._items is not None:
             self._items.tick()
+        if self._production_suspended:
+            with self._lock:
+                self._frame = Frame()
+                self._offer_context = self._gold_context = None
+                self._observed_at = self._clock()
+                self._diagnostic = {'code': 'suspended', 'message': 'Overlay suspenso após relato de congelamento e fechamento do LoL.'}
+            return Frame()
         frame = Frame()
         offer_context = None
         gold_context = None
@@ -213,6 +221,7 @@ class OverlayRuntime:
         return Frame(bool(view.cards), view, offer_layout=len(view.cards) == 3)
 
     def frame(self):
+        if self._production_suspended:return Frame()
         with self._lock:
             if not self._stop.is_set() and self._clock() < self._preview_until:
                 from .model import Card
@@ -260,14 +269,15 @@ class OverlayRuntime:
         if self._thread is not None or self._stop.is_set():
             return
         if self._factory is None:
-            if os.name != 'nt':
-                return
-            from .win32 import NativeOverlay
-            self._factory = NativeOverlay
-            self._live_started = True
-            if self._items is None:
+            # Incident quarantine: never import/start a production renderer or OCR,
+            # including when a prior release persisted overlay_enabled=true.
+            self._production_suspended = True
+            if self._items is None and os.name == 'nt':
                 from sexo2.services.auto_items import AutoItems
                 self._items = AutoItems(self.lcu, plans=self.item_plans)
+            self._thread = threading.Thread(target=self._run, name='SEXO2-Items-context', daemon=True)
+            self._thread.start()
+            return
         try:
             self._window = self._factory(self.display_frame)
             if hasattr(self._window, 'set_opponent_action'):

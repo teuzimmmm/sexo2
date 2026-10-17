@@ -67,7 +67,7 @@
         logo.alt='SEXO2';logo.style.objectFit='contain';
       }
     }
-    for(const link of shadowRoot.querySelectorAll('a[href*="discord.com/invite/roseskins"],a[href*="ko-fi.com/roseapp"],a[href*="github.com/Alban1911/Rose"]'))link.hidden=true;
+    for(const link of shadowRoot.querySelectorAll('a[href*="discord.com"],a[href*="discord.gg"],a[href*="ko-fi.com"],a[href*="github.com/Alban1911/Rose"]')){link.hidden=true;link.style.setProperty('display','none','important');}
   }
 
   function setupPenguWelcomeBadgeFix() {

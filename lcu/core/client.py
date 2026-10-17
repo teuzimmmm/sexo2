@@ -9,6 +9,7 @@ from typing import Optional
 
 from .lcu_connection import LCUConnection
 from .lcu_api import LCUAPI
+from .request_error import LCURequestError
 from ..features.lcu_properties import LCUProperties
 from ..features.lcu_skin_selection import LCUSkinSelection
 from ..features.lcu_game_mode import LCUGameMode
@@ -87,14 +88,14 @@ class LCU:
     def loadout_request(self, method, path, payload=None):
         """Strict, bounded requests for explicit loadout actions; never retry writes."""
         import re
-        allowed_reads = {'/lol-summoner/v1/current-summoner', '/lol-perks/v1/pages',
+        allowed_reads = {'/lol-summoner/v1/current-summoner', '/lol-perks/v1/pages', '/lol-perks/v1/currentpage',
                          '/lol-game-data/assets/v1/perkstyles.json',
                          '/lol-game-data/assets/v1/cherry-augments.json',
                          '/lol-game-data/assets/v1/perks.json', '/lol-game-data/assets/v1/items.json'}
         item_sets = re.fullmatch(r'/lol-item-sets/v1/item-sets/[1-9][0-9]*/sets', path)
         permitted = (method == 'GET' and (path in allowed_reads or item_sets)
                      or method == 'POST' and path == '/lol-perks/v1/pages'
-                     or method == 'PUT' and (item_sets or re.fullmatch(r'/lol-perks/v1/pages/[1-9][0-9]*', path)))
+                     or method == 'PUT' and (path == '/lol-perks/v1/currentpage' or item_sets or re.fullmatch(r'/lol-perks/v1/pages/[1-9][0-9]*', path)))
         if not permitted:
             raise ValueError('Operação de páginas não permitida.')
         return self._build_request(method, path, payload, timeout=(2, 5))
@@ -116,27 +117,28 @@ class LCU:
         with connection._lock:
             session, base, connected = connection.session, connection.base, connection.ok
         if not connected or not re.fullmatch(r'https://127\.0\.0\.1:[0-9]{1,5}', base or ''):
-            raise ValueError('O cliente LoL não está conectado localmente.')
+            raise LCURequestError('disconnected')
         try:
             with session.request(method, base + path, json=payload, timeout=timeout,
                                 stream=True, allow_redirects=False) as response:
                 if not 200 <= response.status_code < 300:
-                    raise ValueError(f'O cliente recusou a operação (HTTP {response.status_code}).')
+                    raise LCURequestError('http',response.status_code)
                 body = bytearray()
                 for chunk in response.iter_content(65536):
                     body.extend(chunk)
                     if len(body) > 4 * 1024 * 1024:
-                        raise ValueError('Resposta de páginas excedeu o limite permitido.')
+                        raise LCURequestError('size')
                 def invalid_constant(_):
                     raise ValueError('Resposta de páginas contém número inválido.')
                 result = json.loads(body, parse_constant=invalid_constant) if body else None
             self._api.invalidate(path)
             return result
-        except ValueError:
+        except LCURequestError:
             raise
+        except (ValueError,RecursionError):
+            raise LCURequestError('schema') from None
         except Exception:
-            # Never expose credentials, account IDs, URLs or response bodies.
-            raise ValueError('Falha de comunicação com as páginas do cliente. Confira o resultado antes de repetir.') from None
+            raise LCURequestError('network') from None
     
     def reconnect_game(self) -> bool:
         """Ask the still-running client to reopen its current game."""

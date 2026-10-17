@@ -198,6 +198,8 @@ class BuildService:
         target = payload.get('target')
         if target not in ('runes', 'items'):
             raise BuildError('Escolha importar runas ou itens.')
+        if target=='runes' and 'runePageId' in payload:
+            return importer.apply(target,selected,pages,context['champion_id'],guard=guard,rune_page_id=payload['runePageId'])
         return importer.apply(target, selected, pages, context['champion_id'], guard=guard)
 
     def stop(self):

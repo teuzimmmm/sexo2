@@ -8,6 +8,7 @@ const fixture=JSON.parse(execFileSync('python',['-c',`
 import json
 from tests.test_build_workflow import service,query
 s,lcu,t=service();context=s.context();result=query(s)
+context['runePages']=[{'id':p['id'],'name':p['name'],'current':p['current']} for p in lcu.pages if p['isEditable']]
 from sexo2.services.loadouts import GameCatalog
 catalog=GameCatalog(lcu);result['itemNames']=catalog.names('items');result['runeNames']=catalog.names('perks')
 print(json.dumps({'context':context,'result':result}));s.close()
@@ -17,7 +18,7 @@ print(json.dumps({'context':context,'result':result}));s.close()
  try{
   const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  await page.setContent('<html><head><style>body{margin:0;background:#09141b;color:#c8aa6e;font:16px Arial}.draft-fixture{height:100vh;background:linear-gradient(#172b37,#08121a)}.team{position:absolute;top:90px;width:190px;padding:15px}.enemy{right:0}.timer{text-align:center;padding:20px}.actions{position:absolute;bottom:15px;left:40%;padding:20px;border:1px solid #c8aa6e}</style></head><body><div id="home">Cliente simulado · início</div></body></html>');
+  await page.setContent('<html><head><style>body{margin:0;background:#09141b;color:#c8aa6e;font:16px Arial}.draft-fixture{height:100vh;background:linear-gradient(#172b37,#08121a)}.team{position:absolute;top:90px;width:190px;padding:15px}.enemy{right:0}.timer{text-align:center;padding:20px}.actions{position:absolute;bottom:15px;left:40%;padding:20px;border:1px solid #c8aa6e}.bottom-right-buttons{position:absolute;right:20px;bottom:20px;width:50px;height:26px}.rose-custom-wheel-button{position:absolute;right:0;bottom:100%;margin-bottom:10px}lol-uikit-flat-button{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;color:#cdbe91;border:1px solid #785a28;background:#1e2328;cursor:pointer}[aria-disabled=true]{opacity:.5}</style></head><body><div id="home">Cliente simulado · início</div></body></html>');
   await page.evaluate(sample=>{
    window.originalContext=structuredClone(sample.context);window.sample=sample;window.sample.context={...sample.context,phase:'Lobby',available:false};window.handlers={};window.sent=[];window.holdQueries=false;window.pending=[];window.queryError=false;
    window.emit=(type,message)=>(window.handlers[type]||[]).forEach(fn=>fn(message));
@@ -37,7 +38,7 @@ print(json.dumps({'context':context,'result':result}));s.close()
   await page.waitForFunction(()=>window.sent.some(x=>x.type==='sexo2-build-context'));
   assert.equal(await page.locator('#sexo2-builds').count(),0,'must not mount in the client home/lobby');
   await page.evaluate(()=>{
-   document.body.innerHTML='<main class="draft-fixture"><div class="timer">DRAFT NORMAL SIMULADO · 00:30</div><aside class="team">Seu time<br>Ahri</aside><aside class="team enemy">Adversários<br>Annie<br>Ryze</aside><button class="actions">Confirmar campeão</button></main>';
+   document.body.innerHTML='<main class="draft-fixture"><div class="timer">DRAFT NORMAL SIMULADO · 00:30</div><aside class="team">Seu time<br>Ahri</aside><aside class="team enemy">Adversários<br>Annie<br>Ryze</aside><button class="actions">Confirmar campeão</button><div class="bottom-right-buttons"><lol-uikit-flat-button class="rose-custom-wheel-button">Mods</lol-uikit-flat-button></div></main>';
    // No DOM classes or phase-change notification: a fresh LCU context must suffice.
    window.sample.context={...structuredClone(window.originalContext),champion:null,champion_id:0,available:false,revision:'before-pick'};
   });
@@ -45,21 +46,25 @@ print(json.dumps({'context':context,'result':result}));s.close()
   assert.equal(await page.getByRole('button',{name:'Consultar',exact:true,includeHidden:true}).isDisabled(),true);
   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length),0,'closed panel must not scrape');
   await page.evaluate(()=>{window.sample.context=structuredClone(window.originalContext);});
-  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds button')).find(b=>b.textContent==='Consultar').disabled);
+  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds-panel [role=button]')).find(b=>b.textContent==='Consultar').disabled);
   // Transient context errors must disable actions rather than remove the launcher.
   await page.evaluate(()=>{window.contextError=true;});
-  await page.waitForFunction(()=>Array.from(document.querySelectorAll('#sexo2-builds button')).find(b=>b.textContent==='Consultar')?.disabled);
+  await page.waitForFunction(()=>Array.from(document.querySelectorAll('#sexo2-builds-panel [role=button]')).find(b=>b.textContent==='Consultar')?.disabled);
   assert.equal(await page.getByRole('button',{name:'Abrir builds do SEXO2'}).isVisible(),true);
   await page.evaluate(()=>{window.contextError=false;});
-  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds button')).find(b=>b.textContent==='Consultar')?.disabled);
+  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds-panel [role=button]')).find(b=>b.textContent==='Consultar')?.disabled);
   await page.getByRole('button',{name:'Abrir builds do SEXO2'}).click();
-  await page.getByRole('button',{name:'Importar runas',exact:true}).waitFor();
-  await page.waitForFunction(()=>!document.querySelector('#sexo2-builds button')?.disabled&&document.querySelector('#sexo2-builds')?.textContent.includes('Sugestões prontas'));
-  assert.equal(await page.getByRole('combobox',{name:'Adversário',exact:true}).isDisabled(),true);
+  await page.getByRole('button',{name:'Aplicar runas',exact:true}).waitFor();
+  await page.waitForFunction(()=>!document.querySelector('#sexo2-builds-panel [role=button]')?.disabled&&document.querySelector('#sexo2-builds-panel')?.textContent.includes('Sugestões prontas'));
+  assert.equal(await page.getByRole('combobox',{name:'Adversário',exact:true,includeHidden:true}).isDisabled(),true);
   assert.equal(await page.getByRole('combobox',{name:'Sugestão',exact:true}).locator('option').count(),2);
-  await page.getByRole('button',{name:'Importar runas',exact:true}).click();
+  assert.equal(await page.locator('.rose-custom-wheel-button').isVisible(),false,'native Mods slot must be replaced');
+  assert.equal(await page.getByRole('combobox',{name:'Página de runas no LoL',exact:true}).inputValue(),'1');
+  assert.equal(await page.getByRole('button',{name:'Abrir builds do SEXO2'}).evaluate(e=>e.tagName),'LOL-UIKIT-FLAT-BUTTON');
+  await page.getByRole('button',{name:'Aplicar runas',exact:true}).click();
   await page.getByText('Importação confirmada no cliente simulado.',{exact:true}).waitFor();
   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-import').at(-1).entryId),'wr');
+  assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-import').at(-1).runePageId),1);
   const notices=page.getByLabel('Avisos da fonte');
   await notices.getByText('A WR exibida corresponde à runa principal, não à página inteira.',{exact:true}).waitFor();
   assert.equal(await notices.getByText('keystone_conditioned',{exact:true}).count(),0,'internal warning codes must not appear in the product');
@@ -68,8 +73,12 @@ print(json.dumps({'context':context,'result':result}));s.close()
   await page.getByRole('combobox',{name:'Sugestão',exact:true}).selectOption('wr');
   // Client carousels can establish transformed/clipped containing blocks.
   await page.evaluate(()=>{const root=document.querySelector('.draft-fixture');root.style.transform='translateY(10px)';root.style.overflow='hidden';root.style.height='200px';});
+  const runeChoice=page.getByRole('combobox',{name:'Página de runas no LoL',exact:true});
+  await runeChoice.selectOption('');
+  await page.waitForTimeout(1700);
+  assert.equal(await runeChoice.inputValue(),'','poll must preserve an explicit new-page choice');
   await page.getByRole('button',{name:'Importar itens',exact:true}).click({trial:true});
-  assert.equal(await page.evaluate(()=>document.querySelector('#sexo2-builds').parentElement===document.body),true);
+  assert.equal(await page.evaluate(()=>document.querySelector('#sexo2-builds').parentElement.classList.contains('bottom-right-buttons')&&document.querySelector('#sexo2-builds-panel').parentElement===document.body),true);
   await page.evaluate(()=>document.querySelector('.draft-fixture').removeAttribute('style'));
   await page.screenshot({path:path.join(os.tmpdir(),'sexo2-builds-1280x720.png')});
   // A late response from an older revision cannot restore obsolete recommendations.
@@ -79,10 +88,10 @@ print(json.dumps({'context':context,'result':result}));s.close()
   await page.evaluate(()=>{window.sample.context.revision='next-draft';window.sample.context.finalization=true;});
   await page.waitForFunction(()=>window.pending.length===2);
   await page.evaluate(()=>window.emit('sexo2-build-data',window.pending.shift()));
-  assert.equal(await page.getByRole('button',{name:'Importar runas',exact:true}).isDisabled(),true);
+  assert.equal(await page.getByRole('button',{name:'Aplicar runas',exact:true}).isDisabled(),true);
   await page.evaluate(()=>{window.emit('sexo2-build-data',window.pending.shift());window.holdQueries=false;});
-  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds button')).find(b=>b.textContent==='Importar runas').disabled);
-  assert.equal(await page.getByRole('combobox',{name:'Adversário',exact:true}).isEnabled(),true);
+  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds-panel [role=button]')).find(b=>b.textContent==='Aplicar runas').disabled);
+  assert.equal(await page.getByRole('combobox',{name:'Adversário',exact:true,includeHidden:true}).isEnabled(),true);
   // Source failure does not become an automatic retry loop on every context poll.
   await page.evaluate(()=>window.queryError=true);
   await page.getByRole('button',{name:'Consultar',exact:true}).click();

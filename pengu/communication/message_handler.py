@@ -701,7 +701,11 @@ class MessageHandler:
             if getattr(self, '_builds_closed', False):
                 return
             if action == 'context':
-                send('sexo2-build-context-data', context=service.context())
+                context=service.context()
+                if context['available']:
+                    try:context['runePages']=importer.rune_targets()
+                    except Exception:context['runePages']=[]
+                send('sexo2-build-context-data', context=context)
             elif action == 'query':
                 result = service.query(payload, ticket)
                 # Names are convenience metadata; missing names never fabricate statistics.

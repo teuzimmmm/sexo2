@@ -56,16 +56,11 @@ test('LoLalytics selector loads persisted value, preserves dirty choice during p
     autostart: false, hideEmptyCategories: false, gamePath: '', lolalyticsRiskLevel: 'high', version:'2.0.0.7 (teste)' });
   assert.equal(risk.value, 'high');
   assert.ok(host.querySelectorAll('p').some(node=>node.textContent==='SEXO2 · 2.0.0.7 (teste)'));
-  const overlay = host.querySelectorAll('input').find(node => node.name === 'buildOverlayEnabled');
-  assert.equal(overlay.checked, true);
-  host.querySelectorAll('button').find(node => node.textContent === 'Testar janela (20 s)').onclick();
-  assert.equal(sent.at(-1).type, 'sexo2-overlay-preview');
-  emit('sexo2-overlay-state', { accepted: true, status: { message: 'Prévia temporária.', window: { message: 'Janela exibida.' } } });
-  assert.ok(host.querySelectorAll('p').some(node => node.textContent.includes('Janela exibida.')));
+  assert.equal(host.querySelectorAll('input').some(node=>node.name==='buildOverlayEnabled'),false);
+  assert.equal(host.querySelectorAll('button').some(node=>node.textContent==='Testar janela (20 s)'),false);
   assert.deepEqual(risk.children.map(option => option.textContent), ['Muito baixo', 'Baixo', 'Médio', 'Alto', 'Muito alto']);
 
   risk.value = 'very-high'; risk.emit('change');
-  overlay.checked = false; overlay.emit('change');
   window.dispatchEvent(new context.CustomEvent('rose-hub-settings', { detail: { target: host } }));
   const poll = sent.filter(message => message.type === 'settings-request').at(-1);
   emit('settings-data', { requestId: poll.requestId, threshold: .5, monitorAutoResumeTimeout: 60,
@@ -83,7 +78,6 @@ test('LoLalytics selector loads persisted value, preserves dirty choice during p
       hideEmptyCategories: false, gamePath: '', lolalyticsRiskLevel: 'very-high', buildOverlayEnabled: false } });
   assert.equal(risk.disabled, false);
   assert.equal(risk.value, 'very-high');
-  assert.equal(overlay.checked, false);
 });
 
 test('missing risk field from an older backend populates the medium default', () => {

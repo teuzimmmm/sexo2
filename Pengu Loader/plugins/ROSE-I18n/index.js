@@ -16,10 +16,14 @@
     return text.replace(/\{(\w+)\}/g, (match, key) => (key in vars ? String(vars[key]) : match));
   }
 
+  const brand = value => value.replace(/\bRose\b|\bROSE\b/g,'SEXO2');
+
   function t(text, vars) {
     if (typeof text !== "string") return text;
     const translated = state.strings[text];
-    return format(typeof translated === "string" && translated ? translated : text, vars);
+    const template=typeof translated === "string" && translated ? translated : text;
+    const attribution=/copyright|licen[cs]e|credits|based on|contributors|authors/i.test(text);
+    return format(attribution?template:brand(template), vars);
   }
 
   // Templated texts ("Connected to {name}") as regexes, to translate finished
@@ -49,7 +53,7 @@
 
   function tAny(text) {
     if (typeof text !== "string") return text;
-    if (state.strings[text]) return state.strings[text];
+    if (state.strings[text]) return t(text);
     for (const { key, names, regex } of templates) {
       const match = regex.exec(text);
       if (!match) continue;

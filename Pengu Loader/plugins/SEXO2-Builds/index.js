@@ -5,10 +5,13 @@ if(window.__sexo2Builds)return;
 window.__sexo2Builds={};
 let bridge=null,host=null,panel=null,ctx=null,data=null,opened=false,sequence=0;
 let contextRequest=null,queryRequest=null,importRequest=null,queryTimer=null,lastQuery=null,pausedForGame=false,lastContextAt=0;
-let summary,status,entries,enemy,position,tier,details,warnings,runesButton,itemsButton,queryButton;
+let summary,status,entries,enemy,position,tier,details,warnings,runesButton,itemsButton,queryButton,runeTarget;
 const supportsPanel=context=>context?.phase==='ChampSelect'&&context.mode==='ranked';
 const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
-function button(text,fn){const n=el('button',text);n.type='button';n.onclick=fn;return n;}
+function button(text,fn){const n=el('lol-uikit-flat-button',text);n.className='lol-uikit-flat-button idle';n.setAttribute('role','button');n.setAttribute('tabindex','0');n.onclick=e=>{if(n.disabled){e?.preventDefault();return;}fn();};n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();n.click();}});return n;}
+function disable(node,value){if(!node)return;node.disabled=!!value;node.toggleAttribute('disabled',!!value);node.setAttribute('aria-disabled',String(!!value));}
+function close(){opened=false;if(panel)panel.hidden=true;}
+function unmount(){host?.remove();panel?.remove();host=panel=null;opened=false;document.body?.classList.remove('sexo2-builds-in-draft');}
 function option(value,label){const n=el('option',label);n.value=value;return n;}
 function requestId(){return 's2-build-'+Date.now().toString(36)+'-'+(++sequence);}
 function say(text,error=false){if(status){status.textContent=text;status.dataset.error=String(error);}}
@@ -16,13 +19,14 @@ function selected(){return data?.entries?.find(row=>row.id===entries?.value);}
 function selectOverlay(){if(data&&ctx?.available&&bridge?.ready)bridge.send({type:'sexo2-build-select',requestId:requestId(),revision:ctx.revision,resultId:data.resultId,entryId:entries.value});}
 function lock(){
  const available=!!ctx?.available&&bridge?.ready;
- if(queryButton)queryButton.disabled=!available||!!importRequest;
- if(runesButton)runesButton.disabled=!available||!selected()||!!queryRequest||!!importRequest;
- if(itemsButton)itemsButton.disabled=runesButton.disabled;
+ disable(queryButton,!available||!!importRequest);
+ disable(runesButton,!available||!selected()||!!queryRequest||!!importRequest);
+ disable(itemsButton,runesButton?.disabled);
  if(enemy)enemy.disabled=!available||ctx.mode!=='ranked'||!ctx.finalization||!!importRequest;
  if(position)position.disabled=ctx?.mode!=='ranked'||!!importRequest;
  if(tier)tier.disabled=!!importRequest;
  if(entries)entries.disabled=!!importRequest;
+ if(runeTarget)runeTarget.disabled=!!importRequest;
 }
 function reset(){
  data=null;queryRequest=null;importRequest=null;lastQuery=null;clearTimeout(queryTimer);
@@ -55,7 +59,7 @@ function importPage(target){
  if(!page||!data||queryRequest||importRequest||!bridge?.ready)return;
  importRequest={id:requestId(),at:Date.now()};lock();say('Importando e verificando no cliente…');
  bridge.send({type:'sexo2-build-import',requestId:importRequest.id,revision:ctx.revision,
-              resultId:data.resultId,entryId:page.id,target});
+              resultId:data.resultId,entryId:page.id,target,...(target==='runes'&&Number(runeTarget.value)>0?{runePageId:Number(runeTarget.value)}:{})});
 }
 function renderPage(){
  details.replaceChildren();const row=selected();
@@ -90,12 +94,18 @@ function renderPage(){
 function receiveContext(message){
  if(message.requestId!==contextRequest?.id)return;
  contextRequest=null;const previous=ctx;ctx=message.context;pausedForGame=['GameStart','InProgress','Reconnect'].includes(ctx?.phase);
- if(!supportsPanel(ctx)){reset();host?.remove();host=null;opened=false;return;}
+ if(!supportsPanel(ctx)){reset();unmount();return;}
  mount();if(!host)return;
  if(previous?.revision!==ctx.revision){reset();}
  summary.textContent=ctx.champion?`${ctx.champion.name} · ${({ranked:'SR · dados Ranked',aram:'ARAM',arena:'Arena'})[ctx.mode]||'modo indisponível'} · risco ${({ 'very-low':'muito baixo',low:'baixo',medium:'médio',high:'alto','very-high':'muito alto'})[ctx.riskLevel]||ctx.riskLevel}`:'Escolha seu campeão.';
  const chosen=enemy.value;
  enemy.replaceChildren(option('','Geral · WR / Common'));
+ const previousRune=runeTarget.value,hadRuneChoice=runeTarget.dataset.initialized==='true';
+ runeTarget.replaceChildren(option('','Nova página SEXO2 (requer espaço)'));
+ for(const row of ctx.runePages||[])runeTarget.append(option(String(row.id),row.name+(row.current?' · atual':'')));
+ if(hadRuneChoice&&[...runeTarget.options].some(o=>o.value===previousRune))runeTarget.value=previousRune;
+ else runeTarget.value=hadRuneChoice?'':String((ctx.runePages||[]).find(r=>r.current)?.id||'');
+ runeTarget.dataset.initialized='true';
  for(const row of ctx.enemies||[])enemy.append(option(String(row.id),`vs ${row.name}`));
  if([...enemy.options].some(o=>o.value===chosen))enemy.value=chosen;
  if(!ctx.finalization||ctx.mode!=='ranked')enemy.value='';
@@ -139,60 +149,73 @@ function receiveError(message){
 }
 function mount(){
  if(!document.body||!supportsPanel(ctx))return;
- if(host?.isConnected)return;
+ const anchor=document.querySelector('.bottom-right-buttons');
+ if(!anchor)return; // Do not invent another floating launcher when the native slot is absent.
+ if(host?.isConnected){if(host.parentElement!==anchor)anchor.append(host);if(!panel.isConnected)document.body.append(panel);return;}
  host=el('aside');host.id='sexo2-builds';host.setAttribute('aria-label','SEXO2 · builds da seleção');
  const style=el('style');style.textContent=`
- #sexo2-builds{position:fixed;left:50%;transform:translateX(-50%);top:84px;z-index:10900;font:13px Spiegel,Arial,sans-serif;color:#c8c1ae;max-width:calc(100vw - 24px)}
- #sexo2-builds *{box-sizing:border-box}#sexo2-builds [hidden]{display:none!important}
- #sexo2-builds button,#sexo2-builds select{font:inherit;color:#cdbe91;background:#101e26;border:1px solid #5a513b;border-radius:0;padding:7px;max-width:100%}
- #sexo2-builds button{cursor:pointer}#sexo2-builds button:disabled{opacity:.45;cursor:default}
- #sexo2-builds .s2-build-panel{display:flex;flex-direction:column;width:440px;max-width:calc(100vw - 24px);height:calc(100vh - 220px);max-height:calc(100vh - 220px);overflow:hidden;background:#09141bf5;border:1px solid #5a513b;padding:12px}
- #sexo2-builds p{line-height:1.45;margin:6px 0}#sexo2-builds label{display:block;margin:8px 0}
- #sexo2-builds .s2-build-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 8px;flex:none}#sexo2-builds .s2-build-details{overflow:auto;min-height:0;flex:1}#sexo2-builds select{width:100%;margin-top:4px}#sexo2-builds .s2-build-actions{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
- #sexo2-builds .s2-build-block{border-top:1px solid #26343c;padding:8px 0}#sexo2-builds small,#sexo2-builds .s2-build-help{font-size:11px;color:#a09b8c}
- #sexo2-builds [data-error=true]{color:#e5aa8a}#sexo2-builds a{color:#c8aa6e}
+ body.sexo2-builds-in-draft .rose-custom-wheel-button{display:none!important}
+ #sexo2-builds{position:absolute;right:0;bottom:100%;margin-bottom:10px;z-index:10900}
+ #sexo2-builds>lol-uikit-flat-button{white-space:nowrap}
+ #sexo2-builds-panel{position:fixed;z-index:10901;left:50%;transform:translateX(-50%);top:100px;bottom:110px;display:flex;flex-direction:column;width:440px;max-width:calc(100vw - 48px);height:calc(100vh - 210px);max-height:600px;overflow:auto;box-sizing:border-box;background:#010a13;border:1px solid #785a28;padding:16px;color:#a09b8c;font:13px Spiegel,Arial,sans-serif;box-shadow:0 0 15px #000}
+ #sexo2-builds-panel *{box-sizing:border-box}#sexo2-builds-panel[hidden]{display:none!important}
+ #sexo2-builds-panel header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #3c3c41;padding-bottom:10px}
+ #sexo2-builds-panel h2{font:18px 'Beaufort for LOL',Georgia,serif;color:#cdbe91;margin:0;text-transform:uppercase;letter-spacing:.06em}
+ #sexo2-builds-panel p{line-height:1.45;margin:6px 0}
+ #sexo2-builds-panel label{display:block;margin:8px 0}
+ #sexo2-builds-panel select{font:13px Spiegel,Arial,sans-serif;color:#cdbe91;background:#1e2328;border:1px solid #5b5a56;padding:6px;width:100%;margin-top:4px;border-radius:0}
+ #sexo2-builds-panel .s2-build-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 8px;flex:none}
+ #sexo2-builds-panel .s2-build-details{overflow:auto;min-height:0;flex:1}
+ #sexo2-builds-panel .s2-build-actions{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+ #sexo2-builds-panel .s2-build-block{border-top:1px solid #1e282d;padding:8px 0}
+ #sexo2-builds-panel small,#sexo2-builds-panel .s2-build-help{font-size:11px;color:#78796d}
+ #sexo2-builds-panel [data-error=true]{color:#d9a796}#sexo2-builds-panel a{color:#c8aa6e}
  `;
- const launch=button('SEXO2 · Builds',()=>{opened=!opened;panel.hidden=!opened;if(opened){requestContext();schedule();}});
+ const launch=button('Runas e itens',()=>{opened=!opened;panel.hidden=!opened;if(opened){requestContext();schedule();}});
  launch.setAttribute('aria-label','Abrir builds do SEXO2');host.append(style,launch);
- panel=el('div');panel.className='s2-build-panel';panel.hidden=!opened;host.append(panel);
- summary=el('p');panel.append(summary);const fields=el('div');fields.className='s2-build-fields';panel.append(fields);
- function select(label){const row=el('label',label),input=el('select');input.setAttribute('aria-label',label);row.append(input);fields.append(row);return input;}
- position=select('Sua rota');position.append(option('','Automática'),...Object.entries({top:'Topo',jungle:'Selva',middle:'Meio',bottom:'Atirador',support:'Suporte'}).map(([v,t])=>option(v,t)));
- tier=select('Amostra');tier.append(option('emerald_plus','Emerald+'),option('all','Todos os elos'));
- enemy=select('Adversário');enemy.append(option('','Geral · WR / Common'));enemy.title='Matchups disponíveis ao finalizar o draft de Summoner’s Rift.';
+ panel=el('aside');panel.id='sexo2-builds-panel';panel.className='s2-build-panel';panel.setAttribute('aria-label','Runas e itens');panel.hidden=!opened;
+ const header=el('header');header.append(el('h2','Runas e itens'),button('Fechar',close));panel.append(header);
+ summary=el('p');panel.append(summary);const advanced=el('details'),filterFields=el('div');advanced.append(el('summary','Filtros e adversário'),filterFields);filterFields.className='s2-build-fields';panel.append(advanced);const fields=el('div');fields.className='s2-build-fields';panel.append(fields);
+ function select(label,target=fields){const row=el('label',label),input=el('select');input.setAttribute('aria-label',label);row.append(input);target.append(row);return input;}
+ position=select('Sua rota',filterFields);position.append(option('','Automática'),...Object.entries({top:'Topo',jungle:'Selva',middle:'Meio',bottom:'Atirador',support:'Suporte'}).map(([v,t])=>option(v,t)));
+ tier=select('Amostra',filterFields);tier.append(option('emerald_plus','Emerald+'),option('all','Todos os elos'));
+ enemy=select('Adversário',filterFields);enemy.append(option('','Geral · WR / Common'));enemy.title='Matchups disponíveis ao finalizar o draft de Summoner’s Rift.';
  for(const input of [position,tier,enemy])input.onchange=()=>{data=null;queryRequest=null;entries.replaceChildren();details.replaceChildren();lastQuery=null;lock();query(false);};
  entries=select('Sugestão');entries.onchange=()=>{renderPage();selectOverlay();};
+ runeTarget=select('Página de runas no LoL');runeTarget.append(option('','Nova página SEXO2 (requer espaço)'));
+ const explanation=el('p','Aplicar runas substitui a página escolhida. O conteúdo anterior é preservado em backup local.');explanation.className='s2-build-help';panel.append(explanation);
  const actions=el('div');actions.className='s2-build-actions';
- queryButton=button('Consultar',()=>query(true));runesButton=button('Importar runas',()=>importPage('runes'));itemsButton=button('Importar itens',()=>importPage('items'));
+ queryButton=button('Consultar',()=>query(true));runesButton=button('Aplicar runas',()=>importPage('runes'));itemsButton=button('Importar itens',()=>importPage('items'));
  actions.append(queryButton,runesButton,itemsButton);panel.append(actions);
  status=el('p');status.setAttribute('role','status');panel.append(status);details=el('div');details.className='s2-build-details';panel.append(details);
  warnings=el('div');warnings.className='s2-build-help';warnings.setAttribute('aria-label','Avisos da fonte');
- // LCU phase/mode gates visibility; carousel classes vary across client screens.
- // A viewport sibling avoids transformed/clipped containing blocks.
- document.body.append(host);lock();
+ const mods=button('Mods de aparência',()=>{close();window.dispatchEvent(new CustomEvent('sexo2-open-draft-mods'));});panel.append(mods);
+ if(getComputedStyle(anchor).position==='static')anchor.style.position='relative';
+ anchor.append(host);document.body.append(panel);document.body.classList.add('sexo2-builds-in-draft');lock();
 }
 function attach(){
  if(bridge||!window.__roseBridge)return;
  bridge=window.__roseBridge;
  bridge.subscribe('sexo2-build-context-data',receiveContext);bridge.subscribe('sexo2-build-data',receiveData);
  bridge.subscribe('sexo2-build-error',receiveError);bridge.subscribe('sexo2-build-imported',receiveImported);
- bridge.subscribe('phase-change',message=>{reset();contextRequest=null;pausedForGame=['GameStart','InProgress','Reconnect'].includes(message.phase);if(message.phase!=='ChampSelect'){ctx=null;host?.remove();host=null;opened=false;}else requestContext();});
+ bridge.subscribe('phase-change',message=>{reset();contextRequest=null;pausedForGame=['GameStart','InProgress','Reconnect'].includes(message.phase);if(message.phase!=='ChampSelect'){ctx=null;unmount();}else requestContext();});
  bridge.onReady(()=>{reset();pausedForGame=false;contextRequest=null;requestContext();});
 }
 const tick=setInterval(()=>{
  attach();
- if(host&&!host.isConnected){host=null;reset();}
+ if(host&&!host.isConnected){unmount();reset();}
+ if(supportsPanel(ctx))mount();
  if(!bridge?.ready){if(host){reset();say('Reconectando ao SEXO2…',true);}contextRequest=null;return;}
  const now=Date.now();
  // Discover late screen/phase changes even when no old carousel selector exists.
  // A slow in-game probe recovers a lost next-draft notification.
  // Only local context is read; source queries remain opt-in.
  if(now-lastContextAt>=(pausedForGame?10000:supportsPanel(ctx)?1200:5000))requestContext();
- if(!supportsPanel(ctx)&&host){host.remove();host=null;opened=false;reset();}
+ if(!supportsPanel(ctx)&&host){unmount();reset();}
  if(contextRequest&&now-contextRequest.at>12000){contextRequest=null;reset();say('O cliente não respondeu. Tentando reconectar…',true);}
  if(queryRequest&&now-queryRequest.at>180000){queryRequest=null;say('A fonte demorou demais. Tente novamente.',true);lock();}
  if(importRequest&&now-importRequest.at>45000){importRequest=null;say('A confirmação demorou. Confira a página no cliente antes de repetir.',true);lock();}
 },1500);
-window.addEventListener('keydown',event=>{if(event.key==='Escape'&&panel){opened=false;panel.hidden=true;}});
+window.addEventListener('keydown',event=>{if(event.key==='Escape')close();});
 attach();
 })();

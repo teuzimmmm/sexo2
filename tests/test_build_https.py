@@ -172,6 +172,36 @@ class BuildHTTPSIntegrationTests(unittest.TestCase):
         for name in ['WR', 'Common', 'Annie', 'Ryze']:
             self.assertIn(name, labels)
 
+    def test_existing_rune_page_roundtrip_does_not_require_capacity_for_a_new_one(self):
+        result=query(self.service)
+        self.server.overrides[('POST','/lol-perks/v1/pages')]=(409,{'error':'Synthetic full capacity'})
+        payload=dict(revision=result['revision'],resultId=result['resultId'],entryId='wr',target='runes',runePageId=1)
+        answer=self.service.import_selection(payload,self.importer)
+        self.assertTrue(answer['verified']);self.assertEqual(len(self.state.pages),1)
+        self.assertIn(('PUT','/lol-perks/v1/pages/1'),self.server.traffic)
+        self.assertNotIn(('POST','/lol-perks/v1/pages'),self.server.traffic)
+
+    def test_native_item_defaults_in_https_json_are_verified_without_dropping_content(self):
+        original=self.state.loadout_request
+        def serialized(method,path,payload=None):
+            value=original(method,path,payload)
+            if method=='GET' and path.endswith('/sets'):
+                for row in value['itemSets']:
+                    row.setdefault('startedFrom','')
+                    for block in row['blocks']:
+                        block.setdefault('showIfSummonerSpell','');block.setdefault('hideIfSummonerSpell','')
+            return value
+        self.state.loadout_request=serialized
+        result=query(self.service)
+        self.assertTrue(self.apply(result,'wr','items')['verified'])
+        self.assertEqual(self.state.sets['itemSets'][0]['uid'],'personal')
+
+    def test_http_failure_has_a_safe_visible_reason_instead_of_generic_operation_error(self):
+        result=query(self.service)
+        self.server.overrides[('GET','/lol-summoner/v1/current-summoner')]=(403,{'private':'DO-NOT-DISPLAY-RESPONSE'})
+        with self.assertRaisesRegex(BuildError,'HTTP 403') as captured:self.apply(result)
+        self.assertNotIn('DO-NOT-DISPLAY',str(captured.exception))
+
     def test_aram_roundtrip_uses_current_catalog_and_map_twelve(self):
         self.state.session['myTeam'][0].update(championId=222, assignedPosition='')
         self.state.game['gameData'].update(queue={'id': 450}, gameMode='ARAM', mapId=12)

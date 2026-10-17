@@ -2056,6 +2056,12 @@
     });
   }
 
+  // The native bottom-right slot belongs to Runas/Itens in SR. Keep appearance
+  // mods accessible from that flyout, without restoring a duplicate launcher.
+  window.addEventListener('sexo2-open-draft-mods',()=>{
+    if(championSelectRoot)openPanel();
+  });
+
   // After a language change, the button follows right away and the panel on its next opening
   window.addEventListener("rose-i18n-changed", () => {
     const label = button && button.firstChild;

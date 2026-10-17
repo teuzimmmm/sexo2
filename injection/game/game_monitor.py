@@ -230,7 +230,7 @@ class GameMonitor:
                                         break
                                     except AccessDenied:
                                         log.error("[monitor] ACCESS DENIED - Cannot suspend game")
-                                        log.error("[monitor] Try running Rose as Administrator")
+                                        log.error("[monitor] Try running SEXO2 as Administrator")
                                         self._monitor_active = False
                                         break
                                     except Exception as e:
@@ -265,7 +265,7 @@ class GameMonitor:
                             auto_resume_timeout = self._get_auto_resume_timeout()
                             if elapsed >= auto_resume_timeout:
                                 self._auto_resume_triggered.set()
-                                self._report_issue_async("SAFETY_RELEASE", "Limite de pausa do LoL atingido", "O Rose atingiu o limite de pausa e tentou liberar o jogo. A skin pode não ter sido aplicada.")
+                                self._report_issue_async("SAFETY_RELEASE", "Limite de pausa do LoL atingido", "O SEXO2 atingiu o limite de pausa e tentou liberar o jogo. A skin pode não ter sido aplicada.")
                                 log.warning(f"[monitor] AUTO-RESUME after {auto_resume_timeout:.0f}s (safety timeout)")
                                 log.warning(f"[monitor] Injection took too long - releasing game to prevent freeze")
                                 report_issue(
@@ -317,7 +317,7 @@ class GameMonitor:
                                     break
                                 except AccessDenied:
                                     log.error("[monitor] ACCESS DENIED - Cannot suspend game")
-                                    log.error("[monitor] Try running Rose as Administrator")
+                                    log.error("[monitor] Try running SEXO2 as Administrator")
                                     self._monitor_active = False
                                     # Clear reference if we couldn't suspend (game is running anyway)
                                     with self._process_lock:

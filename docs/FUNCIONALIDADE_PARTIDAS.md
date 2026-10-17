@@ -1,5 +1,11 @@
 # Matriz de entrega por modo — 17/10/2026
 
+**Estado após o teste real da 2.0.0.7:** usuário relatou congelamento/fechamento no
+carregamento e falha nas duas importações. Overlay suspenso em produção e seus
+binários removidos da próxima edição; ouro/cartas **não estão disponíveis** nessa
+edição de correção. A matriz abaixo registra o objetivo, não comprova entrega
+funcional no jogo. Ver [correções do incidente](CORRECAO_TESTE_2_0_0_7.md).
+
 Escopo atualizado explicitamente pelo usuário antes desta rodada.
 
 | Modo | Seleção | Durante a partida | Itens |

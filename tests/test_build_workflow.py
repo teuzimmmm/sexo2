@@ -62,7 +62,9 @@ class FakeLCU:
             if self.before_write:self.before_write()
             if self.reject_write:raise ValueError('fake capacity failure')
             if self.drop_write:return None
-            if path.startswith('/lol-perks/v1/pages'):
+            if path=='/lol-perks/v1/currentpage':
+                for page in self.pages:page['current']=page.get('id')==payload
+            elif path.startswith('/lol-perks/v1/pages'):
                 for page in self.pages:page['current'] = False
                 if method == 'POST':
                     self.pages.append(dict(deepcopy(payload), id=max(p['id'] for p in self.pages)+1, isEditable=True))

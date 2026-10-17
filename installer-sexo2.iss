@@ -6,10 +6,10 @@
   #error Define OutputDir for the test installer.
 #endif
 #ifndef BuildVersion
-  #define BuildVersion "2.0.0.7"
+  #define BuildVersion "2.0.0.8"
 #endif
 #ifndef OutputName
-  #define OutputName "SEXO2-2.0.0.7-Teste"
+  #define OutputName "SEXO2-2.0.0.8-Teste"
 #endif
 
 [Setup]
@@ -54,6 +54,14 @@ Name: "desktopicon"; Description: "Criar atalho na área de trabalho"; GroupDesc
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "sexo2-release.json,SEXO2 Update.exe,*\update-access.json,*\config.ini,*\datastore,*.log,*.key,*.pfx"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[InstallDelete]
+; Exact obsolete files of this owned test installation, never Rose/user data.
+Type: files; Name: "{app}\_internal\sexo2\overlay\bin\sexo2-overlay-renderer.dll"
+Type: files; Name: "{app}\_internal\sexo2\overlay\bin\sexo2-offer-reader.exe"
+Type: dirifempty; Name: "{app}\_internal\sexo2\overlay\bin"
+Type: dirifempty; Name: "{app}\_internal\sexo2\overlay"
+Type: dirifempty; Name: "{app}\_internal\sexo2"
+
 [Icons]
 Name: "{group}\SEXO2 2.0 Teste"; Filename: "{app}\SEXO2.exe"; WorkingDir: "{app}"
 Name: "{autodesktop}\SEXO2 2.0 Teste"; Filename: "{app}\SEXO2.exe"; WorkingDir: "{app}"; Tasks: desktopicon
@@ -85,6 +93,19 @@ begin
       Attributes := ReadAttributes(Parent);
       if (Attributes = $FFFFFFFF) or ((Attributes and $400) <> 0) then begin
         Result := 'Não foi possível validar a pasta de teste. Links e junctions não são aceitos.';
+        exit;
+      end;
+    end;
+    NextParent := ExtractFileDir(Parent);
+    if CompareText(NextParent, Parent) = 0 then break;
+    Parent := NextParent;
+  end;
+  Parent := AddBackslash(Target) + '_internal\sexo2\overlay\bin';
+  while Length(Parent) > Length(Target) do begin
+    if DirExists(Parent) then begin
+      Attributes := ReadAttributes(Parent);
+      if (Attributes = $FFFFFFFF) or ((Attributes and $400) <> 0) then begin
+        Result := 'A pasta interna de teste contém um link ou junction. Instalação interrompida.';
         exit;
       end;
     end;

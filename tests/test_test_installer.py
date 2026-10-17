@@ -181,7 +181,12 @@ class TestPackagingTests(unittest.TestCase):
         self.assertIn('Programs\\SEXO2-2.0-Teste', text)
         self.assertNotIn('B876AA51-DB38-448E-BD13-716F1C9DE750', text)
         self.assertIn('UsePreviousAppDir=no', text)
-        self.assertNotIn('[InstallDelete]', text)
+        deletion=text.split('[InstallDelete]',1)[1].split('[Icons]',1)[0]
+        paths=[line.split('Name: ',1)[1].strip('\"') for line in deletion.splitlines() if line.startswith('Type: files;')]
+        self.assertEqual(set(paths),{r'{app}\_internal\sexo2\overlay\bin\sexo2-overlay-renderer.dll',r'{app}\_internal\sexo2\overlay\bin\sexo2-offer-reader.exe'})
+        self.assertNotIn('filesandordirs',deletion)
+        self.assertNotIn('{localappdata}',deletion)
+        self.assertIn('A pasta interna de teste contém um link ou junction',text)
         self.assertNotIn('[UninstallRun]', text)
         self.assertNotIn('deltree', text.lower())
 

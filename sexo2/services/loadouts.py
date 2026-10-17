@@ -12,6 +12,12 @@ from lolalytics.item_pages import plan_item_pages
 from utils.core.atomic_file import atomic_write
 
 from .draft import BuildError, positive
+from lcu.core.request_error import LCURequestError
+
+
+def lcu_request(lcu,method,path,payload=None):
+    try:return lcu.loadout_request(method,path,payload)
+    except LCURequestError as error:raise BuildError(str(error)) from None
 
 
 class GameCatalog:
@@ -27,7 +33,7 @@ class GameCatalog:
 
     def rows(self, name):
         if name not in self._cache:
-            value = self.lcu.loadout_request('GET', f'/lol-game-data/assets/v1/{name}.json')
+            value = lcu_request(self.lcu,'GET', f'/lol-game-data/assets/v1/{name}.json')
             if name == 'perkstyles':
                 if not isinstance(value, dict) or value.get('schemaVersion') != 2:
                     raise BuildError('A versão do catálogo de estilos de runas mudou.')
@@ -42,6 +48,27 @@ class GameCatalog:
     def names(self, name):
         return {str(r['id']): str(r.get('name') or r.get('nameTRA') or r['id'])[:120]
                 for r in self.rows(name) if isinstance(r, dict) and positive(r.get('id'))}
+
+
+def canonical_item_sets(rows):
+    """LCU serializes optional fields omitted by callers. Keep meaningful content.
+
+    Based on LolItemSetsItemSet/Block; top-level order is not the item's order.
+    Do not ignore blocks, counts, associations, user metadata, or duplicate UIDs.
+    """
+    if not isinstance(rows,list) or len(rows)>502:raise BuildError('Conjuntos de itens inválidos na confirmação.')
+    result={}
+    for value in rows:
+        if not isinstance(value,dict) or not isinstance(value.get('uid'),str) or value['uid'] in result:
+            raise BuildError('Identificadores de conjuntos ambíguos na confirmação.')
+        row=deepcopy(value);row.setdefault('startedFrom','')
+        blocks=row.get('blocks')
+        if not isinstance(blocks,list):raise BuildError('Blocos de itens inválidos na confirmação.')
+        for block in blocks:
+            if not isinstance(block,dict):raise BuildError('Bloco de itens inválido na confirmação.')
+            block.setdefault('hideIfSummonerSpell','');block.setdefault('showIfSummonerSpell','')
+        result[row['uid']]=row
+    return result
 
 
 def _ids(values, count):
@@ -120,13 +147,13 @@ class LoadoutImporter:
         return self._owner
 
     def _account(self):
-        current = self.lcu.loadout_request('GET', '/lol-summoner/v1/current-summoner')
+        current = lcu_request(self.lcu,'GET', '/lol-summoner/v1/current-summoner')
         if (not isinstance(current, dict) or not positive(current.get('summonerId'))
                 or not positive(current.get('accountId'))):
             raise BuildError('Não foi possível identificar a conta conectada para importar.')
         return current['summonerId'], current['accountId']
 
-    def apply(self, target, selected, pages, champion_id, *, guard):
+    def apply(self, target, selected, pages, champion_id, *, guard, rune_page_id=None):
         with self._lock:
             context = guard()
             if isinstance(context, dict) and isinstance(context.get('revision'), str):
@@ -140,7 +167,7 @@ class LoadoutImporter:
 
             try:
                 if target == 'runes':
-                    return self._runes(selected, account, check)
+                    return self._runes(selected, account, check, rune_page_id=rune_page_id)
                 if target == 'items':
                     return self._items(pages, champion_id, account, check)
                 if target == 'item-groups':
@@ -151,35 +178,49 @@ class LoadoutImporter:
             except Exception:
                 raise BuildError('A importação não foi confirmada. Confira as páginas no cliente antes de repetir.') from None
 
-    def _runes(self, page, account, check):
+    def _runes(self, page, account, check, *, rune_page_id=None):
         self._identity()
         account_key = hashlib.sha256(f'{account[0]}:{account[1]}'.encode()).hexdigest()
         owned_id = self._state['runePages'].get(account_key)
         body = rune_payload(page, self.catalog.rows('perkstyles'), 'SEXO2 · ' + page.label[:35])
         path = '/lol-perks/v1/pages'
-        previous = self.lcu.loadout_request('GET', path)
+        previous = lcu_request(self.lcu,'GET', path)
         if not isinstance(previous, list) or any(not isinstance(p, dict) for p in previous):
             raise BuildError('Não foi possível ler suas páginas de runas.')
+        if rune_page_id is not None:
+            if not positive(rune_page_id):raise BuildError('Selecione uma página editável no LoL.')
+            chosen=[p for p in previous if p.get('id')==rune_page_id and p.get('isEditable') is True]
+            if len(chosen)!=1:raise BuildError('A página escolhida não está mais disponível ou é protegida.')
+        else:chosen=[]
         owned = [p for p in previous if positive(owned_id) and p.get('id') == owned_id]
-        if len(owned) > 1 or (owned and (owned[0].get('isEditable') is not True
-                or not str(owned[0].get('name', '')).startswith('SEXO2 · '))):
+        if not chosen and (len(owned) > 1 or (owned and (owned[0].get('isEditable') is not True
+                or not str(owned[0].get('name', '')).startswith('SEXO2 · ')))):
             raise BuildError('As páginas gerenciadas estão ambíguas ou protegidas. Nenhuma foi removida.')
         check()
-        if self.lcu.loadout_request('GET', path) != previous:
+        if lcu_request(self.lcu,'GET', path) != previous:
             raise BuildError('Suas páginas mudaram durante a importação. Tente novamente.')
         check()
-        endpoint = path + '/' + str(owned[0]['id']) if owned else path
+        destination=chosen[0] if chosen else owned[0] if owned else None
+        if chosen:self._backup_rune_page(account_key,chosen[0])
+        endpoint = path + '/' + str(destination['id']) if destination else path
         try:
-            response = self.lcu.loadout_request('PUT' if owned else 'POST', endpoint, body)
+            response = lcu_request(self.lcu,'PUT' if destination else 'POST', endpoint, body)
+        except BuildError:
+            raise
         except ValueError:
-            raise BuildError('O cliente não confirmou as runas. Verifique o limite de páginas e a conexão; nenhuma página pessoal foi apagada.') from None
-        after = self.lcu.loadout_request('GET', path)
+            raise BuildError('O cliente não confirmou as runas. Escolha uma página editável existente no seletor ou libere espaço; nenhuma página foi apagada.') from None
+        after = lcu_request(self.lcu,'GET', path)
         previous_ids = {p.get('id') for p in previous if positive(p.get('id'))}
         created_id = response.get('id') if isinstance(response, dict) else None
-        target_id = owned_id if owned else created_id
+        target_id = destination['id'] if destination else created_id
         matches = [p for p in after if isinstance(p, dict) and positive(p.get('id'))
                    and (p['id'] == target_id if positive(target_id) else p['id'] not in previous_ids)
                    and p.get('name') == body['name']] if isinstance(after, list) else []
+        if len(matches)==1 and all(matches[0].get(k)==v for k,v in body.items() if k!='current') and matches[0].get('current') is not True:
+            check()
+            lcu_request(self.lcu,'PUT','/lol-perks/v1/currentpage',matches[0]['id'])
+            refreshed=lcu_request(self.lcu,'GET',path)
+            matches=[p for p in refreshed if isinstance(p,dict) and positive(p.get('id')) and p.get('id')==matches[0]['id']] if isinstance(refreshed,list) else []
         if len(matches) != 1 or any(matches[0].get(k) != v for k, v in body.items()):
             raise BuildError('A escrita das runas não foi confirmada pela leitura do cliente. Confira a página no LoL.')
         # Ownership comes from our write + native ID, never from a display name alone.
@@ -189,6 +230,29 @@ class LoadoutImporter:
         with atomic_write(self.path) as file:
             json.dump(self._state, file)
         return {'target': 'runes', 'verified': True, 'message': 'Runas importadas e confirmadas no cliente.'}
+
+    def rune_targets(self):
+        rows=lcu_request(self.lcu,'GET','/lol-perks/v1/pages')
+        if not isinstance(rows,list) or len(rows)>100:raise BuildError('Não foi possível ler as páginas de runas.')
+        return [{'id':r['id'],'name':str(r.get('name') or 'Página de runas')[:100],
+                 'current':r.get('current') is True}
+                for r in rows if isinstance(r,dict) and positive(r.get('id')) and r.get('isEditable') is True]
+
+    def _backup_rune_page(self,account_key,page):
+        path=self.path.with_name('sexo2-rune-backups.json')
+        if path.is_symlink() or (path.exists() and path.stat().st_size>65536):
+            raise BuildError('O backup das runas não é válido; página preservada.')
+        try:backups=json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+        except (ValueError,OSError):raise BuildError('Não foi possível preservar a página anterior.') from None
+        if not isinstance(backups,dict) or len(backups)>16:raise BuildError('O backup das runas está inválido.')
+        key=account_key+':'+str(page['id'])
+        # Retain the original page across repeated imports, no account/player identity.
+        if key not in backups:
+            saved={k:deepcopy(page[k]) for k in ('name','primaryStyleId','subStyleId','selectedPerkIds','current') if k in page}
+            if len(json.dumps(saved))>2048:raise BuildError('A página anterior excede o limite de backup.')
+            backups[key]=saved
+            while len(backups)>16:backups.pop(next(iter(backups)))
+            with atomic_write(path) as file:json.dump(backups,file,ensure_ascii=False)
 
     def apply_item_groups(self, groups, *, guard):
         """At most two champion groups (the two lobby picks), same owned budget."""
@@ -240,7 +304,7 @@ class LoadoutImporter:
                              'associatedChampions': [cid], 'associatedMaps': [11 if pages[0].query['mode'] in ('ranked', 'swift') else 12],
                              'preferredItemSlots': [], 'blocks': blocks})
         path = f'/lol-item-sets/v1/item-sets/{account[0]}/sets'
-        before = self.lcu.loadout_request('GET', path)
+        before = lcu_request(self.lcu,'GET', path)
         if (not isinstance(before, dict) or before.get('accountId') != account[1]
                 or not isinstance(before.get('itemSets'), list) or len(before['itemSets']) > 500):
             raise BuildError('O formato dos seus conjuntos de itens mudou ou está indisponível.')
@@ -253,12 +317,13 @@ class LoadoutImporter:
         body = deepcopy(before)
         body.update(itemSets=personal + sets, timestamp=int(time.time() * 1000))
         check()
-        if self.lcu.loadout_request('GET', path) != before:
+        if lcu_request(self.lcu,'GET', path) != before:
             raise BuildError('Seus conjuntos mudaram durante a importação. Tente novamente.')
         check()
-        self.lcu.loadout_request('PUT', path, body)
-        after = self.lcu.loadout_request('GET', path)
-        if not isinstance(after, dict) or after.get('itemSets') != body['itemSets']:
+        lcu_request(self.lcu,'PUT', path, body)
+        after = lcu_request(self.lcu,'GET', path)
+        if (not isinstance(after, dict) or after.get('accountId') != account[1]
+                or canonical_item_sets(after.get('itemSets')) != canonical_item_sets(body['itemSets'])):
             raise BuildError('A escrita dos itens não foi confirmada. Confira os conjuntos no LoL.')
         return {'target': 'items', 'verified': True,
                 'message': f'Itens confirmados em {len(sets)} conjunto(s) do SEXO2; conjuntos pessoais preservados.'}

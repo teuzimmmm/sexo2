@@ -8,7 +8,7 @@ on:
         required: true
       version:
         description: Test edition (2.0.0.1 through 2.0.0.65535)
-        default: 2.0.0.7
+        default: 2.0.0.8
         required: true
       native_host_only:
         description: Test isolated DX11 candidate only; do not build an installer
@@ -42,18 +42,11 @@ jobs:
         run: |
           python -m unittest discover -s tests -q
           if ($LASTEXITCODE -ne 0) { throw 'Tests failed; installer will not be built.' }
+          python -m unittest injection.tests.test_game_monitor injection.tests.test_early_patcher utils.tests.test_i18n -q
+          if ($LASTEXITCODE -ne 0) { throw 'Legacy pause/patcher regressions failed.' }
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Smoke test native overlay window
-        shell: pwsh
-        env:
-          SEXO2_TEST_NATIVE_OVERLAY: '1'
-        run: |
-          python scripts/build_overlay_renderer.py
-          if ($LASTEXITCODE -ne 0) { throw 'Composition renderer build failed.' }
-          python -m unittest tests.test_overlay_win32 -v
-          if ($LASTEXITCODE -ne 0) { throw 'Native overlay smoke failed.' }
       - name: Test build panel modes with isolated browser
         shell: pwsh
         run: |
@@ -61,6 +54,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Browser test dependencies failed.' }
           & .\ui-test-runtime\node_modules\.bin\playwright.cmd install chromium
           if ($LASTEXITCODE -ne 0) { throw 'Browser install failed.' }
+          node --test tests/test_settings_ui.cjs tests/test_branding_ui.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Settings/branding UI regression failed.' }
           node tests/browser_builds.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Build panel mode tests failed.' }
       - name: Download existing native baseline
@@ -76,7 +71,7 @@ jobs:
       - name: Build and audit test installer
         shell: pwsh
         env:
-          TEST_VERSION: ${{ inputs.version || '2.0.0.7' }}
+          TEST_VERSION: ${{ inputs.version || '2.0.0.8' }}
         run: |
           python scripts/build_test_installer.py --base "$env:RUNNER_TEMP/sexo2-baseline/SEXO2-baseline.zip" --version $env:TEST_VERSION
           if ($LASTEXITCODE -ne 0) { throw 'Test installer build failed.' }

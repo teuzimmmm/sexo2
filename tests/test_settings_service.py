@@ -22,7 +22,7 @@ class SettingsTests(unittest.TestCase):
         self.payload.pop('buildOverlayEnabled')
         with patch('sexo2.services.settings.get_overlay_enabled',return_value=False), patch('sexo2.services.settings.set_config_options') as write:
             self.assertFalse(self.service.save(self.payload)['buildOverlayEnabled'])
-            self.assertNotIn('LoLalytics',write.call_args.args[0])
+            self.assertEqual(write.call_args.args[0]['LoLalytics']['overlay_enabled'],'false')
     def test_invalid_overlay_setting_has_no_side_effects(self):
         self.payload['buildOverlayEnabled']='false'
         with patch('sexo2.services.settings.set_config_options') as write,self.assertRaises(ValueError):
@@ -51,7 +51,7 @@ class SettingsTests(unittest.TestCase):
             result=self.service.save(self.payload)
         self.assertEqual(result['lolalyticsRiskLevel'],'high')
         write.assert_called_once()
-        self.assertEqual(write.call_args.args[0]['LoLalytics'], {'risk_level':'high'})
+        self.assertEqual(write.call_args.args[0]['LoLalytics'], {'risk_level':'high','overlay_enabled':'false'})
         self.assertTrue(write.call_args.kwargs['strict'])
         self.assertTrue(write.call_args.kwargs['atomic_only'])
     def test_risk_level_uses_atomic_config_batch_and_keeps_other_sections(self):
@@ -69,7 +69,7 @@ class SettingsTests(unittest.TestCase):
         with patch('sexo2.services.settings.get_config_option', side_effect=lambda section, key, fallback=None: 'low' if (section,key)==('LoLalytics','risk_level') else fallback), patch('sexo2.services.settings.set_config_options') as write:
             result=self.service.save(self.payload)
         self.assertEqual(result['lolalyticsRiskLevel'],'low')
-        self.assertNotIn('LoLalytics',write.call_args.args[0])
+        self.assertEqual(write.call_args.args[0]['LoLalytics']['overlay_enabled'],'false')
     def test_invalid_risk_level_has_no_side_effects(self):
         for invalid in (None, True, 1, [], 'unsupported'):
             with self.subTest(value=invalid):
