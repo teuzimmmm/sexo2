@@ -15,6 +15,8 @@ for name in ['main','main.setup.initialization','main.setup.arguments','main.cor
              'sexo2.services.plugin_sync','sexo2.services.auto_items','sexo2.services.session','sexo2.sources.mayhem','sexo2.overlay.mayhem',
              'sexo2.services.draft','sexo2.services.builds','sexo2.services.loadouts',
              'sexo2.overlay.model','sexo2.overlay.runtime','sexo2.overlay.win32',
+             'sexo2.overlay.display','sexo2.overlay.layered','sexo2.overlay.software','sexo2.overlay.isolated',
+             'sexo2.overlay.worker','sexo2.overlay.worker_wire','sexo2.overlay.readiness',
              'sexo2.overlay.arena','sexo2.overlay.processes',
              'sexo2.overlay.gold','sexo2.overlay.composition','sexo2.overlay.offers','sexo2.overlay.reader','sexo2.overlay.screen','sexo2.overlay.wire',
              'sexo2.install.identity','lolalytics.client','lolalytics.builds','lolalytics.matchups','lolalytics.risk']:
@@ -34,9 +36,11 @@ for name in ['galo.png','galo.ico','bork-black-v3.png','sexo2.ico','golden_rose.
 print('PASS: release visual assets and update source match.')
 
 if (bundle/'sexo2-test-build.json').exists():
-    for relative in ['sexo2/overlay/bin/sexo2-overlay-renderer.dll','sexo2/overlay/bin/sexo2-offer-reader.exe']:
-        assert not (bundle/'_internal'/relative).exists(),'Suspended overlay binary present in production package'
-    print('PASS: production package contains neither renderer DLL nor OCR executable.')
+    assert not (bundle/'_internal/sexo2/overlay/bin/sexo2-overlay-renderer.dll').exists(),'Obsolete renderer DLL present'
+    reader=Path('sexo2/overlay/bin/sexo2-offer-reader.exe')
+    assert (bundle/'_internal'/reader).read_bytes()==(root/reader).read_bytes(),'OCR helper differs'
+    assert any((bundle/'_internal/sexo2/overlay/licenses').glob('*LICENSE*')),'OCR notices missing'
+    print('PASS: isolated CPU modules/OCR match source; no obsolete renderer DLL.')
     for source,target in [('LICENSE','LICENSE-Rose.txt'),
                           ('vendor/PenguLoader-1.1.6/LICENSE','LICENSE-PenguLoader.txt'),
                           ('hosting-tools/LICENSE-cloudflared.txt','_internal/hosting-tools/LICENSE-cloudflared.txt'),

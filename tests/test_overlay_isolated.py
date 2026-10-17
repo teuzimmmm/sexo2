@@ -85,11 +85,17 @@ class ChildTests(unittest.TestCase):
         self.assertIsNotNone(child.poll());self.assertIsNone(renderer._child)
         self.assertEqual(renderer.diagnostic()['code'],'worker-failed')
 
+class SessionLCU:
+    phase='InProgress'
+    def draft_request(self,path):
+        if path=='/lol-gameflow/v1/gameflow-phase':return self.phase
+        if path=='/lol-gameflow/v1/session':return {'gameData':{'gameId':10,'queue':{'id':400,'gameMode':'CLASSIC'}}}
+        raise AssertionError('Unexpected test request')
+
 class SessionContinuityTests(unittest.TestCase):
     def test_confirmed_session_can_bridge_lcu_loss_only_with_fresh_game_signal(self):
         from sexo2.overlay.runtime import OverlayRuntime
-        from tests.test_build_workflow import FakeLCU
-        clock=[0.0];lcu=FakeLCU();lcu.phase='InProgress'
+        clock=[0.0];lcu=SessionLCU();lcu.phase='InProgress'
         runtime=OverlayRuntime(lcu,enabled=lambda:True,clock=lambda:clock[0])
         self.addCleanup(runtime.stop)
         client=Mock();client.get.return_value={'gameTime':5}
@@ -104,8 +110,7 @@ class SessionContinuityTests(unittest.TestCase):
 
     def test_end_of_game_never_reuses_a_previous_mode(self):
         from sexo2.overlay.runtime import OverlayRuntime
-        from tests.test_build_workflow import FakeLCU
-        lcu=FakeLCU();runtime=OverlayRuntime(lcu,enabled=lambda:True)
+        lcu=SessionLCU();runtime=OverlayRuntime(lcu,enabled=lambda:True)
         self.addCleanup(runtime.stop)
         lcu.phase='InProgress';runtime.poll();self.assertIsNotNone(runtime._cached_session)
         lcu.phase='EndOfGame';runtime.poll();self.assertIsNone(runtime._cached_session)

@@ -15,7 +15,7 @@ if ((Test-Path -LiteralPath $target) -or (Test-Path -LiteralPath $newKey) -or (T
 if ($ExpectedCommit -notmatch '^[0-9a-f]{40}$') { throw 'Invalid expected commit.' }
 $installerPath = (Resolve-Path -LiteralPath $Installer).Path
 $buildReport = Get-Content -LiteralPath ([IO.Path]::ChangeExtension($installerPath, '.json')) -Raw | ConvertFrom-Json
-if ($buildReport.sourceCommit -ne $ExpectedCommit -or $buildReport.overlayStatus -ne 'suspended' -or $null -ne $buildReport.overlayRendererSha256 -or $null -ne $buildReport.offerReaderSha256) { throw 'Overlay quarantine build receipt missing or invalid.' }
+if ($buildReport.sourceCommit -ne $ExpectedCommit -or $buildReport.overlayStatus -ne 'isolated-cpu' -or $null -ne $buildReport.overlayRendererSha256 -or $buildReport.offerReaderSha256 -notmatch '^[a-f0-9]{64}$') { throw 'Isolated overlay build receipt missing or invalid.' }
 $marker = 'synthetic-installer-smoke-' + [Guid]::NewGuid().ToString('N')
 $sentinels = @()
 try {
@@ -46,9 +46,11 @@ try {
         foreach ($excluded in @('_internal\assets\update-access.json','_internal\Pengu Loader\config','_internal\Pengu Loader\datastore')) {
             if (Test-Path -LiteralPath (Join-Path $target $excluded)) { throw 'Private state leaked into installed package.' }
         }
-        foreach ($relative in @('_internal/sexo2/overlay/bin/sexo2-overlay-renderer.dll','_internal/sexo2/overlay/bin/sexo2-offer-reader.exe')) {
+        foreach ($relative in @('_internal/sexo2/overlay/bin/sexo2-overlay-renderer.dll')) {
             if (Test-Path -LiteralPath (Join-Path $target $relative)) { throw 'Quarantined binary survived install/reinstall.' }
         }
+        $readerBefore = Join-Path $target '_internal/sexo2/overlay/bin/sexo2-offer-reader.exe'
+        if ((Get-FileHash -LiteralPath $readerBefore -Algorithm SHA256).Hash.ToLowerInvariant() -ne $buildReport.offerReaderSha256) { throw 'Installed OCR differs from receipt.' }
         if ($round -eq 0) {
             # Synthetic obsolete binaries of our owned test install: reinstall must remove them.
             $obsolete = Join-Path $target '_internal/sexo2/overlay/bin'
@@ -59,11 +61,13 @@ try {
         $record = Get-ItemProperty -LiteralPath $newKey
         if ($record.DisplayName -notlike '*Teste*') { throw 'Test uninstall registration missing.' }
     }
-    # No renderer/OCR is present or executed. No League/Pengu executable is started.
-    foreach ($relative in @('_internal/sexo2/overlay/bin/sexo2-overlay-renderer.dll','_internal/sexo2/overlay/bin/sexo2-offer-reader.exe')) {
+    # Exercise only the installed display-worker entry, never normal app startup.
+    foreach ($relative in @('_internal/sexo2/overlay/bin/sexo2-overlay-renderer.dll')) {
         if (Test-Path -LiteralPath (Join-Path $target $relative)) { throw 'Quarantined renderer/OCR present after install.' }
     }
-    Write-Output 'PASS: installed package contains no experimental renderer or OCR executable.'
+    python scripts/probe_overlay_worker.py --worker (Join-Path $target 'SEXO2.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Installed isolated worker entry failed.' }
+    Write-Output 'PASS: installed worker entry/private pipes; obsolete renderer DLL absent.'
     $uninstaller = Join-Path $target 'unins000.exe'
     $process = Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw 'Uninstaller did not succeed.' }
@@ -75,10 +79,10 @@ try {
     foreach ($file in $sentinels) {
         if ((Get-Content -LiteralPath $file -Raw) -ne $marker) { throw 'Legacy data sentinel changed.' }
     }
-    @{ installed=$true; reinstalled=$true; uninstalled=$true; legacySentinelsPreserved=$true; installedRendererLoaded=$false; overlaySuspended=$true; installedRendererAbsent=$true;
+    @{ installed=$true; reinstalled=$true; uninstalled=$true; legacySentinelsPreserved=$true; installedRendererLoaded=$false; installedWorkerEntry=$true; overlayEngine='isolated-cpu'; overlaySuspended=$false; installedRendererAbsent=$true;
        sourceCommit=$ExpectedCommit; nativeLeagueValidation=$false } |
         ConvertTo-Json | Set-Content -LiteralPath $ReportPath -Encoding utf8
-    Write-Output 'PASS: Windows install/reinstall/uninstall; current plugin/version and legacy preservation verified. No application/game was launched.'
+    Write-Output 'PASS: Windows install/reinstall/uninstall; current plugin/version and legacy preservation verified. Only renderer-mode entry was launched; no League/Pengu or normal application startup.'
 } finally {
     foreach ($file in $sentinels) {
         if ((Test-Path -LiteralPath $file) -and (Get-Content -LiteralPath $file -Raw) -eq $marker) {

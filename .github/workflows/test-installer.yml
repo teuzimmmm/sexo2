@@ -8,7 +8,7 @@ on:
         required: true
       version:
         description: Test edition (2.0.0.1 through 2.0.0.65535)
-        default: 2.0.0.8
+        default: 2.0.0.9
         required: true
       software_only:
         description: Validate isolated CPU display worker without building an installer
@@ -62,6 +62,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Settings/branding UI regression failed.' }
           node tests/browser_builds.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Build panel mode tests failed.' }
+      - name: Compile local OCR helper for screen tests
+        shell: pwsh
+        run: |
+          rustup default stable
+          if ($LASTEXITCODE -ne 0) { throw 'Rust toolchain unavailable.' }
+          python scripts/build_offer_reader.py
+          if ($LASTEXITCODE -ne 0) { throw 'OCR build failed.' }
+      - name: Validate isolated CPU display before packaging
+        shell: pwsh
+        env:
+          SEXO2_TEST_SOFTWARE_OVERLAY: '1'
+          SEXO2_TEST_SCREEN_OCR: '1'
+        run: |
+          python -m unittest tests.test_overlay_isolated tests.test_overlay_software_windows tests.test_overlay_screen_windows -v
+          if ($LASTEXITCODE -ne 0) { throw 'Native isolated display/OCR validation failed.' }
       - name: Download existing native baseline
         shell: pwsh
         env:
@@ -75,7 +90,7 @@ jobs:
       - name: Build and audit test installer
         shell: pwsh
         env:
-          TEST_VERSION: ${{ inputs.version || '2.0.0.8' }}
+          TEST_VERSION: ${{ inputs.version || '2.0.0.9' }}
         run: |
           python scripts/build_test_installer.py --base "$env:RUNNER_TEMP/sexo2-baseline/SEXO2-baseline.zip" --version $env:TEST_VERSION
           if ($LASTEXITCODE -ne 0) { throw 'Test installer build failed.' }

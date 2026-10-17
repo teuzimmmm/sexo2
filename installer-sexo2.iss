@@ -1,4 +1,4 @@
-; Functional test edition. The final legacy migration is deliberately separate.
+﻿; Functional test edition. The final legacy migration is deliberately separate.
 #ifndef SourceDir
   #error Define SourceDir with the audited frozen SEXO2 directory.
 #endif
@@ -6,10 +6,10 @@
   #error Define OutputDir for the test installer.
 #endif
 #ifndef BuildVersion
-  #define BuildVersion "2.0.0.8"
+  #define BuildVersion "2.0.0.9"
 #endif
 #ifndef OutputName
-  #define OutputName "SEXO2-2.0.0.8-Teste"
+  #define OutputName "SEXO2-2.0.0.9-Teste"
 #endif
 
 [Setup]

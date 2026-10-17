@@ -44,8 +44,13 @@ injection_data_files = [
 ]
 # Verify and add injection binaries
 binaries = []
-# Incident quarantine: production packages contain no renderer DLL or OCR helper.
-# Native experiments remain available only through separate opt-in lab scripts.
+# Isolated CPU renderer is Python code, never the obsolete DirectComposition DLL.
+# Only the source-built local OCR helper and dependency notices are native assets.
+reader = Path('sexo2/overlay/bin/sexo2-offer-reader.exe')
+if reader.is_file():
+    binaries.append((str(reader), 'sexo2/overlay/bin'))
+if Path('sexo2/overlay/licenses').is_dir():
+    datas.append(('sexo2/overlay/licenses', 'sexo2/overlay/licenses'))
 missing_binaries = []
 for tool in injection_binaries:
     if Path(tool).exists():

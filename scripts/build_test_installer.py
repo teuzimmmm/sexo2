@@ -87,7 +87,9 @@ def build(base, version, output, iscc):
         version_file.write_text(metadata, encoding='utf-8')
         spec = stage / 'installer-sexo2.iss'
         spec.write_text(spec.read_text(encoding='utf-8-sig'), encoding='utf-8-sig')
-        # No renderer or screen reader in this incident recovery package.
+        # Compile only the OCR helper; the CPU renderer runs in a separate Python child.
+        from scripts.build_offer_reader import build as build_reader
+        reader_sha = build_reader(stage)
         run([sys.executable, '-m', 'PyInstaller', 'SEXO2.spec', '--noconfirm',
              '--distpath', 'dist-test', '--workpath', 'build-test'], cwd=stage)
         app = stage / 'dist-test' / 'SEXO2'
@@ -114,7 +116,7 @@ def build(base, version, output, iscc):
         (output / (installer.name + '.sha256')).write_text(
             digest + '  ' + installer.name + '\n', encoding='ascii')
         report = dict(identity, installer=installer.name, sha256=digest, nativeFiles=native,
-                      offerReaderSha256=None, overlayRendererSha256=None, overlayStatus='suspended',
+                      offerReaderSha256=reader_sha, overlayRendererSha256=None, overlayStatus='isolated-cpu',
                       legacyCleanup=False, legacyDataCompatibility=True,
                       stableUpdates=False, nativeLeagueValidation=False)
         (output / (name + '.json')).write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
@@ -126,7 +128,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base', type=Path, required=True,
                         help='SEXO2 baseline ZIP or existing application folder (read-only)')
-    parser.add_argument('--version', default='2.0.0.8')
+    parser.add_argument('--version', default='2.0.0.9')
     parser.add_argument('--output', type=Path, default=ROOT / 'build-test-installer' / 'output')
     parser.add_argument('--iscc', type=Path)
     args = parser.parse_args(argv)
