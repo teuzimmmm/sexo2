@@ -3,6 +3,7 @@ import ctypes as C
 from ctypes import wintypes as W
 import os
 import time
+import threading
 import unittest
 
 from sexo2.overlay.model import Card, View
@@ -79,10 +80,18 @@ class NativeWindowTests(unittest.TestCase):
     def test_composited_pixels_recover_z_order_without_new_data_and_pass_clicks(self):
         # Unlike the old HWND-only smoke, inspect actual desktop pixels in memory.
         # No screenshot is saved. The target/competitor are disposable own windows.
+        gate, paused = threading.Event(), threading.Event()
+        gate.set()
+        def foreground():
+            if not gate.is_set():
+                paused.set()
+                gate.wait(2)
+            return (0, 0, 1000, 700)
         window = NativeOverlay(lambda: Frame(True, View('pixel-test',
             (Card('Composição nativa', ('Conteúdo sintético, sem partida.',)),))),
-            foreground=lambda: (0, 0, 1000, 700))
+            foreground=foreground)
         self.addCleanup(window.stop)
+        self.addCleanup(gate.set)
         window.start(); self.assertTrue(window.ready.wait(8)); self.assertIsNone(window.error)
         self.until(lambda: window._visible)
         u, g = window.u, window.g
@@ -113,6 +122,10 @@ class NativeWindowTests(unittest.TestCase):
         self.assertGreater(window.diagnostic()['renders'], 0)
         self.assertNotEqual(u.WindowFromPoint(W.POINT(px, py)), window.hwnd)
         renders, raises = window._renders, window._raises
+        # Hold the injectable foreground seam briefly, avoiding a race between
+        # our occlusion setup and the 200 ms production repair timer.
+        gate.clear()
+        self.assertTrue(paused.wait(1))
         # An opaque white TOPMOST deliberately occludes the exact same rectangle.
         competitor = u.CreateWindowExW(0x08000008, 'STATIC', 'synthetic-occluder',
             0x90000006, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
@@ -122,8 +135,11 @@ class NativeWindowTests(unittest.TestCase):
         self.assertTrue(u.SetWindowPos(competitor, W.HWND(-1), 0, 0, 0, 0, 0x10 | 0x40 | 0x1 | 0x2))
         # Verify actual z-order loss; periodic positioning must repair it despite
         # unchanged frame/geometry (the old implementation never did this).
-        self.assertEqual(u.WindowFromPoint(W.POINT(px, py)), competitor)
+        u.UpdateWindow.argtypes = [W.HWND]; u.UpdateWindow.restype = W.BOOL
+        u.UpdateWindow(competitor)
+        C.WinDLL('dwmapi').DwmFlush()
         self.assertGreater(min(pixel()), 200)
+        gate.set()
         self.until(lambda: window._raises > raises and drawn())
         self.assertEqual(window._renders, renders)
         self.assertNotEqual(u.WindowFromPoint(W.POINT(px, py)), window.hwnd)
