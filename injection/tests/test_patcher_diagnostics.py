@@ -21,12 +21,12 @@ class PatcherFilesTests(unittest.TestCase):
     def test_each_file_is_identified_by_its_hash(self):
         with tempfile.TemporaryDirectory() as temp:
             tools = Path(temp)
-            (tools / LTK_PATCHER_HOST).write_bytes(b'host')
-            (tools / LTK_PATCHER_DLL).write_bytes(b'dll')
+            (tools / LTK_PATCHER_HOST).write_bytes(b"host")
+            (tools / LTK_PATCHER_DLL).write_bytes(b"dll")
             description = describe_ltk_patcher_files(tools)
 
         self.assertIn(f"{LTK_PATCHER_HOST}: 4 bytes", description)
-        self.assertIn(hashlib.sha256(b'dll').hexdigest(), description)
+        self.assertIn(hashlib.sha256(b"dll").hexdigest(), description)
 
     def test_a_missing_file_is_named_instead_of_raising(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -42,16 +42,16 @@ class FailureHintTests(unittest.TestCase):
         return OverlayManager._ltk_failure_hint(reason)
 
     def test_hook_failure_does_not_blame_the_files(self):
-        self.assertNotIn('up to date', self.hint('SetWindowsHookEx failed: 0x00000000'))
+        self.assertNotIn("up to date", self.hint("SetWindowsHookEx failed: 0x00000000"))
 
     def test_late_join_says_the_game_started_first(self):
-        self.assertIn('started before the patcher', self.hint(LATE_JOIN_ERROR))
+        self.assertIn("started before the patcher", self.hint(LATE_JOIN_ERROR))
 
     def test_disabled_overlay_points_at_the_skin_or_mods(self):
-        self.assertIn('custom mods', self.hint('overlay verification failed, disabling overlay'))
+        self.assertIn("custom mods", self.hint("overlay verification failed, disabling overlay"))
 
     def test_unknown_failures_keep_the_update_hint(self):
-        self.assertIn('up to date', self.hint('exited with code 3'))
+        self.assertIn("up to date", self.hint("exited with code 3"))
 
 
 class FailureContextTests(unittest.TestCase):
@@ -59,55 +59,62 @@ class FailureContextTests(unittest.TestCase):
         temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(temp_dir.cleanup)
         root = Path(temp_dir.name)
-        self.overlay_dir = root / 'overlay'
+        self.overlay_dir = root / "overlay"
         self.overlay_dir.mkdir()
-        self.overlay = OverlayManager(root / 'tools', root / 'mods', root / 'game', ProcessManager())
-        reporter = patch.object(overlay_manager, 'report_issue')
+        self.overlay = OverlayManager(root / "tools", root / "mods", root / "game", ProcessManager())
+        reporter = patch.object(overlay_manager, "report_issue")
         self.report_issue = reporter.start()
         self.addCleanup(reporter.stop)
-        running_game = patch.object(OverlayManager, '_running_game', return_value=None)
+        running_game = patch.object(OverlayManager, "_running_game", return_value=None)
         running_game.start()
         self.addCleanup(running_game.stop)
 
     def test_a_failed_session_logs_its_context_and_a_specific_hint(self):
         proc = subprocess.Popen(
-            [sys.executable, '-c', 'import time; time.sleep(60)'],
-            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True,
+            [sys.executable, "-c", "import time; time.sleep(60)"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            text=True,
         )
         self.addCleanup(proc.stdin.close)
         self.addCleanup(lambda: proc.poll() is None and proc.kill())
         reader = threading.Thread(target=lambda: None)
         reader.start()
         session = {
-            'proc': proc,
-            'session': {'state': 'failed', 'error': 'SetWindowsHookEx failed: 0x00000000', 'eol': False},
-            'reader': reader,
-            'log': None,
+            "proc": proc,
+            "session": {"state": "failed", "error": "SetWindowsHookEx failed: 0x00000000", "eol": False},
+            "reader": reader,
+            "log": None,
         }
 
-        with self.assertLogs(level='ERROR') as logs:
+        with self.assertLogs(level="ERROR") as logs:
             code = self.overlay._run_ltk_patcher(session, self.overlay_dir)
 
         self.assertEqual(code, 1)
-        self.assertTrue(any('LTK patcher context: last state=failed' in line for line in logs.output))
-        self.assertNotIn('up to date', self.report_issue.call_args.kwargs['hint'])
+        self.assertTrue(any("LTK patcher context: last state=failed" in line for line in logs.output))
+        self.assertNotIn("up to date", self.report_issue.call_args.kwargs["hint"])
 
     def test_context_logging_never_changes_the_reported_failure(self):
         """The patcher's own exit code must survive a context probe that fails"""
         patcher = SimpleNamespace(returncode=3, poll=lambda: 3, stdin=None)
         session = {
-            'proc': patcher,
-            'session': {'state': None, 'error': None, 'eol': False},
-            'reader': threading.Thread(target=lambda: None),
-            'log': None,
+            "proc": patcher,
+            "session": {"state": None, "error": None, "eol": False},
+            "reader": threading.Thread(target=lambda: None),
+            "log": None,
         }
-        session['reader'].start()
-        with patch.object(OverlayManager, '_running_game', return_value=SimpleNamespace()),                 patch.object(OverlayManager, '_stop_ltk_patcher'),                 self.assertLogs(level='ERROR'):
+        session["reader"].start()
+        with (
+            patch.object(OverlayManager, "_running_game", return_value=SimpleNamespace()),
+            patch.object(OverlayManager, "_stop_ltk_patcher"),
+            self.assertLogs(level="ERROR"),
+        ):
             code = self.overlay._run_ltk_patcher(session, self.overlay_dir)
 
         self.assertEqual(code, 3)
-        self.assertIn('exited with code 3', self.report_issue.call_args[0][2])
+        self.assertIn("exited with code 3", self.report_issue.call_args[0][2])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

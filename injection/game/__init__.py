@@ -8,5 +8,4 @@ Handles game detection and monitoring
 from .game_monitor import GameMonitor
 from .game_detector import GameDetector
 
-__all__ = ['GameMonitor', 'GameDetector']
-
+__all__ = ["GameMonitor", "GameDetector"]

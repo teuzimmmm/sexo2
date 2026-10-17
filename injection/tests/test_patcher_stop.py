@@ -20,25 +20,28 @@ class RoseStoppedPatcherTests(unittest.TestCase):
         temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(temp_dir.cleanup)
         root = Path(temp_dir.name)
-        self.overlay_dir = root / 'overlay'
+        self.overlay_dir = root / "overlay"
         self.overlay_dir.mkdir()
         self.process_manager = ProcessManager()
-        self.overlay = OverlayManager(root / 'tools', root / 'mods', root / 'game', self.process_manager)
+        self.overlay = OverlayManager(root / "tools", root / "mods", root / "game", self.process_manager)
 
-        reporter = patch.object(overlay_manager, 'report_issue')
+        reporter = patch.object(overlay_manager, "report_issue")
         self.report_issue = reporter.start()
         self.addCleanup(reporter.stop)
         # Never touch the developer's real patcher or mod-tools processes
         self.running = []
-        processes = patch.object(process_manager.psutil, 'process_iter', side_effect=lambda *a, **k: list(self.running))
+        processes = patch.object(process_manager.psutil, "process_iter", side_effect=lambda *a, **k: list(self.running))
         processes.start()
         self.addCleanup(processes.stop)
 
     def _start_patcher(self):
         """Stand-in patcher that runs until it's killed"""
         proc = subprocess.Popen(
-            [sys.executable, '-c', 'import time; time.sleep(60)'],
-            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True,
+            [sys.executable, "-c", "import time; time.sleep(60)"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            text=True,
         )
         self.addCleanup(proc.stdin.close)
         self.addCleanup(lambda: proc.poll() is None and proc.kill())
@@ -46,10 +49,10 @@ class RoseStoppedPatcherTests(unittest.TestCase):
         reader = threading.Thread(target=lambda: None)
         reader.start()
         session = {
-            'proc': proc,
-            'session': {'state': None, 'error': None, 'eol': False},
-            'reader': reader,
-            'log': None,
+            "proc": proc,
+            "session": {"state": None, "error": None, "eol": False},
+            "reader": reader,
+            "log": None,
         }
         return proc, session
 
@@ -62,7 +65,7 @@ class RoseStoppedPatcherTests(unittest.TestCase):
         stop()
         runner.join(timeout=15)
         self.assertFalse(runner.is_alive())
-        return result['code']
+        return result["code"]
 
     def test_end_of_game_stop_is_not_a_failure(self):
         proc, session = self._start_patcher()
@@ -73,7 +76,7 @@ class RoseStoppedPatcherTests(unittest.TestCase):
 
     def test_lobby_cleanup_is_not_a_failure(self):
         proc, session = self._start_patcher()
-        self.running = [SimpleNamespace(info={'pid': proc.pid, 'name': LTK_PATCHER_HOST})]
+        self.running = [SimpleNamespace(info={"pid": proc.pid, "name": LTK_PATCHER_HOST})]
         code = self._serve_until(session, self.process_manager.kill_all_runoverlay_processes)
         self.assertEqual(proc.returncode, 15)
         self.assertEqual(code, 0)
@@ -84,16 +87,16 @@ class RoseStoppedPatcherTests(unittest.TestCase):
         code = self._serve_until(session, proc.terminate)
         self.assertEqual(code, 1)
         self.report_issue.assert_called_once()
-        self.assertIn('exited with code 1', self.report_issue.call_args.args[2])
+        self.assertIn("exited with code 1", self.report_issue.call_args.args[2])
 
     def test_patcher_errors_are_still_reported_when_rose_stops_it(self):
         proc, session = self._start_patcher()
-        session['session']['error'] = 'the game started before the patcher, overlay not applied'
+        session["session"]["error"] = "the game started before the patcher, overlay not applied"
         code = self._serve_until(session, self.process_manager.stop_overlay_process)
         self.assertEqual(code, 1)
         self.report_issue.assert_called_once()
-        self.assertIn('overlay not applied', self.report_issue.call_args.args[2])
+        self.assertIn("overlay not applied", self.report_issue.call_args.args[2])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -101,9 +101,7 @@ class ModStorageService:
     def __init__(self, mods_root: Optional[Path] = None):
         self.mods_root = mods_root or (get_user_data_dir() / "mods")
         self._storage_lock = _STORAGE_LOCK
-        self._champion_listing_cache: dict[
-            int, tuple[float, tuple[SkinModEntry, ...]]
-        ] = {}
+        self._champion_listing_cache: dict[int, tuple[float, tuple[SkinModEntry, ...]]] = {}
         self.mods_root.mkdir(parents=True, exist_ok=True)
         self._ensure_mods_root_layout()
 
@@ -122,9 +120,7 @@ class ModStorageService:
         path limit.  Truncate only as much as needed, then account for the
         normal `` (2)`` collision suffixes.
         """
-        member_lengths = [
-            len(member.replace("/", "\\")) for member in list_mod_archive(source)
-        ]
+        member_lengths = [len(member.replace("/", "\\")) for member in list_mod_archive(source)]
 
         longest_member_length = max(member_lengths, default=0)
         fixed_path_length = len(str(parent_dir)) + 2 + longest_member_length
@@ -141,16 +137,11 @@ class ModStorageService:
             suffix = "" if suffix_number == 1 else f" ({suffix_number})"
             available_name_length = max_name_length - len(suffix)
             if available_name_length < 1:
-                raise ValueError(
-                    "Unable to create a unique Windows-safe folder name for "
-                    "the selected mod"
-                )
+                raise ValueError("Unable to create a unique Windows-safe folder name for the selected mod")
 
             candidate_base = base_name[:available_name_length].rstrip(" .")
             if not candidate_base:
-                raise ValueError(
-                    "The selected mod archive has no usable Windows-safe name"
-                )
+                raise ValueError("The selected mod archive has no usable Windows-safe name")
             mod_name = f"{candidate_base}{suffix}"
             target_dir = parent_dir / mod_name
             if not target_dir.exists() and not target_dir.is_symlink():
@@ -265,9 +256,7 @@ class ModStorageService:
         if not isinstance(payload, dict):
             return (), {}
 
-        default_targets = self._normalize_target_ids(
-            payload.get("targets") or payload.get("skinIds")
-        )
+        default_targets = self._normalize_target_ids(payload.get("targets") or payload.get("skinIds"))
         raw_mods = payload.get("mods") or {}
         mod_targets: dict[str, dict] = {}
         if isinstance(raw_mods, dict):
@@ -301,7 +290,8 @@ class ModStorageService:
                 file_hash = hashlib.sha256()
                 with file_path.open("rb") as stream:
                     for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-                        if check_continue is not None:check_continue()
+                        if check_continue is not None:
+                            check_continue()
                         file_hash.update(chunk)
                 file_digest = file_hash.digest()
                 folder_hash.update(relative_path.encode("utf-8"))
@@ -311,7 +301,8 @@ class ModStorageService:
                 if relative_path.casefold().endswith((".wad", ".wad.client")):
                     wad_hashes[relative_path] = file_hash.hexdigest()
             except (OSError, ValueError):
-                if check_continue is not None:raise
+                if check_continue is not None:
+                    raise
                 continue
         return folder_hash.hexdigest(), wad_hashes
 
@@ -331,10 +322,7 @@ class ModStorageService:
         if isinstance(named_metadata, dict):
             return named_metadata
         for metadata in mod_targets.values():
-            if (
-                isinstance(metadata, dict)
-                and str(metadata.get("name") or "") == str(mod_name)
-            ):
+            if isinstance(metadata, dict) and str(metadata.get("name") or "") == str(mod_name):
                 return metadata
 
         # Legacy manifests may not have a per-mod mapping at all.  There is
@@ -352,11 +340,7 @@ class ModStorageService:
             if (
                 key == folder_hash
                 or stored_folder_hash == folder_hash
-                or (
-                    wad_hashes
-                    and isinstance(stored_wad_hashes, dict)
-                    and stored_wad_hashes == wad_hashes
-                )
+                or (wad_hashes and isinstance(stored_wad_hashes, dict) and stored_wad_hashes == wad_hashes)
             ):
                 return metadata
         return None
@@ -387,7 +371,8 @@ class ModStorageService:
         skin_ids: object,
         mod_name: Optional[str] = None,
         mod_path: Optional[Path] = None,
-        *, precomputed_hashes=None,
+        *,
+        precomputed_hashes=None,
     ) -> Path:
         """Persist the user's manual targets for a champion or named mod."""
         champion_id_int = self._to_int(champion_id)
@@ -403,7 +388,9 @@ class ModStorageService:
         default_targets, mod_targets = self._load_target_manifest(champion_id_int)
         if mod_name:
             if mod_path is not None:
-                folder_hash, wad_hashes = precomputed_hashes if precomputed_hashes is not None else self._hash_mod_folder(Path(mod_path))
+                folder_hash, wad_hashes = (
+                    precomputed_hashes if precomputed_hashes is not None else self._hash_mod_folder(Path(mod_path))
+                )
                 existing_display_name = None
                 for key, metadata in list(mod_targets.items()):
                     if key == folder_hash or (
@@ -565,11 +552,13 @@ class ModStorageService:
             entry["displayName"] = clean_name
             mods[matched_key] = entry
 
-            payload.update({
-                "version": 1,
-                "category": category,
-                "mods": dict(sorted(mods.items())),
-            })
+            payload.update(
+                {
+                    "version": 1,
+                    "category": category,
+                    "mods": dict(sorted(mods.items())),
+                }
+            )
             temporary_manifest = manifest_path.with_name(f".{manifest_path.name}.tmp")
             temporary_manifest.write_text(
                 json.dumps(payload, ensure_ascii=False, indent=2),
@@ -583,7 +572,9 @@ class ModStorageService:
         champion_id: int | str,
         source_path: str | Path,
         skin_ids: object,
-        *, before_commit=None, prepare_extracted=None,
+        *,
+        before_commit=None,
+        prepare_extracted=None,
     ) -> tuple[Path, Path, str]:
         """Extract one user-selected mod archive into its champion folder."""
         source = Path(source_path).expanduser()
@@ -718,7 +709,12 @@ class ModStorageService:
             for key in list(mod_targets.keys()):
                 metadata = mod_targets[key]
                 stored_name = str(metadata.get("name") or key)
-                if key == resolved_mod_name or stored_name == resolved_mod_name or key == target.name or stored_name == target.name:
+                if (
+                    key == resolved_mod_name
+                    or stored_name == resolved_mod_name
+                    or key == target.name
+                    or stored_name == target.name
+                ):
                     mod_targets.pop(key, None)
                     removed = True
 
@@ -763,11 +759,13 @@ class ModStorageService:
             mods = dict(raw_mods) if isinstance(raw_mods, dict) else {}
             if mod_name in mods:
                 mods.pop(mod_name, None)
-                payload.update({
-                    "version": 1,
-                    "category": category,
-                    "mods": dict(sorted(mods.items())),
-                })
+                payload.update(
+                    {
+                        "version": 1,
+                        "category": category,
+                        "mods": dict(sorted(mods.items())),
+                    }
+                )
                 temporary_manifest = manifest_path.with_name(f".{manifest_path.name}.tmp")
                 temporary_manifest.write_text(
                     json.dumps(payload, ensure_ascii=False, indent=2),
@@ -799,7 +797,9 @@ class ModStorageService:
         self,
         category: str,
         source_path: str | Path,
-        *, before_commit=None, prepare_extracted=None,
+        *,
+        before_commit=None,
+        prepare_extracted=None,
     ) -> tuple[Path, str]:
         """Extract one user-selected archive into a registered category folder."""
         if category not in self.MOD_CATEGORIES:
@@ -848,11 +848,13 @@ class ModStorageService:
             raw_mods = payload.get("mods")
             mods = dict(raw_mods) if isinstance(raw_mods, dict) else {}
             mods[mod_name] = {"name": mod_name, "path": mod_name}
-            payload.update({
-                "version": 1,
-                "category": category,
-                "mods": dict(sorted(mods.items())),
-            })
+            payload.update(
+                {
+                    "version": 1,
+                    "category": category,
+                    "mods": dict(sorted(mods.items())),
+                }
+            )
             temporary_manifest = manifest_path.with_name(f".{manifest_path.name}.tmp")
             temporary_manifest.write_text(
                 json.dumps(payload, ensure_ascii=False, indent=2),
@@ -881,7 +883,10 @@ class ModStorageService:
         entries: List[SkinModEntry] = []
         mod_targets = mod_targets or {}
         for candidate in sorted(mod_directory.iterdir(), key=lambda p: p.name.lower()):
-            if candidate.name.startswith(self.IMPORT_TEMP_PREFIX) or candidate.name in {self.TARGET_METADATA, self.LEGACY_TARGET_METADATA}:
+            if candidate.name.startswith(self.IMPORT_TEMP_PREFIX) or candidate.name in {
+                self.TARGET_METADATA,
+                self.LEGACY_TARGET_METADATA,
+            }:
                 continue
             if candidate.is_dir():
                 mod_name = candidate.name
@@ -925,11 +930,7 @@ class ModStorageService:
         champion_id = get_champion_id_from_skin_id(skin_id_int)
         if champion_id is None:
             return []
-        return [
-            entry
-            for entry in self.list_mods_for_champion(champion_id)
-            if skin_id_int in entry.target_skin_ids
-        ]
+        return [entry for entry in self.list_mods_for_champion(champion_id) if skin_id_int in entry.target_skin_ids]
 
     def list_mods_for_champion(self, champion_id: int | str) -> List[SkinModEntry]:
         """Return mods stored once under the champion's directory."""
@@ -991,16 +992,16 @@ class ModStorageService:
 
     def _list_mods_for_category(self, category: str) -> List[dict]:
         """List all mods in a category (maps, fonts, announcers, others)
-        
+
         Args:
             category: One of CATEGORY_MAPS, CATEGORY_FONTS, CATEGORY_ANNOUNCERS, CATEGORY_OTHERS
-            
+
         Returns:
             List of mod dictionaries with name, path, updated_at, description
         """
         if category not in self.MOD_CATEGORIES:
             return []
-        
+
         category_dir = self.mods_root / category
         if not category_dir.exists() or not category_dir.is_dir():
             return []
@@ -1025,14 +1026,16 @@ class ModStorageService:
             except Exception:
                 relative_path = candidate
 
-            entries.append({
-                "id": str(relative_path).replace("\\", "/"),
-                "name": mod_name,
-                "displayName": display_names.get(mod_name.casefold()),
-                "path": str(relative_path).replace("\\", "/"),
-                "updatedAt": updated_at,
-                "description": self._read_mod_description(candidate),
-            })
+            entries.append(
+                {
+                    "id": str(relative_path).replace("\\", "/"),
+                    "name": mod_name,
+                    "displayName": display_names.get(mod_name.casefold()),
+                    "path": str(relative_path).replace("\\", "/"),
+                    "updatedAt": updated_at,
+                    "description": self._read_mod_description(candidate),
+                }
+            )
 
         return entries
 
@@ -1074,5 +1077,3 @@ class ModStorageService:
         except Exception as exc:
             log.debug(f"[ModStorage] Unable to read descriptor {description_file}: {exc}")
             return None
-
-

@@ -7,5 +7,4 @@ Handles CSLOL tools detection and validation
 
 from .tools_manager import ToolsManager
 
-__all__ = ['ToolsManager']
-
+__all__ = ["ToolsManager"]

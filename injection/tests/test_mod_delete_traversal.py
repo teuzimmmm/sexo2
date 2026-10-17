@@ -1,4 +1,5 @@
 """Bridge messages carry mod paths; deletion must stay inside the champion folder."""
+
 import tempfile
 import unittest
 from pathlib import Path
@@ -23,8 +24,16 @@ class ModDeleteTraversalTests(unittest.TestCase):
     def test_traversal_paths_delete_nothing(self):
         rel = self.champion_dir.relative_to(self.root).as_posix()
         absolute = str(self.outside)
-        for relative_path in ("../keep.txt", f"{rel}/../../keep.txt", "../../keep.txt", "..",
-                              "..\\keep.txt", f"{rel}\\..\\..\\keep.txt", absolute, "/" + absolute.lstrip("/")):
+        for relative_path in (
+            "../keep.txt",
+            f"{rel}/../../keep.txt",
+            "../../keep.txt",
+            "..",
+            "..\\keep.txt",
+            f"{rel}\\..\\..\\keep.txt",
+            absolute,
+            "/" + absolute.lstrip("/"),
+        ):
             self.assertFalse(self.storage.delete_champion_mod(103, relative_path=relative_path), relative_path)
         for mod_name in ("../keep.txt", "..", "../../keep.txt"):
             self.assertFalse(self.storage.delete_champion_mod(103, mod_name=mod_name), mod_name)

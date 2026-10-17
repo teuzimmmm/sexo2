@@ -14,17 +14,17 @@ log = get_logger()
 
 class ThresholdManager:
     """Manages injection threshold configuration"""
-    
+
     def __init__(self, shared_state=None):
         """Initialize threshold manager
-        
+
         Args:
             shared_state: Optional shared state for propagating threshold changes
         """
         self.shared_state = shared_state
         self.injection_threshold = get_config_float("General", "injection_threshold", 0.5)
         self._last_threshold_value = self.injection_threshold
-    
+
     def refresh(self) -> float:
         """Reload injection threshold from config so tray changes apply immediately."""
         try:
@@ -50,4 +50,3 @@ class ThresholdManager:
 
         log.info(f"[INJECT] Injection threshold reloaded: {new_value:.2f}s")
         return self.injection_threshold
-

@@ -46,5 +46,5 @@ class PatcherEndOfLifeTests(unittest.TestCase):
         self.assertFalse(self.status.expired_for(self.game_dir))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

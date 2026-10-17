@@ -21,6 +21,7 @@ from typing import List, Optional, Callable
 # Import psutil with fallback for development environments
 try:
     import psutil
+
     PSUTIL_AVAILABLE = True
 except ImportError:
     PSUTIL_AVAILABLE = False
@@ -31,6 +32,7 @@ from utils.core.issue_reporter import report_issue
 from .. import result_codes
 from .match_context import MatchContext
 from contextvars import ContextVar
+
 _CURRENT_MATCH_CONTEXT = ContextVar("rose_match_context", default=None)
 from ..tools.patcher import check_ltk_patcher, describe_ltk_patcher_files
 from config import (
@@ -48,13 +50,13 @@ log = get_logger()
 MIN_FREE_SPACE_BYTES = 1 * 1024 * 1024 * 1024
 DISK_SPACE_HEADROOM_BYTES = 512 * 1024 * 1024
 DISK_SPACE_ERROR_MARKERS = (
-    'not enough space',
-    'not enough disk space',
-    'insufficient disk space',
-    'disk full',
-    'no space left',
-    'error 112',
-    'errno 28',
+    "not enough space",
+    "not enough disk space",
+    "insufficient disk space",
+    "disk full",
+    "no space left",
+    "error 112",
+    "errno 28",
 )
 
 # LTK patcher host settings (see ltk-manager patcher/host/protocol.rs).
@@ -76,7 +78,7 @@ WAD_HEADER_SIZE = 268
 
 class OverlayManager:
     """Manages overlay creation and execution"""
-    
+
     def __init__(self, tools_dir: Path, mods_dir: Path, game_dir: Optional[Path], process_manager=None):
         self.tools_dir = tools_dir
         self.mods_dir = mods_dir
@@ -86,12 +88,12 @@ class OverlayManager:
         # Patcher started with the game monitor, before the mods are prepared
         self._early_patcher: Optional[dict] = None
         self._early_patcher_lock = threading.Lock()
-    
+
     @property
     def current_overlay_process(self):
         """Get current overlay process from process manager"""
         return self.process_manager.current_overlay_process if self.process_manager else None
-    
+
     @current_overlay_process.setter
     def current_overlay_process(self, value):
         """Set current overlay process on process manager"""
@@ -100,10 +102,10 @@ class OverlayManager:
 
     @staticmethod
     def _directory_size(directory: Path) -> int:
-        '''Return the best-effort size of files below *directory*.'''
+        """Return the best-effort size of files below *directory*."""
         total = 0
         try:
-            for path in directory.rglob('*'):
+            for path in directory.rglob("*"):
                 try:
                     if path.is_file():
                         total += path.stat().st_size
@@ -115,13 +117,13 @@ class OverlayManager:
 
     @staticmethod
     def _format_bytes(size: int) -> str:
-        '''Format a byte count for log and diagnostics messages.'''
+        """Format a byte count for log and diagnostics messages."""
         value = float(max(0, size))
-        for unit in ('B', 'KB', 'MB', 'GB', 'TB'):
-            if value < 1024 or unit == 'TB':
-                return f'{value:.1f} {unit}'
+        for unit in ("B", "KB", "MB", "GB", "TB"):
+            if value < 1024 or unit == "TB":
+                return f"{value:.1f} {unit}"
             value /= 1024
-        return f'{value:.1f} TB'
+        return f"{value:.1f} TB"
 
     def _report_low_disk_space_failure(
         self,
@@ -129,11 +131,11 @@ class OverlayManager:
         mod_names: Optional[List[str]] = None,
         result_code: Optional[int] = None,
     ) -> bool:
-        '''Report a failed overlay when its output drive is out of space.'''
-        output = ' '.join(output_lines or ()).lower()
-        tool_reported_disk_error = (
-            any(marker in output for marker in DISK_SPACE_ERROR_MARKERS)
-            or result_code in (28, 112)
+        """Report a failed overlay when its output drive is out of space."""
+        output = " ".join(output_lines or ()).lower()
+        tool_reported_disk_error = any(marker in output for marker in DISK_SPACE_ERROR_MARKERS) or result_code in (
+            28,
+            112,
         )
 
         free_bytes = None
@@ -147,29 +149,29 @@ class OverlayManager:
                 extracted_bytes + DISK_SPACE_HEADROOM_BYTES,
             )
         except (OSError, ValueError) as exc:
-            log.debug(f'[INJECT] Could not inspect free disk space after injection failure: {exc}')
+            log.debug(f"[INJECT] Could not inspect free disk space after injection failure: {exc}")
 
         low_disk_space = free_bytes is not None and free_bytes < required_bytes
         if not low_disk_space and not tool_reported_disk_error:
             return False
 
-        free_text = self._format_bytes(free_bytes) if free_bytes is not None else 'an unknown amount'
+        free_text = self._format_bytes(free_bytes) if free_bytes is not None else "an unknown amount"
         required_text = self._format_bytes(required_bytes)
         log.error(
-            '[INJECT] Injection failed because disk space is too low '
-            f'({free_text} free; approximately {required_text} recommended on {self.mods_dir.parent})'
+            "[INJECT] Injection failed because disk space is too low "
+            f"({free_text} free; approximately {required_text} recommended on {self.mods_dir.parent})"
         )
         report_issue(
-            'LOW_DISK_SPACE',
-            'error',
-            f'Injection failed: not enough disk space for the overlay ({free_text} free).',
+            "LOW_DISK_SPACE",
+            "error",
+            f"Injection failed: not enough disk space for the overlay ({free_text} free).",
             details={
-                'free_bytes': free_bytes,
-                'required_bytes': required_bytes,
-                'overlay_path': str(self.mods_dir.parent),
-                'mods': '/'.join(mod_names or ()),
+                "free_bytes": free_bytes,
+                "required_bytes": required_bytes,
+                "overlay_path": str(self.mods_dir.parent),
+                "mods": "/".join(mod_names or ()),
             },
-            hint='Free up disk space on the drive containing Rose injection files, then retry the skin.',
+            hint="Free up disk space on the drive containing Rose injection files, then retry the skin.",
         )
         return True
 
@@ -180,8 +182,8 @@ class OverlayManager:
             return None
         names = {name.lower() for name in GAME_EXECUTABLE_NAMES}
         try:
-            for proc in psutil.process_iter(['name']):
-                if (proc.info.get('name') or '').lower() in names:
+            for proc in psutil.process_iter(["name"]):
+                if (proc.info.get("name") or "").lower() in names:
                     return proc
         except (psutil.Error, OSError) as e:
             log.debug(f"[INJECT] Could not look for the game process: {e}")
@@ -198,7 +200,7 @@ class OverlayManager:
                 continue
             except psutil.Error:
                 return
-    
+
     def mk_run_overlay(self, mod_names, timeout=120, stop_callback=None, injection_manager=None):
         ctx = MatchContext(injection_manager, list(mod_names))
         token = _CURRENT_MATCH_CONTEXT.set(ctx)
@@ -208,15 +210,21 @@ class OverlayManager:
                 return result_codes.EMERGENCY_STOP
             result = self._mk_run_overlay_current(mod_names, timeout, stop_callback, injection_manager)
             if result and not result_codes.is_expected_stop(result):
-                ctx.report_issue("OVERLAY_RUN_FAILED", "Falha ao aplicar a skin", "A aplicação terminou sem sucesso. Consulte os logs do Rose para os detalhes do aplicador.")
+                ctx.report_issue(
+                    "OVERLAY_RUN_FAILED",
+                    "Falha ao aplicar a skin",
+                    "A aplicação terminou sem sucesso. Consulte os logs do Rose para os detalhes do aplicador.",
+                )
             return result
         finally:
             ctx.report.encerrar(result, result_codes.describe(result))
             _CURRENT_MATCH_CONTEXT.reset(token)
 
-    def _mk_run_overlay_current(self, mod_names: List[str], timeout: int = 120, stop_callback: Optional[Callable] = None, injection_manager=None) -> int:
+    def _mk_run_overlay_current(
+        self, mod_names: List[str], timeout: int = 120, stop_callback: Optional[Callable] = None, injection_manager=None
+    ) -> int:
         """Create and run overlay
-        
+
         Args:
             mod_names: List of mod names to inject
             timeout: Unused (kept for backward compatibility) - overlay runs until explicitly killed
@@ -227,19 +235,20 @@ class OverlayManager:
             log.error("[INJECTOR] Cannot create overlay - League game directory not found")
             log.error("[INJECTOR] Please ensure League Client is running or manually set the path in config.ini")
             return 127
-        
+
         from ..tools.tools_manager import ToolsManager
+
         tools_manager = ToolsManager(self.tools_dir)
         tools = tools_manager.detect_tools()
         exe = tools.get("modtools")
         if not exe or not exe.exists():
             log.error(f"[INJECTOR] Missing mod-tools.exe in {self.tools_dir}")
             return 127
-        
+
         # Use overlay directory (should already be clean from _clean_overlay_dir)
         overlay_dir = self.mods_dir.parent / "overlay"
         overlay_dir.mkdir(parents=True, exist_ok=True)
-        
+
         ltk_host = tools_manager.detect_ltk_patcher()
         if not ltk_host:
             log.error("[INJECT] LTK patcher not found (ltk_patcher_host.exe + ltk_patcher_dll.dll)")
@@ -274,11 +283,16 @@ class OverlayManager:
         # Based on CSLOL source: flags.contains("--ignoreConflict") in main_mod_tools.cpp:332
         # Documentation: mod-tools.md shows --ignoreConflict flag (camelCase, no --opts: prefix)
         cmd = [
-            str(exe), "mkoverlay", str(self.mods_dir), str(overlay_dir),
-            f"--game:{gpath}", f"--mods:{names_str}", "--noTFT",
-            "--ignoreConflict"
+            str(exe),
+            "mkoverlay",
+            str(self.mods_dir),
+            str(overlay_dir),
+            f"--game:{gpath}",
+            f"--mods:{names_str}",
+            "--noTFT",
+            "--ignoreConflict",
         ]
-        
+
         log.debug(f"[INJECT] Creating overlay: {' '.join(cmd)}")
         mkoverlay_start = time.time()
         output_lines = []
@@ -286,13 +300,16 @@ class OverlayManager:
         try:
             # Hide console window on Windows
             import sys
+
             creationflags = 0
             if sys.platform == "win32":
                 creationflags = subprocess.CREATE_NO_WINDOW
-            
+
             # Capture both stdout and stderr - CSLOL uses logi() which may write to stdout
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creationflags, text=True, bufsize=1)
-            
+            proc = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creationflags, text=True, bufsize=1
+            )
+
             # Boost process priority to maximize CPU contention if enabled
             if ENABLE_MKOVERLAY_PRIORITY_BOOST and PSUTIL_AVAILABLE:
                 try:
@@ -301,7 +318,7 @@ class OverlayManager:
                     log.debug(f"[INJECT] Boosted mkoverlay process priority (PID={proc.pid})")
                 except Exception as e:
                     log.debug(f"[INJECT] Could not boost process priority: {e}")
-            
+
             # Wait for process to complete with timeout
             # Read both stdout and stderr in separate threads to see what mkoverlay is doing
             def read_output(pipe, lines_list, prefix):
@@ -313,47 +330,52 @@ class OverlayManager:
                                 lines_list.append(stripped)
                 except Exception as e:
                     log.debug(f"[INJECT] Error reading {prefix}: {e}")
-            
-            stdout_thread = threading.Thread(target=read_output, args=(proc.stdout, output_lines, "stdout"), daemon=True)
+
+            stdout_thread = threading.Thread(
+                target=read_output, args=(proc.stdout, output_lines, "stdout"), daemon=True
+            )
             stderr_thread = threading.Thread(target=read_output, args=(proc.stderr, error_lines, "stderr"), daemon=True)
             stdout_thread.start()
             stderr_thread.start()
-            
+
             try:
                 proc.wait(timeout=timeout)
                 # Give threads a moment to finish reading
                 stdout_thread.join(timeout=1.0)
                 stderr_thread.join(timeout=1.0)
                 if output_lines or error_lines:
-                    log.debug(f"[INJECT] mkoverlay completed - {len(output_lines)} stdout, {len(error_lines)} stderr lines")
+                    log.debug(
+                        f"[INJECT] mkoverlay completed - {len(output_lines)} stdout, {len(error_lines)} stderr lines"
+                    )
             except subprocess.TimeoutExpired:
                 # Process timed out - log what we have so far
                 all_lines = output_lines + error_lines
                 if all_lines:
-                    log.warning(f"[INJECT] mkoverlay timeout - last output: {'; '.join(all_lines[-10:])}")  # Last 10 lines
+                    log.warning(
+                        f"[INJECT] mkoverlay timeout - last output: {'; '.join(all_lines[-10:])}"
+                    )  # Last 10 lines
                 else:
                     log.warning("[INJECT] mkoverlay timeout - no output captured")
                 proc.kill()
                 proc.wait()
                 raise
             mkoverlay_duration = time.time() - mkoverlay_start
-            
+
             if proc.returncode != 0:
                 self._report_low_disk_space_failure(
                     output_lines + error_lines,
                     mod_names,
                     result_code=proc.returncode,
                 )
-                log.error(f"[INJECT] mkoverlay failed with return code: {proc.returncode} (0x{proc.returncode & 0xFFFFFFFF:08X})")
+                log.error(
+                    f"[INJECT] mkoverlay failed with return code: {proc.returncode} (0x{proc.returncode & 0xFFFFFFFF:08X})"
+                )
                 self._abort_ltk_patcher(patcher_session)
                 return proc.returncode
             else:
                 log_success(log, f"mkoverlay completed in {mkoverlay_duration:.2f}s", "⚡")
                 # Store timing data for external access
-                self.last_injection_timing = {
-                    'mkoverlay_duration': mkoverlay_duration,
-                    'timestamp': time.time()
-                }
+                self.last_injection_timing = {"mkoverlay_duration": mkoverlay_duration, "timestamp": time.time()}
 
                 self._restore_wad_headers(overlay_dir, Path(gpath))
 
@@ -365,7 +387,7 @@ class OverlayManager:
 
                 # DON'T resume game yet - keep it frozen until runoverlay starts
                 log_event(log, "mkoverlay done - keeping game frozen until the overlay is served", "❄️")
-                
+
         except subprocess.TimeoutExpired:
             log.error("[INJECT] mkoverlay timeout - monitor will auto-resume if needed")
             report_issue(
@@ -396,7 +418,11 @@ class OverlayManager:
             self._abort_ltk_patcher(patcher_session)
             self._wipe_overlay_dir(overlay_dir)
             if ctx.safety_released:
-                ctx.report_issue("SAFETY_RELEASE", "LoL liberado; skin não aplicada", "O limite de pausa foi atingido antes da aplicação da skin.")
+                ctx.report_issue(
+                    "SAFETY_RELEASE",
+                    "LoL liberado; skin não aplicada",
+                    "O limite de pausa foi atingido antes da aplicação da skin.",
+                )
             return result_codes.EMERGENCY_STOP if ctx.cancelled else result_codes.SAFETY_RELEASE
         return self._run_ltk_patcher(patcher_session, overlay_dir, stop_callback, injection_manager)
 
@@ -413,6 +439,7 @@ class OverlayManager:
             if self._early_patcher is not None or self.game_dir is None:
                 return
             from ..tools.tools_manager import ToolsManager
+
             ltk_host = ToolsManager(self.tools_dir).detect_ltk_patcher()
             if not ltk_host or check_ltk_patcher(ltk_host.parent).expired_for(self.game_dir):
                 return
@@ -448,6 +475,7 @@ class OverlayManager:
         It stays alive between sessions, so we stop it once the game exits.
         """
         import sys
+
         creationflags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
         prefix = str(overlay_dir).rstrip("\\/") + "\\"
         commands = [
@@ -501,9 +529,16 @@ class OverlayManager:
         log.info(f"[INJECT] LTK patcher files: {describe_ltk_patcher_files(host_exe.parent)}")
         try:
             proc = subprocess.Popen(
-                [str(host_exe)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                cwd=str(host_exe.parent), creationflags=creationflags,
-                text=True, encoding="utf-8", errors="replace", bufsize=1,
+                [str(host_exe)],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                cwd=str(host_exe.parent),
+                creationflags=creationflags,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                bufsize=1,
             )
         except Exception as e:
             log.error(f"[INJECT] Could not start LTK patcher: {e}")
@@ -537,15 +572,16 @@ class OverlayManager:
         if patcher_session["log"]:
             patcher_session["log"].close()
 
-    def _run_ltk_patcher(self, patcher_session: dict, overlay_dir: Path,
-                         stop_callback: Optional[Callable] = None, injection_manager=None) -> int:
+    def _run_ltk_patcher(
+        self, patcher_session: dict, overlay_dir: Path, stop_callback: Optional[Callable] = None, injection_manager=None
+    ) -> int:
         """Resume the game and serve the overlay until the game exits."""
         proc = patcher_session["proc"]
         session = patcher_session["session"]
         reader = patcher_session["reader"]
         runoverlay_log = patcher_session["log"]
         try:
-            ready = getattr(injection_manager, 'arena_overlay_ready', None)
+            ready = getattr(injection_manager, "arena_overlay_ready", None)
             if ready and not ready():
                 self._stop_ltk_patcher(proc)
                 return 1
@@ -555,6 +591,7 @@ class OverlayManager:
                 injection_manager.resume_game()
             resumed_at = time.monotonic()
             from ..game.match_recovery import game_pids
+
             ctx = _CURRENT_MATCH_CONTEXT.get() or MatchContext(injection_manager)
             ctx.report.evento("skin_iniciada")
             seen = game_pids()
@@ -580,10 +617,18 @@ class OverlayManager:
                     missing_polls += 1
                     if missing_polls >= 6 and not exit_reported:
                         ctx.report.jogo_perdido()
-                        ctx.report_issue("GAME_EXIT", "SEXO2 perdeu o processo do LoL", "O jogo deixou de ser detectado enquanto a skin estava ativa. A causa não foi identificada.")
+                        ctx.report_issue(
+                            "GAME_EXIT",
+                            "SEXO2 perdeu o processo do LoL",
+                            "O jogo deixou de ser detectado enquanto a skin estava ativa. A causa não foi identificada.",
+                        )
                         exit_reported = True
                 elif not seen and ctx.in_active_phase and not no_game_reported and time.monotonic() - resumed_at >= 90:
-                    ctx.report_issue("GAME_NOT_SEEN", "Processo do LoL não apareceu", "O SEXO2 não detectou o processo do jogo após 90 segundos. A causa não foi identificada.")
+                    ctx.report_issue(
+                        "GAME_NOT_SEEN",
+                        "Processo do LoL não apareceu",
+                        "O SEXO2 não detectou o processo do jogo após 90 segundos. A causa não foi identificada.",
+                    )
                     no_game_reported = True
                 if session["state"] == "failed":
                     break
@@ -624,7 +669,9 @@ class OverlayManager:
                     # Rose's own cleanup killed it (end of game, lobby, shutdown)
                     log.info(f"[INJECT] LTK patcher stopped by Rose (exit code {proc.returncode})")
                     return 0
-                log.error(f"[INJECT] LTK patcher exited with return code: {proc.returncode} (0x{proc.returncode & 0xFFFFFFFF:08X})")
+                log.error(
+                    f"[INJECT] LTK patcher exited with return code: {proc.returncode} (0x{proc.returncode & 0xFFFFFFFF:08X})"
+                )
                 self._log_patcher_context(session, resumed_at)
                 self._log_runoverlay_tail(runoverlay_log)
                 self._report_ltk_patcher_failure(f"exited with code {proc.returncode}")
@@ -674,13 +721,17 @@ class OverlayManager:
         """What the user can do about a patcher failure, by the cause it reported."""
         logs = "Details are in rose_runoverlay_*.log."
         if "SetWindowsHookEx" in reason:
-            return ("The patcher could not attach to the game this time. Retry the next game; "
-                    f"if it fails every game, report it with rose_*.log and rose_runoverlay_*.log. {logs}")
+            return (
+                "The patcher could not attach to the game this time. Retry the next game; "
+                f"if it fails every game, report it with rose_*.log and rose_runoverlay_*.log. {logs}"
+            )
         if reason == LATE_JOIN_ERROR:
             return f"The game started before the patcher was ready. Retry the next game. {logs}"
         if "disabling overlay" in reason:
-            return ("The patcher rejected the overlay built for this game. Try another skin or turn off custom mods; "
-                    f"if every skin fails, update your LTK patcher files. {logs}")
+            return (
+                "The patcher rejected the overlay built for this game. Try another skin or turn off custom mods; "
+                f"if every skin fails, update your LTK patcher files. {logs}"
+            )
         if reason.startswith("could not start"):
             return f"Rose could not start ltk_patcher_host.exe. Check that it is still in Rose's tools folder. {logs}"
         return f"Make sure your LTK patcher files are up to date, then retry. {logs}"
@@ -745,6 +796,7 @@ class OverlayManager:
         """Open a log file for runoverlay output, or None if it cannot be created."""
         try:
             from utils.core.paths import get_user_data_dir
+
             logs_dir = get_user_data_dir() / "logs"
             logs_dir.mkdir(parents=True, exist_ok=True)
             timestamp = time.strftime("%d-%m-%Y_%H-%M-%S")
@@ -778,6 +830,7 @@ class OverlayManager:
         stays: the next game's patcher may already be configured with it)"""
         try:
             from ..mods.mod_manager import empty_directory
+
             empty_directory(overlay_dir)
             log.debug("[INJECT] Wiped overlay directory after game ended")
         except Exception as e:
@@ -787,6 +840,7 @@ class OverlayManager:
         """Delete extracted skin files immediately after mkoverlay consumes them"""
         try:
             import shutil
+
             for p in self.mods_dir.iterdir():
                 if p.is_dir():
                     shutil.rmtree(p, ignore_errors=True)
@@ -800,17 +854,19 @@ class OverlayManager:
     def _hide_directory(path: Path):
         """Set hidden + system attributes on a directory and its contents (Windows only)"""
         import sys
+
         if sys.platform != "win32":
             return
         try:
             import ctypes
+
             FILE_ATTRIBUTE_HIDDEN = 0x02
             FILE_ATTRIBUTE_SYSTEM = 0x04
             attrs = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM
             # Hide the directory itself
             ctypes.windll.kernel32.SetFileAttributesW(str(path), attrs)
             # Hide all contents recursively
-            for item in path.rglob('*'):
+            for item in path.rglob("*"):
                 ctypes.windll.kernel32.SetFileAttributesW(str(item), attrs)
             log.debug(f"[INJECT] Hidden overlay directory: {path}")
         except Exception as e:
@@ -822,7 +878,7 @@ class OverlayManager:
             log.error("[INJECTOR] Cannot create overlay - League game directory not found")
             log.error("[INJECTOR] Please ensure League Client is running or manually set the path in config.ini")
             return 127
-        
+
         try:
             # Build mkoverlay command
             # Based on CSLOL source: flags.contains("--ignoreConflict") in main_mod_tools.cpp:332
@@ -834,39 +890,41 @@ class OverlayManager:
                 f"--game:{self.game_dir}",
                 f"--mods:{'/'.join(mod_names)}",
                 "--noTFT",
-                "--ignoreConflict"
+                "--ignoreConflict",
             ]
-            
+
             log.debug(f"[INJECT] Creating overlay (mkoverlay only): {' '.join(cmd)}")
             mkoverlay_start = time.time()
-            
+
             # Set creation flags for Windows
             import sys
+
             creationflags = 0
             if sys.platform == "win32":
                 creationflags = subprocess.CREATE_NO_WINDOW
-            
+
             try:
                 # Don't capture stdout to avoid pipe buffer deadlock - send to devnull instead
-                proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=creationflags)
+                proc = subprocess.Popen(
+                    cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=creationflags
+                )
                 proc.wait(timeout=timeout)
                 mkoverlay_duration = time.time() - mkoverlay_start
-                
+
                 if proc.returncode != 0:
                     self._report_low_disk_space_failure(
                         mod_names=mod_names,
                         result_code=proc.returncode,
                     )
-                    log.error(f"[INJECT] mkoverlay failed with return code: {proc.returncode} (0x{proc.returncode & 0xFFFFFFFF:08X})")
+                    log.error(
+                        f"[INJECT] mkoverlay failed with return code: {proc.returncode} (0x{proc.returncode & 0xFFFFFFFF:08X})"
+                    )
                     return proc.returncode
                 else:
                     log.debug(f"[INJECT] mkoverlay completed in {mkoverlay_duration:.2f}s")
-                    self.last_injection_timing = {
-                        'mkoverlay_duration': mkoverlay_duration,
-                        'timestamp': time.time()
-                    }
+                    self.last_injection_timing = {"mkoverlay_duration": mkoverlay_duration, "timestamp": time.time()}
                     return 0
-                    
+
             except subprocess.TimeoutExpired:
                 log.error(f"[INJECT] mkoverlay timed out after {timeout}s")
                 proc.kill()
@@ -876,7 +934,7 @@ class OverlayManager:
                 self._report_low_disk_space_failure(mod_names=mod_names)
                 log.error(f"[INJECT] mkoverlay failed with exception: {e}")
                 return -1
-                
+
         except Exception as e:
             log.error(f"[INJECT] Failed to create mkoverlay command: {e}")
             return -1
