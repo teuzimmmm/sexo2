@@ -341,3 +341,20 @@ img { display: block; }
 .fav:hover { background: var(--s2-hover); }
 .fav img { width: 32px; height: 32px; border-radius: 2px; }
 .fav .t-small { display: block; }
+
+/* ---------- Aprimoramentos (Arena e ARAM Mayhem) ---------- */
+/* As cartas imitam as do jogo; o que é do SEXO2 é só o bloco .aug-read abaixo de cada uma. */
+.aug-game { background: radial-gradient(ellipse at 50% 40%, #1b2b3a 0%, #0c141c 70%); }
+.aug-row { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); display: flex; gap: 46px; }
+.aug-slot { width: 212px; display: flex; flex-direction: column; align-items: center; }
+.aug-card { width: 212px; height: 350px; border: 6px solid #e8dcc4; border-radius: 10px; background: #0d2226; box-shadow: 0 0 22px rgba(232,220,196,.25); display: flex; flex-direction: column; align-items: center; padding-top: 30px; gap: 26px; font-family: Georgia, serif; color: #f0e6d2; }
+.aug-card img { width: 96px; height: 96px; }
+.aug-card .nm { font-size: 17px; font-weight: 700; text-align: center; padding: 0 10px; }
+.aug-read { min-height: 62px; margin-top: 10px; text-align: center; font-family: var(--s2-font-body); }
+.aug-read .who { font-size: 11px; color: var(--s2-fg-2); min-height: 14px; }
+.aug-read .st { font-size: 14px; font-weight: 700; color: #ececec; text-shadow: 0 1px 2px #000; }
+.aug-read.best .st { color: #f2d27a; }
+.aug-fixbtn { margin-top: 3px; font-size: 11px; color: var(--s2-fg-2); text-decoration: underline; }
+.aug-fix { margin-top: 3px; width: 190px; font-size: 12px; }
+.aug-reroll { margin-top: 6px; width: 46px; height: 30px; border: 1px solid #463714; background: #2b2412; color: #cdbe91; font-size: 16px; }
+.aug-reroll:disabled { opacity: .4; }

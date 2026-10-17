@@ -80,6 +80,39 @@ window.S2_DEMO = {
     },
   },
 
+  // Aprimoramentos: nomes e ícones reais (capturas de ARAM Mayhem); estatísticas simuladas.
+  // Os nomes aparecem no idioma do cliente; as capturas disponíveis estão em inglês.
+  augments: {
+    names: {
+      "scopier-weapons": "Scopier Weapons", vulnerability: "Vulnerability", "combusting-interest": "Combusting Interest",
+      overflow: "Overflow", "ravenous-bind": "Ravenous Bind", "upgrade-sheen": "Upgrade Sheen",
+      "ultimate-revolution": "Ultimate Revolution", "blade-waltz": "Blade Waltz", overloaded: "Overloaded",
+      "infernal-soul": "Infernal Soul", juiced: "Juiced", firefox: "FireFox",
+    },
+    // Cada modo tem a sua fonte e os seus números; nunca se misturam.
+    mayhem: {
+      source: "ARAMKit", patch: "16.20",
+      offers: [["overflow", "ravenous-bind", "upgrade-sheen"], ["scopier-weapons", "vulnerability", "combusting-interest"], ["ultimate-revolution", "blade-waltz", "overloaded"]],
+      rerolls: ["juiced", "firefox", "infernal-soul", "blade-waltz"],
+      stats: {
+        overflow: { wr: 52.4, pr: 6.1, n: 4210 }, "ravenous-bind": { wr: 49.8, pr: 2.3, n: 1580 }, "upgrade-sheen": { wr: 54.9, pr: 4.4, n: 3022 },
+        "scopier-weapons": { wr: 51.2, pr: 7.9, n: 5410 }, vulnerability: { wr: 50.6, pr: 3.1, n: 2104 }, "combusting-interest": { wr: 48.9, pr: 1.2, n: 812 },
+        "ultimate-revolution": { wr: 56.3, pr: 9.8, n: 1977 }, "blade-waltz": { wr: 53.0, pr: 5.5, n: 1103 },
+        juiced: { wr: 50.1, pr: 2.6, n: 940 }, firefox: { wr: 47.7, pr: 1.9, n: 655 }, "infernal-soul": { wr: 52.0, pr: 3.3, n: 120 },
+      },
+    },
+    arena: {
+      source: "LoLalytics", patch: "16.20",
+      offers: [["scopier-weapons", "blade-waltz", "ultimate-revolution"], ["infernal-soul", "juiced", "firefox"]],
+      rerolls: ["vulnerability", "upgrade-sheen", "overflow"],
+      // Arena: só PR e partidas (a WR de Arena fica oculta, ver docs/lolalytics/FONTES.md).
+      stats: {
+        "scopier-weapons": { pr: 17.7, n: 9777 }, "blade-waltz": { pr: 12.1, n: 6690 },
+        "infernal-soul": { pr: 8.4, n: 4630 }, firefox: { pr: 5.2, n: 2871 }, vulnerability: { pr: 6.0, n: 3305 },
+      },
+    },
+  },
+
   mods: {
     Ahri: [
       { name: "Ahri Arcana (cores)", file: "ahri-arcana.fantome" },

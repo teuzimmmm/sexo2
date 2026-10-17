@@ -31,6 +31,8 @@
     items: { pending: false, done: null, error: null },
     mod: null,
     game: { minute: 22, tab: true },
+    // Aprimoramentos: modo, oferta na tela e o que o SEXO2 leu de cada carta.
+    aug: { mode: "mayhem", offerIndex: 0, cards: null, open: true, noData: false, fixing: null, rerollsLeft: 3, picked: null },
     hub: { open: true, section: "skins", category: "skins", auto: "favorite", profile: "Padrão", room: "connected", toast: null },
     dialog: null,
     toast: null,
@@ -155,7 +157,7 @@
   function render() {
     document.querySelectorAll("#views button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.view === S.view)));
     const client = $("#client");
-    client.innerHTML = S.view === "champ" ? champSelect() : S.view === "game" ? game() : home();
+    client.innerHTML = S.view === "champ" ? champSelect() : S.view === "game" ? game() : S.view === "aug" ? augments() : home();
     if (S.dialog) client.insertAdjacentHTML("beforeend", dialog());
     if (S.toast) client.insertAdjacentHTML("beforeend", `<div class="s2-toast s2">${esc(S.toast)}</div>`);
     renderSim();
@@ -423,6 +425,69 @@
     </div>`;
   }
 
+  // ------------------------------------------------ aprimoramentos
+  // O jogo mostra as cartas; o SEXO2 só escreve abaixo de cada uma o que leu e os números da fonte do modo.
+  const AUG = D.augments;
+  const augIcon = (slug) => `assets/augments/${slug}.png`;
+
+  function augOffer() {
+    if (!S.aug.cards) {
+      const offers = AUG[S.aug.mode].offers;
+      S.aug.cards = offers[S.aug.offerIndex % offers.length].map((slug) => ({ slug, read: slug, state: "ok", manual: false }));
+    }
+    return S.aug.cards;
+  }
+
+  function augStat(card) {
+    if (card.state === "unknown" || S.aug.noData) return null;
+    return AUG[S.aug.mode].stats[card.read] || null;
+  }
+
+  function augBest(cards) {
+    // Destaque só com WR de pelo menos duas cartas com 200 partidas ou mais (Arena não tem WR).
+    const eligible = cards.map((c, i) => ({ i, st: augStat(c) })).filter((x) => x.st && x.st.wr != null && x.st.n >= 200);
+    if (eligible.length < 2) return -1;
+    const top = eligible.reduce((a, b) => (b.st.wr > a.st.wr ? b : a));
+    return eligible.filter((x) => x.st.wr === top.st.wr).length === 1 ? top.i : -1;
+  }
+
+  function augments() {
+    const src = AUG[S.aug.mode];
+    if (!S.aug.open) {
+      return `<div class="game aug-game"><div class="hint">${S.aug.picked ? `Escolhido: ${esc(AUG.names[S.aug.picked])}. ` : ""}Nenhuma oferta na tela.</div></div>`;
+    }
+    const cards = augOffer();
+    const best = augBest(cards);
+    const pool = Object.keys(src.stats).concat(Object.keys(AUG.names)).filter((v, i, a) => a.indexOf(v) === i);
+    const card = (c, i) => {
+      const st = augStat(c);
+      const known = c.state !== "unknown";
+      const line = !known ? "Não reconhecida" : !st ? "Sem dados"
+        : [st.wr != null ? `WR ${pct(st.wr)}` : null, st.pr != null ? `PR ${pct(st.pr)}` : null, nf0.format(st.n)].filter(Boolean).join(" · ");
+      const tip = known && st ? `${esc(AUG.names[c.read])}|${src.source} · patch ${src.patch} · ${nf0.format(st.n)} partidas${st.wr == null ? " · sem WR" : ""}` : "";
+      return `<div class="aug-slot">
+        <button class="aug-card" data-act="aug-pick" data-i="${i}"><img src="${augIcon(c.slug)}" alt=""><span class="nm">${esc(AUG.names[c.slug])}</span></button>
+        <div class="aug-read${i === best ? " best" : ""}">
+          <div class="who">${known ? esc(AUG.names[c.read]) : ""}</div>
+          <div class="st num"${tip ? ` data-tip="${tip}"` : ""}>${line}</div>
+          ${S.aug.fixing === i
+            ? `<select class="s2-input aug-fix" data-act="aug-fix" data-i="${i}"><option value="">Qual é esta carta?</option>${pool.map((k) => `<option value="${k}">${esc(AUG.names[k])}</option>`).join("")}</select>`
+            : `<button class="aug-fixbtn" data-act="aug-fixopen" data-i="${i}">Corrigir</button>`}
+        </div>
+        <button class="aug-reroll" data-act="aug-reroll" data-i="${i}" ${S.aug.rerollsLeft ? "" : "disabled"} aria-label="Trocar carta">↻</button>
+      </div>`;
+    };
+    return `<div class="game aug-game"><div class="aug-row">${cards.map(card).join("")}</div>
+      <div class="hint">${S.aug.mode === "arena" ? "Arena" : "ARAM Mayhem"} · oferta ${S.aug.offerIndex + 1} · trocas restantes: ${S.aug.rerollsLeft}</div></div>`;
+  }
+
+  function augNewOffer(mode) {
+    if (mode) S.aug.mode = mode;
+    S.aug.offerIndex = mode ? 0 : S.aug.offerIndex + 1;
+    S.aug.cards = null; S.aug.open = true; S.aug.fixing = null; S.aug.picked = null;
+    if (mode) S.aug.rerollsLeft = 3;
+  }
+
   // ------------------------------------------- cliente: início e painel
   function home() {
     const sections = [["skins", "Skins"], ["mods", "Mods"], ["room", "Sala"], ["settings", "Configurações"], ["diag", "Diagnóstico"]];
@@ -552,7 +617,16 @@
     const homeSim = `
       <h3>Sala</h3>
       <div class="row">${["connected", "off", "error"].map((k) => `<button data-sim="roomstate" data-v="${k}">${{ connected: "Conectada", off: "Sem sala", error: "Erro" }[k]}</button>`).join("")}</div>`;
-    el.innerHTML = S.view === "champ" ? champSim : S.view === "game" ? gameSim : homeSim;
+    const augSim = `
+      <h3>Modo</h3>
+      <div class="row">${["mayhem", "arena"].map((k) => `<button data-sim="augmode" data-v="${k}" style="${S.aug.mode === k ? "border-color:#ddd" : ""}">${k === "arena" ? "Arena" : "ARAM Mayhem"}</button>`).join("")}</div>
+      <h3>Oferta</h3>
+      <div class="row"><button data-sim="augnew">Nova oferta</button><button data-sim="augclose">Fechar oferta</button></div>
+      <h3>Leitura</h3>
+      <div class="row"><button data-sim="augunknown">Carta não reconhecida</button><button data-sim="augwrong">Reconhecimento errado</button></div>
+      <label><input type="checkbox" data-sim="augnodata" ${S.aug.noData ? "checked" : ""}> Sem dados da fonte</label>
+      <p style="margin-top:10px;line-height:1.5">Mayhem: WR, PR e partidas (${AUG.mayhem.source}). Arena: PR e partidas (${AUG.arena.source}). Clique numa carta para escolhê-la; o SEXO2 nunca escolhe.</p>`;
+    el.innerHTML = S.view === "champ" ? champSim : S.view === "game" ? gameSim : S.view === "aug" ? augSim : homeSim;
   }
 
   // ---------------------------------------------------------------- eventos
@@ -575,7 +649,15 @@
       if (k === "fail") S.sim.fail = t.checked;
       if (k === "nopage") S.sim.noPage = t.checked;
       if (k === "tab") S.game.tab = t.checked;
+      if (k === "augnodata") S.aug.noData = t.checked;
       if (k === "champ") switchChampion(t.value, "campeão trocado");
+      render();
+      return;
+    }
+    if (t.dataset.act === "aug-fix" && t.value) {
+      const c = S.aug.cards[+t.dataset.i];
+      c.read = t.value; c.state = "ok"; c.manual = true; S.aug.fixing = null;
+      log(`Carta ${+t.dataset.i + 1} corrigida: ${AUG.names[t.value]}.`);
       render();
       return;
     }
@@ -605,6 +687,11 @@
       importer.reset("nova seleção");
     }
     if (k === "data") S.sim.data = s.dataset.v;
+    if (k === "augmode") augNewOffer(s.dataset.v);
+    if (k === "augnew") augNewOffer();
+    if (k === "augclose") { S.aug.open = false; S.aug.cards = null; }
+    if (k === "augunknown" && S.aug.open) { const c = augOffer()[2]; c.state = "unknown"; c.manual = false; c.read = null; }
+    if (k === "augwrong" && S.aug.open) { const c = augOffer()[1]; const others = Object.keys(AUG.names).filter((x) => x !== c.slug); c.read = others[(others.indexOf(c.slug) + 5) % others.length]; c.state = "ok"; c.manual = false; }
     if (k === "minute") S.game.minute = +s.dataset.v;
     if (k === "roomstate") S.hub.room = s.dataset.v;
     render();
@@ -635,6 +722,17 @@
       case "shard": S.asst.draft = R.edit.shard(RD, p, +el.dataset.row, +el.dataset.id); importer.edit(S.asst.draft); break;
       case "data-retry": S.sim.data = "loading"; render(); setTimeout(() => { S.sim.data = "ok"; render(); }, 900); return;
       case "items-import": importItems(); break;
+      case "aug-pick": S.aug.picked = S.aug.cards[+el.dataset.i].slug; S.aug.open = false; S.aug.cards = null; log(`Carta escolhida pelo jogador: ${AUG.names[S.aug.picked]}.`); break;
+      case "aug-fixopen": S.aug.fixing = +el.dataset.i; break;
+      case "aug-reroll": {
+        const i = +el.dataset.i;
+        const pool = AUG[S.aug.mode].rerolls;
+        const next = pool.find((x) => !S.aug.cards.some((c) => c.slug === x)) || pool[0];
+        S.aug.cards[i] = { slug: next, read: next, state: "ok", manual: false };
+        S.aug.rerollsLeft -= 1;
+        log(`Troca da carta ${i + 1}: ${AUG.names[next]}.`);
+        break;
+      }
       case "mod": S.mod = el.dataset.mod; toast(S.mod ? "Mod selecionado." : "Sem mod."); return;
       case "open-library": S.view = "home"; S.hub.open = true; S.hub.section = "mods"; break;
       case "hub-toggle": S.hub.open = !S.hub.open; break;

@@ -109,7 +109,9 @@ class _Window:
             canvas.delete("all")
             for card, (x, y) in zip(cards, text_positions(width, height, self._layout)):
                 text, colour = card_text(card)
-                canvas.create_text(x, y, text=text, fill=colour, font=("Segoe UI", size, "bold"))
+                if card.name:  # what was read, so a wrong reading can be noticed
+                    canvas.create_text(x, y, text=card.name, fill=MUTED, font=("Segoe UI", max(8, size - 3)))
+                canvas.create_text(x, y + size + 6, text=text, fill=colour, font=("Segoe UI", size, "bold"))
 
         def poll() -> None:
             try:
