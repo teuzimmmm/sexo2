@@ -1,6 +1,8 @@
 # Overlay de recomendações durante a partida
 
-**Estado atual:** a correção 2.0.0.4 amplia a edição inicial descrita abaixo.
+**Estado atual:** o usuário informou que a edição 2.0.0.4 também não funcionou.
+A substituição do motor está em investigação em [OVERLAY_MOTOR.md](OVERLAY_MOTOR.md);
+não há novo motor confirmado no LoL. A correção 2.0.0.4 amplia a edição inicial descrita abaixo.
 Arena, detecção sem abrir o processo e diagnóstico/prévia estão documentados em
 [OVERLAY_CORRECOES.md](OVERLAY_CORRECOES.md). Os limites da edição 2.0.0.3 a seguir
 são históricos, incluindo sua exclusão de Arena e ausência de consultas em jogo.
