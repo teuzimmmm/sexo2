@@ -1,0 +1,273 @@
+"""Augment catalog, statistics, offer tracking and recognition on real captures."""
+
+import sys
+import unittest
+from pathlib import Path
+
+from PIL import Image
+
+from sexo2.augments.catalog import build_catalog
+from sexo2.augments.offers import CardRead, OfferTracker
+from sexo2.augments.stats import (
+    AugmentStat,
+    aramkit_champion_url,
+    aramkit_data_path,
+    parse_aramkit_champion,
+    parse_lolalytics_arena,
+)
+from sexo2.augments.view import card_views
+from sexo2.augments.vision import IconMatcher, Layout, cards_present, crops, read_offer
+
+CAPTURES = Path(__file__).parent / "fixtures" / "augments"
+
+CHERRY = [
+    {
+        "id": 1205,
+        "augmentNameId": "ARAM_ADAPt",
+        "nameTRA": "ADAPt",
+        "augmentSmallIconPath": "/a.png",
+        "rarity": "kSilver",
+    },
+    {"id": 1141, "augmentNameId": "ARAM_AllForYou", "nameTRA": "Tudo por Você", "rarity": "kGold"},
+    {"id": 1004, "augmentNameId": "ARAM_BacktoBasics", "nameTRA": "De Volta ao Básico", "rarity": "kPrismatic"},
+    {"id": 99, "augmentNameId": "ArenaOnly", "nameTRA": "Só na Arena", "rarity": "kSilver"},
+    {"id": 98, "augmentNameId": "", "nameTRA": ""},
+]
+LISTS = [
+    {"modeName": "CHERRY", "augmentList": ["Maps/ModeSpecificData/Augments/ArenaOnly", "Maps/x/ARAM_ADAPt"]},
+    {
+        "modeName": "KIWI",
+        "augmentList": ["Maps/x/ARAM_ADAPt", "Maps/x/ARAM_AllForYou", "Maps/x/ARAM_BacktoBasics", "Maps/x/Missing"],
+    },
+]
+
+
+def stat(augment_id, wr, games, mode="mayhem", pr=5.0):
+    return AugmentStat(augment_id, mode, "aramkit", "16.20", "champion", wr, pr, games)
+
+
+class CatalogTests(unittest.TestCase):
+    def test_pools_are_separate_per_mode(self):
+        mayhem = build_catalog(CHERRY, LISTS, "mayhem")
+        arena = build_catalog(CHERRY, LISTS, "arena")
+        self.assertEqual([a.id for a in mayhem.augments], [1205, 1141, 1004])
+        self.assertEqual(mayhem.unmatched, ("Missing",))
+        self.assertEqual([a.id for a in arena.augments], [99, 1205])
+        self.assertEqual(mayhem.by_id(1004).rarity, "prismatic")
+        self.assertIsNone(mayhem.by_id(99))
+
+    def test_unknown_mode_or_pool_fails(self):
+        with self.assertRaises(ValueError):
+            build_catalog(CHERRY, LISTS, "urf")
+        with self.assertRaises(ValueError):
+            build_catalog(CHERRY, [], "arena")
+
+
+class StatsTests(unittest.TestCase):
+    def test_aramkit_rates_become_percent_and_bad_rows_are_skipped(self):
+        path, version = aramkit_data_path(
+            {"latest": "16.20", "versions": [{"version": "16.20", "dataPath": "/v/16.20/"}]}
+        )
+        self.assertEqual((path, version), ("v/16.20", "16.20"))
+        self.assertEqual(
+            aramkit_champion_url(path, 103), "https://data.aramkit.com/data/v/16.20/stats/all/champion-details/103.json"
+        )
+        stats = parse_aramkit_champion(
+            {
+                "augments": {
+                    "all": [
+                        {"id": 1205, "winRate": 0.5312, "pickRate": 0.041, "sampleCount": 812},
+                        {"id": 1141, "winRate": 1.7, "pickRate": None, "sampleCount": -1},
+                        {"id": "x"},
+                    ]
+                }
+            },
+            "16.20",
+        )
+        self.assertEqual((stats[1205].win_rate, stats[1205].pick_rate, stats[1205].games), (53.12, 4.1, 812))
+        self.assertEqual((stats[1141].win_rate, stats[1141].pick_rate, stats[1141].games), (None, None, None))
+        self.assertEqual(stats[1205].mode, "mayhem")
+        with self.assertRaises(ValueError):
+            parse_aramkit_champion({"augments": {}}, "16.20")
+
+    def test_arena_keeps_pick_rate_and_games_without_win_rate(self):
+        sys.path.insert(0, str(Path(__file__).parent))
+        from test_lolalytics_client import FixtureTransport, query_for
+        from lolalytics.client import Client
+
+        query = query_for("ahri-arena.json")
+        snapshot = Client(transport=FixtureTransport(("ahri-arena.json",)), ttl=0).collect(query)
+        stats = parse_lolalytics_arena(snapshot, 0)
+        self.assertNotIn(0, stats)  # "no augment" row
+        first = stats[133]
+        self.assertEqual(
+            (first.mode, first.source, first.patch, first.scope), ("arena", "lolalytics", "16.20", "champion_choice_1")
+        )
+        self.assertIsNone(first.win_rate)
+        self.assertEqual((first.pick_rate, first.games), (17.74, 9777))
+        with self.assertRaises(ValueError):
+            parse_lolalytics_arena(snapshot, 5)
+
+
+def reads(*ids):
+    return [CardRead(i, 0.9) for i in ids]
+
+
+class OfferTrackerTests(unittest.TestCase):
+    def test_opens_after_two_frames_and_closes_after_three_empty(self):
+        tracker = OfferTracker()
+        self.assertFalse(tracker.observe(reads(1, 2, 3)))
+        self.assertTrue(tracker.observe(reads(1, 2, 3)))
+        self.assertEqual([c.augment_id for c in tracker.offer.cards], [1, 2, 3])
+        self.assertFalse(tracker.observe(None))
+        self.assertFalse(tracker.observe(None))
+        self.assertTrue(tracker.observe(None))
+        self.assertIsNone(tracker.offer)
+
+    def test_one_bad_frame_changes_nothing_and_a_reroll_is_followed(self):
+        tracker = OfferTracker()
+        tracker.observe(reads(1, 2, 3))
+        tracker.observe(reads(1, 2, 3))
+        sequence = tracker.offer.sequence
+        self.assertFalse(tracker.observe(reads(1, 9, 3)))  # one frame only
+        self.assertFalse(tracker.observe(reads(1, 2, 3)))
+        self.assertFalse(tracker.observe(None))  # one missing frame does not close
+        self.assertFalse(tracker.observe(reads(1, 4, 3)))
+        self.assertTrue(tracker.observe(reads(1, 4, 3)))
+        self.assertEqual([c.augment_id for c in tracker.offer.cards], [1, 4, 3])
+        self.assertEqual(tracker.offer.sequence, sequence)  # a reroll is the same offer
+
+    def test_a_correction_survives_the_wrong_reading_but_not_a_reroll(self):
+        tracker = OfferTracker()
+        tracker.observe(reads(1, 2, 3))
+        tracker.observe(reads(1, 2, 3))
+        tracker.correct(1, 7)
+        for _ in range(3):
+            tracker.observe(reads(1, 2, 3))
+        self.assertEqual(tracker.offer.cards[1].augment_id, 7)
+        self.assertTrue(tracker.offer.cards[1].manual)
+        tracker.observe(reads(1, 5, 3))
+        tracker.observe(reads(1, 5, 3))
+        self.assertEqual(tracker.offer.cards[1].augment_id, 5)
+        self.assertFalse(tracker.offer.cards[1].manual)
+
+    def test_new_offer_after_close_gets_a_new_sequence(self):
+        tracker = OfferTracker()
+        for _ in range(2):
+            tracker.observe(reads(1, 2, 3))
+        first = tracker.offer.sequence
+        for _ in range(3):
+            tracker.observe(None)
+        for _ in range(2):
+            tracker.observe(reads(4, 5, 6))
+        self.assertEqual(tracker.offer.sequence, first + 1)
+
+
+class CardViewTests(unittest.TestCase):
+    def setUp(self):
+        self.catalog = build_catalog(CHERRY, LISTS, "mayhem")
+        self.tracker = OfferTracker()
+
+    def offer(self, *cards):
+        for _ in range(2):
+            self.tracker.observe(list(cards))
+        return self.tracker.offer
+
+    def test_highlights_the_best_win_rate_among_known_cards_with_enough_games(self):
+        offer = self.offer(CardRead(1205, 0.9), CardRead(1141, 0.9), CardRead(1004, 0.9))
+        views = card_views(
+            offer, self.catalog, {1205: stat(1205, 52.0, 900), 1141: stat(1141, 55.0, 600), 1004: stat(1004, 60.0, 50)}
+        )
+        self.assertEqual([v.highlight for v in views], [False, True, False])  # 60% has too few games
+        self.assertEqual([v.state for v in views], ["ok", "ok", "ok"])
+
+    def test_unsure_or_foreign_cards_are_unknown_and_never_highlighted(self):
+        offer = self.offer(CardRead(1205, 0.3), CardRead(99, 0.95), CardRead(1141, 0.9))
+        views = card_views(offer, self.catalog, {1205: stat(1205, 70.0, 900), 1141: stat(1141, 50.0, 900)})
+        self.assertEqual([v.state for v in views], ["unknown", "unknown", "ok"])
+        self.assertFalse(any(v.highlight for v in views))  # one figure alone decides nothing
+
+    def test_no_data_and_other_mode_figures_show_no_numbers(self):
+        offer = self.offer(CardRead(1205, 0.9), CardRead(1141, 0.9), CardRead(1004, 0.9))
+        views = card_views(offer, self.catalog, {1205: stat(1205, None, 900, mode="arena", pr=9.0)})
+        self.assertEqual([v.state for v in views], ["no_data", "no_data", "no_data"])
+
+    def test_pick_rate_only_is_never_highlighted(self):
+        offer = self.offer(CardRead(1205, 0.9), CardRead(1141, 0.9), CardRead(1004, 0.9))
+        figures = {i: stat(i, None, 5000, pr=pr) for i, pr in ((1205, 20.0), (1141, 30.0), (1004, 1.0))}
+        self.assertFalse(any(v.highlight for v in card_views(offer, self.catalog, figures)))
+
+
+# Augments on the captures, by position; templates come from the 600 px captures.
+LABELS = {
+    "1920x1080_gold": "ABC",
+    "1920x1080_rerolls": "GHI",
+    "1920x1200_wrapped_fr": "DEF",
+    "2000x837_prismatic": "PQR",
+    "2000x837_silver": "STU",
+    "1024x768_gold": "ABC",
+    "1024x768_wrapped_fr": "DEF",
+    "1280x1024_rerolls": "GHI",
+    "1440x900_rerolls": "GHI",
+    "1600x900_gold": "ABC",
+    "1680x1050_rerolls": "GHI",
+    "2000x844_gold": "ABC",
+    "3424x1401_wrapped_fr": "DEF",
+    "3440x1440_rerolls": "GHI",
+}
+TEMPLATES = ("1920x1080_gold", "1920x1080_rerolls", "1920x1200_wrapped_fr", "2000x837_prismatic", "2000x837_silver")
+IDS = {letter: index for index, letter in enumerate("ABCDEFGHIPQRSTU")}
+
+
+def capture(name):
+    return Image.open(CAPTURES / f"{name}.jpg").convert("RGB")
+
+
+class VisionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        templates = {}
+        for name in TEMPLATES:
+            for letter, icon in zip(LABELS[name], crops(capture(name))):
+                templates[IDS[letter]] = icon
+        cls.matcher = IconMatcher(templates)
+
+    def test_card_boxes_scale_with_height_and_stay_centred(self):
+        boxes = Layout().cards(1920, 1080)
+        self.assertEqual(len(boxes), 3)
+        centres = [(left + right) / 2 for left, _, right, _ in boxes]
+        self.assertAlmostEqual(centres[0], 598.6, delta=1)
+        self.assertAlmostEqual(centres[2], 1334.8, delta=1)
+        self.assertEqual(boxes[0][1], 194)
+
+    def test_every_card_is_named_at_other_resolutions_and_scales(self):
+        for name, letters in LABELS.items():
+            if name in TEMPLATES:
+                continue
+            with self.subTest(capture=name):
+                reading = read_offer(capture(name), self.matcher)
+                self.assertIsNotNone(reading)
+                self.assertEqual([r.augment_id for r in reading], [IDS[letter] for letter in letters])
+
+    def test_frames_without_cards_give_no_reading(self):
+        self.assertFalse(cards_present(capture("no_cards_champ_select")))
+        self.assertIsNone(read_offer(capture("no_cards_champ_select"), self.matcher))
+
+    def test_an_icon_outside_the_pool_stays_unknown(self):
+        pool = {i: t for i, t in self.matcher._templates.items() if i != IDS["H"]}
+        reading = read_offer(capture("1280x1024_rerolls"), IconMatcher(pool))
+        self.assertIsNone(reading[1].augment_id)  # Ravenous Bind is not in this pool
+        self.assertEqual(reading[0].augment_id, IDS["G"])
+        # Known limit: an icon drawn like another one in a different tint (Overflow and the
+        # silver T) is taken for it when the real augment is missing from the pool. The pool
+        # must be the full one of the mode being played.
+
+    def test_a_hand_named_card_teaches_the_matcher(self):
+        pool = {i: t for i, t in self.matcher._templates.items() if i != IDS["G"]}
+        matcher = IconMatcher(pool)
+        matcher.add(IDS["G"], next(iter(crops(capture("1440x900_rerolls")))))
+        self.assertEqual(read_offer(capture("3440x1440_rerolls"), matcher)[0].augment_id, IDS["G"])
+
+
+if __name__ == "__main__":
+    unittest.main()
