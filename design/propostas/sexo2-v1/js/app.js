@@ -43,6 +43,27 @@
     renderSim();
   }
 
+  // Painel aberto acima do botão SEXO2: bordas direitas alinhadas, 8 px de folga.
+  // As medidas vêm do próprio botão, não de coordenadas fixas.
+  function placeAssistant() {
+    const panel = document.querySelector(".asst");
+    const button = document.querySelector(".s2-entry");
+    if (!panel || !button) return;
+    const client = $("#client");
+    const scale = client.getBoundingClientRect().width / client.offsetWidth || 1;
+    const c = client.getBoundingClientRect();
+    const b = button.getBoundingClientRect();
+    const rect = (v, o) => (v - o) / scale;
+    const pos = S2Anchor.computeAnchor(
+      { left: rect(b.left, c.left), right: rect(b.right, c.left), top: rect(b.top, c.top), bottom: rect(b.bottom, c.top) },
+      { width: panel.offsetWidth, height: ASST_HEIGHT },
+      { width: client.offsetWidth, height: client.offsetHeight },
+    );
+    panel.style.left = pos.left + "px";
+    panel.style.top = pos.top + "px";
+    panel.style.height = Math.min(ASST_HEIGHT, pos.maxHeight) + "px";
+  }
+
   function toast(msg) {
     S.toast = msg;
     render();
@@ -137,6 +158,7 @@
     if (S.dialog) client.insertAdjacentHTML("beforeend", dialog());
     if (S.toast) client.insertAdjacentHTML("beforeend", `<div class="s2-toast s2">${esc(S.toast)}</div>`);
     renderSim();
+    placeAssistant();
   }
 
   // --------------------------------------------- seleção de campeões
@@ -654,6 +676,8 @@
     }
     render();
   }
+
+  const ASST_HEIGHT = 492;
 
   // ------------------------------------------------------------- escala
   function fit() {

@@ -184,7 +184,7 @@ img { display: block; }
 
 /* ---------- Assistente (painel na seleção) ---------- */
 .asst {
-  position: absolute; right: 270px; bottom: 74px; width: 452px; height: 492px; z-index: 20;
+  position: absolute; left: 804px; top: 160px; width: 452px; height: 492px; z-index: 20; /* posição final: placeAssistant() */
   display: flex; flex-direction: column; background: var(--s2-surface); border: 1px solid var(--s2-line);
   box-shadow: 0 8px 30px rgba(0,0,0,.55);
 }

@@ -6,6 +6,26 @@
  */
 (function createCustomWheel() {
   const LOG_PREFIX = "[ROSE-CustomWheel]";
+  // Panel placement above the SEXO2 button: right edges aligned, `gap` px above it,
+  // kept inside the viewport. When it does not fit above, the panel shrinks
+  // (maxHeight) instead of covering the button. Rects are getBoundingClientRect().
+  function computeAnchor(buttonRect, panelSize, viewport, gap = 8, margin = 8) {
+    const room = Math.max(0, buttonRect.top - gap - margin);
+    const height = Math.min(panelSize.height, room);
+    let left = buttonRect.right - panelSize.width;
+    left = Math.max(margin, Math.min(left, viewport.width - margin - panelSize.width));
+    return {
+      left: Math.round(left),
+      top: Math.round(buttonRect.top - gap - height),
+      maxHeight: Math.floor(room),
+      shrunk: height < panelSize.height,
+      shifted: Math.round(left) !== Math.round(buttonRect.right - panelSize.width),
+    };
+  }
+  if (typeof window === "undefined" && typeof module !== "undefined" && module.exports) {
+    module.exports = { computeAnchor };
+    return;
+  }
   console.log(`${LOG_PREFIX} JS Loaded`);
   // Keep the custom wheel fully namespaced. The official chroma wheel uses
   // the lu-chroma-* selectors, and sharing them makes the two panels style
@@ -1351,14 +1371,22 @@
       }
     }
 
-    // Center panel in the middle of the screen
-    const centerX = (window.innerWidth - flyoutRect.width) / 2;
-    const centerY = (window.innerHeight - flyoutRect.height) / 2;
+    // Open above our own button (right edges aligned). Centre only when the
+    // button has no box (detached or hidden), which was the previous behaviour.
+    let x = (window.innerWidth - flyoutRect.width) / 2;
+    let y = (window.innerHeight - flyoutRect.height) / 2;
+    flyoutFrame.style.maxHeight = "";
+    if (rect.width > 0 && rect.height > 0) {
+      const anchor = computeAnchor(rect, flyoutRect, { width: window.innerWidth, height: window.innerHeight });
+      x = anchor.left;
+      y = anchor.top;
+      if (anchor.shrunk) flyoutFrame.style.maxHeight = `${anchor.maxHeight}px`;
+    }
 
     flyoutFrame.style.position = "fixed";
     flyoutFrame.style.overflow = "visible";
-    flyoutFrame.style.top = `${centerY}px`;
-    flyoutFrame.style.left = `${centerX}px`;
+    flyoutFrame.style.top = `${y}px`;
+    flyoutFrame.style.left = `${x}px`;
     flyoutFrame.style.right = ""; // Clear right when using left
     flyoutFrame.style.transform = ""; // Remove transform to avoid blur
 
@@ -2133,6 +2161,7 @@
     }, 0);
 
     isOpen = true;
+    watchAnchor();
 
     // Update button pressed state
     if (button) {
@@ -2165,7 +2194,51 @@
     }, 100);
   }
 
+  // While the panel is open, a size change of the button, the flyout or the
+  // client window repositions it. Disconnected on close; no polling.
+  let anchorObserver = null;
+  function watchAnchor() {
+    unwatchAnchor();
+    if (typeof ResizeObserver === "undefined" || !panel || !button) return;
+    anchorObserver = new ResizeObserver(() => {
+      if (isOpen) positionPanel(panel, button);
+    });
+    anchorObserver.observe(button);
+    anchorObserver.observe(document.documentElement);
+    const flyout = panel.querySelector(".flyout");
+    if (flyout) anchorObserver.observe(flyout);
+  }
+  function unwatchAnchor() {
+    if (anchorObserver) anchorObserver.disconnect();
+    anchorObserver = null;
+  }
+
+  // Run from the client's DevTools console: window.__sexo2AnchorDiagnostics()
+  function anchorDiagnostics() {
+    const box = (el) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
+    };
+    const flyout = panel ? panel.querySelector(".flyout") : null;
+    const report = {
+      championSelect: !!document.querySelector(".champion-select"),
+      buttonContainer: box(document.querySelector(".bottom-right-buttons")),
+      button: box(document.querySelector(BUTTON_SELECTOR)),
+      panel: box(flyout),
+      viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio: window.devicePixelRatio },
+      open: isOpen,
+    };
+    if (report.button && report.panel) {
+      report.expected = computeAnchor(report.button, report.panel, report.viewport);
+    }
+    console.log(`${LOG_PREFIX} anchor`, JSON.stringify(report));
+    return report;
+  }
+  window.__sexo2AnchorDiagnostics = anchorDiagnostics;
+
   function closePanel() {
+    unwatchAnchor();
     if (!panel) {
       isOpen = false;
       // Update button pressed state
