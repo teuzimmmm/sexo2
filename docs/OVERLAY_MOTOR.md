@@ -1,5 +1,9 @@
 # Substituição do motor do overlay
 
+**Substituído na candidata 2.0.0.9:** o motor DirectComposition abaixo foi retirado
+do pacote após o relato real de falha. Estado atual e evidências estão em
+[OVERLAY_ISOLADO.md](OVERLAY_ISOLADO.md). Este documento mantém o histórico.
+
 Investigação de 17/10/2026, após o usuário informar que a edição 2.0.0.4
 também não exibiu o overlay. Este documento sucede a tentativa descrita em
 [OVERLAY_CORRECOES.md](OVERLAY_CORRECOES.md). A rodada de composição ao final

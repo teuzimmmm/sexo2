@@ -227,3 +227,12 @@ Novo pacote de itens por modo, comparação de inventários e três faixas de PR
 CI 39007544851 aprovado, incluindo instalação/reinstalação/desinstalação e DLL
 instalada renderizando sobre janela sintética. Código `3042968326042f87661bd0ebbf69ac94a6298a88`.
 Resultados, hash, download e limites na [matriz atual](FUNCIONALIDADE_PARTIDAS.md#pacote-auditado--2007).
+
+### Validação Windows — 2.0.0.9
+
+Renderer CPU em processo separado; antigo renderer/DLL excluídos. CI
+[39046087887](https://github.com/teuzimmmm/sexo2/actions/runs/39046087887) e
+revalidação da janela instalada no CI
+[39046631608](https://github.com/teuzimmmm/sexo2/actions/runs/39046631608) passaram.
+Programa de `30334790675d64de4d950a798cb157714ead5e75`. Download, hashes e limites:
+[OVERLAY_ISOLADO.md](OVERLAY_ISOLADO.md#pacote-validado--2009). Sem validação no LoL.

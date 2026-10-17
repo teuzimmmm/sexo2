@@ -1,10 +1,15 @@
 # Matriz de entrega por modo — 17/10/2026
 
-**Estado após o teste real da 2.0.0.7:** usuário relatou congelamento/fechamento no
-carregamento e falha nas duas importações. Overlay suspenso em produção e seus
-binários removidos da próxima edição; ouro/cartas **não estão disponíveis** nessa
-edição de correção. A matriz abaixo registra o objetivo, não comprova entrega
-funcional no jogo. Ver [correções do incidente](CORRECAO_TESTE_2_0_0_7.md).
+**Situação atual — candidata 2.0.0.9:** substituição por renderer Win32 CPU em
+processo separado, com bloqueio durante carregamento. Pacote/instalação e janela
+inicializada passaram no Windows; **exibição e estabilidade no LoL real ainda
+não foram validadas**. A matriz abaixo continua descrevendo o objetivo.
+Veja [motor, pacote, controles e limitações](OVERLAY_ISOLADO.md).
+
+Histórico: o teste real da 2.0.0.7 congelou/fechou durante o carregamento e falhou
+nas importações. A proposta 2.0.0.8 colocou o renderer em quarentena; a 2.0.0.9
+contém as correções de importação e usa somente o novo motor isolado. O antigo
+não voltou a ser ativado. Ver [incidente](CORRECAO_TESTE_2_0_0_7.md).
 
 Escopo atualizado explicitamente pelo usuário antes desta rodada.
 

@@ -86,3 +86,39 @@ de validação, revalidar o artefato já compilado em um job separado evita reco
 o mesmo programa e o OCR. Esse job baixa somente um run numérico deste repositório,
 confere SHA-256 e recibo/commit e repete instalação, worker e desinstalação.
 Nenhuma mudança no runtime requer novo binário nesta etapa.
+
+## Pacote validado — 2.0.0.9
+
+Programa compilado de `30334790675d64de4d950a798cb157714ead5e75` no
+[CI 39046087887](https://github.com/teuzimmmm/sexo2/actions/runs/39046087887).
+Passaram 566 testes gerais (18 ignorados), 28 regressões do mecanismo de skins
+e traduções, testes Node/Chromium, 19 testes de protocolo/gráficos/OCR reais em
+Windows, auditoria do PYZ/assets e instalação/reinstalação/desinstalação.
+A DLL e os módulos Python do renderer antigo estão ausentes.
+
+O [CI 39046631608](https://github.com/teuzimmmm/sexo2/actions/runs/39046631608),
+com o probe reforçado em d053aaf, baixou esse mesmo artefato, conferiu SHA-256 e
+commit, reinstalou e comprovou `windowInitialized: true`, pipe privado e saída
+por EOF no SEXO2 efetivamente instalado. Depois desinstalou e conferiu sentinelas
+do legado. Não houve reconstrução ou mudança de runtime entre as verificações.
+
+[Download privado do pacote](https://github.com/teuzimmmm/sexo2/actions/runs/39046087887/artifacts/12105602826)
+
+- Instalador: `SEXO2-2.0.0.9-Teste-30334790.exe`
+- SHA-256: `61d4ea7b8d55b37be29ad7b18051a0110a3ca18b25c6604dd72e42ba37dfe1d0`
+- OCR SHA-256: `87b0c80110bcff5b353059559baad191301ed99b49253822ad7cb7e5479d092c`
+- Motor: Win32 CPU em processo separado; sem a DLL antiga.
+- LoL real: **não validado** (`nativeLeagueValidation=false`).
+
+Uso: abrir a edição 2.0.0.9, habilitar “Overlay durante a partida” nas
+Configurações e usar janela/sem bordas. TAB exibe a comparação de valor dos itens;
+F7 troca adversário, com correspondência automática por rota somente quando
+inequívoca. F8 recolhe/expande; F9/F10 alternam cartões/páginas de detalhes.
+Arena/Mayhem relacionam métricas apenas às ofertas reconhecidas; OCR/idioma e
+geometria de cartas reais ainda dependem de validação na partida.
+
+Não foi reproduzido o fechamento do LoL relatado no carregamento. O renderer
+novo não inicia nessa fase e é isolado do processo principal; o mecanismo de
+skins foi preservado e teve regressões sintéticas, sem certificação de partida.
+Tela cheia exclusiva e comparação de RAM com outros aplicativos não foram
+comprovadas. Não anunciar a edição como correção do crash confirmada no LoL.
