@@ -4,6 +4,7 @@ on:
     branches: ['**']
     tags: ['v*']
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -35,5 +36,39 @@ jobs:
         run: |
           node --test (Get-ChildItem tests -Filter 'test_*.cjs').FullName
           if ($LASTEXITCODE -ne 0) { throw 'Plugin tests failed.' }
+  test-build:
+    # Unsigned test build for manual checks; never published as a release.
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/sexoatividade')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Install build dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Restore build-only binaries from the 1.6.4 baseline
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.6.4 --repo ${{ github.repository }} --pattern SEXO2-baseline.zip --dir baseline
+          if ($LASTEXITCODE -ne 0) { throw 'Baseline download failed.' }
+          Expand-Archive baseline/SEXO2-baseline.zip -DestinationPath baseline/extracted
+          python scripts/restore_build_binaries.py --base baseline/extracted
+          if ($LASTEXITCODE -ne 0) { throw 'Binary restore failed.' }
+      - name: Build
+        shell: pwsh
+        run: |
+          python -m PyInstaller SEXO2.spec --distpath dist-test --workpath build-test --noconfirm
+          if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+          python audit_frozen.py dist-test/SEXO2
+          if ($LASTEXITCODE -ne 0) { throw 'Audit failed.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEXO2-teste-${{ github.sha }}
+          path: dist-test/SEXO2
+          retention-days: 14
 # Releases are compiled and signed locally by scripts/release_local.ps1.
 # The private signing key is never stored in GitHub Actions.
