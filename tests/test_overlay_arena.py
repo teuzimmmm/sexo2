@@ -91,10 +91,11 @@ class ArenaOverlayTests(unittest.TestCase):
     def test_runtime_arena_without_draft_ui_and_no_source_for_unknown_mode(self):
         self.lcu.phase = 'InProgress'
         self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}, 'teamOne': [{'summonerId': 100, 'championId': 222}]}
-        runtime = OverlayRuntime(self.lcu, enabled=lambda: True, champion=lambda: 222,
+        runtime = OverlayRuntime(self.lcu, enabled=lambda: True, champion=lambda: 103,  # stale hover must not choose source champion
                                  arena_factory=lambda: self.feed)
         self.addCleanup(runtime.stop)
         self.assertTrue(runtime.poll().active)
+        self.assertEqual(runtime._offer_context, (game_key(10),222,'arena'))
         self.assertIn('aguardando oferta', str(runtime.frame()))
         self.assertNotIn('Critical Rhythm', str(runtime.frame()))
         self.wait()

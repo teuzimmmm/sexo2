@@ -104,3 +104,22 @@ Mayhem, visibilidade sobre LoL sem bordas, importação antes de abrir a loja e 
 painel no Pengu efetivamente carregado no PC. Os testes Windows usam somente
 janelas próprias; não equivalem a esses testes de jogo. Tela cheia exclusiva
 não é garantida pelo compositor externo. Sem hooks no processo do LoL.
+
+## Uso no pacote 2.0.0.7
+
+- SR normal/competitivo: abrir **SEXO2 · Builds**, escolher WR/Common ou adversário
+  após finalização, e usar **Importar runas**. Os conjuntos de itens são preparados
+  automaticamente; o botão **Importar itens** permite confirmar manualmente as
+  sugestões abertas. Não remover páginas pessoais para liberar espaço de runas.
+- Na partida SR/Swiftplay: **F7** troca o oponente da comparação de inventários;
+  **F8** recolhe/expande; **F9/F10** navegam sugestões/texto quando existem.
+- ARAM/Mayhem: conjuntos são preparados sem abrir painel. Na loja, selecionar o
+  conjunto **SEXO2**. Mayhem e Arena: manter o jogo sem bordas/em janela e em
+  primeiro plano; o reconhecimento precisa de duas leituras consistentes da oferta.
+- Configurações do SEXO2 mostram versão e estado da importação junto ao diagnóstico
+  do overlay. A opção de desligar o overlay não desliga a preparação de itens.
+- Coletor separado, sem importar para o cliente:
+  `python -m lolalytics ahri --mode swift --builds --cache-dir /tmp/sexo2-swift-cache`.
+  A CLI `lolalytics` continua sendo exclusivamente LoLalytics; Mayhem fica no
+  adaptador próprio `sexo2.sources.mayhem.MayhemClient`, com `pools(103)` e
+  `builds(103, 'ahri', 'Ahri')`. Fechar o cliente com `close()` ao terminar.

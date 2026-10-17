@@ -107,6 +107,16 @@ class AutoItemsTests(unittest.TestCase):
             self.lcu.draft_request=read;self.auto.tick();read.assert_not_called()
         finally:release.set()
 
+    def test_missing_or_conflicting_match_identity_never_imports(self):
+        self.lcu.game['gameData'].pop('gameId')
+        self.auto.tick();self.wait()
+        self.assertEqual(self.transport.calls,[])
+        self.lcu.game.update(gameId=11)
+        self.lcu.game['gameData']['gameId']=10
+        self.auto.tick();self.wait()
+        self.assertEqual(self.transport.calls,[])
+        self.assertEqual(self.lcu.sets['itemSets'],[self.personal])
+
     def test_source_failure_is_bounded_and_never_writes_empty_success(self):
         self.auto._pages=Mock(side_effect=TransportError('private error'))
         now=[0];self.auto._clock=lambda:now[0]

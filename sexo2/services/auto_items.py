@@ -85,15 +85,20 @@ class AutoItems:
             data=game.get('gameData') if isinstance(game,dict) else None
             mode=play_mode(data)
             if mode not in ('ranked','swiftplay','aram','mayhem'):return None
+            first,second=game.get('gameId'),data.get('gameId')
+            if positive(first) and positive(second) and first!=second:return None
+            key=game_key(first or second)
+            if key is None:return None
             if phase=='ChampSelect':
                 draft=self.reader.read()
+                if draft.game_key!=key or draft.mode!=mode:return None
                 cid,position=draft.champion_id,draft.lane
             else:
                 cid=own_champion(self.lcu,game)
                 position='all'
             if not positive(cid):return None
             intent=Intent(mode,((cid,position if mode=='ranked' else 'all'),),
-                          game_key(game.get('gameId') or data.get('gameId')),self.plans.version)
+                          key,self.plans.version)
         else:return None
         if self.lcu.draft_request('/lol-gameflow/v1/gameflow-phase')!=phase:
             raise BuildError('A fase mudou durante a preparação dos itens.')
