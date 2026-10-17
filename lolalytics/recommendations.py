@@ -1,4 +1,5 @@
 """Serializable response model for locally risk-ranked recommendations."""
+
 from dataclasses import asdict, dataclass
 from copy import deepcopy
 import math
@@ -69,8 +70,9 @@ def rune_candidates(snapshot: Any) -> list[dict]:
                 raise SchemaError(f"LoLalytics summary.{selection}.runes.set.{slot} must be an array")
             if len(ids) != size:
                 complete = False
-            layout[slot] = [_opaque_id(item, f"summary.{selection}.runes.set.{slot}[{i}]")
-                            for i, item in enumerate(ids)]
+            layout[slot] = [
+                _opaque_id(item, f"summary.{selection}.runes.set.{slot}[{i}]") for i, item in enumerate(ids)
+            ]
         if not complete:
             continue
         primary = rune_set["pri"][0]
@@ -80,15 +82,17 @@ def rune_candidates(snapshot: Any) -> list[dict]:
             if not isinstance(runes["page"], dict):
                 raise SchemaError(f"LoLalytics summary.{selection}.runes.page must be an object")
             layout["page"] = deepcopy(runes["page"])
-        candidates.append({
-            "selection": selection,
-            "keystone": primary,
-            "runes": layout,
-            "source_path": f"payload.summary.{selection}.runes",
-            "source_url": snapshot.source_url,
-            "metric_scope": "keystone_observation",
-            "metrics": {"win_rate": runes.get("wr"), "games": runes.get("n")},
-        })
+        candidates.append(
+            {
+                "selection": selection,
+                "keystone": primary,
+                "runes": layout,
+                "source_path": f"payload.summary.{selection}.runes",
+                "source_url": snapshot.source_url,
+                "metric_scope": "keystone_observation",
+                "metrics": {"win_rate": runes.get("wr"), "games": runes.get("n")},
+            }
+        )
     return candidates
 
 
@@ -108,18 +112,27 @@ def item_rankings(snapshot: Any, baseline: float | int, risk_level: str) -> dict
         if arena:
             for row in rows:
                 rate = row["metrics"].get("pick_rate")
-                if rate is not None and (isinstance(rate, bool) or not isinstance(rate, (int, float))
-                                         or not math.isfinite(rate) or rate < 0):
+                if rate is not None and (
+                    isinstance(rate, bool) or not isinstance(rate, (int, float)) or not math.isfinite(rate) or rate < 0
+                ):
                     raise SchemaError("Arena pick_rate must be a finite non-negative number or null")
-            ordered = sorted(enumerate(rows), key=lambda pair: (
-                pair[1]["metrics"].get("pick_rate") is None,
-                -(pair[1]["metrics"].get("pick_rate") or 0),
-                -(pair[1]["metrics"].get("games") or 0), pair[0]))
+            ordered = sorted(
+                enumerate(rows),
+                key=lambda pair: (
+                    pair[1]["metrics"].get("pick_rate") is None,
+                    -(pair[1]["metrics"].get("pick_rate") or 0),
+                    -(pair[1]["metrics"].get("games") or 0),
+                    pair[0],
+                ),
+            )
             result[key] = []
             for _index, row in ordered:
-                row["risk"] = {"score": None, "criterion": "pick_rate",
-                               "reason": "risk_not_applicable_to_arena_popularity",
-                               "risk_level": risk_level}
+                row["risk"] = {
+                    "score": None,
+                    "criterion": "pick_rate",
+                    "reason": "risk_not_applicable_to_arena_popularity",
+                    "risk_level": risk_level,
+                }
                 result[key].append(row)
         else:
             result[key] = rank_candidates(rows, baseline, risk_level)

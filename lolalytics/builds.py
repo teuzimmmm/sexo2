@@ -1,4 +1,5 @@
 """Pure conversion of one filtered LoLalytics snapshot into a build page."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -165,7 +166,9 @@ def build_page(snapshot, selection: str, keystone: int, *, conditioning="keyston
     if conditioning != "keystone" and not mode_summary:
         raise DataUnavailable("unfiltered mode summaries are supported only for Swiftplay")
     resolved_keystone = resolved.get("keystone")
-    if not mode_summary and (isinstance(resolved_keystone, bool) or resolved_keystone != keystone or not isinstance(resolved_keystone, int)):
+    if not mode_summary and (
+        isinstance(resolved_keystone, bool) or resolved_keystone != keystone or not isinstance(resolved_keystone, int)
+    ):
         raise DataUnavailable("snapshot keystone does not match the requested keystone")
 
     raw = _mapping(getattr(snapshot, "raw", None), "snapshot.raw")
@@ -199,7 +202,9 @@ def build_page(snapshot, selection: str, keystone: int, *, conditioning="keyston
             raise _schema(f"summary.{selection}.runes.set.{slot} must be an array")
         if len(values) != size:
             raise DataUnavailable(f"filtered snapshot {selection} rune layout has incomplete {slot}")
-        runes[slot] = [_opaque_id(value, f"summary.{selection}.runes.set.{slot}[{i}]") for i, value in enumerate(values)]
+        runes[slot] = [
+            _opaque_id(value, f"summary.{selection}.runes.set.{slot}[{i}]") for i, value in enumerate(values)
+        ]
     if runes["pri"][0] != str(keystone):
         raise DataUnavailable("suggested rune page does not begin with the requested keystone")
     # Keep auxiliary rune page metadata when present; never invent tree IDs.
@@ -229,10 +234,15 @@ def build_page(snapshot, selection: str, keystone: int, *, conditioning="keyston
     title = f"{title_prefix} {rate} / {_format_games(games)}"
 
     blocks = []
-    warnings = ["mode_summary_unfiltered" if mode_summary else "keystone_conditioned", "not_full_rune_page_joint_sample"]
+    warnings = [
+        "mode_summary_unfiltered" if mode_summary else "keystone_conditioned",
+        "not_full_rune_page_joint_sample",
+    ]
     starting = items.get("start")
-    if starting is None or (isinstance(starting, dict) and (starting.get("set") is None or starting.get("set") == []
-            or (mode_summary and starting.get("set") == [0]))):
+    if starting is None or (
+        isinstance(starting, dict)
+        and (starting.get("set") is None or starting.get("set") == [] or (mode_summary and starting.get("set") == [0]))
+    ):
         warnings.append("starting_items_unavailable")
     elif not isinstance(starting, dict):
         raise _schema(f"summary.{selection}.items.start must be an object")

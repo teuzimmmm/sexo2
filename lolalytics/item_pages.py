@@ -1,4 +1,5 @@
 """Pure packing of build suggestions into explicitly budgeted item pages."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -147,8 +148,11 @@ def plan_item_pages(
         raise QueryError("at most 20 suggestions can be planned at once")
     if isinstance(max_pages, bool) or not isinstance(max_pages, int) or not 1 <= max_pages <= 20:
         raise QueryError("max_pages must be an integer from 1 to 20")
-    if (isinstance(max_blocks_per_page, bool) or not isinstance(max_blocks_per_page, int)
-            or not 1 <= max_blocks_per_page <= 100):
+    if (
+        isinstance(max_blocks_per_page, bool)
+        or not isinstance(max_blocks_per_page, int)
+        or not 1 <= max_blocks_per_page <= 100
+    ):
         raise QueryError("max_blocks_per_page must be an integer from 1 to 100")
 
     identity = None
@@ -164,7 +168,9 @@ def plan_item_pages(
             identity = current
             champion = current[0]
             display = page.resolved.get("champion_name")
-            champion_title = display.strip() if isinstance(display, str) and display.strip() else champion.replace("-", " ").title()
+            champion_title = (
+                display.strip() if isinstance(display, str) and display.strip() else champion.replace("-", " ").title()
+            )
         elif current != identity:
             fields = ("champion", "mode", "patch", "tier", "region", "effective lane")
             different = next(name for name, left, right in zip(fields, identity, current) if left != right)
@@ -188,9 +194,7 @@ def plan_item_pages(
         raise QueryError("build suggestions contain no item blocks")
     required_pages = math.ceil(total_blocks / max_blocks_per_page)
     if required_pages > max_pages:
-        raise QueryError(
-            f"item blocks require {required_pages} pages, exceeding max_pages={max_pages}"
-        )
+        raise QueryError(f"item blocks require {required_pages} pages, exceeding max_pages={max_pages}")
 
     entries: list[PreparedItemBlock] = []
     for page, _suggestion, labels in validated:
@@ -202,7 +206,7 @@ def plan_item_pages(
 
     result = []
     for page_index, start in enumerate(range(0, len(entries), max_blocks_per_page), start=1):
-        page_blocks = entries[start:start + max_blocks_per_page]
+        page_blocks = entries[start : start + max_blocks_per_page]
         title = f"Builds de {champion_title}"
         if required_pages > 1:
             title += f" · {page_index}/{required_pages}"

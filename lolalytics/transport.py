@@ -1,4 +1,5 @@
 """Small, bounded HTTP transport for the public LoLalytics page data."""
+
 from __future__ import annotations
 
 from email.utils import parsedate_to_datetime
@@ -24,12 +25,18 @@ def _validate_url(url: str) -> None:
         port = parts.port
     except (TypeError, ValueError):
         raise TransportError("Invalid LoLalytics URL") from None
-    allowed_path = (
-        host == "lolalytics.com" and parts.path.endswith("/q-data.json")
-    ) or (host == "a1.lolalytics.com" and parts.path == "/mega/")
-    if (parts.scheme != "https" or host not in _ALLOWED_HOSTS or port not in (None, 443)
-            or parts.username is not None or parts.password is not None or parts.fragment
-            or not allowed_path):
+    allowed_path = (host == "lolalytics.com" and parts.path.endswith("/q-data.json")) or (
+        host == "a1.lolalytics.com" and parts.path == "/mega/"
+    )
+    if (
+        parts.scheme != "https"
+        or host not in _ALLOWED_HOSTS
+        or port not in (None, 443)
+        or parts.username is not None
+        or parts.password is not None
+        or parts.fragment
+        or not allowed_path
+    ):
         raise TransportError("URL is outside the supported LoLalytics endpoints")
 
 
@@ -48,6 +55,7 @@ def _retry_after(value: str | None, now: float) -> float | None:
         dt = parsedate_to_datetime(value)
         if dt.tzinfo is None:
             from datetime import timezone
+
             dt = dt.replace(tzinfo=timezone.utc)
         delay = dt.timestamp() - now
         return max(0.0, delay) if math.isfinite(delay) else math.inf
@@ -71,9 +79,19 @@ class HTTPTransport:
 
     validate_url = staticmethod(_validate_url)
 
-    def __init__(self, session=None, *, timeout=(5, 20), max_bytes=_MAX_RESPONSE_BYTES,
-                 max_wait=30.0, min_interval=1.0, attempts=3, clock=time.monotonic,
-                 wall_clock=time.time, sleep=time.sleep):
+    def __init__(
+        self,
+        session=None,
+        *,
+        timeout=(5, 20),
+        max_bytes=_MAX_RESPONSE_BYTES,
+        max_wait=30.0,
+        min_interval=1.0,
+        attempts=3,
+        clock=time.monotonic,
+        wall_clock=time.time,
+        sleep=time.sleep,
+    ):
         try:
             if len(timeout) != 2:
                 raise ValueError
@@ -125,7 +143,10 @@ class HTTPTransport:
                 result = None
                 try:
                     response = self._session.get(
-                        url, timeout=self._timeout, stream=True, allow_redirects=False,
+                        url,
+                        timeout=self._timeout,
+                        stream=True,
+                        allow_redirects=False,
                         headers={"Accept": "application/json,text/html;q=0.9"},
                     )
                     status = int(response.status_code)
@@ -136,7 +157,7 @@ class HTTPTransport:
                         retry_error = HTTPStatusError(status, delay)
                         if attempt + 1 >= self._attempts or (delay is not None and delay > self._max_wait):
                             raise retry_error
-                        retry_wait = delay if delay is not None else min(2 ** attempt, self._max_wait)
+                        retry_wait = delay if delay is not None else min(2**attempt, self._max_wait)
                     elif status < 200 or status >= 300:
                         raise HTTPStatusError(status)
                     else:
@@ -154,7 +175,7 @@ class HTTPTransport:
                     retry_error = TransportError("LoLalytics request failed")
                     if attempt + 1 >= self._attempts:
                         raise retry_error from None
-                    retry_wait = min(2 ** attempt, self._max_wait)
+                    retry_wait = min(2**attempt, self._max_wait)
                 except (HTTPStatusError, ResponseTooLarge):
                     raise
                 except Exception:

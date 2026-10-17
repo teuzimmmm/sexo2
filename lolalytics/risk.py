@@ -27,9 +27,7 @@ BUILD_PRIOR_GAMES = {
 def validate_risk_level(value: Any) -> str:
     """Return a supported risk level, rejecting implicit coercions."""
     if not isinstance(value, str) or value not in RISK_LEVELS:
-        raise QueryError(
-            f"risk_level must be one of: {', '.join(RISK_LEVELS)}"
-        )
+        raise QueryError(f"risk_level must be one of: {', '.join(RISK_LEVELS)}")
     return value
 
 
@@ -136,9 +134,7 @@ def rank_candidates(
             raise SchemaError("candidate metrics must contain games")
 
         copied = deepcopy(candidate)
-        score = score_observation(
-            metrics["win_rate"], metrics["games"], base, level
-        )
+        score = score_observation(metrics["win_rate"], metrics["games"], base, level)
         copied["risk"] = score
         ranked.append((index, copied, score["score"], metrics["games"]))
 
