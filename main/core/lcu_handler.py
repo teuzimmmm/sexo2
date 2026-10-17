@@ -13,6 +13,7 @@ log = get_logger()
 
 def create_lcu_disconnection_handler(state: SharedState, skin_scraper: LCUSkinScraper, app_status: AppStatus):
     """Create and return LCU disconnection handler function"""
+
     def on_lcu_disconnected():
         """Handle LCU disconnection - reset UI detection status"""
         log.info("[Main] LCU disconnected - resetting UI state")
@@ -120,6 +121,5 @@ def create_lcu_disconnection_handler(state: SharedState, skin_scraper: LCUSkinSc
                 app_status.update_status(force=True)
             except Exception as e:
                 log.debug(f"[Main] Failed to update app status after disconnection: {e}")
-    
-    return on_lcu_disconnected
 
+    return on_lcu_disconnected

@@ -13,15 +13,14 @@ from .lcu_handler import create_lcu_disconnection_handler
 from .cleanup import perform_cleanup
 
 __all__ = [
-    'AppState',
-    'get_app_state',
-    'check_single_instance',
-    'cleanup_lock_file',
-    'setup_signal_handlers',
-    'force_quit_handler',
-    'initialize_core_components',
-    'initialize_threads',
-    'create_lcu_disconnection_handler',
-    'perform_cleanup',
+    "AppState",
+    "get_app_state",
+    "check_single_instance",
+    "cleanup_lock_file",
+    "setup_signal_handlers",
+    "force_quit_handler",
+    "initialize_core_components",
+    "initialize_threads",
+    "create_lcu_disconnection_handler",
+    "perform_cleanup",
 ]
-

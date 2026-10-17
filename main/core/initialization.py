@@ -21,15 +21,17 @@ from config import APP_VERSION, set_config_option
 log = get_logger()
 
 
-def initialize_core_components(args, injection_threshold: Optional[float] = None) -> Tuple[LCU, LCUSkinScraper, SharedState, InjectionManager]:
+def initialize_core_components(
+    args, injection_threshold: Optional[float] = None
+) -> Tuple[LCU, LCUSkinScraper, SharedState, InjectionManager]:
     """
     Initialize core application components
-    
+
     Returns:
         Tuple of (lcu, skin_scraper, state, injection_manager)
     """
     set_config_option("General", "installed_version", APP_VERSION)
-    
+
     # Check for admin rights FIRST (required for injection to work)
     ensure_admin_rights()
 
@@ -38,7 +40,7 @@ def initialize_core_components(args, injection_threshold: Optional[float] = None
         ModStorageService()
     except Exception as exc:  # noqa: BLE001
         log.warning("Failed to initialize mods storage directories: %s", exc)
-    
+
     # Initialize core components with error handling
     try:
         log.info("Initializing LCU client...")
@@ -48,7 +50,7 @@ def initialize_core_components(args, injection_threshold: Optional[float] = None
         log.info("Initializing skin scraper...")
         skin_scraper = LCUSkinScraper(lcu)
         log.info("Skin scraper initialized")
-        
+
         log.info("Initializing shared state...")
         state = SharedState()
         log.info("Shared state initialized")
@@ -59,9 +61,10 @@ def initialize_core_components(args, injection_threshold: Optional[float] = None
         log.error(f"Failed to initialize core components: {e}")
         log.error(f"Error type: {type(e).__name__}")
         import traceback
+
         log.error(f"Traceback:\n{traceback.format_exc()}")
         log.error("=" * 80)
-        
+
         # Show error message to user
         if sys.platform == "win32":
             try:
@@ -69,12 +72,12 @@ def initialize_core_components(args, injection_threshold: Optional[float] = None
                     0,
                     f"SEXO2 failed to initialize:\n\n{str(e)}\n\nCheck the log file for details:\n{log.handlers[0].baseFilename if log.handlers else 'N/A'}",
                     "SEXO2 - Initialization Error",
-                    0x50010  # MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST
+                    0x50010,  # MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST
                 )
             except Exception:
                 pass
         sys.exit(1)
-    
+
     # Initialize injection manager with database (lazy initialization)
     try:
         log.info("Initializing injection manager...")
@@ -87,7 +90,7 @@ def initialize_core_components(args, injection_threshold: Optional[float] = None
         log.info("Injection manager initialized")
         # Don't initialize injection system yet - wait for WebSocket to be active
         # This will be called in main/__init__.py after WebSocket is ready
-        
+
         # Hash check is now handled by the launcher before the app starts
         # No need to check again here - launcher ensures hashes are ready
         if getattr(args, "dev", False):
@@ -101,9 +104,10 @@ def initialize_core_components(args, injection_threshold: Optional[float] = None
         log.error(f"Failed to initialize injection manager: {e}")
         log.error(f"Error type: {type(e).__name__}")
         import traceback
+
         log.error(f"Traceback:\n{traceback.format_exc()}")
         log.error("=" * 80)
-        
+
         # Show error message to user
         if sys.platform == "win32":
             try:
@@ -111,11 +115,10 @@ def initialize_core_components(args, injection_threshold: Optional[float] = None
                     0,
                     f"SEXO2 failed to initialize injection system:\n\n{str(e)}\n\nCheck the log file for details:\n{log.handlers[0].baseFilename if log.handlers else 'N/A'}",
                     "SEXO2 - Injection Error",
-                    0x50010  # MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST
+                    0x50010,  # MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST
                 )
             except Exception:
                 pass
         sys.exit(1)
-    
-    return lcu, skin_scraper, state, injection_manager
 
+    return lcu, skin_scraper, state, injection_manager

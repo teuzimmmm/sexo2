@@ -20,16 +20,17 @@ def setup_logging_and_cleanup(args: argparse.Namespace) -> None:
     """Setup logging and clean up old logs and debug folders"""
     # Clean up old log files on startup
     from utils.core.logging import cleanup_logs
+
     cleanup_logs()
-    
+
     # Determine log mode based on flags
     if args.debug:
-        log_mode = 'debug'
+        log_mode = "debug"
     elif args.verbose:
-        log_mode = 'verbose'
+        log_mode = "verbose"
     else:
-        log_mode = 'customer'
-    
+        log_mode = "customer"
+
     # Setup logging (skip log files in dev mode unless explicitly forced)
     force_logs = bool(getattr(args, "logs", False))
     write_logs = (not bool(getattr(args, "dev", False))) or force_logs
@@ -49,36 +50,41 @@ def setup_logging_and_cleanup(args: argparse.Namespace) -> None:
     logging.getLogger("PIL").setLevel(logging.INFO)
 
     # Show startup banner (mode-aware via log_section)
-    if log_mode == 'customer':
+    if log_mode == "customer":
         # Simple startup for customer mode
         pass  # Already shown in setup_logging()
     else:
         # Detailed startup for verbose/debug
-        log_section(log, "Rose Starting", "", {
-            "Verbose Mode": "Enabled" if args.verbose else "Disabled",
-            "Download Skins": "Enabled" if args.download_skins else "Disabled"
-        })
+        log_section(
+            log,
+            "Rose Starting",
+            "",
+            {
+                "Verbose Mode": "Enabled" if args.verbose else "Disabled",
+                "Download Skins": "Enabled" if args.download_skins else "Disabled",
+            },
+        )
 
 
 def initialize_tray_manager(args: argparse.Namespace) -> Optional[TrayManager]:
     """Initialize the system tray manager"""
     try:
+
         def tray_quit_callback():
             """Callback for tray quit - will be updated with state reference later"""
             log.info("Setting stop flag from tray quit")
             # Callback will be updated later when state is initialized
-        
+
         tray_manager = TrayManager(quit_callback=tray_quit_callback)
         tray_manager.start()
         log_success(log, "System tray icon initialized - console hidden", "")
-        
+
         # Tray status is queued until the backend is ready; never sleep here.
-        
+
         # Note: Status will be managed by AppStatus class
-        
+
         return tray_manager
     except Exception as e:
         log.warning(f"Failed to initialize system tray: {e}")
         log.info("Application will continue without system tray icon")
         return None
-
