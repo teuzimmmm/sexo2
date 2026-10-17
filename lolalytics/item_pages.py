@@ -77,7 +77,7 @@ def _suggestion_label(page: BuildPage) -> str:
         return "WR"
     if page.selection == "pick":
         return "Common"
-    if page.selection == "vs":
+    if page.selection in ("vs", "archetype"):
         return _nonempty_string(page.label, "matchup label")
     raise QueryError(f"unsupported build page selection: {page.selection!r}")
 
@@ -86,6 +86,7 @@ def _kind_label(kind: Any) -> str:
     labels = {
         "starting": "Starting",
         "core": "Core",
+        "suggested_core": "Core sugerido (sem ordem)",
         "item1": "Item 1",
         "item2": "Item 2",
         "item3": "Item 3",
@@ -104,6 +105,10 @@ def _conditioning(page: BuildPage) -> str:
     value = getattr(page, "conditioning", None)
     if value is None:
         value = "opponent" if page.selection == "vs" else "keystone"
+    if value == "archetype" and page.selection == "archetype" and page.query.get("mode") == "mayhem":
+        return value
+    if value == "mode" and page.selection in ("win", "pick") and page.query.get("mode") == "swift":
+        return value
     if value not in ("keystone", "opponent"):
         raise QueryError("build page conditioning must be keystone or opponent")
     if page.selection == "vs" and value != "opponent":

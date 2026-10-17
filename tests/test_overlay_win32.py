@@ -145,6 +145,43 @@ class NativeWindowTests(unittest.TestCase):
         self.assertNotEqual(u.WindowFromPoint(W.POINT(px, py)), window.hwnd)
         self.assertNotEqual(u.GetForegroundWindow(), window.hwnd)
 
+    def test_three_offer_strips_have_visible_pixels_and_transparent_clickthrough_gaps(self):
+        from sexo2.overlay.screen import offer_band
+        values=[Frame(True,View('offers',tuple(Card(name,('PR 12% · 345 jogos','Fonte sintética'))
+            for name in ('Esquerda','Centro','Direita'))),offer_layout=True)]
+        window=NativeOverlay(lambda:values[0],foreground=lambda:(0,0,1000,700))
+        self.addCleanup(window.stop);window.start()
+        self.assertTrue(window.ready.wait(8));self.assertIsNone(window.error)
+        self.until(lambda:window._visible)
+        u,g=window.u,window.g
+        host=u.CreateWindowExW(0x08000008,'STATIC','offer-pixel-fixture',0x90000006,
+            0,0,1000,700,None,None,window.k.GetModuleHandleW(None),None)
+        self.assertTrue(host);self.addCleanup(lambda:u.DestroyWindow(host))
+        u.UpdateWindow.argtypes=[W.HWND];u.UpdateWindow.restype=W.BOOL;u.UpdateWindow(host)
+        u.GetDC.argtypes=[W.HWND];u.GetDC.restype=W.HDC
+        u.ReleaseDC.argtypes=[W.HWND,W.HDC];u.ReleaseDC.restype=C.c_int
+        g.GetPixel.argtypes=[W.HDC,C.c_int,C.c_int];g.GetPixel.restype=W.DWORD
+        u.WindowFromPoint.argtypes=[W.POINT];u.WindowFromPoint.restype=W.HWND
+        previous=u.SetThreadDpiAwarenessContext(C.c_void_p(-4))
+        self.addCleanup(lambda:u.SetThreadDpiAwarenessContext(previous))
+        (x,y,w,h),regions=offer_band(1000,700)
+        def pixel(px,py):
+            dc=u.GetDC(None)
+            try:
+                value=g.GetPixel(dc,px,py)
+                return value&255,(value>>8)&255,(value>>16)&255
+            finally:u.ReleaseDC(None,dc)
+        def all_drawn():
+            return all(0<min(pixel(x+rx+4,y+3)) and max(pixel(x+rx+4,y+3))<60 for rx,rw in regions)
+        self.until(all_drawn)
+        gapx=x+(regions[0][0]+regions[0][1]+regions[1][0])//2
+        self.until(lambda:min(pixel(gapx,y+3))>200)
+        self.assertEqual(window._registered,{1})
+        self.assertNotEqual(u.WindowFromPoint(W.POINT(gapx,y+3)),window.hwnd)
+        self.assertNotEqual(u.GetForegroundWindow(),window.hwnd)
+        values[0]=Frame();self.until(lambda:not window._visible and not window._registered)
+        self.assertIsNone(window.error)
+
     def test_f7_opponent_switch_and_live_gold_do_not_reset_build_navigation(self):
         values=[Frame(True, View('match', (Card('Ouro em itens', ('+600 G',)),
             Card('Build preparada', tuple('Item '+str(i) for i in range(50))))), opponent_switch=True)]

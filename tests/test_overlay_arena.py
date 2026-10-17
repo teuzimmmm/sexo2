@@ -90,7 +90,7 @@ class ArenaOverlayTests(unittest.TestCase):
 
     def test_runtime_arena_without_draft_ui_and_no_source_for_unknown_mode(self):
         self.lcu.phase = 'InProgress'
-        self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}}
+        self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}, 'teamOne': [{'summonerId': 100, 'championId': 222}]}
         runtime = OverlayRuntime(self.lcu, enabled=lambda: True, champion=lambda: 222,
                                  arena_factory=lambda: self.feed)
         self.addCleanup(runtime.stop)
@@ -132,7 +132,7 @@ class ArenaOverlayTests(unittest.TestCase):
             def diagnostic(self): return 'reading'
         reader = Reader()
         self.lcu.phase = 'InProgress'
-        self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}}
+        self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}, 'teamOne': [{'summonerId': 100, 'championId': 222}]}
         runtime = OverlayRuntime(self.lcu, enabled=lambda: True, champion=lambda: 222,
             arena_factory=lambda: self.feed, offer_reader_factory=lambda: reader, clock=lambda: now[0])
         self.addCleanup(runtime.stop)

@@ -21,7 +21,7 @@ def main(argv=None) -> int:
     parser.add_argument("--ttl", type=float, default=900, help="cache lifetime in seconds, 0–86400 (default 900)")
     parser.add_argument("--item-sets", action="store_true", help="also fetch reproduced ranked lazy item sets; preserve raw counters")
     parser.add_argument("--keystone", type=int, help="filter by a primary rune ID")
-    parser.add_argument("--builds", action="store_true", help="collect win and common keystone-conditioned builds")
+    parser.add_argument("--builds", action="store_true", help="collect win/common builds (Swiftplay: unfiltered mode summaries)")
     parser.add_argument("--opponent", help="explicit opponent champion slug for matchup data")
     parser.add_argument("--opponent-lane", choices=LANES, default="all")
     parser.add_argument("--matchup", action="store_true", help="collect one opponent-conditioned build page")
@@ -35,7 +35,7 @@ def main(argv=None) -> int:
         if args.builds and args.item_sets:
             parser.error("--builds and --item-sets are incompatible")
         if args.builds and args.mode == "arena":
-            parser.error("--builds currently supports ranked and ARAM only")
+            parser.error("--builds supports ranked, ARAM and Swiftplay")
         if args.item_sets and args.keystone is not None:
             parser.error("--item-sets does not support --keystone")
         if args.matchup and not args.opponent:

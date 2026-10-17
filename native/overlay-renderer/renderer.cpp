@@ -18,6 +18,11 @@ struct Apartment {
     HRESULT status = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     ~Apartment() { if (SUCCEEDED(status)) CoUninitialize(); }
 };
+struct OfferRegion {
+    UINT x, width;
+    const wchar_t* title;
+    const wchar_t* body;
+};
 struct Surface {
     Apartment apartment; // Declared first so COM uninitializes after all members.
     DWORD owner = GetCurrentThreadId();
@@ -28,7 +33,7 @@ struct Surface {
     ComPtr<ID2D1DeviceContext> draw;
     ComPtr<ID2D1Bitmap1> bitmap;
     ComPtr<IDWriteTextFormat> format;
-    ComPtr<ID2D1SolidColorBrush> text, accent;
+    ComPtr<ID2D1SolidColorBrush> text, accent, background;
     ComPtr<IDCompositionDevice> composition;
     ComPtr<IDCompositionTarget> target;
     ComPtr<IDCompositionVisual> visual;
@@ -77,6 +82,7 @@ struct Surface {
         CHECK(format->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM, 20.f, 15.f));
         CHECK(draw->CreateSolidColorBrush(D2D1::ColorF(.84f, .90f, .94f), &text));
         CHECK(draw->CreateSolidColorBrush(D2D1::ColorF(.22f, .82f, .74f), &accent));
+        CHECK(draw->CreateSolidColorBrush(D2D1::ColorF(.035f, .055f, .075f, .97f), &background));
         CHECK(DCompositionCreateDevice(dxgi.Get(), IID_PPV_ARGS(&composition)));
         CHECK(composition->CreateTargetForHwnd(hwnd, TRUE, &target));
         CHECK(composition->CreateVisual(&visual));
@@ -86,13 +92,7 @@ struct Surface {
         return S_OK;
     }
 
-    HRESULT paint(UINT w, UINT h, const wchar_t* header, const wchar_t* body, const wchar_t* footer) {
-        if (owner != GetCurrentThreadId()) return RPC_E_WRONG_THREAD;
-        if (w < 240 || w > 840 || h < 40 || h > 1140 || !header || !body || !footer)
-            return E_INVALIDARG;
-        // Bound before DrawText, including malformed direct callers of the ABI.
-        const size_t a = wcsnlen_s(header, 8193), b = wcsnlen_s(body, 8193), c = wcsnlen_s(footer, 8193);
-        if (a > 8192 || b > 8192 || c > 8192) return E_INVALIDARG;
+    HRESULT resize(UINT w, UINT h) {
         if (width != w || height != h || !bitmap) {
             draw->SetTarget(nullptr);
             bitmap.Reset();
@@ -107,6 +107,17 @@ struct Surface {
             draw->SetTarget(bitmap.Get());
             width = w; height = h;
         }
+        return S_OK;
+    }
+
+    HRESULT paint(UINT w, UINT h, const wchar_t* header, const wchar_t* body, const wchar_t* footer) {
+        if (owner != GetCurrentThreadId()) return RPC_E_WRONG_THREAD;
+        if (w < 240 || w > 840 || h < 40 || h > 1140 || !header || !body || !footer)
+            return E_INVALIDARG;
+        // Bound before DrawText, including malformed direct callers of the ABI.
+        const size_t a = wcsnlen_s(header, 8193), b = wcsnlen_s(body, 8193), c = wcsnlen_s(footer, 8193);
+        if (a > 8192 || b > 8192 || c > 8192) return E_INVALIDARG;
+        CHECK(resize(w, h));
         draw->BeginDraw();
         draw->Clear(D2D1::ColorF(.035f, .055f, .075f, .98f));
         const D2D1_RECT_F top = D2D1::RectF(14.f, 8.f, float(w)-14.f, 34.f);
@@ -121,6 +132,35 @@ struct Surface {
         CHECK(swap->Present(0, 0));
         return composition->Commit();
     }
+    HRESULT paint_regions(UINT w, UINT h, const OfferRegion* regions, UINT count) {
+        if (owner != GetCurrentThreadId()) return RPC_E_WRONG_THREAD;
+        if (w < 360 || w > 7680 || h < 28 || h > 180 || !regions || count != 3)
+            return E_INVALIDARG;
+        UINT end = 0;
+        for (UINT i = 0; i < count; ++i) {
+            const auto& r = regions[i];
+            if (r.x < end || r.x > w || r.width < 100 || r.width > 1600 || r.width > w - r.x
+                    || !r.title || !r.body || wcsnlen_s(r.title, 257) > 256
+                    || wcsnlen_s(r.body, 1025) > 1024) return E_INVALIDARG;
+            end = r.x + r.width;
+        }
+        CHECK(resize(w, h));
+        draw->BeginDraw();
+        draw->Clear(D2D1::ColorF(0.f, 0.f, 0.f, 0.f)); // Gaps must stay transparent.
+        for (UINT i = 0; i < count; ++i) {
+            const auto& r = regions[i];
+            const float x = float(r.x), right = float(r.x + r.width);
+            draw->FillRectangle(D2D1::RectF(x, 0.f, right, float(h)), background.Get());
+            draw->DrawTextW(r.title, UINT32(wcslen(r.title)), format.Get(),
+                D2D1::RectF(x+8.f, 4.f, right-8.f, 25.f), accent.Get(), D2D1_DRAW_TEXT_OPTIONS_CLIP);
+            if (h > 28) draw->DrawTextW(r.body, UINT32(wcslen(r.body)), format.Get(),
+                D2D1::RectF(x+8.f, 28.f, right-8.f, float(h)-4.f), text.Get(), D2D1_DRAW_TEXT_OPTIONS_CLIP);
+        }
+        CHECK(draw->EndDraw());
+        CHECK(swap->Present(0, 0));
+        return composition->Commit();
+    }
+
 };
 
 extern "C" __declspec(dllexport) HRESULT __cdecl s2_create(HWND hwnd, void** output) noexcept {
@@ -137,6 +177,11 @@ extern "C" __declspec(dllexport) HRESULT __cdecl s2_draw(void* state, UINT w, UI
     const wchar_t* header, const wchar_t* body, const wchar_t* footer) noexcept {
     if (!state) return E_POINTER;
     return static_cast<Surface*>(state)->paint(w, h, header, body, footer);
+}
+extern "C" __declspec(dllexport) HRESULT __cdecl s2_draw_regions(void* state, UINT w, UINT h,
+    const OfferRegion* regions, UINT count) noexcept {
+    if (!state) return E_POINTER;
+    return static_cast<Surface*>(state)->paint_regions(w, h, regions, count);
 }
 extern "C" __declspec(dllexport) int __cdecl s2_driver(void* state) noexcept {
     return state ? (static_cast<Surface*>(state)->warp ? 2 : 1) : 0;

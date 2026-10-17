@@ -26,6 +26,7 @@ class NativeOverlay:
         self._renderer = None
         self._renders = self._raises = 0
         self._view = None
+        self._offer_layout = False
         self._registered = set()
         self._opponent_action = None
         self._opponent_attempted = False
@@ -121,10 +122,12 @@ class NativeOverlay:
     def _foreground_game(self):
         return self._foreground_bounds()
 
-    def _hotkeys(self, active, opponent_switch=False):
+    def _hotkeys(self, active, opponent_switch=False, offers=False):
+        if active and offers != self._offer_layout and self._hotkey_attempted:
+            self._hotkeys(False)
         if active and not self._hotkey_attempted:
             self._hotkey_attempted = True
-            for identifier, key in ((1, 0x77), (2, 0x78), (3, 0x79)):  # F8/F9/F10, MOD_NOREPEAT
+            for identifier, key in (((1, 0x77),) if offers else ((1, 0x77), (2, 0x78), (3, 0x79))):  # F8/F9/F10, MOD_NOREPEAT
                 if self.u.RegisterHotKey(self.hwnd, identifier, 0x4000, key):
                     self._registered.add(identifier)
             if 1 not in self._registered:
@@ -162,7 +165,8 @@ class NativeOverlay:
                 self._status('process-unavailable', 'Não foi possível enumerar os processos; tentando novamente.')
                 return
         active = bounds is not None
-        self._hotkeys(active, frame.opponent_switch)
+        self._hotkeys(active, frame.opponent_switch, frame.offer_layout)
+        self._offer_layout = frame.offer_layout
         if not active:
             if self._visible:
                 self.u.ShowWindow(self.hwnd, 0)
@@ -184,18 +188,38 @@ class NativeOverlay:
             if new_match:
                 self._expanded = True
         x, y, width, height = bounds
-        width = min(420, width - 24)
-        height = min(570, height - 160) if self._expanded else 40
-        if width < 240 or height < 40:
-            self.u.ShowWindow(self.hwnd, 0); self._visible = False
-            return
-        state = (x, y, width, height, frame.view, self._expanded, self._index, self._page)
+        if frame.offer_layout:
+            from .screen import offer_band
+            try:
+                (left, top, width, height), regions = offer_band(width, height, expanded=self._expanded)
+            except ValueError:
+                self.u.ShowWindow(self.hwnd, 0); self._visible = False
+                return
+            position = (x+left, y+top, width, height)
+        else:
+            width = min(420, width - 24)
+            height = min(570, height - 160) if self._expanded else 40
+            if width < 240 or height < 40:
+                self.u.ShowWindow(self.hwnd, 0); self._visible = False
+                return
+            position = (x+bounds[2]-width-12, y+110, width, height)
+        state = (position, frame.view, frame.offer_layout, self._expanded, self._index, self._page)
         if state != self._state or not self._visible:
-            self._paint(width, height)
+            if frame.offer_layout:
+                rendered=[]
+                if len(frame.view.cards) != 3:raise ValueError('Three offer cards required')
+                for (rx, rw), card in zip(regions, frame.view.cards):
+                    columns=max(10,(rw-16)//8)
+                    lines=[]
+                    for line in card.lines:
+                        lines.extend(textwrap.wrap(line,width=columns,break_long_words=True) or [''])
+                    rendered.append((rx,rw,card.title,'\n'.join(lines[:5]) if self._expanded else ''))
+                self._renderer.draw_offers(width,height,rendered)
+                self._renders+=1
+            else:
+                self._paint(width, height)
             self._state = state
-        # Another topmost application (including the game) can change z-order
-        # without changing our data. Reassert every 200 ms, never activate/focus.
-        position = (x + bounds[2] - width - 12, y + 110, width, height)
+        # Repair z-order even when unchanged, without activation or geometry churn.
         flags = 0x10 | 0x40
         if position == self._position:
             flags |= 0x1 | 0x2  # SWP_NOSIZE | SWP_NOMOVE; z-order still repaired.

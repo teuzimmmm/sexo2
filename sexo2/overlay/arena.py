@@ -162,7 +162,7 @@ class ArenaFeed:
             self._cards = ()
             self._offer_metrics, self._source = {}, None
 
-    def offered_view(self, key, cid, offer):
+    def offered_view(self, key, cid, offer, *, positioned=False):
         from .offers import offer_view
         with self._lock:
             if offer.context != (key, cid, 'arena') or self._desired != (key, cid):
@@ -171,7 +171,7 @@ class ArenaFeed:
             metrics = {c.identifier: self._offer_metrics.get(c.identifier, {})
                        for c in offer.choices if c.identifier} if ready else {}
             source = self._source if ready else 'Estatísticas Arena ainda indisponíveis.'
-        return offer_view(key, offer, metrics, mode='arena', source=source)
+        return offer_view(key, offer, metrics, mode='arena', source=source, positioned=positioned)
 
     def retry(self):
         with self._lock:

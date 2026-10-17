@@ -150,7 +150,7 @@ def _items_block(kind: str, obj: dict | list, path: str, *, ordered: bool) -> It
     return ItemBlock(kind, choices, metrics, path, ordered)
 
 
-def build_page(snapshot, selection: str, keystone: int) -> BuildPage:
+def build_page(snapshot, selection: str, keystone: int, *, conditioning="keystone") -> BuildPage:
     """Create a structured suggestion from exactly one filtered snapshot."""
     if selection not in ("win", "pick"):
         raise _schema("selection must be 'win' or 'pick'")
@@ -159,10 +159,13 @@ def build_page(snapshot, selection: str, keystone: int) -> BuildPage:
 
     query = _mapping(getattr(snapshot, "query", None), "snapshot.query")
     resolved = _mapping(getattr(snapshot, "resolved", None), "snapshot.resolved")
-    if query.get("mode") not in ("ranked", "aram"):
-        raise DataUnavailable("build pages are supported only for ranked and ARAM")
+    if query.get("mode") not in ("ranked", "aram", "swift"):
+        raise DataUnavailable("build pages are supported only for ranked, ARAM and Swiftplay")
+    mode_summary = conditioning == "mode" and query.get("mode") == "swift" and query.get("keystone") is None
+    if conditioning != "keystone" and not mode_summary:
+        raise DataUnavailable("unfiltered mode summaries are supported only for Swiftplay")
     resolved_keystone = resolved.get("keystone")
-    if isinstance(resolved_keystone, bool) or resolved_keystone != keystone or not isinstance(resolved_keystone, int):
+    if not mode_summary and (isinstance(resolved_keystone, bool) or resolved_keystone != keystone or not isinstance(resolved_keystone, int)):
         raise DataUnavailable("snapshot keystone does not match the requested keystone")
 
     raw = _mapping(getattr(snapshot, "raw", None), "snapshot.raw")
@@ -226,9 +229,10 @@ def build_page(snapshot, selection: str, keystone: int) -> BuildPage:
     title = f"{title_prefix} {rate} / {_format_games(games)}"
 
     blocks = []
-    warnings = ["keystone_conditioned", "not_full_rune_page_joint_sample"]
+    warnings = ["mode_summary_unfiltered" if mode_summary else "keystone_conditioned", "not_full_rune_page_joint_sample"]
     starting = items.get("start")
-    if starting is None or (isinstance(starting, dict) and (starting.get("set") is None or starting.get("set") == [])):
+    if starting is None or (isinstance(starting, dict) and (starting.get("set") is None or starting.get("set") == []
+            or (mode_summary and starting.get("set") == [0]))):
         warnings.append("starting_items_unavailable")
     elif not isinstance(starting, dict):
         raise _schema(f"summary.{selection}.items.start must be an object")
@@ -256,4 +260,5 @@ def build_page(snapshot, selection: str, keystone: int) -> BuildPage:
         collected_at=getattr(snapshot, "collected_at", ""),
         cache_hit=bool(getattr(snapshot, "cache_hit", False)),
         warnings=warnings,
+        conditioning=conditioning,
     )

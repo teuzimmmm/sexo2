@@ -31,6 +31,20 @@ def title_rects(width, height):
     return tuple(rects)
 
 
+def offer_band(width, height, *, expanded=True):
+    """One short transparent band across the three recognized title crops.
+
+    Returns client-local (x,y,w,h) and three relative rectangles. Nothing overlaps
+    the OCR title crops; capture cannot read our metrics back as card names.
+    """
+    titles=title_rects(width,height)
+    left=titles[0][0];right=titles[-1][0]+titles[-1][2]
+    top=titles[0][1]+titles[0][3]+8
+    h=132 if expanded else 28
+    if top+h>height:raise ValueError('Offer metrics outside game window.')
+    return (left,top,right-left,h), tuple((x-left,w) for x,y,w,h in titles)
+
+
 class Screen:
     def __init__(self, *, process_catalog=None):
         if os.name != 'nt':

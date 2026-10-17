@@ -132,7 +132,7 @@ class BuildPageTests(unittest.TestCase):
                 with self.assertRaises(SchemaError):
                     build_page(snapshot, "win", 8992)
         snapshot = make_snapshot("arena")
-        with self.assertRaisesRegex(DataUnavailable, "only for ranked and ARAM"):
+        with self.assertRaisesRegex(DataUnavailable, "only for ranked, ARAM and Swiftplay"):
             build_page(snapshot, "win", 8992)
 
     def test_real_filtered_fixtures_keep_each_suggestion_with_its_keystone(self):

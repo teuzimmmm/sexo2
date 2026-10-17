@@ -277,7 +277,7 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
         raise _schema("header.cid does not match nav.cid")
     if "patch" in header and header["patch"] != nav_patch:
         raise _schema("header.patch does not match nav.patch")
-    expected_queue = {"ranked": 420, "aram": 450}.get(query.mode)
+    expected_queue = {"ranked": 420, "aram": 450, "swift": 480}.get(query.mode)
     if "queue" in header and expected_queue is not None:
         queue = header["queue"]
         if isinstance(queue, bool) or not isinstance(queue, int) or queue != expected_queue:

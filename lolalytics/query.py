@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 from .errors import QueryError
 
-MODES = ("ranked", "aram", "arena")
+MODES = ("ranked", "aram", "arena", "swift")
 LANES = ("all", "top", "jungle", "middle", "bottom", "support")
 # Deliberately narrow until more values have concrete HTTP evidence.
 TIERS = ("emerald_plus", "diamond_plus", "gold", "all")
@@ -54,7 +54,9 @@ class Query:
             if self.mode not in ("ranked", "aram"):
                 raise QueryError("keystone is only supported for ranked and ARAM")
         if self.mode != "ranked" and (self.tier not in ("emerald_plus", "all") or self.region != "all"):
-            raise QueryError("ARAM/Arena currently support only tier emerald_plus/all and region all")
+            raise QueryError("non-ranked modes currently support only tier emerald_plus/all and region all")
+        if self.mode == "swift" and self.tier != "emerald_plus":
+            raise QueryError("Swiftplay currently supports only tier emerald_plus")
         if self.patch is not None and (not isinstance(self.patch, str) or not re.fullmatch(r"\d{2}\.\d{1,2}", self.patch)):
             raise QueryError("patch must have the observed format, e.g. 16.20")
 

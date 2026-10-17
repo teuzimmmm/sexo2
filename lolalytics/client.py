@@ -192,10 +192,14 @@ class Client:
             raise QueryError("collect_builds expects a Query")
         if getattr(query, "opponent", None) is not None:
             raise QueryError("collect_builds does not support opponent-filtered queries")
-        if query.mode not in ("ranked", "aram"):
-            raise QueryError("structured builds currently support ranked and ARAM only")
+        if query.mode not in ("ranked", "aram", "swift"):
+            raise QueryError("structured builds currently support ranked, ARAM and Swiftplay only")
 
         base = self.collect(query)
+        if query.mode == "swift":
+            return BuildCollection(query=query.to_dict(), pages=[
+                build_page(base, selection, self._summary_keystone(base, selection), conditioning="mode")
+                for selection in ("win", "pick")])
         if query.keystone is not None:
             pages = [build_page(base, selection, query.keystone) for selection in ("win", "pick")]
             return BuildCollection(query=query.to_dict(), pages=pages)
@@ -241,6 +245,8 @@ class Client:
         """Collect a bounded source snapshot and apply the local risk policy."""
         if not isinstance(query, Query):
             raise QueryError("recommend expects a Query")
+        if query.mode == "swift":
+            raise QueryError("Swiftplay supports collect_builds without keystone conditioning, not recommend")
         level = validate_risk_level(risk_level)
         # Input and policy validation happen above the first transport call.
         base = self.collect(query)

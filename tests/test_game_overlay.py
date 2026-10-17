@@ -102,14 +102,12 @@ class OverlayTests(unittest.TestCase):
         self.now = 21
         self.assertFalse(self.runtime.frame().active)
 
-    def test_standard_aram_supported_but_separated_from_sr(self):
+    def test_standard_aram_imports_items_without_an_extra_overlay(self):
         self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'id': 450}}
         frame = self.playing()
-        self.assertTrue(frame.active)
+        self.assertFalse(frame.active)
         self.assertEqual(frame.view.cards, ())
-        # No silent reinterpretation of SR cards as ARAM even with the same gameId.
-        self.store.prepare(dict(self.context, mode='aram'), self.result)
-        self.assertEqual(len(self.playing().view.cards), 2)
+        self.assertEqual(self.runtime.diagnostic()['code'], 'items-only')
 
     def test_failures_hide_and_same_match_reconnect_can_recover(self):
         self.assertTrue(self.playing().active)

@@ -5,6 +5,10 @@ from pathlib import Path
 import sys
 
 
+class Region(C.Structure):
+    _fields_ = [('x', W.UINT), ('width', W.UINT), ('title', W.LPCWSTR), ('body', W.LPCWSTR)]
+
+
 class Composition:
     def __init__(self, hwnd):
         root = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[2]))
@@ -15,6 +19,8 @@ class Composition:
         self.api.s2_create.restype = C.c_int32
         self.api.s2_draw.argtypes = [C.c_void_p, W.UINT, W.UINT, W.LPCWSTR, W.LPCWSTR, W.LPCWSTR]
         self.api.s2_draw.restype = C.c_int32
+        self.api.s2_draw_regions.argtypes = [C.c_void_p, W.UINT, W.UINT, C.POINTER(Region), W.UINT]
+        self.api.s2_draw_regions.restype = C.c_int32
         self.api.s2_destroy.argtypes = [C.c_void_p]
         self.api.s2_destroy.restype = None
         self.api.s2_driver.argtypes = [C.c_void_p]
@@ -34,6 +40,17 @@ class Composition:
                for s in (header, body, footer)):
             raise ValueError('Composition text exceeds limits.')
         self._check(self.api.s2_draw(self.handle, width, height, header, body, footer))
+
+    def draw_offers(self, width, height, regions):
+        if len(regions) != 3:
+            raise ValueError('Exactly three offer regions required.')
+        for x, w, title, body in regions:
+            if (type(x) is not int or type(w) is not int or not 0 <= x <= 7680 or not 100 <= w <= 1600
+                    or any(not isinstance(s, str) or len(s.encode('utf-16-le'))//2 > limit or '\0' in s
+                           for s, limit in ((title,256),(body,1024)))):
+                raise ValueError('Offer region exceeds limits.')
+        values = (Region * 3)(*(Region(*r) for r in regions))
+        self._check(self.api.s2_draw_regions(self.handle, width, height, values, 3))
 
     def close(self):
         if self.handle:

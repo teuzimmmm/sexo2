@@ -95,10 +95,10 @@ class OfferState:
         return None
 
 
-def offer_view(key, offer, metrics=None, *, mode='arena', source=None):
+def offer_view(key, offer, metrics=None, *, mode='arena', source=None, positioned=False):
     """Preserve screen order; metrics are looked up only for the offered IDs."""
     metrics = metrics or {}
-    lines = []
+    lines = []; positioned_cards = []
     for label, choice in zip(('Esquerda', 'Centro', 'Direita'), offer.choices):
         lines.append(label + ': ' + (choice.name or 'Carta não identificada')
                      + (' (leitura aproximada)' if choice.match == 'fuzzy' else ''))
@@ -106,7 +106,12 @@ def offer_view(key, offer, metrics=None, *, mode='arena', source=None):
         rate, games = row.get('pick_rate'), row.get('games')
         valid_rate = type(rate) in (int, float) and math.isfinite(rate) and 0 <= rate <= 100
         valid_games = type(games) is int and games >= 0
-        lines.append(f"PR {rate if valid_rate else '—'}% · {games if valid_games else '—'} jogos")
+        metric = f"PR {rate if valid_rate else '—'}% · {games if valid_games else '—'} jogos"
+        lines.append(metric)
+        positioned_cards.append(Card(text(choice.name or 'Carta não identificada', 80),
+            (metric, ('Leitura aproximada · ' if choice.match == 'fuzzy' else '') + text(source or ('Arena' if mode == 'arena' else 'ARAM Mayhem') + ' · estatísticas indisponíveis.', 200))))
+    if positioned:
+        return View(key, tuple(positioned_cards))
     lines += ['Popularidade não prevê vitória.',
               source or 'Estatísticas deste modo indisponíveis; sem dados de outro modo.']
     return View(key, (Card(('Arena' if mode == 'arena' else 'ARAM Mayhem') + ' · cartas na tela', tuple(lines)),))

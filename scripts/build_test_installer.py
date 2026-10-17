@@ -129,7 +129,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base', type=Path, required=True,
                         help='SEXO2 baseline ZIP or existing application folder (read-only)')
-    parser.add_argument('--version', default='2.0.0.6')
+    parser.add_argument('--version', default='2.0.0.7')
     parser.add_argument('--output', type=Path, default=ROOT / 'build-test-installer' / 'output')
     parser.add_argument('--iscc', type=Path)
     args = parser.parse_args(argv)

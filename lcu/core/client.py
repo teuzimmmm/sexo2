@@ -101,7 +101,7 @@ class LCU:
 
     def draft_request(self, path):
         """Fresh, bounded reads for builds, independent of the legacy GET cache."""
-        if path not in {'/lol-gameflow/v1/gameflow-phase', '/lol-gameflow/v1/session',
+        if path not in {'/lol-lobby/v2/lobby', '/lol-gameflow/v1/gameflow-phase', '/lol-gameflow/v1/session',
                         '/lol-champ-select/v1/session',
                         '/lol-game-data/assets/v1/champion-summary.json'}:
             raise ValueError('Leitura de seleção não permitida.')

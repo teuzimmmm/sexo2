@@ -19,11 +19,12 @@ log = logging.getLogger(__name__)
 
 
 class BuildService:
-    def __init__(self, lcu, collector, *, risk=get_risk_level, overlay=None):
+    def __init__(self, lcu, collector, *, risk=get_risk_level, overlay=None, item_plans=None):
         self.reader = DraftReader(lcu)
         self.collector = collector
         self.risk = risk
         self.overlay = overlay
+        self.item_plans = item_plans
         self._lock = threading.RLock()
         self._context_lock = threading.Lock()
         self._revision = None
@@ -157,6 +158,8 @@ class BuildService:
                                      runeMetricScope='keystone_observation', policy=deepcopy(value['policy']))
                                 for key, value in self._pages.items()],
                     'warnings': recommendation.warnings}
+            if self.item_plans is not None:
+                self.item_plans.prepare(context, [v['page'] for v in self._pages.values()])
             if self.overlay is not None:
                 try:
                     self.overlay.prepare(context, result, selected_id='vs:' + str(opponent['id']) if opponent else 'wr')

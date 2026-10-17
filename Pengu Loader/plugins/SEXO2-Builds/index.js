@@ -6,7 +6,7 @@ window.__sexo2Builds={};
 let bridge=null,host=null,panel=null,ctx=null,data=null,opened=false,sequence=0;
 let contextRequest=null,queryRequest=null,importRequest=null,queryTimer=null,lastQuery=null,pausedForGame=false,lastContextAt=0;
 let summary,status,entries,enemy,position,tier,details,warnings,runesButton,itemsButton,queryButton;
-const supportsPanel=context=>context?.phase==='ChampSelect'&&['ranked','aram'].includes(context.mode);
+const supportsPanel=context=>context?.phase==='ChampSelect'&&context.mode==='ranked';
 const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
 function button(text,fn){const n=el('button',text);n.type='button';n.onclick=fn;return n;}
 function option(value,label){const n=el('option',label);n.value=value;return n;}

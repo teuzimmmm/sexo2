@@ -106,6 +106,12 @@ print(json.dumps({'context':context,'result':result}));s.close()
   await page.waitForFunction(()=>!document.querySelector('#sexo2-builds'));
   await page.waitForTimeout(1700);
   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length),sourceCount,'Arena must not query the source');
+  for(const mode of ['aram','mayhem','swiftplay']){
+   await page.evaluate(mode=>{window.sample.context={...window.sample.context,mode,available:false,revision:mode};window.emit('phase-change',{phase:'ChampSelect'});},mode);
+   await page.waitForTimeout(1700);
+   assert.equal(await page.locator('#sexo2-builds').count(),0,mode+' must not mount draft panel');
+   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length),sourceCount,mode+' must not query draft builds');
+  }
   // Ranked uses the same LCU mode as normal SR; neither needs old carousel classes.
   await page.evaluate(()=>{
    document.querySelector('main').classList.remove('champion-select');

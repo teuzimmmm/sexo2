@@ -8,7 +8,7 @@ on:
         required: true
       version:
         description: Test edition (2.0.0.1 through 2.0.0.65535)
-        default: 2.0.0.6
+        default: 2.0.0.7
         required: true
       native_host_only:
         description: Test isolated DX11 candidate only; do not build an installer
@@ -76,7 +76,7 @@ jobs:
       - name: Build and audit test installer
         shell: pwsh
         env:
-          TEST_VERSION: ${{ inputs.version || '2.0.0.6' }}
+          TEST_VERSION: ${{ inputs.version || '2.0.0.7' }}
         run: |
           python scripts/build_test_installer.py --base "$env:RUNNER_TEMP/sexo2-baseline/SEXO2-baseline.zip" --version $env:TEST_VERSION
           if ($LASTEXITCODE -ne 0) { throw 'Test installer build failed.' }

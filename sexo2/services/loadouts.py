@@ -143,6 +143,8 @@ class LoadoutImporter:
                     return self._runes(selected, account, check)
                 if target == 'items':
                     return self._items(pages, champion_id, account, check)
+                if target == 'item-groups':
+                    return self._items_groups(pages, account, check)
                 raise BuildError('Tipo de importação inválido.')
             except BuildError:
                 raise
@@ -188,37 +190,55 @@ class LoadoutImporter:
             json.dump(self._state, file)
         return {'target': 'runes', 'verified': True, 'message': 'Runas importadas e confirmadas no cliente.'}
 
+    def apply_item_groups(self, groups, *, guard):
+        """At most two champion groups (the two lobby picks), same owned budget."""
+        return self.apply('item-groups', None, groups, None, guard=guard)
+
     def _items(self, pages, cid, account, check):
-        if not positive(cid):
-            raise BuildError('Campeão inválido para os conjuntos de itens.')
+        return self._items_groups([(cid, pages)], account, check)
+
+    def _items_groups(self, groups, account, check):
+        if (not isinstance(groups, (list, tuple)) or not 1 <= len(groups) <= 2
+                or any(not isinstance(g, (list, tuple)) or len(g) != 2 or not positive(g[0])
+                       or not isinstance(g[1], list) or not g[1] for g in groups)
+                or len({g[0] for g in groups}) != len(groups)):
+            raise BuildError('Campeões inválidos para os conjuntos de itens.')
         owner = uuid.UUID(self._identity())
         account_key = hashlib.sha256(f'{account[0]}:{account[1]}'.encode()).hexdigest()
         ids = [str(uuid.uuid5(owner, f'items:{account_key}:{slot}')) for slot in range(2)]
         known_items = self.catalog.names('items')
-        prepared = plan_item_pages(pages, max_pages=2, max_blocks_per_page=20)
         sets = []
-        for index, page in enumerate(prepared):
-            blocks = []
-            for prepared_block in page.blocks:
-                block = prepared_block.block
-                choices = []
-                for choice in block.choices:
-                    if choice.identifier not in known_items or not positive(choice.count):
-                        raise BuildError('Um item da sugestão não existe no catálogo atual do cliente.')
-                    choices.append({'id': choice.identifier, 'count': choice.count})
-                # Preserve observed core order and explicit alternatives as distinct blocks.
-                metrics = block.metrics or (block.choices[0].metrics if len(block.choices) == 1 else {})
-                label = prepared_block.label
-                if metrics.get('games') is not None:
-                    rate = metrics.get('win_rate')
-                    label += f" · {rate if rate is not None else '—'}% / {metrics['games']} jogos"
-                elif len(block.choices) > 1 and not block.ordered:
-                    label += ' · alternativas'
-                blocks.append({'type': label, 'items': choices})
-            sets.append({'uid': ids[index], 'title': 'SEXO2 · ' + page.title[:70],
-                         'type': 'custom', 'map': 'any', 'mode': 'any', 'sortrank': 0,
-                         'associatedChampions': [cid], 'associatedMaps': [11 if pages[0].query['mode'] == 'ranked' else 12],
-                         'preferredItemSlots': [], 'blocks': blocks})
+        for cid, pages in groups:
+            if any(p.resolved.get('cid') != cid for p in pages):
+                raise BuildError('O campeão dos itens não corresponde ao destino da importação.')
+            prepared = plan_item_pages(pages, max_pages=1 if len(groups) == 2 else 2, max_blocks_per_page=20)
+            for index, page in enumerate(prepared):
+                blocks = []
+                for prepared_block in page.blocks:
+                    block = prepared_block.block
+                    choices = []
+                    for choice in block.choices:
+                        if choice.identifier not in known_items or not positive(choice.count):
+                            raise BuildError('Um item da sugestão não existe no catálogo atual do cliente.')
+                        choices.append({'id': choice.identifier, 'count': choice.count})
+                    # Preserve observed core order and explicit alternatives as distinct blocks.
+                    metrics = block.metrics or (block.choices[0].metrics if len(block.choices) == 1 else {})
+                    label = prepared_block.label
+                    if metrics.get('games') is not None:
+                        rate = metrics.get('win_rate')
+                        if rate is not None:
+                            label += f" · {rate}% / {metrics['games']} jogos"
+                        elif metrics.get('pick_rate') is not None:
+                            label += f" · PR {metrics['pick_rate']}% / {metrics['games']} jogos"
+                        else:
+                            label += f" · {metrics['games']} jogos"
+                    elif len(block.choices) > 1 and not block.ordered and block.kind != 'suggested_core':
+                        label += ' · alternativas'
+                    blocks.append({'type': label, 'items': choices})
+                sets.append({'uid': ids[len(sets)], 'title': 'SEXO2 · ' + page.title[:70],
+                             'type': 'custom', 'map': 'any', 'mode': 'any', 'sortrank': 0,
+                             'associatedChampions': [cid], 'associatedMaps': [11 if pages[0].query['mode'] in ('ranked', 'swift') else 12],
+                             'preferredItemSlots': [], 'blocks': blocks})
         path = f'/lol-item-sets/v1/item-sets/{account[0]}/sets'
         before = self.lcu.loadout_request('GET', path)
         if (not isinstance(before, dict) or before.get('accountId') != account[1]

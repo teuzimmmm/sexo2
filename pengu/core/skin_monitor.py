@@ -114,6 +114,8 @@ class PenguSkinMonitorThread(threading.Thread):
         self._build_overlay = OverlayRuntime(lcu, enabled=get_overlay_enabled,
                                             champion=lambda: getattr(shared_state, 'locked_champ_id', None)
                                             or getattr(shared_state, 'hovered_champ_id', None))
+        self.message_handler.item_plans = self._build_overlay.item_plans
+        self.message_handler.item_importer_provider = self._build_overlay.item_importer
         self.message_handler.overlay_store = self._build_overlay.store
         self.message_handler.overlay_runtime = self._build_overlay
 

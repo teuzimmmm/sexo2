@@ -104,7 +104,8 @@ class DraftReader:
                 if not isinstance(queue, dict):
                     queue = {}
                 qid = queue.get('id', data.get('queueId'))
-                mode = game_mode(data)
+                from .session import play_mode
+                mode = play_mode(data)
                 if mode == 'ranked':
                     if qid not in (420, 440):
                         warning = 'As estatísticas de Summoner’s Rift são da fila Ranked.'

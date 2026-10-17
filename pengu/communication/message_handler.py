@@ -687,8 +687,11 @@ class MessageHandler:
                 if lcu is None:
                     failed(BuildError('O cliente LoL ainda não está conectado.')); return
                 self._build_service = BuildService(lcu, Client(cache_dir=get_user_data_dir() / 'lolalytics-cache'),
-                                                   overlay=getattr(self, 'overlay_store', None))
-                self._loadout_importer = LoadoutImporter(lcu, get_user_data_dir() / 'sexo2-loadouts.json')
+                                                   overlay=getattr(self, 'overlay_store', None),
+                                                   item_plans=getattr(self, 'item_plans', None))
+                provider = getattr(self, 'item_importer_provider', None)
+                shared_importer = provider() if provider else None
+                self._loadout_importer = shared_importer or LoadoutImporter(lcu, get_user_data_dir() / 'sexo2-loadouts.json')
                 self._build_context_worker = SerialWorker('SEXO2-Build-context', capacity=1)
                 self._build_worker = SerialWorker('SEXO2-Builds', capacity=2)
             service, importer = self._build_service, self._loadout_importer

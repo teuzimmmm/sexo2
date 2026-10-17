@@ -69,6 +69,8 @@ def _finite_number(value, name, *, positive=False):
 class HTTPTransport:
     """Serialized requests session with bounded retries and response size."""
 
+    validate_url = staticmethod(_validate_url)
+
     def __init__(self, session=None, *, timeout=(5, 20), max_bytes=_MAX_RESPONSE_BYTES,
                  max_wait=30.0, min_interval=1.0, attempts=3, clock=time.monotonic,
                  wall_clock=time.time, sleep=time.sleep):
@@ -110,7 +112,7 @@ class HTTPTransport:
         self._last_request = self._clock()
 
     def get(self, url: str) -> bytes:
-        _validate_url(url)
+        self.validate_url(url)
         with self._lock:
             if self._closed:
                 raise TransportError("HTTP transport is closed")
