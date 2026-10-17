@@ -1,7 +1,7 @@
 # Coletor LoLalytics
 
 Biblioteca Python independente do SEXO2, com CLI JSON. Coleta dados agregados
-públicos de campeão em **Ranked/Summoner’s Rift, ARAM e Arena** por HTTP direto,
+públicos de campeão em **Ranked/Summoner’s Rift, ARAM, Arena e Swiftplay** por HTTP direto,
 sem navegador permanente. Não é uma API oficial e depende de fontes internas
 instáveis do LoLalytics. As integrações no cliente LoL ficam fora desta entrega.
 
@@ -15,6 +15,7 @@ python -m pip install requests==2.34.2
 python -m lolalytics ahri --lane middle --patch 16.20
 python -m lolalytics jinx --mode aram --tier all
 python -m lolalytics ahri --mode arena
+python -m lolalytics ahri --mode swift --builds
 python -m lolalytics ahri --patch 16.19 --tier gold --region br --lane middle
 python -m lolalytics ahri --patch 16.20 --item-sets
 ```
@@ -220,3 +221,8 @@ ou release foi produzido.
 
 Arquitetura: [ARQUITETURA.md](ARQUITETURA.md). Evidências e matriz:
 [FONTES.md](FONTES.md). Plano e rodadas: [PLANO.md](PLANO.md).
+
+Swiftplay: apenas região `all`, tier `emerald_plus`, sem filtro de rota/runa.
+`--builds` retorna summaries gerais (`conditioning=mode`); não afirmar que os
+itens foram filtrados pela runa. Mayhem tem um adaptador comunitário separado,
+fora do pacote `lolalytics`; ver [matriz de modos](../FUNCIONALIDADE_PARTIDAS.md).

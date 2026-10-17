@@ -209,3 +209,10 @@ O coordenador também reproduziu GET do chunk de menu
 foi `["ranked","aram","swift","arena"]`. Isso confirma o conteúdo do menu
 consultado, sem provar inexistência de Mayhem em outras superfícies do site.
 Nenhum código da biblioteca ou CLI foi alterado nesta rodada de testes.
+
+## Atualização em 17/10/2026
+
+O resultado histórico acima descreve LoLalytics. Uma fonte pública comunitária
+aramkit específica de Mayhem foi depois reproduzida e integrada ao aplicativo,
+sem fingir que é um endpoint LoLalytics. Evidências, filtros e limitações atuais
+na [matriz de modos](../FUNCIONALIDADE_PARTIDAS.md).

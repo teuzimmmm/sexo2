@@ -123,3 +123,36 @@ não é garantida pelo compositor externo. Sem hooks no processo do LoL.
   A CLI `lolalytics` continua sendo exclusivamente LoLalytics; Mayhem fica no
   adaptador próprio `sexo2.sources.mayhem.MayhemClient`, com `pools(103)` e
   `builds(103, 'ahri', 'Ahri')`. Fechar o cliente com `close()` ao terminar.
+
+ARAM foi também reconsultado por HTTP em 17/10: Jinx, tier all, patch 16.20,
+WR/Common com keystone 8008 e cinco blocos cada. Reprodução:
+`Client().collect_builds(Query("jinx", mode="aram", tier="all"))`, fechando o
+cliente ao terminar. Resultado sanitizado em `docs/lolalytics/modes-live-2026-10-17.json`.
+
+## Pacote auditado — 2.0.0.7
+
+CI privado [39007544851](https://github.com/teuzimmmm/sexo2/actions/runs/39007544851)
+concluído com sucesso. Código `3042968326042f87661bd0ebbf69ac94a6298a88`.
+
+- 533 testes gerais Windows (10 skips de checks nativos opt-in), seguidos de
+  7 testes nativos executados explicitamente: pixels nas três faixas, transparência
+  dos intervalos, F7, paginação, foco, clique através e recuperação de z-order.
+- Chromium isolado: painel normal/ranked, antes da escolha, importação, erros,
+  respostas atrasadas, recuperação sem evento e exclusão nos demais modos.
+- Auditoria do frozen e de cada plugin; DLL/renderizador e helper OCR incluídos.
+- Instalação/reinstalação/desinstalação; DLL **instalada** realmente carregada e
+  desenhada em HWND sintético próprio; sentinelas de dados antigos preservadas.
+- 526 testes compatíveis com Linux passaram (10 skips); o módulo histórico
+  `test_startup_policy` foi excluído desse comando por exigir `ctypes.windll` e
+  foi executado na suíte Windows. Dois testes Node das configurações passaram.
+- **Não foi iniciada uma partida ou cliente real do LoL no CI.** As ressalvas
+  de geometria, carregamento efetivo no Pengu do PC e loja em partida permanecem.
+
+Artefato privado [12091312878](https://github.com/teuzimmmm/sexo2/actions/runs/39007544851/artifacts/12091312878),
+retenção de sete dias. Executável `SEXO2-2.0.0.7-Teste-30429683.exe`, 61123942 bytes.
+SHA-256: `3d29b581e9db38186f2d0488100325da0cc5942d8ebdde2b139d53ef70c08f73`.
+Renderer: `da1949023d4d6585d8652de32d75104630554c351ec7780adaefa82175d2681b`; OCR: `1d2618ac7c1a811b249d4027a113bfe90ae182548188fc40ba456b4bb9275973`.
+
+No cliente, a edição deve aparecer como **2.0.0.7 (teste)** nas configurações do
+SEXO2. Esses resultados não sustentam uma promessa de overlay sobre tela cheia
+exclusiva, nem confirmam a causa do painel ausente no computador do usuário.

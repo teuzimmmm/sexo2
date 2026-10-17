@@ -220,3 +220,10 @@ SHA-256 `09d63fc083a03e1b93dcda420eea66ea4fa7cc168aecdea16bcf8652f0c661ce`.
 DLL incluída: `a45c43197b82897f1117a27737dc9581f3db84a56debc61b6eaa06a9c91d4400`.
 O leitor OCR continua incluído. Não houve validação de partida real; a janela
 externa destina-se a janela/sem bordas e não garante tela cheia exclusiva.
+
+### Validação Windows — 2.0.0.7
+
+Novo pacote de itens por modo, comparação de inventários e três faixas de PR.
+CI 39007544851 aprovado, incluindo instalação/reinstalação/desinstalação e DLL
+instalada renderizando sobre janela sintética. Código `3042968326042f87661bd0ebbf69ac94a6298a88`.
+Resultados, hash, download e limites na [matriz atual](FUNCIONALIDADE_PARTIDAS.md#pacote-auditado--2007).

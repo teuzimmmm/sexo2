@@ -390,3 +390,15 @@ Situação atual: renderer DirectComposition integrado e pacote testável entreg
 pendentes confirmação em LoL janela/sem bordas, calibração de cartas reais, fonte
 estatística Mayhem e medidas de consumo no programa completo. Tela cheia
 exclusiva não faz parte do suporte confirmado. Nenhum hook/injetor foi integrado.
+
+## Rodada 2.0.0.7
+
+Uma superfície curta desenha três regiões separadas por transparência, na ordem
+esquerda/centro/direita das ofertas reconhecidas. Arena usa apenas augment0 do
+LoLalytics; Mayhem usa pools por campeão de aramkit via cache comunitário.
+Não aproveitar hover para selecionar o campeão das estatísticas. O ouro de SR e
+Swiftplay compara apenas inventários observados, com troca de oponente em F7.
+
+Sete testes Windows de pixels/atalhos e carregamento da DLL instalada aprovados
+no CI 39007544851. Geometria de cartas e visibilidade no LoL real continuam sem
+validação de partida. Ver [matriz vigente](FUNCIONALIDADE_PARTIDAS.md).
