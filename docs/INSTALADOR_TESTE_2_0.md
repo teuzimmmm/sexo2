@@ -117,6 +117,26 @@ O suporte final a instalação independente e limpeza permanece pendente.
 - Compilação efetiva de PyInstaller/Inno Setup permanece dependente de Windows.
   Não foi produzido um `.exe` por compilação neste ambiente Linux.
 
+### Validação posterior em Windows — 2.0.0.2
+
+O [job privado 38993159782](https://github.com/teuzimmmm/sexo2/actions/runs/38993159782)
+compilou o código `6974b506e578ab2bd070c57c8c84c951cd6373b9` com sucesso.
+Passaram 447 testes Python, o teste do painel em navegador isolado, a auditoria
+do pacote e instalação/reinstalação/desinstalação em Windows descartável.
+Os marcadores sintéticos do legado foram preservados. Não houve execução do LoL.
+
+O artefato `12086445291` contém `SEXO2-2.0.0.2-Teste-6974b506.exe`.
+O download foi conferido contra o checksum e o relatório de compilação:
+SHA-256 `4aa76f54012b7c63f15fa4df98883e7b0ab2c19cb07a36d3ebd4fe6704ebca1a`.
+Essas verificações substituem a pendência de compilação acima para essa edição
+de teste; a validação no cliente real e a migração definitiva continuam pendentes.
+
+O relato posterior do usuário distingue ausência do painel na seleção e de uma
+interface durante a partida. Esta edição corrige a condição de exibição na
+seleção; não contém uma interface sobre a partida. O plugin fecha ao sair de
+ChampSelect. Importar conjuntos de itens pelo LCU não cria um overlay dentro do
+jogo. Uma interface em partida requer projeto e implementação próprios.
+
 O primeiro job Windows identificou a mudança do limite de recursão JSON no Python
 3.14 e a normalização de nomes ZIP pela stdlib no Windows. O cliente agora limita
 explicitamente a profundidade do cache a 128 contêineres; um cache inválido vira
