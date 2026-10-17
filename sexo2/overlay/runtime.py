@@ -188,6 +188,27 @@ class OverlayRuntime:
                 return self._offered_frame(self._offer_context)
             return self._frame
 
+    def display_frame(self):
+        """A renderer health notice never reuses unconfirmed match data.
+
+        The window independently requires the real game in the foreground.
+        Keeping source failure visible avoids hiding the renderer along with
+        the metrics when the League client disconnects/minimizes/closes.
+        """
+        frame = self.frame()
+        if frame.active or self._stop.is_set():
+            return frame
+        with self._lock:
+            code = self._diagnostic['code']
+            expired = self._clock() - self._observed_at > 8
+            started = self._observed_at != float('-inf')
+        if code == 'client-unavailable' or (started and expired and code in ('match', 'offers')):
+            return Frame(True, View('source-unavailable', (Card('SEXO2 · dados indisponíveis',
+                ('Não foi possível confirmar a partida pelo cliente LoL.',
+                 'Confira se o cliente continua aberto e conectado.',
+                 'As métricas foram ocultadas até confirmar o contexto.')),)))
+        return frame
+
     def start(self):
         if self._thread is not None or self._stop.is_set():
             return
@@ -197,7 +218,7 @@ class OverlayRuntime:
             from .win32 import NativeOverlay
             self._factory = NativeOverlay
         try:
-            self._window = self._factory(self.frame)
+            self._window = self._factory(self.display_frame)
             self._window.start()
             self._thread = threading.Thread(target=self._run, name='SEXO2-Overlay-context', daemon=True)
             self._thread.start()

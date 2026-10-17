@@ -121,6 +121,20 @@ class OverlayTests(unittest.TestCase):
         self.lcu.phase = 'Reconnect'
         self.assertEqual(len(self.runtime.poll().view.cards), 2)
 
+    def test_lcu_failure_keeps_only_a_renderer_notice_without_stale_match_data(self):
+        self.assertTrue(self.playing().active)
+        self.lcu.draft_request = Mock(side_effect=TimeoutError('PRIVATE'))
+        self.runtime.poll()
+        self.assertFalse(self.runtime.frame().active)
+        notice = self.runtime.display_frame()
+        self.assertTrue(notice.active)
+        self.assertIn('dados indisponíveis', str(notice))
+        self.assertNotIn('Ahri', str(notice))
+        self.assertNotIn('PRIVATE', str(notice))
+        self.assertNotIn('%', str(notice))
+        self.runtime.stop()
+        self.assertFalse(self.runtime.display_frame().active)
+
     def test_unstable_phase_missing_identity_and_malformed_response_fail_closed(self):
         for responses in [('InProgress', self.lcu.game, 'EndOfGame'), ('InProgress', {}, 'InProgress'),
                           ('InProgress', [], 'InProgress')]:

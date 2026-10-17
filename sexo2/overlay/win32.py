@@ -29,6 +29,7 @@ class NativeOverlay:
         self._registered = set()
         self._hotkey_attempted = False
         self._visible = False
+        self._position = None
         self._state = None
         self._diagnostic = {'code': 'not-started', 'message': 'Janela ainda não iniciada.', 'windowShown': False}
 
@@ -97,16 +98,6 @@ class NativeOverlay:
         bind(self.u, 'InvalidateRect', W.BOOL, W.HWND, W.LPVOID, W.BOOL)
         bind(self.u, 'BeginPaint', W.HDC, W.HWND, C.POINTER(Paint))
         bind(self.u, 'EndPaint', W.BOOL, W.HWND, C.POINTER(Paint))
-        bind(self.u, 'FillRect', C.c_int, W.HDC, C.POINTER(W.RECT), W.HBRUSH)
-        bind(self.u, 'DrawTextW', C.c_int, W.HDC, W.LPCWSTR, C.c_int, C.POINTER(W.RECT), W.UINT)
-        bind(self.g, 'CreateSolidBrush', W.HBRUSH, W.DWORD)
-        bind(self.g, 'CreateFontW', W.HFONT, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
-             W.DWORD, W.DWORD, W.DWORD, W.DWORD, W.DWORD, W.DWORD, W.DWORD, W.DWORD, W.LPCWSTR)
-        bind(self.g, 'SelectObject', W.HANDLE, W.HDC, W.HANDLE)
-        bind(self.g, 'DeleteObject', W.BOOL, W.HANDLE)
-        bind(self.g, 'SetBkMode', C.c_int, W.HDC, C.c_int)
-        bind(self.g, 'SetTextColor', W.DWORD, W.HDC, W.DWORD)
-        bind(self.g, 'GetTextExtentPoint32W', W.BOOL, W.HDC, W.LPCWSTR, C.c_int, C.POINTER(W.SIZE))
 
     def _foreground_bounds(self, preview=False):
         hwnd = self.foreground_hwnd() if self.foreground_hwnd else self.u.GetForegroundWindow()
@@ -182,12 +173,16 @@ class NativeOverlay:
             self._state = state
         # Another topmost application (including the game) can change z-order
         # without changing our data. Reassert every 200 ms, never activate/focus.
-        if not self.u.SetWindowPos(self.hwnd, W.HWND(-1), x + bounds[2] - width - 12, y + 110,
-                                   width, height, 0x10 | 0x40):
+        position = (x + bounds[2] - width - 12, y + 110, width, height)
+        flags = 0x10 | 0x40
+        if position == self._position:
+            flags |= 0x1 | 0x2  # SWP_NOSIZE | SWP_NOMOVE; z-order still repaired.
+        if not self.u.SetWindowPos(self.hwnd, W.HWND(-1), *position, flags):
             self.u.ShowWindow(self.hwnd, 0)
             self._visible = False
             self._status('show-failed', 'O Windows recusou exibir a janela do overlay.')
             return
+        self._position = position
         self._raises += 1
         self._visible = True
         self._status('preview' if frame.preview else 'visible',
@@ -298,6 +293,7 @@ class NativeOverlay:
             self._status('window-error', self.error)
             log.warning(self.error)
         finally:
+            self._visible = False
             if self._renderer is not None:
                 self._renderer.close()
                 self._renderer = None

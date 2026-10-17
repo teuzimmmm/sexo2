@@ -36,8 +36,8 @@ struct Surface {
     HRESULT init(HWND hwnd) {
         if (FAILED(apartment.status)) return apartment.status;
         DWORD pid = 0;
-        GetWindowThreadProcessId(hwnd, &pid);
-        if (pid != GetCurrentProcessId()) return E_ACCESSDENIED;
+        DWORD thread = GetWindowThreadProcessId(hwnd, &pid);
+        if (pid != GetCurrentProcessId() || thread != GetCurrentThreadId()) return E_ACCESSDENIED;
         HRESULT result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
             D3D11_CREATE_DEVICE_BGRA_SUPPORT, nullptr, 0, D3D11_SDK_VERSION,
             d3d.GetAddressOf(), nullptr, nullptr);

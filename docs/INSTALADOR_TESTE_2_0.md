@@ -51,7 +51,7 @@ com alterações registradas no Git:
 
 ```powershell
 python -m pip install -r requirements.txt
-python scripts/build_test_installer.py --base "C:\pacotes\SEXO2-baseline.zip" --version 2.0.0.5
+python scripts/build_test_installer.py --base "C:\pacotes\SEXO2-baseline.zip" --version 2.0.0.6
 ```
 
 `--base` também aceita uma pasta existente do SEXO2 contendo `_internal`.
@@ -95,7 +95,7 @@ O instalador não fecha processos
 
 Na seleção, abra `SEXO2 · Builds`, consulte WR/Common e importe explicitamente
 runas/itens. Ao finalizar o draft, escolha um adversário. A edição aparece como
-`2.0.0.5 (teste)` nas configurações. Se houver um Pengu externo ativo, aplica-se a
+`2.0.0.6 (teste)` nas configurações. Se houver um Pengu externo ativo, aplica-se a
 limitação de sincronização descrita em `DESENVOLVIMENTO_2_0.md`; não sobrescrevemos
 uma instalação externa silenciosamente.
 
@@ -188,3 +188,18 @@ instalação: SHA-256 `e22534d8c0a32fe818d87de42923d6663d77fa99aacc8b39a289dd471
 O helper incluído tem SHA-256
 `57b9d49766b36e4c1adf8294dc029dba596fbfc7b76df15becc7efca212fdb0d`.
 Os limites visuais/no jogo descritos no plano da edição continuam pendentes.
+
+### Plano 2.0.0.6 — DirectComposition
+
+Edição para testar o novo renderer DirectComposition/D3D11/Direct2D/DirectWrite,
+sem GDI de desenho, hooks ou integração com Game Bar/Overwolf/Electron.
+A DLL pertence somente ao processo SEXO2; não é carregada no LoL. O instalador
+compila a DLL com MSVC/Windows SDK e audita seu hash. O smoke confere a DLL
+instalada e a carrega/desenha em um HWND sintético antes de desinstalar.
+Ver [OVERLAY_MOTOR.md](OVERLAY_MOTOR.md#correção-de-composição--plano-antes-do-código-17102026).
+
+O controlador reafirma o z-order mesmo sem novos dados, usa pixels físicos e
+abre o painel expandido. A espera pelo OCR e a perda do LCU têm avisos visíveis
+somente sobre o processo do jogo em primeiro plano; não exibem dados antigos
+ou ofertas presumidas. Janela/sem bordas é o caminho previsto. Tela cheia
+exclusiva e uma partida real do LoL não foram validadas neste runner.

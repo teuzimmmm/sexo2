@@ -14,6 +14,8 @@ if ((Test-Path -LiteralPath $target) -or (Test-Path -LiteralPath $newKey) -or (T
 }
 if ($ExpectedCommit -notmatch '^[0-9a-f]{40}$') { throw 'Invalid expected commit.' }
 $installerPath = (Resolve-Path -LiteralPath $Installer).Path
+$buildReport = Get-Content -LiteralPath ([IO.Path]::ChangeExtension($installerPath, '.json')) -Raw | ConvertFrom-Json
+if ($buildReport.sourceCommit -ne $ExpectedCommit -or $buildReport.overlayRendererSha256 -notmatch '^[0-9a-f]{64}$') { throw 'Renderer build receipt missing or invalid.' }
 $marker = 'synthetic-installer-smoke-' + [Guid]::NewGuid().ToString('N')
 $sentinels = @()
 try {
@@ -44,9 +46,38 @@ try {
         foreach ($excluded in @('_internal\assets\update-access.json','_internal\Pengu Loader\config','_internal\Pengu Loader\datastore')) {
             if (Test-Path -LiteralPath (Join-Path $target $excluded)) { throw 'Private state leaked into installed package.' }
         }
+        $renderer = Join-Path $target '_internal\sexo2\overlay\bin\sexo2-overlay-renderer.dll'
+        if ((Get-FileHash -LiteralPath $renderer).Hash.ToLowerInvariant() -ne $buildReport.overlayRendererSha256) { throw 'Installed renderer digest mismatch.' }
         $record = Get-ItemProperty -LiteralPath $newKey
         if ($record.DisplayName -notlike '*Teste*') { throw 'Test uninstall registration missing.' }
     }
+    # Load and exercise the actual installed DLL in this isolated Python process.
+    # No SEXO2, League or Pengu executable is started.
+    $probe = @'
+import sys
+from pathlib import Path
+from sexo2.overlay.runtime import Frame
+from sexo2.overlay.win32 import NativeOverlay
+from sexo2.overlay.composition import Composition
+sys._MEIPASS = str(Path(sys.argv[1]) / '_internal')
+w = NativeOverlay(lambda: Frame())
+w._api()
+hwnd = w.u.CreateWindowExW(0, 'STATIC', 'synthetic installed renderer', 0x80000000,
+    0, 0, 420, 100, None, None, w.k.GetModuleHandleW(None), None)
+if not hwnd:
+    raise RuntimeError('Synthetic HWND creation failed.')
+try:
+    renderer = Composition(hwnd)
+    try:
+        renderer.draw(420, 100, 'SEXO2', 'Installed renderer test', 'Synthetic only')
+    finally:
+        renderer.close()
+finally:
+    w.u.DestroyWindow(hwnd)
+print('PASS: installed composition DLL loaded and rendered on its own synthetic HWND.')
+'@
+    python -c $probe $target
+    if ($LASTEXITCODE -ne 0) { throw 'Installed composition DLL did not load/render.' }
     $uninstaller = Join-Path $target 'unins000.exe'
     $process = Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw 'Uninstaller did not succeed.' }
@@ -58,7 +89,7 @@ try {
     foreach ($file in $sentinels) {
         if ((Get-Content -LiteralPath $file -Raw) -ne $marker) { throw 'Legacy data sentinel changed.' }
     }
-    @{ installed=$true; reinstalled=$true; uninstalled=$true; legacySentinelsPreserved=$true;
+    @{ installed=$true; reinstalled=$true; uninstalled=$true; legacySentinelsPreserved=$true; installedRendererLoaded=$true;
        sourceCommit=$ExpectedCommit; nativeLeagueValidation=$false } |
         ConvertTo-Json | Set-Content -LiteralPath $ReportPath -Encoding utf8
     Write-Output 'PASS: Windows install/reinstall/uninstall; current plugin/version and legacy preservation verified. No application/game was launched.'

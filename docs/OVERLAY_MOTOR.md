@@ -2,8 +2,10 @@
 
 Investigação de 17/10/2026, após o usuário informar que a edição 2.0.0.4
 também não exibiu o overlay. Este documento sucede a tentativa descrita em
-[OVERLAY_CORRECOES.md](OVERLAY_CORRECOES.md). **Não há novo motor integrado
-ou validado no LoL.** Não entregar novamente a janela anterior como correção.
+[OVERLAY_CORRECOES.md](OVERLAY_CORRECOES.md). A rodada de composição ao final
+integra DirectComposition ao produto; **ainda não há validação no LoL real**.
+A janela GDI anterior não é mais o renderer de produção. As seções de pesquisa
+e laboratório abaixo registram as etapas anteriores.
 
 ## Restrições e situação
 
@@ -346,3 +348,27 @@ Validar: pixels realmente compostos sobre outra janela, perda/recuperação de
 z-order sem mudar dados, clique passando ao alvo, foco preservado, DPI/geometria,
 atalhos/paginação, ocultação em alt-tab/expiração e liberação. Suíte de regressão,
 Windows real descartável e pacote auditado; teste com LoL continua separado.
+
+### Resultado da composição antes de empacotar
+
+O [job Windows 39004397951](https://github.com/teuzimmmm/sexo2/actions/runs/39004397951),
+código `e1afd6b82d9b4ec5b1ce8919ae495089285ae6db`, compilou a DLL e passou cinco
+testes nativos. O teste de pixels lê a composição na área de trabalho, cobre-a
+com outro topmost branco e verifica que ela volta sem novas pinturas/dados.
+Também verifica passagem de hit-test, ausência de foco próprio, atalhos,
+paginação, geometria de HWND real, ocultação e encerramento. Os testes de OCR
+sintético continuaram passando. A primeira execução falhou numa suposição do
+teste sobre hit-test de STATIC; corrigiu-se o teste e repetiu-se a rodada.
+
+O runtime distingue projeção de dados de aviso de renderer. Perda/expiração do
+LCU mantém apenas aviso estático, sem campeão ou métrica antiga, enquanto a
+janela ainda exige o executável do jogo em primeiro plano. Desligar, sair da
+partida ou parar continua ocultando/encerrando. Isso também permite diagnosticar
+configurações do cliente que o fecham durante a partida; não é uma nova fonte de
+estatísticas sem LCU. Não presume que essa foi a causa do relato do usuário.
+
+O empacotamento 2.0.0.6 deve repetir os testes com a última revisão e exercitar a
+DLL efetivamente instalada. Sucesso em HWND próprio não é prova de tela cheia
+exclusiva, compatibilidade com Vanguard ou leitura de cartas reais. O laboratório
+hudhook permanece separado e não foi promovido a injetor. Não foi medido consumo
+comparativo com Blitz/U.GG; a composição só é repintada quando muda o conteúdo.
