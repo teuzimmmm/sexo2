@@ -3,7 +3,7 @@
 [tool.ruff]
 target-version = "py313"  # keeps `except (A, B)` parenthesized; 3.14-only syntax breaks older tools
 line-length = 120
-extend-exclude = ["vendor", "Pengu Loader"]
+extend-exclude = ["vendor", "Pengu Loader", "docs"]
 
 [tool.ruff.lint]
 # Blocking set: syntax errors and undefined names only. Wider rules are
