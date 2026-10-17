@@ -318,3 +318,31 @@ Windows real e imagens/janela sintéticas; nenhuma carta real de partida foi
 validada. A fonte de estatísticas de Mayhem no LoLalytics e a correção do renderer
 em jogo continuam pendentes. Não apresentar os testes acima como prova dessas
 funcionalidades.
+
+## Correção de composição — plano antes do código (17/10/2026)
+
+Problemas reproduzíveis por inspeção: `SetWindowPos(HWND_TOPMOST)` só é chamado
+quando o conteúdo/geometria muda; outro topmost pode encobrir o painel para
+sempre. A janela também oculta toda a UI em Arena/Mayhem sem uma oferta OCR,
+impedindo distinguir ausência de dados de ausência do renderer. Isso não prova
+qual problema ocorreu no PC do usuário.
+
+Substituir o desenho GDI por DirectComposition + Direct3D 11 + Direct2D/DirectWrite
+em DLL própria carregada **somente pelo SEXO2**. Preservar o controlador Win32 e
+os atalhos, com nova reafirmação periódica do z-order, geometria em pixels físicos
+e diagnóstico de desenho separado do estado de dados. Sem hook, injetor, acesso
+à memória do jogo, Game Bar, Overwolf ou Electron. A janela externa destina-se a
+janela/sem bordas; não prometer tela cheia exclusiva nem mudar opções do jogo.
+
+Contratos: DLL C ABI recebe HWND pertencente ao próprio processo e textos de
+apresentação limitados, retorna HRESULT, libera todos os objetos COM antes de
+destruir a janela. Nenhum HTTP, arquivo de captura ou thread permanente nativa.
+Build usa MSVC/Windows SDK instalados no runner; o empacotador audita o hash da
+DLL compilada. Falha de criação/desenho aparece como falha, sem retornar ao GDI.
+O runtime mantém um pequeno estado de espera em Arena/Mayhem sem publicar
+ofertas ou métricas falsas; cartas confirmadas continuam sendo só as lidas.
+
+Validar: pixels realmente compostos sobre outra janela, perda/recuperação de
+z-order sem mudar dados, clique passando ao alvo, foco preservado, DPI/geometria,
+atalhos/paginação, ocultação em alt-tab/expiração e liberação. Suíte de regressão,
+Windows real descartável e pacote auditado; teste com LoL continua separado.

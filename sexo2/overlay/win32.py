@@ -1,10 +1,11 @@
-"""External Win32/GDI window. No hooks, injection, game memory or browser."""
+"""External DirectComposition window; Win32 owns focus, geometry and hotkeys."""
 import ctypes as C
 from ctypes import wintypes as W
 import logging
 import threading
 import textwrap
 from .processes import ProcessCatalog
+from .composition import Composition
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,8 @@ class NativeOverlay:
         self.error = None
         self._expanded = False
         self._index = self._page = 0
+        self._renderer = None
+        self._renders = self._raises = 0
         self._view = None
         self._registered = set()
         self._hotkey_attempted = False
@@ -30,7 +33,8 @@ class NativeOverlay:
         self._diagnostic = {'code': 'not-started', 'message': 'Janela ainda não iniciada.', 'windowShown': False}
 
     def diagnostic(self):
-        return dict(self._diagnostic, hotkeys={f'F{i + 7}': i in self._registered for i in (1, 2, 3)})
+        return dict(self._diagnostic, engine='directcomposition-d3d11', renders=self._renders,
+                    raises=self._raises, driver=getattr(self._renderer, 'driver', None), hotkeys={f'F{i + 7}': i in self._registered for i in (1, 2, 3)})
 
     def _status(self, code, message):
         self._diagnostic = {'code': code, 'message': message,
@@ -81,6 +85,7 @@ class NativeOverlay:
         bind(self.u, 'RegisterHotKey', W.BOOL, W.HWND, C.c_int, W.UINT, W.UINT)
         bind(self.u, 'UnregisterHotKey', W.BOOL, W.HWND, C.c_int)
         bind(self.u, 'GetForegroundWindow', W.HWND)
+        bind(self.u, 'SetThreadDpiAwarenessContext', W.HANDLE, W.HANDLE)
         bind(self.u, 'IsIconic', W.BOOL, W.HWND)
         bind(self.u, 'IsWindowVisible', W.BOOL, W.HWND)
         bind(self.u, 'GetWindowThreadProcessId', W.DWORD, W.HWND, C.POINTER(W.DWORD))
@@ -164,7 +169,7 @@ class NativeOverlay:
             self._view = frame.view
             self._index, self._page = frame.view.selected, 0
             if new_match:
-                self._expanded = frame.preview or 1 not in self._registered
+                self._expanded = True
         x, y, width, height = bounds
         width = min(420, width - 24)
         height = min(570, height - 160) if self._expanded else 40
@@ -173,59 +178,46 @@ class NativeOverlay:
             return
         state = (x, y, width, height, frame.view, self._expanded, self._index, self._page)
         if state != self._state or not self._visible:
-            # HWND_TOPMOST, SWP_NOACTIVATE | SWP_SHOWWINDOW
-            if not self.u.SetWindowPos(self.hwnd, W.HWND(-1), x + bounds[2] - width - 12, y + 110,
-                                       width, height, 0x10 | 0x40):
-                self.u.ShowWindow(self.hwnd, 0)
-                self._visible = False
-                self._status('show-failed', 'O Windows recusou exibir a janela do overlay.')
-                return
-            self.u.InvalidateRect(self.hwnd, None, True)
+            self._paint(width, height)
             self._state = state
-            self._visible = True
-            self._status('preview' if frame.preview else 'visible',
-                         'Prévia temporária exibida pelo Windows.' if frame.preview else 'Janela do overlay exibida pelo Windows.')
+        # Another topmost application (including the game) can change z-order
+        # without changing our data. Reassert every 200 ms, never activate/focus.
+        if not self.u.SetWindowPos(self.hwnd, W.HWND(-1), x + bounds[2] - width - 12, y + 110,
+                                   width, height, 0x10 | 0x40):
+            self.u.ShowWindow(self.hwnd, 0)
+            self._visible = False
+            self._status('show-failed', 'O Windows recusou exibir a janela do overlay.')
+            return
+        self._raises += 1
+        self._visible = True
+        self._status('preview' if frame.preview else 'visible',
+                     'Prévia desenhada por DirectComposition.' if frame.preview else
+                     'DirectComposition desenhou o painel; exibição no LoL ainda requer confirmação visual.')
 
-    def _paint(self, hwnd):
-        paint, rect = self.Paint(), W.RECT()
-        dc = self.u.BeginPaint(hwnd, C.byref(paint))
-        try:
-            self.u.GetClientRect(hwnd, C.byref(rect))
-            self.u.FillRect(dc, C.byref(rect), self._brush)
-            previous = self.g.SelectObject(dc, self._font)
-            self.g.SetBkMode(dc, 1)
-            self.g.SetTextColor(dc, 0xAEC1C8)
-            size = W.SIZE()
-            self.g.GetTextExtentPoint32W(dc, 'M', 1, C.byref(size))
-            line_height = max(18, size.cy + 3)
-            columns = max(20, (rect.right - 28) // max(8, size.cx))
-            def draw(value, y):
-                r = W.RECT(14, y, rect.right - 14, y + line_height)
-                self.u.DrawTextW(dc, value, -1, C.byref(r), 0x800 | 0x20)  # NOPREFIX | SINGLELINE
-            draw('SEXO2 · F8 expandir/recolher' if 1 in self._registered else 'SEXO2 · F8 ocupado em outro aplicativo', 10)
-            if self._expanded:
-                cards = self._view.cards if self._view else ()
-                if cards:
-                    self._index %= len(cards)
-                    card = cards[self._index]
-                    rows = []
-                    for line in (card.title, '', *card.lines):
-                        rows.extend(textwrap.wrap(line, width=columns, break_long_words=True) or [''])
-                    capacity = max(1, (rect.bottom - 90) // line_height)
-                    count = max(1, (len(rows) + capacity - 1) // capacity)
-                    self._page %= count
-                    for i, line in enumerate(rows[self._page * capacity:(self._page + 1) * capacity]):
-                        draw(line, 42 + i * line_height)
-                    footer = (f"{'F9' if 2 in self._registered else 'F9 ocupado'} {self._index + 1}/{len(cards)} · "
-                              f"{'F10' if 3 in self._registered else 'F10 ocupado'} {self._page + 1}/{count}")
-                else:
-                    for i, line in enumerate(('Nenhuma sugestão preparada.', 'Consulte SEXO2 · Builds na seleção', 'da próxima partida.')):
-                        draw(line, 46 + i * line_height)
-                    footer = 'Somente leitura · cliques passam ao jogo'
-                draw(footer, rect.bottom - 30)
-            self.g.SelectObject(dc, previous)
-        finally:
-            self.u.EndPaint(hwnd, C.byref(paint))
+    def _paint(self, width, height):
+        # Only presentation strings enter the DLL. No LCU/game context or raw data.
+        columns = max(20, (width - 28) // 8)
+        header = 'SEXO2 · F8 expandir/recolher' if 1 in self._registered else 'SEXO2 · F8 ocupado'
+        body, footer = '', ''
+        if self._expanded:
+            cards = self._view.cards if self._view else ()
+            if cards:
+                self._index %= len(cards)
+                card = cards[self._index]
+                rows = []
+                for line in (card.title, '', *card.lines):
+                    rows.extend(textwrap.wrap(line, width=columns, break_long_words=True) or [''])
+                capacity = max(1, (height - 90) // 20)
+                count = max(1, (len(rows) + capacity - 1) // capacity)
+                self._page %= count
+                body = '\n'.join(rows[self._page * capacity:(self._page + 1) * capacity])
+                footer = (f"{'F9' if 2 in self._registered else 'F9 ocupado'} {self._index + 1}/{len(cards)} · "
+                          f"{'F10' if 3 in self._registered else 'F10 ocupado'} {self._page + 1}/{count}")
+            else:
+                body = 'Nenhuma sugestão preparada.\nConsulte SEXO2 · Builds na seleção\nda próxima partida.'
+                footer = 'Somente leitura · cliques passam ao jogo'
+        self._renderer.draw(width, height, header, body, footer)
+        self._renders += 1
 
     def _procedure(self, hwnd, message, wparam, lparam):
         try:
@@ -246,8 +238,13 @@ class NativeOverlay:
                 else:
                     self._page += 1
                 self._tick(); return 0
-            if message == 0xF:  # WM_PAINT
-                self._paint(hwnd); return 0
+            if message == 0xF:  # Validate the update region; DComp draws its own surface.
+                paint = self.Paint()
+                self.u.BeginPaint(hwnd, C.byref(paint))
+                self.u.EndPaint(hwnd, C.byref(paint))
+                return 0
+            if message == 0x14:  # WM_ERASEBKGND: no GDI redirection bitmap.
+                return 1
             if message == 0x84:  # WM_NCHITTEST: never consume mouse input
                 return -1
             if message == 0x21:  # WM_MOUSEACTIVATE
@@ -255,8 +252,9 @@ class NativeOverlay:
             if message == 2:  # WM_DESTROY
                 self._hotkeys(False)
                 self.u.PostQuitMessage(0); return 0
-        except Exception:
-            self.error = 'Falha na janela do overlay.'
+        except Exception as error:
+            self.error = ('Falha no desenho DirectComposition.' +
+                          (' ' + str(error) if isinstance(error, OSError) and str(error).startswith('DirectComposition HRESULT') else ''))
             self._status('window-error', self.error)
             self._stop.set()
             log.warning(self.error)
@@ -264,8 +262,12 @@ class NativeOverlay:
 
     def _run(self):
         registered = False
+        dpi = None
         try:
             self._api()
+            dpi = self.u.SetThreadDpiAwarenessContext(C.c_void_p(-4))
+            if not dpi:
+                raise OSError('DPI context unavailable')
             instance = self.k.GetModuleHandleW(None)
             class_name = 'SEXO2Overlay_' + str(id(self))
             self._callback = self.proc_type(self._procedure)
@@ -273,15 +275,13 @@ class NativeOverlay:
             if not self.u.RegisterClassW(C.byref(window_class)):
                 raise OSError('RegisterClass')
             registered = True
-            self._brush = self.g.CreateSolidBrush(0x1B1409)
-            self._font = self.g.CreateFontW(-14, 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 4, 0, 'Consolas')
-            # TOPMOST | TRANSPARENT | TOOLWINDOW | LAYERED | NOACTIVATE; WS_POPUP.
-            self.hwnd = self.u.CreateWindowExW(0x080800A8, class_name, 'SEXO2 · Builds', 0x80000000,
+            # Layered transparent hit-testing + no redirection bitmap. Content
+            # is supplied exclusively by the DirectComposition visual tree.
+            self.hwnd = self.u.CreateWindowExW(0x082800A8, class_name, 'SEXO2 · Builds', 0x80000000,
                                                0, 0, 420, 40, None, None, instance, None)
-            if not self.hwnd or not self._brush or not self._font:
+            if not self.hwnd:
                 raise OSError('CreateWindow')
-            if not self.u.SetLayeredWindowAttributes(self.hwnd, 0, 242, 2):
-                raise OSError('LayeredWindow')
+            self._renderer = Composition(self.hwnd)
             if not self.u.SetTimer(self.hwnd, 1, 200, None):
                 raise OSError('Timer')
             self.ready.set()
@@ -292,20 +292,22 @@ class NativeOverlay:
                     break
                 self.u.TranslateMessage(C.byref(message))
                 self.u.DispatchMessageW(C.byref(message))
-        except Exception:
-            self.error = 'Não foi possível iniciar o overlay Windows.'
+        except Exception as error:
+            self.error = ('Não foi possível iniciar DirectComposition.' +
+                          (' ' + str(error) if isinstance(error, OSError) and str(error).startswith('DirectComposition HRESULT') else ''))
             self._status('window-error', self.error)
             log.warning(self.error)
         finally:
+            if self._renderer is not None:
+                self._renderer.close()
+                self._renderer = None
             if self.hwnd:
                 self._hotkeys(False)
                 self.u.KillTimer(self.hwnd, 1)
                 self.u.DestroyWindow(self.hwnd)
                 self.hwnd = None
-            for name in ('_font', '_brush'):
-                handle = getattr(self, name, None)
-                if handle:
-                    self.g.DeleteObject(handle)
             if registered:
                 self.u.UnregisterClassW(class_name, instance)
+            if dpi:
+                self.u.SetThreadDpiAwarenessContext(dpi)
             self.ready.set()

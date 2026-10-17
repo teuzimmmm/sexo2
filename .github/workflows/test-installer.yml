@@ -50,6 +50,8 @@ jobs:
         env:
           SEXO2_TEST_NATIVE_OVERLAY: '1'
         run: |
+          python scripts/build_overlay_renderer.py
+          if ($LASTEXITCODE -ne 0) { throw 'Composition renderer build failed.' }
           python -m unittest tests.test_overlay_win32 -v
           if ($LASTEXITCODE -ne 0) { throw 'Native overlay smoke failed.' }
       - name: Test build panel modes with isolated browser
@@ -127,6 +129,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Rust protocol tests failed.' }
           cargo build --manifest-path native/overlay-host/Cargo.toml --release --locked
           if ($LASTEXITCODE -ne 0) { throw 'Native host compilation failed.' }
+      - name: Test external DirectComposition renderer
+        shell: pwsh
+        env:
+          SEXO2_TEST_NATIVE_OVERLAY: '1'
+        run: |
+          python scripts/build_overlay_renderer.py
+          if ($LASTEXITCODE -ne 0) { throw 'Composition renderer compilation failed.' }
+          python -m unittest tests.test_overlay_win32 -v
+          if ($LASTEXITCODE -ne 0) { throw 'Composition pixel/z-order tests failed.' }
       - name: Test local OCR and bounded screen crops
         shell: pwsh
         env:

@@ -87,10 +87,10 @@ class OverlayTests(unittest.TestCase):
             self.assertFalse(self.playing().active)
             self.assertEqual(self.store.view(self.key, 'ranked').cards, ())
 
-    def test_arena_hides_until_offers_and_local_champion_are_known(self):
+    def test_arena_status_without_fabricated_offers_until_champion_is_known(self):
         self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}}
-        self.assertFalse(self.playing().active)
-        self.assertFalse(self.runtime.frame().active)
+        self.assertTrue(self.playing().active)
+        self.assertIn('identificando campeão', str(self.runtime.frame()))
         self.assertEqual(self.store.view(self.key, 'ranked').cards, ())
 
     def test_preview_is_explicit_temporary_and_independent_of_client(self):

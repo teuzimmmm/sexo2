@@ -6,7 +6,7 @@ import threading
 import time
 
 from sexo2.services.draft import game_key, game_mode, positive
-from .model import OverlayStore, View
+from .model import Card, OverlayStore, View
 
 log = logging.getLogger(__name__)
 
@@ -123,6 +123,10 @@ class OverlayRuntime:
                                 if self._offers is not None:
                                     self._offers.ensure(offer_context)
                                 frame = self._offered_frame(offer_context)
+                            else:
+                                frame = Frame(True, View(key, (Card('SEXO2 · identificando campeão',
+                                    ('Partida reconhecida.', 'Aguardando identificação local do seu campeão.',
+                                     'Nenhuma oferta ou estatística foi presumida.')),)))
                             status = {'code': 'offers', 'message': 'Leitura local: aguardando cartas na tela; nenhuma lista geral será exibida.'}
                         elif mode in ('ranked', 'aram'):
                             frame = Frame(True, self.store.view(key, mode))
@@ -153,7 +157,13 @@ class OverlayRuntime:
     def _offered_frame(self, context):
         offer = self._offers.current(context) if self._offers is not None else None
         if offer is None:
-            return Frame()
+            key, _, mode = context
+            unavailable = self._offers is None or self._offers.diagnostic() == 'unavailable'
+            message = ('Leitura indisponível: confira o OCR/idioma do Windows.' if unavailable else
+                       'Aguardando duas leituras das cartas oferecidas.')
+            return Frame(True, View(key, (Card(('Arena' if mode == 'arena' else 'Mayhem') + ' · aguardando oferta',
+                (message, 'Use o jogo em janela ou sem bordas.',
+                 'Sem cartas reconhecidas, nenhuma métrica é exibida.')),)))
         key, cid, mode = context
         if mode == 'arena':
             view = self._arena.offered_view(key, cid, offer)

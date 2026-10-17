@@ -44,6 +44,9 @@ injection_data_files = [
 ]
 # Verify and add injection binaries
 binaries = []
+renderer = 'sexo2/overlay/bin/sexo2-overlay-renderer.dll'
+if os.path.isfile(renderer):
+    binaries.append((renderer, 'sexo2/overlay/bin'))
 offer_reader = 'sexo2/overlay/bin/sexo2-offer-reader.exe'
 if os.path.isfile(offer_reader):
     binaries.append((offer_reader, 'sexo2/overlay/bin'))

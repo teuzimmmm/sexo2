@@ -15,7 +15,7 @@ for name in ['main','main.setup.initialization','sexo2.update.lifecycle','main.r
              'sexo2.services.draft','sexo2.services.builds','sexo2.services.loadouts',
              'sexo2.overlay.model','sexo2.overlay.runtime','sexo2.overlay.win32',
              'sexo2.overlay.arena','sexo2.overlay.processes',
-             'sexo2.overlay.offers','sexo2.overlay.reader','sexo2.overlay.screen','sexo2.overlay.wire',
+             'sexo2.overlay.composition','sexo2.overlay.offers','sexo2.overlay.reader','sexo2.overlay.screen','sexo2.overlay.wire',
              'sexo2.install.identity','lolalytics.client','lolalytics.builds','lolalytics.matchups','lolalytics.risk']:
     source=root/'main/__init__.py' if name=='main' else root/(name.replace('.','/')+'.py')
     expected=compile(source.read_text(encoding='utf-8-sig'),str(source),'exec')
@@ -33,6 +33,8 @@ for name in ['galo.png','galo.ico','bork-black-v3.png','sexo2.ico','golden_rose.
 print('PASS: release visual assets and update source match.')
 
 if (bundle/'sexo2-test-build.json').exists():
+    renderer=Path('sexo2/overlay/bin/sexo2-overlay-renderer.dll')
+    assert (bundle/'_internal'/renderer).read_bytes()==(root/renderer).read_bytes(),'Composition DLL differs from source output'
     helper=Path('sexo2/overlay/bin/sexo2-offer-reader.exe')
     assert (bundle/'_internal'/helper).read_bytes()==(root/helper).read_bytes(),'OCR helper differs from compiled source output'
     notices=root/'sexo2/overlay/licenses'

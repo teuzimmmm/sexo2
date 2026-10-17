@@ -50,7 +50,10 @@ class NativeWindowTests(unittest.TestCase):
         self.assertEqual(u.SendMessageW(window.hwnd, 0x84, 0, 0), -1)
         self.assertEqual(u.SendMessageW(window.hwnd, 0x21, 0, 0), 3)
         self.assertNotEqual(u.GetForegroundWindow(), window.hwnd)
-        u.SendMessageW(window.hwnd, 0x312, 1, 0)  # F8, owning thread handles event
+        self.assertTrue(window._expanded)  # First match opens without a hidden-only bar.
+        u.SendMessageW(window.hwnd, 0x312, 1, 0)
+        self.assertFalse(window._expanded)
+        u.SendMessageW(window.hwnd, 0x312, 1, 0)
         self.assertTrue(window._expanded)
         u.UpdateWindow(window.hwnd)
         rect = W.RECT()
@@ -72,6 +75,59 @@ class NativeWindowTests(unittest.TestCase):
         window.stop()
         self.assertFalse(window._thread.is_alive())
         self.assertIsNone(window.hwnd)
+
+    def test_composited_pixels_recover_z_order_without_new_data_and_pass_clicks(self):
+        # Unlike the old HWND-only smoke, inspect actual desktop pixels in memory.
+        # No screenshot is saved. The target/competitor are disposable own windows.
+        window = NativeOverlay(lambda: Frame(True, View('pixel-test',
+            (Card('Composição nativa', ('Conteúdo sintético, sem partida.',)),))),
+            foreground=lambda: (0, 0, 1000, 700))
+        self.addCleanup(window.stop)
+        window.start(); self.assertTrue(window.ready.wait(8)); self.assertIsNone(window.error)
+        self.until(lambda: window._visible)
+        u, g = window.u, window.g
+        u.GetWindowRect.argtypes = [W.HWND, C.POINTER(W.RECT)]
+        u.GetWindowRect.restype = W.BOOL
+        u.GetDC.argtypes = [W.HWND]; u.GetDC.restype = W.HDC
+        u.ReleaseDC.argtypes = [W.HWND, W.HDC]; u.ReleaseDC.restype = C.c_int
+        u.WindowFromPoint.argtypes = [W.POINT]; u.WindowFromPoint.restype = W.HWND
+        g.GetPixel.argtypes = [W.HDC, C.c_int, C.c_int]; g.GetPixel.restype = W.DWORD
+        previous = u.SetThreadDpiAwarenessContext(C.c_void_p(-4))
+        self.addCleanup(lambda: u.SetThreadDpiAwarenessContext(previous))
+        rect = W.RECT()
+        self.assertTrue(u.GetWindowRect(window.hwnd, C.byref(rect)))
+        px, py = rect.left + 4, rect.top + 4
+        def pixel():
+            dc = u.GetDC(None)
+            try:
+                value = g.GetPixel(dc, px, py)
+                return (value & 255, (value >> 8) & 255, (value >> 16) & 255)
+            finally:
+                u.ReleaseDC(None, dc)
+        def drawn():
+            color = pixel()
+            return 0 < min(color) and max(color) < 60
+        self.until(drawn)
+        self.assertEqual(window.diagnostic()['engine'], 'directcomposition-d3d11')
+        self.assertIn(window.diagnostic()['driver'], ('hardware', 'warp'))
+        self.assertGreater(window.diagnostic()['renders'], 0)
+        self.assertNotEqual(u.WindowFromPoint(W.POINT(px, py)), window.hwnd)
+        renders, raises = window._renders, window._raises
+        # An opaque white TOPMOST deliberately occludes the exact same rectangle.
+        competitor = u.CreateWindowExW(0x08000008, 'STATIC', 'synthetic-occluder',
+            0x90000006, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
+            None, None, window.k.GetModuleHandleW(None), None)
+        self.assertTrue(competitor)
+        self.addCleanup(lambda: u.DestroyWindow(competitor))
+        self.assertTrue(u.SetWindowPos(competitor, W.HWND(-1), 0, 0, 0, 0, 0x10 | 0x40 | 0x1 | 0x2))
+        # Verify actual z-order loss; periodic positioning must repair it despite
+        # unchanged frame/geometry (the old implementation never did this).
+        self.assertEqual(u.WindowFromPoint(W.POINT(px, py)), competitor)
+        self.assertGreater(min(pixel()), 200)
+        self.until(lambda: window._raises > raises and drawn())
+        self.assertEqual(window._renders, renders)
+        self.assertNotEqual(u.WindowFromPoint(W.POINT(px, py)), window.hwnd)
+        self.assertNotEqual(u.GetForegroundWindow(), window.hwnd)
 
     def test_stop_during_creation_and_repeated_shutdown(self):
         window = NativeOverlay(lambda: Frame(), foreground=lambda: None)

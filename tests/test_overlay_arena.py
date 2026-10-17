@@ -94,9 +94,12 @@ class ArenaOverlayTests(unittest.TestCase):
         runtime = OverlayRuntime(self.lcu, enabled=lambda: True, champion=lambda: 222,
                                  arena_factory=lambda: self.feed)
         self.addCleanup(runtime.stop)
-        self.assertFalse(runtime.poll().active)  # A general list is not an offer.
+        self.assertTrue(runtime.poll().active)
+        self.assertIn('aguardando oferta', str(runtime.frame()))
+        self.assertNotIn('Critical Rhythm', str(runtime.frame()))
         self.wait()
-        self.assertFalse(runtime.poll().active)
+        self.assertTrue(runtime.poll().active)
+        self.assertNotIn('Todos os aprimoramentos', str(runtime.frame()))
         self.lcu.game['gameData']['queue'] = {'id': 999999}
         self.assertFalse(runtime.poll().active)
         self.assertEqual(game_mode({'queue': {'gameMode': 'CHERRY'}}), 'arena')
@@ -133,7 +136,7 @@ class ArenaOverlayTests(unittest.TestCase):
         runtime = OverlayRuntime(self.lcu, enabled=lambda: True, champion=lambda: 222,
             arena_factory=lambda: self.feed, offer_reader_factory=lambda: reader, clock=lambda: now[0])
         self.addCleanup(runtime.stop)
-        self.assertFalse(runtime.poll().active)
+        self.assertTrue(runtime.poll().active)
         self.wait()
         choices = (Choice('1328', 'Critical Rhythm'), Choice('999999', 'Unknown stats'), Choice(None, None))
         reader.state.observe(reader.context, choices, 0)
@@ -143,9 +146,11 @@ class ArenaOverlayTests(unittest.TestCase):
         self.assertTrue(frame.active)
         self.assertIn('35.29%', str(frame.view))
         now[0] = 3
-        self.assertFalse(runtime.frame().active)
+        self.assertTrue(runtime.frame().active)
+        self.assertIn('aguardando oferta', str(runtime.frame()))
+        self.assertNotIn('35.29', str(runtime.frame()))
         self.lcu.game['gameData']['queue'] = {'id': 2400}
-        self.assertFalse(runtime.poll().active)
+        self.assertTrue(runtime.poll().active)
         reader.state.observe(reader.context, choices, 3)
         now[0] = 4
         reader.state.observe(reader.context, choices, 4)
