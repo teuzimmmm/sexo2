@@ -26,8 +26,8 @@ def parse_server_link(link):
 
 def save_server_link(link):
     endpoint, token = parse_server_link(link)
-    # One write through the shared config writer: atomic, under the config lock and
-    # in the ANSI code page core.dll reads, so a host never mixes with another token.
+    # One write of the whole file through the shared config writer, under the config
+    # lock and in the ANSI code page core.dll reads: a host never mixes with another token.
     from config import set_config_options
     set_config_options({'Party': {'relay_url': endpoint, 'relay_access': token}}, strict=True)
     return endpoint
