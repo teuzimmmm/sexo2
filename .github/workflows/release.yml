@@ -41,8 +41,15 @@ jobs:
     needs: test
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/sexoatividade')
     runs-on: windows-latest
+    # The repository root has an __init__.py, so PyInstaller puts its parent folder on the
+    # module path: a checkout folder named "sexo2" would shadow the sexo2 package.
+    defaults:
+      run:
+        working-directory: app
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: app
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14'
@@ -68,7 +75,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: SEXO2-teste-${{ github.sha }}
-          path: dist-test/SEXO2
+          path: app/dist-test/SEXO2
           retention-days: 14
 # Releases are compiled and signed locally by scripts/release_local.ps1.
 # The private signing key is never stored in GitHub Actions.
