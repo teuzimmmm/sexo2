@@ -236,3 +236,48 @@ DX11 com esse teste de reconhecimento. Nenhuma escolha automática é necessári
 - Testes: matching, ambiguidade, rerrolagem, expiração, contexto, métricas apenas
   das opções, captura limitada e falhas; Windows OCR real com imagem sintética
   renderizada pelo teste. Não declarar esse teste como leitura de cartas reais.
+
+### Fontes e operação da leitura
+
+A consulta limitada de 17/10/2026 confirmou por HTTP 200:
+
+- `https://static.developer.riotgames.com/docs/lol/queues.json`: fila 2400,
+  descrição `ARAM: Mayhem`, mapa Howling Abyss. A classificação do overlay foi
+  atualizada; os filtros do coletor e a UI do draft não foram ampliados.
+- `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/cherry-augments.json`:
+  554 registros; exemplos ID 1205/nameTRA `ADAPt`, 1141/`All For You`.
+- `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/augment-lists.json`:
+  listas CHERRY, KIWI e KIWI_JADE. Todos os nomes internos dessas listas
+  resolveram no catálogo. Não usar essa evidência para inventar uma fonte de PR
+  de Mayhem ou presumir que uma lista enumere toda oferta possível do jogo.
+
+O programa usa o catálogo local traduzido em
+`/lol-game-data/assets/v1/cherry-augments.json` para resolver nomes/IDs. O catálogo
+é compartilhado entre modos; as **estatísticas** continuam separadas pelo modo,
+campeão e contexto da partida. Nomes numéricos de fallback não são reconhecidos
+como títulos. Leitura aproximada é identificada no painel, sem inventar uma
+porcentagem de confiança nem misturá-la ao risco estatístico das recomendações.
+
+O leitor funciona em Arena ou Mayhem com o jogo em primeiro plano, no máximo uma
+captura por segundo. Duas leituras consistentes confirmam a oferta; ambiguidade,
+mudança de opções ou falha invalidam a anterior. A validade de 2 s começa no
+momento da **captura**, não na conclusão do OCR. A inicialização fria do OCR pode
+levar até 8 s; uma imagem que envelheceu é descartada, preservando o helper já
+inicializado para as próximas leituras. Sem renovação do contexto por 8 s, a
+captura pausa e encerra o helper. Não há screenshots/texto OCR em disco ou logs.
+
+Para uso a partir do código-fonte Windows, compilar o helper antes de iniciar o
+programa. O instalador de teste passa a compilá-lo em staging e incluir seus
+avisos de dependências; nenhum executável é baixado para substituir essa etapa.
+
+```powershell
+python scripts/build_offer_reader.py
+$env:SEXO2_TEST_SCREEN_OCR = '1'
+python -m unittest tests.test_overlay_screen_windows -v
+```
+
+É necessário ter ao menos um idioma OCR instalado no Windows. Idioma, resolução,
+recortes reais e aparência das cartas do jogo ainda exigem validação. A captura
+GDI foi projetada para janela/sem bordas; tela cheia exclusiva não está validada.
+O renderer anterior continua separado deste trabalho e ainda não foi corrigido
+ou substituído no LoL. O laboratório hudhook não foi ativado no processo do jogo.

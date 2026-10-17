@@ -1,5 +1,6 @@
 """Foreground-game-only GDI title crops; no full-desktop capture or disk images."""
 import ctypes as C
+from contextlib import contextmanager
 from ctypes import wintypes as W
 from dataclasses import dataclass
 import os
@@ -40,6 +41,7 @@ class Screen:
         def bind(dll, name, result, *args):
             fn = getattr(dll, name); fn.restype = result; fn.argtypes = args
         bind(self.u, 'GetForegroundWindow', W.HWND)
+        bind(self.u, 'SetThreadDpiAwarenessContext', W.HANDLE, W.HANDLE)
         bind(self.u, 'IsWindowVisible', W.BOOL, W.HWND)
         bind(self.u, 'IsIconic', W.BOOL, W.HWND)
         bind(self.u, 'GetWindowThreadProcessId', W.DWORD, W.HWND, C.POINTER(W.DWORD))
@@ -56,7 +58,23 @@ class Screen:
         bind(self.g, 'BitBlt', W.BOOL, W.HDC, C.c_int, C.c_int, C.c_int, C.c_int,
              W.HDC, C.c_int, C.c_int, W.DWORD)
 
+    @contextmanager
+    def _physical_pixels(self):
+        # A thread-local context avoids changing Pengu/skins UI behavior. Logical
+        # coordinates on a scaled monitor must never select pixels outside LoL.
+        previous = self.u.SetThreadDpiAwarenessContext(C.c_void_p(-4))
+        if not previous:
+            raise OSError('Physical capture coordinates unavailable.')
+        try:
+            yield
+        finally:
+            self.u.SetThreadDpiAwarenessContext(previous)
+
     def target(self):
+        with self._physical_pixels():
+            return self._target()
+
+    def _target(self):
         hwnd = self.u.GetForegroundWindow()
         if not hwnd or not self.u.IsWindowVisible(hwnd) or self.u.IsIconic(hwnd):
             return None
@@ -72,6 +90,10 @@ class Screen:
         return target is not None and self.target() == target
 
     def capture(self):
+        with self._physical_pixels():
+            return self._capture()
+
+    def _capture(self):
         from PIL import Image, ImageOps
         target = self.target()
         if target is None:

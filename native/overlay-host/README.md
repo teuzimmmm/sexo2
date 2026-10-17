@@ -1,5 +1,13 @@
 # Host nativo isolado
 
+Este pacote contém dois executáveis independentes:
+
+- `sexo2-overlay-host`: laboratório DX11 descrito abaixo; não é o renderer do LoL.
+- `sexo2-offer-reader`: helper OCR usado pelo runtime Python. Recebe apenas os
+  três recortes de títulos em memória e devolve texto; usa o OCR do Windows,
+  sem hooks, captura própria ou acesso ao processo do jogo. Para disponibilizá-lo
+  no checkout, execute `python scripts/build_offer_reader.py` no Windows.
+
 Candidato de laboratório para substituir o motor de desenho, sem Electron,
 Overwolf ou Game Bar. **Não é um overlay instalável no LoL.** Não há DLL,
 injetor ou mecanismo de abertura do processo de outro aplicativo.

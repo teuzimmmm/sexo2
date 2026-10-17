@@ -104,6 +104,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14'
+      - uses: actions/cache@v4
+        with:
+          path: native/overlay-host/target
+          key: ${{ runner.os }}-overlay-${{ hashFiles('native/overlay-host/Cargo.lock') }}
       - name: Select installed Rust toolchain
         shell: pwsh
         run: |

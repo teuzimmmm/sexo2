@@ -22,6 +22,8 @@ class OffersTests(unittest.TestCase):
         self.assertEqual(match.match('Ice Shied').match, 'fuzzy')
         self.assertIsNone(match.match('Ice Sh').identifier)
         self.assertIsNone(Matcher({'1': 'Ice Shield', '2': 'Ice Shields'}).match('Ice Shied').identifier)
+        with self.assertRaises(ValueError):
+            Matcher({'1': '1', '2': '2'})  # Catalog ID fallback is not a card name.
 
     def test_confirm_expire_reroll_partial_and_changed_game(self):
         matcher = Matcher(NAMES); state = OfferState(); context = ('game', 222, 'arena')
@@ -103,6 +105,29 @@ class OffersTests(unittest.TestCase):
             ocr.recognize([Image.new('RGBA', (20, 20))] * 3)
         child.kill.assert_called_once()
         self.assertFalse(ocr._io.is_alive())
+
+    def test_slow_ocr_never_refreshes_old_pixels_and_context_lease_stops_capture(self):
+        now = [0]
+        screen, ocr = Mock(), Mock()
+        screen.capture.return_value = ('target', (1, 2, 3))
+        screen.valid.return_value = True
+        reader = OfferReader(SimpleNamespace(), screen_factory=lambda: screen,
+                             ocr_factory=lambda: ocr, clock=lambda: now[0])
+        self.addCleanup(reader.close)
+        reader.catalog.names = lambda name: NAMES
+        def slow(images):
+            now[0] += 3
+            return ['Critical Rhythm', 'Fire Power', 'Ice Shield']
+        ocr.recognize.side_effect = slow
+        context = ('game', 222, 'arena')
+        reader.ensure(context)
+        until = time.monotonic() + 2
+        while reader._context is not None and time.monotonic() < until:
+            time.sleep(.01)
+        self.assertIsNone(reader.current(context))
+        self.assertIsNone(reader._context)
+        self.assertEqual(screen.capture.call_count, 3)
+        self.assertTrue(ocr.close.called)
 
 
 if __name__ == '__main__':

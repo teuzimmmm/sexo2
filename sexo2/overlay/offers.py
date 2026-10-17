@@ -30,7 +30,8 @@ class Offer:
 class Matcher:
     def __init__(self, names):
         self.names = {str(k): text(v, 120) for k, v in names.items()
-                      if str(k).isdigit() and int(k) > 0 and isinstance(v, str) and v.strip()}
+                      if str(k).isascii() and str(k).isdigit() and int(k) > 0
+                      and isinstance(v, str) and any(c.isalpha() for c in v)}
         if not self.names or len(self.names) > 4000:
             raise ValueError('Augment catalog unavailable.')
         self.index = {}
@@ -99,7 +100,8 @@ def offer_view(key, offer, metrics=None, *, mode='arena', source=None):
     metrics = metrics or {}
     lines = []
     for label, choice in zip(('Esquerda', 'Centro', 'Direita'), offer.choices):
-        lines.append(label + ': ' + (choice.name or 'Carta não identificada'))
+        lines.append(label + ': ' + (choice.name or 'Carta não identificada')
+                     + (' (leitura aproximada)' if choice.match == 'fuzzy' else ''))
         row = metrics.get(choice.identifier, {})
         rate, games = row.get('pick_rate'), row.get('games')
         valid_rate = type(rate) in (int, float) and math.isfinite(rate) and 0 <= rate <= 100
