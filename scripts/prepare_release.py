@@ -1,22 +1,18 @@
 """Restore build-only binaries from our previous release; never overwrite source plugins."""
 
-import argparse, json, os, shutil, re
+import argparse, json, os, re
 from pathlib import Path
 
 p = argparse.ArgumentParser()
 p.add_argument("--base", required=True)
 p.add_argument("--version", required=True)
 a = p.parse_args()
-base = Path(a.base) / "_internal"
 version = a.version.removeprefix("v")
 if not re.fullmatch(r"\d+\.\d+\.\d+", version):
     raise SystemExit("Invalid release version")
-for folder in ["Pengu Loader", "injection/tools", "hosting-tools"]:
-    for file in (base / folder).rglob("*"):
-        if file.is_file() and file.suffix.lower() in {".exe", ".dll", ".bat"}:
-            dest = Path(folder) / file.relative_to(base / folder)
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(file, dest)
+from restore_build_binaries import restore
+
+restore(Path(a.base))
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
