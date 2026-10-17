@@ -702,7 +702,7 @@
           cancelable: true,
         });
         window.dispatchEvent(event);
-        log.info("Dispatched rose-open-settings event from Golden Rose button");
+        log.info("Dispatched rose-open-settings event from the SEXO2 nav button");
       },
       true
     ); // Use capture phase to intercept early
@@ -727,7 +727,7 @@
             });
             window.dispatchEvent(event);
             log.info(
-              "Dispatched rose-open-settings event from Golden Rose section"
+              "Dispatched rose-open-settings event from the SEXO2 nav section"
             );
 
             // Prevent active class
@@ -844,7 +844,7 @@
     // Attach Discord click listeners
     attachGoldenRoseListeners(navItem);
 
-    log.info("Golden Rose navigation item injected");
+    log.info("SEXO2 navigation item injected");
     return true;
   }
 

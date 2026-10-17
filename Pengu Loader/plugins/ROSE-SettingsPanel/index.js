@@ -5075,7 +5075,7 @@
     } else {
       log(
         "warn",
-        "Could not find Golden Rose nav item to position settings panel"
+        "Could not find the SEXO2 nav item to position settings panel"
       );
     }
   });
