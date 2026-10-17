@@ -47,6 +47,8 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-110 | Fila (queue ID) do novo modo competitivo | informação do usuário |
 | D-111 | Opt-in para Dynamic Workflows | por marco |
 | D-112 | Papel do Galo e do BORK na nova identidade | com D-102 |
+| D-113 | Nome da página de runas gerenciada e prefixo dos títulos dos conjuntos de itens (provisório: “SEXO2”; rótulos de bloco reaproveitam os de `lolalytics/item_pages.py`) | antes do M8 |
+| D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
 
 ## Rejeitadas
 

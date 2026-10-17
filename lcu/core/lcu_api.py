@@ -237,3 +237,34 @@ class LCUAPI:
             except requests.exceptions.RequestException as e:
                 log.debug(f"[LCU] PATCH {path} failed after reconnecting: {e}")
                 return None
+
+    def post(self, path: str, json_data, timeout: float) -> Optional[requests.Response]:
+        """Make POST request to LCU API.
+
+        Unlike PUT, a POST is not retried after a transport error: it may
+        create a resource, and a blind retry could create it twice. The caller
+        reads the state back to learn what happened.
+
+        Returns:
+            Response object or None if the request could not be sent
+        """
+        if not self.connection.ok:
+            self.connection.refresh_if_needed()
+            if not self.connection.ok:
+                return None
+
+        self.invalidate(path)
+        try:
+            t0 = time.perf_counter()
+            resp = self.connection.session.post(
+                (self.connection.base or "") + path,
+                json=json_data,
+                timeout=timeout,
+            )
+            dt_ms = (time.perf_counter() - t0) * 1000.0
+            log.info(f"[LCU] POST {path} -> {getattr(resp, 'status_code', 'None')} in {dt_ms:.1f}ms")
+            return resp
+        except requests.exceptions.RequestException as exc:
+            log.warning(f"[LCU] POST {path} failed ({type(exc).__name__}): {exc}")
+            self.connection.refresh_if_needed(force=True)
+            return None
