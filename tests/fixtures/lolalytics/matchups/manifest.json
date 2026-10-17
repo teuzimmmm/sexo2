@@ -1,0 +1,48 @@
+[
+  {
+    "fixture": "ahri-vs-annie.json",
+    "filters": {
+      "champion": "ahri",
+      "mode": "ranked",
+      "patch": "16.20",
+      "lane": "middle",
+      "tier": "emerald_plus",
+      "region": "all",
+      "keystone": null,
+      "opponent": "annie",
+      "opponent_lane": "middle"
+    },
+    "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle",
+    "collected_on": "2026-10-16",
+    "source_sha256": "7c8c0106268e085305deb8339de7a6b9e98d859df2406595df3076899aa1a014",
+    "transformations": [
+      "keep navigation + aggregate header, summary and relevant tables",
+      "preserve complete matchup summary including individual item1..3 and alternatives",
+      "only first 4 rune statistic IDs and 3 table rows",
+      "rebuild reference table, retaining values"
+    ]
+  },
+  {
+    "fixture": "ahri-vs-ryze.json",
+    "filters": {
+      "champion": "ahri",
+      "mode": "ranked",
+      "patch": "16.20",
+      "lane": "middle",
+      "tier": "emerald_plus",
+      "region": "all",
+      "keystone": null,
+      "opponent": "ryze",
+      "opponent_lane": "middle"
+    },
+    "source_url": "https://lolalytics.com/lol/ahri/vs/ryze/build/q-data.json?lane=middle&vslane=middle",
+    "collected_on": "2026-10-16",
+    "source_sha256": "c591d80a8fa6761bf4151be069f8472dee35b421b906b6faf64a6fc5df4c30e8",
+    "transformations": [
+      "keep navigation + aggregate header, summary and relevant tables",
+      "preserve complete matchup summary including individual item1..3 and alternatives",
+      "only first 4 rune statistic IDs and 3 table rows",
+      "rebuild reference table, retaining values"
+    ]
+  }
+]

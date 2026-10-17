@@ -1,0 +1,107 @@
+[
+  {
+    "fixture": "ahri-ranked.json",
+    "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json",
+    "filters": {
+      "champion": "ahri",
+      "mode": "ranked",
+      "patch": "16.20",
+      "lane": "all",
+      "tier": "emerald_plus",
+      "region": "all"
+    },
+    "collected_on": "2026-10-16",
+    "source_sha256": "e6428340e02128fd03f0976473779254362fc77d23776cec79232b8cf31a73fe",
+    "transformations": [
+      "only nav and aggregate game data loaders",
+      "unrelated payload fields removed",
+      "row tables limited to 3 and rune IDs to 4",
+      "reference table rebuilt; original values retained",
+      "Arena item/combination/augment win-rate cells replaced with null"
+    ]
+  },
+  {
+    "fixture": "ahri-ranked-16.19-br-gold.json",
+    "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json",
+    "filters": {
+      "champion": "ahri",
+      "mode": "ranked",
+      "patch": "16.19",
+      "lane": "middle",
+      "tier": "gold",
+      "region": "br"
+    },
+    "collected_on": "2026-10-16",
+    "source_sha256": "96fe7910036e53527757d38fb00d6e2027300ae6ba4128cb0f76c7e4b3cc9351",
+    "transformations": [
+      "only nav and aggregate game data loaders",
+      "unrelated payload fields removed",
+      "row tables limited to 3 and rune IDs to 4",
+      "reference table rebuilt; original values retained",
+      "Arena item/combination/augment win-rate cells replaced with null"
+    ]
+  },
+  {
+    "fixture": "jinx-aram.json",
+    "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json",
+    "filters": {
+      "champion": "jinx",
+      "mode": "aram",
+      "patch": "16.20",
+      "lane": "all",
+      "tier": "all",
+      "region": "all"
+    },
+    "collected_on": "2026-10-16",
+    "source_sha256": "18b26b3cf0ac2e2679ca3451a58daead09d43ec30826b7ea8123ea484f1abf8d",
+    "transformations": [
+      "only nav and aggregate game data loaders",
+      "unrelated payload fields removed",
+      "row tables limited to 3 and rune IDs to 4",
+      "reference table rebuilt; original values retained",
+      "Arena item/combination/augment win-rate cells replaced with null"
+    ]
+  },
+  {
+    "fixture": "ahri-arena.json",
+    "source_url": "https://lolalytics.com/lol/ahri/arena/build/q-data.json",
+    "filters": {
+      "champion": "ahri",
+      "mode": "arena",
+      "patch": "16.20",
+      "lane": "all",
+      "tier": "all",
+      "region": "all"
+    },
+    "collected_on": "2026-10-16",
+    "source_sha256": "df72a64ac7e212a16dabb4dbcc1488267dce41553b94e9097c5aa5f9c17671eb",
+    "transformations": [
+      "only nav and aggregate game data loaders",
+      "unrelated payload fields removed",
+      "row tables limited to 3 and rune IDs to 4",
+      "reference table rebuilt; original values retained",
+      "Arena item/combination/augment win-rate cells replaced with null"
+    ]
+  },
+  {
+    "fixture": "jinx-arena.json",
+    "source_url": "https://lolalytics.com/lol/jinx/arena/build/q-data.json",
+    "filters": {
+      "champion": "jinx",
+      "mode": "arena",
+      "patch": "16.20",
+      "lane": "all",
+      "tier": "emerald_plus",
+      "region": "all"
+    },
+    "collected_on": "2026-10-16",
+    "source_sha256": "d5c25a434adfc7a868778e185731b57bc266cf92ce3cc7a66485cf6cc0223b3e",
+    "transformations": [
+      "only nav and aggregate game data loaders",
+      "unrelated payload fields removed",
+      "row tables limited to 3 and rune IDs to 4",
+      "reference table rebuilt; original values retained",
+      "Arena item/combination/augment win-rate cells replaced with null"
+    ]
+  }
+]

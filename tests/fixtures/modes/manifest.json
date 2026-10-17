@@ -1,0 +1,61 @@
+{
+  "collected_at": "2026-10-17",
+  "kind": "sanitized projections of real public aggregate responses",
+  "swift": {
+    "url": "https://lolalytics.com/lol/ahri/swift/build/q-data.json?tier=emerald_plus&region=all&patch=16.20",
+    "status": 200,
+    "unsupported_keystone_status": 404
+  },
+  "mayhem": {
+    "url": "https://mayhemcache.drawyoursword.lol/v1/champion?champion=103",
+    "pools": "/v1/pool?champion=103&rarity=silver|gold|prismatic",
+    "statuses": [
+      200,
+      200,
+      200,
+      200
+    ],
+    "scope": "Mayhem only; pooled champion rates; global fallback not projected"
+  },
+  "files": {
+    "jinx-swift.json": "a2ba0a6d5ff431c98df1b9e48b7015c6f6027f00976ddd328dff8a68c066c2d4",
+    "ahri-mayhem-gold.json": "cf3f2a08bb13b6c14a87f6130c7b1da8b1d30f587909509a2024a4df17ffa82a",
+    "ahri-mayhem-prismatic.json": "90f6c814d1df9600de30c430d5ad2339a2f3737a5da83ccca1649e93ad40ecd3",
+    "items-extra.json": "da36031fa98706a5f6244970596f6fd70849143b235b3a33d42926808648a3cc",
+    "ahri-mayhem-builds.json": "b4acac8867e03d31ce06b968a7ddbae98e9028d41626f608843aafdeb7e57e27",
+    "ahri-mayhem-silver.json": "e08565d48fd654ace2c2d9f4bc8c68854d64ac0983c8d0f799803fba8f054eae",
+    "ahri-swift.json": "966f4380dd345f27e9b8fb4fd8d9ef68d47636acce67cb5607c06fd57fda220c"
+  },
+  "items_extra": {
+    "source_url": "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json",
+    "status": 200,
+    "projection": "16 item IDs/names needed by the real mode fixtures"
+  },
+  "live_jinx": {
+    "champion": "jinx",
+    "champion_id": 222,
+    "swift": {
+      "patch": "16.20",
+      "conditioning": "mode",
+      "blocks": [
+        4,
+        4
+      ],
+      "source_url": "https://lolalytics.com/lol/jinx/swift/build/q-data.json?tier=emerald_plus&region=all"
+    },
+    "arena": {
+      "patch": "16.20",
+      "augments": 214,
+      "metrics": "pick_rate/games only",
+      "source_url": "https://lolalytics.com/lol/jinx/arena/build/q-data.json?tier=emerald_plus&region=all"
+    },
+    "mayhem": {
+      "patch": "16.20",
+      "data_date": "2026-10-16",
+      "champion_popularity_rows": 107,
+      "item_pages": 1,
+      "source_url": "https://mayhemcache.drawyoursword.lol/v1/champion?champion=222",
+      "core_order": "unconfirmed"
+    }
+  }
+}

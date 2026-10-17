@@ -17,6 +17,9 @@ A primeira baseline é publicada a partir da compilação local verificada.
 
 ## Desenvolvimento
 
+O fluxo de trabalho com agentes, incluindo critérios para delegar e economizar
+cota, fica em [AGENTS.md](AGENTS.md).
+
 Python 3.14; dependências em `requirements.txt`. Binários Pengu/LTK/mod-tools e
 cloudflared são recursos de build/distribuição, não segredos ou fontes próprias.
 Builds seguintes recuperam esses binários da baseline anterior do projeto.
@@ -24,6 +27,28 @@ Builds seguintes recuperam esses binários da baseline anterior do projeto.
 `python -m unittest discover -s tests -q` valida serviços e recuperação.
 Os testes de navegador usam cliente e servidor simulados. A aparência e o uso
 real ainda precisam ser observados no cliente LoL.
+
+## SEXO2 2.0 — arquitetura e instalação
+
+A versão 2.0 terá instalação, dados e runtime próprios, com migração e limpeza
+das versões antigas no instalador inicial. Isso é requisito para publicação;
+a dependência atual de pastas Rose ainda não foi removida. A arquitetura,
+as evidências e os critérios estão em [SEXO2_2_0.md](docs/SEXO2_2_0.md).
+
+O fluxo de recomendações na seleção, importação e painel específico já está
+integrado no código. Testes isolados e fontes reais foram verificados; a
+validação no cliente Windows ainda está pendente. Consulte
+[DESENVOLVIMENTO_2_0.md](docs/DESENVOLVIMENTO_2_0.md) para uso, testes e limites.
+
+O [instalador de teste](docs/INSTALADOR_TESTE_2_0.md) tem build Windows separado,
+cadastro próprio e atualizações estáveis desativadas. Ainda preserva o caminho
+de dados compatível com o runtime antigo; não executa a migração/limpeza final.
+
+## Coletor LoLalytics (fase 1)
+
+A fase 1 entregou a biblioteca e CLI independentes para Ranked, ARAM e Arena;
+a integração ao aplicativo está descrita acima. Veja
+[uso, fontes e limites do coletor](docs/lolalytics/README.md).
 
 ## Créditos
 

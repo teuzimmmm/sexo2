@@ -9,6 +9,7 @@ from typing import Optional
 
 from .lcu_connection import LCUConnection
 from .lcu_api import LCUAPI
+from .request_error import LCURequestError
 from ..features.lcu_properties import LCUProperties
 from ..features.lcu_skin_selection import LCUSkinSelection
 from ..features.lcu_game_mode import LCUGameMode
@@ -70,9 +71,9 @@ class LCU:
         """Return a consistent port/password snapshot for the LCU WebSocket."""
         return self._connection.websocket_credentials()
     
-    def get(self, path: str, timeout: float = 1.0):
+    def get(self, path: str, timeout: float = 1.0, *, use_cache: bool = True):
         """Make GET request to LCU API"""
-        return self._api.get(path, timeout)
+        return self._api.get(path, timeout, use_cache=use_cache)
 
     def accept_ready_check(self) -> bool:
         if not self.ok:return False
@@ -83,6 +84,61 @@ class LCU:
             (self._connection.base or '')+'/lol-matchmaking/v1/ready-check/accept',timeout=2)
         try:return 200<=response.status_code<300
         finally:response.close()
+
+    def loadout_request(self, method, path, payload=None):
+        """Strict, bounded requests for explicit loadout actions; never retry writes."""
+        import re
+        allowed_reads = {'/lol-summoner/v1/current-summoner', '/lol-perks/v1/pages', '/lol-perks/v1/currentpage',
+                         '/lol-game-data/assets/v1/perkstyles.json',
+                         '/lol-game-data/assets/v1/cherry-augments.json',
+                         '/lol-game-data/assets/v1/perks.json', '/lol-game-data/assets/v1/items.json'}
+        item_sets = re.fullmatch(r'/lol-item-sets/v1/item-sets/[1-9][0-9]*/sets', path)
+        permitted = (method == 'GET' and (path in allowed_reads or item_sets)
+                     or method == 'POST' and path == '/lol-perks/v1/pages'
+                     or method == 'PUT' and (path == '/lol-perks/v1/currentpage' or item_sets or re.fullmatch(r'/lol-perks/v1/pages/[1-9][0-9]*', path)))
+        if not permitted:
+            raise ValueError('Operação de páginas não permitida.')
+        return self._build_request(method, path, payload, timeout=(2, 5))
+
+    def draft_request(self, path):
+        """Fresh, bounded reads for builds, independent of the legacy GET cache."""
+        if path not in {'/lol-lobby/v2/lobby', '/lol-gameflow/v1/gameflow-phase', '/lol-gameflow/v1/session',
+                        '/lol-champ-select/v1/session',
+                        '/lol-game-data/assets/v1/champion-summary.json'}:
+            raise ValueError('Leitura de seleção não permitida.')
+        return self._build_request('GET', path, None, timeout=(1, 2))
+
+    def _build_request(self, method, path, payload, *, timeout):
+        import json
+        import re
+        # Capture the connection once: concurrent reconnects must not combine a
+        # session from one local client with the endpoint of another.
+        connection = self._connection
+        with connection._lock:
+            session, base, connected = connection.session, connection.base, connection.ok
+        if not connected or not re.fullmatch(r'https://127\.0\.0\.1:[0-9]{1,5}', base or ''):
+            raise LCURequestError('disconnected')
+        try:
+            with session.request(method, base + path, json=payload, timeout=timeout,
+                                stream=True, allow_redirects=False) as response:
+                if not 200 <= response.status_code < 300:
+                    raise LCURequestError('http',response.status_code)
+                body = bytearray()
+                for chunk in response.iter_content(65536):
+                    body.extend(chunk)
+                    if len(body) > 4 * 1024 * 1024:
+                        raise LCURequestError('size')
+                def invalid_constant(_):
+                    raise ValueError('Resposta de páginas contém número inválido.')
+                result = json.loads(body, parse_constant=invalid_constant) if body else None
+            self._api.invalidate(path)
+            return result
+        except LCURequestError:
+            raise
+        except (ValueError,RecursionError):
+            raise LCURequestError('schema') from None
+        except Exception:
+            raise LCURequestError('network') from None
     
     def reconnect_game(self) -> bool:
         """Ask the still-running client to reopen its current game."""

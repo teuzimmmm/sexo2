@@ -1,0 +1,165 @@
+{
+  "checked_at": "2026-10-16T16:44:16.352168+00:00",
+  "checks": [
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "middle",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": null
+      },
+      "http_queries": 3,
+      "status": "passed",
+      "pages": [
+        {
+          "selection": "win",
+          "keystone": 8992,
+          "title": "WR 59.3% / 1.077 jogos",
+          "patch": "16.20",
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&patch=16.20&keystone=8992",
+          "core_ids": [
+            "3118",
+            "3020",
+            "3100"
+          ],
+          "blocks": [
+            "starting",
+            "core",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        },
+        {
+          "selection": "pick",
+          "keystone": 8112,
+          "title": "Common 53.6% / 26.214 jogos",
+          "patch": "16.20",
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&patch=16.20&keystone=8112",
+          "core_ids": [
+            "3118",
+            "3020",
+            "4645"
+          ],
+          "blocks": [
+            "starting",
+            "core",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        }
+      ]
+    },
+    {
+      "query": {
+        "champion": "jinx",
+        "mode": "aram",
+        "patch": null,
+        "lane": "all",
+        "tier": "all",
+        "region": "all",
+        "keystone": null
+      },
+      "http_queries": 2,
+      "status": "passed",
+      "pages": [
+        {
+          "selection": "win",
+          "keystone": 8008,
+          "title": "WR 60.6% / 3.090 jogos",
+          "patch": "16.20",
+          "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all&patch=16.20&keystone=8008",
+          "core_ids": [
+            "2523",
+            "3006",
+            "3085"
+          ],
+          "blocks": [
+            "starting",
+            "core",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        },
+        {
+          "selection": "pick",
+          "keystone": 8008,
+          "title": "Common 55.6% / 14.421 jogos",
+          "patch": "16.20",
+          "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all&patch=16.20&keystone=8008",
+          "core_ids": [
+            "3032",
+            "3006",
+            "3085"
+          ],
+          "blocks": [
+            "starting",
+            "core",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        }
+      ]
+    },
+    {
+      "query": {
+        "champion": "ahri",
+        "mode": "ranked",
+        "patch": null,
+        "lane": "middle",
+        "tier": "emerald_plus",
+        "region": "all",
+        "keystone": 8112
+      },
+      "http_queries": 1,
+      "status": "passed",
+      "pages": [
+        {
+          "selection": "win",
+          "keystone": 8112,
+          "title": "WR 56.9% / 5.957 jogos",
+          "patch": "16.20",
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&keystone=8112",
+          "core_ids": [
+            "2503",
+            "3158",
+            "3100"
+          ],
+          "blocks": [
+            "starting",
+            "core",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        },
+        {
+          "selection": "pick",
+          "keystone": 8112,
+          "title": "Common 53.6% / 26.214 jogos",
+          "patch": "16.20",
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&keystone=8112",
+          "core_ids": [
+            "3118",
+            "3020",
+            "4645"
+          ],
+          "blocks": [
+            "starting",
+            "core",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_http_queries": 6
+}

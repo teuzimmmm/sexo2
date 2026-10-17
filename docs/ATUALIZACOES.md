@@ -1,5 +1,10 @@
 # SEXO2 — atualizações
 
+As instruções abaixo descrevem a linha 1.x. A transição para instalação e dados
+próprios da 2.0 exige a migração/limpeza definida em [SEXO2_2_0.md](SEXO2_2_0.md).
+O updater de patches atual não implementa essa limpeza e não deve ser apresentado
+como se já a executasse.
+
 ## Entrega inicial
 
 A versão 1.5.0 adiciona configurações próprias, BORK preto, Galo na abertura e

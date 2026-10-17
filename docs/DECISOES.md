@@ -1,5 +1,9 @@
 # Decisões e entrega r6
 
+Este documento registra as entregas anteriores. Para a 2.0, a instalação própria
+e a limpeza/migração do legado seguem [SEXO2_2_0.md](SEXO2_2_0.md); preservar uma
+dependência permanente de `LocalAppData/Rose` não é mais o destino aprovado.
+
 Nome aprovado: SEXO2. BORK é o símbolo, com máscara que herda cor e dimensões do
 cliente LoL. Interface escura, compacta e com um único ponto de entrada na barra.
 

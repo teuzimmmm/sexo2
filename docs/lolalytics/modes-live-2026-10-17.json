@@ -1,0 +1,46 @@
+{
+  "champion": "jinx",
+  "champion_id": 222,
+  "swift": {
+    "patch": "16.20",
+    "conditioning": "mode",
+    "blocks": [
+      4,
+      4
+    ],
+    "source_url": "https://lolalytics.com/lol/jinx/swift/build/q-data.json?tier=emerald_plus&region=all"
+  },
+  "arena": {
+    "patch": "16.20",
+    "augments": 214,
+    "metrics": "pick_rate/games only",
+    "source_url": "https://lolalytics.com/lol/jinx/arena/build/q-data.json?tier=emerald_plus&region=all"
+  },
+  "mayhem": {
+    "patch": "16.20",
+    "data_date": "2026-10-16",
+    "champion_popularity_rows": 107,
+    "item_pages": 1,
+    "source_url": "https://mayhemcache.drawyoursword.lol/v1/champion?champion=222",
+    "core_order": "unconfirmed"
+  },
+  "collected_on": "2026-10-17",
+  "scope": "Limited real aggregate HTTP checks; no League process or rendered cards tested",
+  "aram": {
+    "patch": "16.20",
+    "champion": "jinx",
+    "selections": [
+      "win",
+      "pick"
+    ],
+    "keystones": [
+      8008,
+      8008
+    ],
+    "blocks": [
+      5,
+      5
+    ],
+    "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all&patch=16.20&keystone=8008"
+  }
+}

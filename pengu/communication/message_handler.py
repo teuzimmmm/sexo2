@@ -293,6 +293,10 @@ class MessageHandler:
 
     def _route(self, payload_type: Optional[str], payload: dict) -> None:
         # Route to appropriate handler
+        if payload_type in ('sexo2-overlay-preview', 'sexo2-overlay-retry'):
+            self._handle_overlay(payload); return
+        if payload_type in ('sexo2-build-context', 'sexo2-build-query', 'sexo2-build-import', 'sexo2-build-select'):
+            self._handle_builds(payload); return
         if payload_type == 'sexo2-library-request':
             self._handle_library(payload); return
         if payload_type == 'sexo2-update-request':
@@ -642,6 +646,112 @@ class MessageHandler:
         worker=getattr(self,'_library_worker',None)
         if worker is not None:worker.close(timeout=.3)
 
+    def _handle_overlay(self, payload):
+        request_id = payload.get('requestId')
+        if not isinstance(request_id, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', request_id):
+            return
+        runtime = getattr(self, 'overlay_runtime', None)
+        accepted = False
+        status = {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}
+        if runtime is not None:
+            accepted = runtime.preview() if payload['type'] == 'sexo2-overlay-preview' else runtime.retry_arena()
+            status = runtime.diagnostic()
+        self._send_response(json.dumps({'type': 'sexo2-overlay-state', 'requestId': request_id,
+                                       'accepted': accepted, 'status': status}, ensure_ascii=False))
+
+    def _handle_builds(self, payload):
+        from sexo2.services.work_queue import SerialWorker
+        from sexo2.services.draft import BuildError
+        action = payload.get('type', '').removeprefix('sexo2-build-')
+        request_id = payload.get('requestId')
+        if not isinstance(request_id, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', request_id):
+            return
+
+        def send(kind, **data):
+            self._send_response(json.dumps(dict(type=kind, requestId=request_id, action=action, **data),
+                                           ensure_ascii=False, allow_nan=False))
+
+        def failed(error):
+            # Unknown exceptions may include HTTP credentials/paths: never echo them.
+            message = str(error) if isinstance(error, BuildError) else 'Não foi possível concluir a operação. Reconecte ou tente novamente.'
+            send('sexo2-build-error', error=message)
+
+        with self._background_lock:
+            if getattr(self, '_builds_closed', False):
+                return
+            if not hasattr(self, '_build_service'):
+                from lolalytics import Client
+                from sexo2.services.builds import BuildService
+                from sexo2.services.loadouts import LoadoutImporter
+                lcu = self.skin_scraper.lcu if self.skin_scraper else None
+                if lcu is None:
+                    failed(BuildError('O cliente LoL ainda não está conectado.')); return
+                self._build_service = BuildService(lcu, Client(cache_dir=get_user_data_dir() / 'lolalytics-cache'),
+                                                   overlay=getattr(self, 'overlay_store', None),
+                                                   item_plans=getattr(self, 'item_plans', None))
+                provider = getattr(self, 'item_importer_provider', None)
+                shared_importer = provider() if provider else None
+                self._loadout_importer = shared_importer or LoadoutImporter(lcu, get_user_data_dir() / 'sexo2-loadouts.json')
+                self._build_context_worker = SerialWorker('SEXO2-Build-context', capacity=1)
+                self._build_worker = SerialWorker('SEXO2-Builds', capacity=2)
+            service, importer = self._build_service, self._loadout_importer
+        ticket = service.begin_query() if action == 'query' else None
+
+        def work():
+            if getattr(self, '_builds_closed', False):
+                return
+            if action == 'context':
+                context=service.context()
+                if context['available']:
+                    try:context['runePages']=importer.rune_targets()
+                    except Exception:context['runePages']=[]
+                send('sexo2-build-context-data', context=context)
+            elif action == 'query':
+                result = service.query(payload, ticket)
+                # Names are convenience metadata; missing names never fabricate statistics.
+                importer.catalog.bind_revision(result['revision'])
+                try:
+                    result['itemNames'] = importer.catalog.names('items')
+                    result['runeNames'] = importer.catalog.names('perks')
+                    if result.get('arena') is not None:
+                        result['augmentNames'] = importer.catalog.names('cherry-augments')
+                except Exception:
+                    result['warnings'].append('Catálogo de nomes indisponível; exibindo IDs da fonte.')
+                if service.overlay is not None:
+                    try:
+                        service.overlay.enrich(result)
+                    except Exception:
+                        log.warning('Nomes indisponíveis no overlay; consulta preservada.')
+                send('sexo2-build-data', result=result)
+            elif action == 'select':
+                send('sexo2-build-selected', result=service.select_overlay(payload))
+            elif action == 'import':
+                result = service.import_selection(payload, importer)
+                send('sexo2-build-imported', result=result)
+        worker = self._build_context_worker if action == 'context' else self._build_worker
+        if not worker.submit(work, failed):
+            failed(BuildError('Há operações de builds em andamento. Aguarde e tente novamente.'))
+
+    def invalidate_builds(self):
+        service = getattr(self, '_build_service', None)
+        if service is not None:
+            service.invalidate()
+
+    def close_builds(self):
+        with self._background_lock:
+            self._builds_closed = True
+            service = getattr(self, '_build_service', None)
+            if service is not None:
+                service.stop()
+        if service is None:
+            return
+        for name in ('_build_context_worker', '_build_worker'):
+            worker = getattr(self, name, None)
+            if worker is not None:
+                worker.close(timeout=.1)
+        # HTTP requests have transport deadlines; waiting for them must not hold shutdown.
+        threading.Thread(target=service.close, name='SEXO2-Build-close', daemon=True).start()
+
     def _queue_library_scan(self):
         self._library_scan_pending=True
         def done():
@@ -690,6 +800,8 @@ class MessageHandler:
                 autostart_status=is_registered_for_autostart,
                 set_autostart=set_autostart,
                 infer_client_path=ConfigManager().infer_client_path_from_league_path,
+                overlay_status=lambda: self.overlay_runtime.diagnostic() if getattr(self, 'overlay_runtime', None)
+                else {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'},
             )
         return self._settings_service
 

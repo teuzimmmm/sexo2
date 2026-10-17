@@ -4,7 +4,7 @@
 if(window.__sexo2Settings)return;
 const CATEGORIES={skins:'Skins',maps:'Mapas',fonts:'Fontes',announcers:'Anunciadores',ui:'Interface',voiceover:'Vozes',loading_screen:'Carregamento',vfx:'Efeitos visuais',sfx:'Sons',others:'Outros'};
 let bridge=null,root=null,form=null,status=null,dirty=false,pending=null,sequence=0,settings=null;
-const fields={};let updateStatus=null,updateButton=null,github=null;
+const fields={};let updateStatus=null,updateButton=null,github=null,overlayStatus=null,versionLabel=null;
 window.__sexo2Settings={};
 function el(tag,text){const node=document.createElement(tag);if(text)node.textContent=text;return node;}
 function button(text,fn){const b=el('button',text);b.type='button';b.onclick=fn;return b;}
@@ -34,10 +34,18 @@ function build(){
  #sexo2-settings-panel details{border-top:1px solid #1e282d;margin-top:16px;padding-top:12px;font-size:11px}
  #sexo2-settings-panel a{color:#c8aa6e}#sexo2-settings-panel summary{cursor:pointer}
  `;root.append(style,el('h2','Configurações'));
+ versionLabel=el('p','SEXO2 · aguardando versão');versionLabel.className='s2-help';versionLabel.setAttribute('aria-label','Versão do SEXO2');root.append(versionLabel);
  form=el('form');form.noValidate=true;root.append(form);
  field('threshold','Espera após o fim da seleção (s)','number',.3,2,.05);
  field('monitorAutoResumeTimeout','Limite de pausa do jogo (s)','number',20,180,1);
  form.append(el('p','s2'));form.lastChild.className='s2-help';form.lastChild.textContent='A pausa dá tempo para preparar as skins. Ao atingir o limite, o aplicativo tenta liberar o jogo.';
+ const riskRow=el('label');riskRow.className='s2-setting';riskRow.append(el('span','Risco das recomendações LoLalytics'));
+ const riskSelect=el('select');riskSelect.name='lolalyticsRiskLevel';riskSelect.setAttribute('aria-label','Risco das recomendações LoLalytics');
+ for(const [value,label]of [['very-low','Muito baixo'],['low','Baixo'],['medium','Médio'],['high','Alto'],['very-high','Muito alto']]){const option=el('option',label);option.value=value;riskSelect.append(option);}
+ fields.lolalyticsRiskLevel=riskSelect;riskRow.append(riskSelect);form.append(riskRow);
+ riskSelect.addEventListener('change',()=>{dirty=true;message('Alterações ainda não salvas.');});
+ const riskHelp=el('p','Níveis mais altos confiam mais em amostras pequenas; níveis mais baixos dão mais peso à referência geral.');riskHelp.className='s2-help';form.append(riskHelp);
+ overlayStatus=el('p','Overlay suspenso após falha no jogo. Importação de runas e itens continua separada.');overlayStatus.className='s2-help';overlayStatus.setAttribute('aria-label','Estado do overlay');form.append(overlayStatus);
  field('autostart','Iniciar com Windows','checkbox');field('hideEmptyCategories','Ocultar categorias de mods vazias','checkbox');
  const path=field('gamePath','Pasta do LoL (Game)','text');path.placeholder='Automática';path.parentElement.classList.add('s2-path');
  const help=el('p','Deixe em branco para usar a detecção automática.');help.className='s2-help';form.append(help);
@@ -60,14 +68,15 @@ function build(){
  github=el('a','Abrir GitHub do projeto');github.target='_blank';github.rel='noopener noreferrer';github.setAttribute('aria-disabled','true');updates.append(github);root.append(updates);
  const credits=el('details');credits.append(el('summary','Créditos da base'));const note=el('p','SEXO2 utiliza componentes de Rose, Pengu Loader e LTK. BORK pertence à Riot Games; o escudo pertence ao Clube Atlético Mineiro.');credits.append(note);const link=el('a','Código e licença da base Rose');link.href='https://github.com/Alban1911/Rose';link.target='_blank';link.rel='noopener noreferrer';credits.append(link);root.append(credits);
 }
-function populate(data){settings=data;if(dirty||pending?.saving)return;for(const[key,input]of Object.entries(fields)){if(input.type==='checkbox')input.checked=data[key]===true;else input.value=data[key]??'';}}
-function lock(value){for(const input of form.querySelectorAll('input,button'))input.disabled=value;}
+function overlayReceived(data){if(overlayStatus){const state=data.status||data.buildOverlayStatus||{};overlayStatus.textContent=[state.message,state.window?.message,state.itemSets?.message].filter(Boolean).join(' · ')||'Overlay: diagnóstico indisponível.';if(data.accepted===false)overlayStatus.textContent+=' Ação indisponível agora; aguarde ou confira o estado da partida.';}}
+function populate(data){settings=data;if(versionLabel)versionLabel.textContent='SEXO2 · '+(data.version||'versão indisponível');overlayReceived(data);if(dirty||pending?.saving)return;for(const[key,input]of Object.entries(fields)){if(input.type==='checkbox')input.checked=key==='buildOverlayEnabled'?data[key]!==false:data[key]===true;else input.value=data[key]??(key==='lolalyticsRiskLevel'?'medium':'');}}
+function lock(value){for(const input of form.querySelectorAll('input,button'))input.disabled=value;fields.lolalyticsRiskLevel.disabled=value;}
 function request(){if(!bridge?.ready||pending)return;pending={id:'s2-settings-'+(++sequence),saving:false,at:Date.now()};bridge.send({type:'settings-request',requestId:pending.id});}
 function saveSettings(){
  if(!bridge?.ready){message('O aplicativo está desconectado. Suas alterações foram mantidas.',true);return;}
  if(pending){message('Aguarde a confirmação anterior.');return;}
  if(!form.reportValidity())return;
- const values={threshold:Number(fields.threshold.value),monitorAutoResumeTimeout:Number(fields.monitorAutoResumeTimeout.value),autostart:fields.autostart.checked,hideEmptyCategories:fields.hideEmptyCategories.checked,gamePath:fields.gamePath.value.trim()};
+ const values={threshold:Number(fields.threshold.value),monitorAutoResumeTimeout:Number(fields.monitorAutoResumeTimeout.value),autostart:fields.autostart.checked,hideEmptyCategories:fields.hideEmptyCategories.checked,gamePath:fields.gamePath.value.trim(),lolalyticsRiskLevel:fields.lolalyticsRiskLevel.value,buildOverlayEnabled:false};
  pending={id:'s2-settings-'+(++sequence),saving:true,at:Date.now()};lock(true);message('Salvando…');bridge.send({type:'settings-save',requestId:pending.id,...values});
 }
 function checkUpdate(){if(bridge?.ready){updateStatus.textContent='Verificando atualizações…';bridge.send({type:'sexo2-update-request',requestId:'s2-update-'+(++sequence)});}}
@@ -84,6 +93,7 @@ function receive(data){
 }
 window.addEventListener('rose-hub-settings',e=>{if(!root)build();root.hidden=false;e.detail.target.append(root);if(root.dataset.libraryOpen==='true'){const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;}request();});
 window.addEventListener('rose-hub-settings-close',()=>{if(root)root.hidden=true;});
-const timer=setInterval(()=>{if(!root)build();if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('settings-data',receive);bridge.subscribe('settings-saved',receive);bridge.subscribe('sexo2-update-state',updateReceived);bridge.onReady(()=>{pending=null;lock(false);request();checkUpdate();});clearInterval(timer);}},100);
+const timer=setInterval(()=>{if(!root)build();if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('settings-data',receive);bridge.subscribe('settings-saved',receive);bridge.subscribe('sexo2-update-state',updateReceived);bridge.subscribe('sexo2-overlay-state',overlayReceived);bridge.onReady(()=>{pending=null;lock(false);request();checkUpdate();});clearInterval(timer);}},100);
+setInterval(()=>{if(root?.isConnected&&!root.hidden&&!document.hidden&&!pending)request();},3000);
 setInterval(()=>{if(pending&&Date.now()-pending.at>15000){pending=null;lock(false);message('Não houve confirmação. Confira a conexão; suas alterações foram mantidas.',true);}},1000);
 })();

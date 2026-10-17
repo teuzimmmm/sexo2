@@ -44,6 +44,8 @@ injection_data_files = [
 ]
 # Verify and add injection binaries
 binaries = []
+# Incident quarantine: production packages contain no renderer DLL or OCR helper.
+# Native experiments remain available only through separate opt-in lab scripts.
 missing_binaries = []
 for tool in injection_binaries:
     if Path(tool).exists():

@@ -1,0 +1,107 @@
+[
+  {
+    "fixture": "ahri-ranked-base.json",
+    "filters": {
+      "champion": "ahri",
+      "mode": "ranked",
+      "patch": "16.20",
+      "lane": "middle",
+      "tier": "emerald_plus",
+      "region": "all",
+      "keystone": null
+    },
+    "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all",
+    "collected_on": "2026-10-16",
+    "source_sha256": "84df16ace3d5837e55a7364c15e60a5e27784075cf5bd59c807a2fe4dff30a18",
+    "transformations": [
+      "keep navigation + relevant aggregate payload loaders",
+      "keep complete summary (runes, starting/core/alternatives)",
+      "only first 4 rune statistics and first 3 combination rows",
+      "rebuild reference table without changing retained values"
+    ]
+  },
+  {
+    "fixture": "ahri-ranked-pick.json",
+    "filters": {
+      "champion": "ahri",
+      "mode": "ranked",
+      "patch": "16.20",
+      "lane": "middle",
+      "tier": "emerald_plus",
+      "region": "all",
+      "keystone": 8112
+    },
+    "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&keystone=8112",
+    "collected_on": "2026-10-16",
+    "source_sha256": "f3d936fb9b3339e2432ecc8940f0c47744827dc340e1ccdb2419bcec530de425",
+    "transformations": [
+      "keep navigation + relevant aggregate payload loaders",
+      "keep complete summary (runes, starting/core/alternatives)",
+      "only first 4 rune statistics and first 3 combination rows",
+      "rebuild reference table without changing retained values"
+    ]
+  },
+  {
+    "fixture": "ahri-ranked-win.json",
+    "filters": {
+      "champion": "ahri",
+      "mode": "ranked",
+      "patch": "16.20",
+      "lane": "middle",
+      "tier": "emerald_plus",
+      "region": "all",
+      "keystone": 8992
+    },
+    "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&keystone=8992",
+    "collected_on": "2026-10-16",
+    "source_sha256": "76ee5c0d3f0cfe7db78d4e408cf865dbd529760d27cead79163b590db2eba9b7",
+    "transformations": [
+      "keep navigation + relevant aggregate payload loaders",
+      "keep complete summary (runes, starting/core/alternatives)",
+      "only first 4 rune statistics and first 3 combination rows",
+      "rebuild reference table without changing retained values"
+    ]
+  },
+  {
+    "fixture": "jinx-aram-base.json",
+    "filters": {
+      "champion": "jinx",
+      "mode": "aram",
+      "patch": "16.20",
+      "lane": "all",
+      "tier": "all",
+      "region": "all",
+      "keystone": null
+    },
+    "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all",
+    "collected_on": "2026-10-16",
+    "source_sha256": "fd19c3bc2e5c011960f4238e2c846ff02475de88bdc4d0c81b24ab8b23ff0cae",
+    "transformations": [
+      "keep navigation + relevant aggregate payload loaders",
+      "keep complete summary (runes, starting/core/alternatives)",
+      "only first 4 rune statistics and first 3 combination rows",
+      "rebuild reference table without changing retained values"
+    ]
+  },
+  {
+    "fixture": "jinx-aram-filtered.json",
+    "filters": {
+      "champion": "jinx",
+      "mode": "aram",
+      "patch": "16.20",
+      "lane": "all",
+      "tier": "all",
+      "region": "all",
+      "keystone": 8008
+    },
+    "source_url": "https://lolalytics.com/lol/jinx/aram/build/q-data.json?tier=all&region=all&keystone=8008",
+    "collected_on": "2026-10-16",
+    "source_sha256": "05d57b7a8f74901fedf431e356c45f094aac34b771e2d6dfabc8f388e44ecdec",
+    "transformations": [
+      "keep navigation + relevant aggregate payload loaders",
+      "keep complete summary (runes, starting/core/alternatives)",
+      "only first 4 rune statistics and first 3 combination rows",
+      "rebuild reference table without changing retained values"
+    ]
+  }
+]

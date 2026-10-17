@@ -108,14 +108,30 @@ class PenguSkinMonitorThread(threading.Thread):
         
         # Set message handler on WebSocket server
         self.websocket_server.message_handler = self.message_handler.handle_message
+        # Separate, read-only Windows window; never runs HTTP on the GUI thread.
+        from sexo2.overlay.runtime import OverlayRuntime
+        from sexo2.services.settings import get_overlay_enabled
+        self._build_overlay = OverlayRuntime(lcu, enabled=get_overlay_enabled,
+                                            champion=lambda: getattr(shared_state, 'locked_champ_id', None)
+                                            or getattr(shared_state, 'hovered_champ_id', None))
+        self.message_handler.item_plans = self._build_overlay.item_plans
+        self.message_handler.item_importer_provider = self._build_overlay.item_importer
+        self.message_handler.overlay_store = self._build_overlay.store
+        self.message_handler.overlay_runtime = self._build_overlay
 
     def run(self) -> None:
         """Run the WebSocket server"""
-        self.websocket_server.run()
+        self._build_overlay.start()
+        try:
+            self.websocket_server.run()
+        finally:
+            self._build_overlay.stop()
 
     def stop(self) -> None:
         """Stop the server"""
         try:
+            self._build_overlay.stop()
+            self.message_handler.close_builds()
             self.message_handler.close_library()
             self.websocket_server.stop()
         finally:
@@ -171,6 +187,7 @@ class PenguSkinMonitorThread(threading.Thread):
     
     def _broadcast_phase_change(self, phase: str) -> None:
         """Broadcast phase change (delegates to broadcaster)"""
+        self.message_handler.invalidate_builds()
         self.broadcaster.broadcast_phase_change(phase)
     
     def _broadcast_language_changed(self) -> None:

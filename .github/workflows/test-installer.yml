@@ -1,0 +1,159 @@
+name: Build private test installer
+on:
+  workflow_dispatch:
+    inputs:
+      base_tag:
+        description: Existing baseline release tag
+        default: v1.6.4
+        required: true
+      version:
+        description: Test edition (2.0.0.1 through 2.0.0.65535)
+        default: 2.0.0.8
+        required: true
+      native_host_only:
+        description: Test isolated DX11 candidate only; do not build an installer
+        type: boolean
+        default: false
+  push:
+    branches: ['test/installer-2.0']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: inputs.native_host_only != true
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install -r requirements.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Python dependencies failed.' }
+          choco install innosetup --no-progress -y
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup install failed.' }
+      - name: Test before packaging
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -q
+          if ($LASTEXITCODE -ne 0) { throw 'Tests failed; installer will not be built.' }
+          python -m unittest injection.tests.test_game_monitor injection.tests.test_early_patcher utils.tests.test_i18n -q
+          if ($LASTEXITCODE -ne 0) { throw 'Legacy pause/patcher regressions failed.' }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test build panel modes with isolated browser
+        shell: pwsh
+        run: |
+          npm install --prefix ui-test-runtime --no-save --package-lock=false playwright@1.64.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser test dependencies failed.' }
+          & .\ui-test-runtime\node_modules\.bin\playwright.cmd install chromium
+          if ($LASTEXITCODE -ne 0) { throw 'Browser install failed.' }
+          node --test tests/test_settings_ui.cjs tests/test_branding_ui.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Settings/branding UI regression failed.' }
+          node tests/browser_builds.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Build panel mode tests failed.' }
+      - name: Download existing native baseline
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BASE_TAG: ${{ inputs.base_tag || 'v1.6.4' }}
+        run: |
+          if ($env:BASE_TAG -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') { throw 'Invalid baseline tag.' }
+          gh release download $env:BASE_TAG --pattern SEXO2-baseline.zip --dir "$env:RUNNER_TEMP/sexo2-baseline"
+          if ($LASTEXITCODE -ne 0) { throw 'Native baseline download failed.' }
+      - name: Build and audit test installer
+        shell: pwsh
+        env:
+          TEST_VERSION: ${{ inputs.version || '2.0.0.8' }}
+        run: |
+          python scripts/build_test_installer.py --base "$env:RUNNER_TEMP/sexo2-baseline/SEXO2-baseline.zip" --version $env:TEST_VERSION
+          if ($LASTEXITCODE -ne 0) { throw 'Test installer build failed.' }
+      - name: Smoke test install, reinstall and uninstall
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -LiteralPath build-test-installer/output -Filter '*.exe'
+          if (@($installer).Count -ne 1) { throw 'Expected one test installer.' }
+          ./scripts/test_installer.ps1 -Installer $installer.FullName -ExpectedCommit $env:GITHUB_SHA -ReportPath build-test-installer/output/installer-smoke.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEXO2-2.0-Teste
+          path: |
+            build-test-installer/output/*.exe
+            build-test-installer/output/*.sha256
+            build-test-installer/output/*.json
+          if-no-files-found: error
+          retention-days: 7
+# Private test artifact only: no release, push from the job, or signing key.
+
+  native-host:
+    if: inputs.native_host_only == true
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - uses: actions/cache@v4
+        with:
+          path: native/overlay-host/target
+          key: ${{ runner.os }}-overlay-${{ hashFiles('native/overlay-host/Cargo.lock') }}
+      - name: Select installed Rust toolchain
+        shell: pwsh
+        run: |
+          rustup default stable
+          if ($LASTEXITCODE -ne 0) { throw 'Rust toolchain failed.' }
+      - name: Install screen test dependencies
+        shell: pwsh
+        run: python -m pip install Pillow==12.3.0 requests==2.34.2
+      - name: Test protocol and compile isolated DX11 host
+        shell: pwsh
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+        run: |
+          python -m unittest tests.test_overlay_wire tests.test_overlay_offers -v
+          if ($LASTEXITCODE -ne 0) { throw 'Python protocol tests failed.' }
+          cargo test --manifest-path native/overlay-host/Cargo.toml --locked
+          if ($LASTEXITCODE -ne 0) { throw 'Rust protocol tests failed.' }
+          cargo build --manifest-path native/overlay-host/Cargo.toml --release --locked
+          if ($LASTEXITCODE -ne 0) { throw 'Native host compilation failed.' }
+      - name: Test external DirectComposition renderer
+        shell: pwsh
+        env:
+          SEXO2_TEST_NATIVE_OVERLAY: '1'
+        run: |
+          python scripts/build_overlay_renderer.py
+          if ($LASTEXITCODE -ne 0) { throw 'Composition renderer compilation failed.' }
+          python -m unittest tests.test_overlay_win32 -v
+          if ($LASTEXITCODE -ne 0) { throw 'Composition pixel/z-order tests failed.' }
+      - name: Test local OCR and bounded screen crops
+        shell: pwsh
+        env:
+          SEXO2_TEST_SCREEN_OCR: '1'
+        run: |
+          python -m unittest tests.test_overlay_screen_windows -v
+          if ($LASTEXITCODE -ne 0) { throw 'Screen/OCR test failed; no League validation.' }
+      - name: Stage OCR helper with dependency notices
+        shell: pwsh
+        run: |
+          python scripts/build_offer_reader.py
+          if ($LASTEXITCODE -ne 0) { throw 'OCR helper/license staging failed.' }
+      - name: Exercise own-process rendering, expiry and disconnect
+        shell: pwsh
+        run: |
+          python scripts/native_overlay_probe.py --host native/overlay-host/target/release/sexo2-overlay-host.exe --output native-host-report.json
+          if ($LASTEXITCODE -ne 0) { throw 'Isolated native host test failed; no League validation.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEXO2-native-host-report
+          path: native-host-report.json
+          if-no-files-found: error
+          retention-days: 7
+# Native-only job uploads a report: no installer, game injector or deployment.

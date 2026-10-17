@@ -1,0 +1,150 @@
+{
+  "checked_at": "2026-10-16T22:23:26.706271+00:00",
+  "lcu": "synthetic; no game writes",
+  "checks": [
+    {
+      "selection": "general",
+      "status": "passed",
+      "entries": [
+        {
+          "id": "wr",
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&patch=16.20&keystone=8992",
+          "patch": "16.20",
+          "keystone": 8992,
+          "runes": {
+            "pri": [
+              "8992",
+              "8226",
+              "8210",
+              "8237"
+            ],
+            "sec": [
+              "8473",
+              "8242"
+            ],
+            "mod": [
+              "5008",
+              "5010",
+              "5011"
+            ],
+            "page": {
+              "pri": 2,
+              "sec": 3
+            }
+          },
+          "core_metrics": {
+            "win_rate": 59.45,
+            "games": 1095
+          },
+          "rune_metrics": {
+            "win_rate": 53.39,
+            "games": 20865
+          },
+          "rune_metric_scope": "keystone_observation",
+          "blocks": [
+            "starting",
+            "core",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        },
+        {
+          "id": "common",
+          "source_url": "https://lolalytics.com/lol/ahri/build/q-data.json?lane=middle&tier=emerald_plus&region=all&patch=16.20&keystone=8112",
+          "patch": "16.20",
+          "keystone": 8112,
+          "runes": {
+            "pri": [
+              "8112",
+              "8139",
+              "8140",
+              "8106"
+            ],
+            "sec": [
+              "8226",
+              "8210"
+            ],
+            "mod": [
+              "5005",
+              "5008",
+              "5001"
+            ],
+            "page": {
+              "pri": 1,
+              "sec": 2
+            }
+          },
+          "core_metrics": {
+            "win_rate": 53.64,
+            "games": 27262
+          },
+          "rune_metrics": {
+            "win_rate": 52.79,
+            "games": 148830
+          },
+          "rune_metric_scope": "keystone_observation",
+          "blocks": [
+            "starting",
+            "core",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        }
+      ]
+    },
+    {
+      "selection": "matchup",
+      "status": "passed",
+      "entries": [
+        {
+          "id": "vs:1",
+          "source_url": "https://lolalytics.com/lol/ahri/vs/annie/build/q-data.json?lane=middle&vslane=middle&tier=emerald_plus",
+          "patch": "16.20",
+          "keystone": 8112,
+          "runes": {
+            "pri": [
+              "8112",
+              "8139",
+              "8137",
+              "8106"
+            ],
+            "sec": [
+              "8210",
+              "8226"
+            ],
+            "mod": [
+              "5005",
+              "5008",
+              "5001"
+            ],
+            "page": {
+              "pri": 1,
+              "sec": 2
+            }
+          },
+          "core_metrics": {
+            "win_rate": null,
+            "games": null
+          },
+          "rune_metrics": {
+            "win_rate": 49.94,
+            "games": 1666
+          },
+          "rune_metric_scope": "keystone_observation",
+          "blocks": [
+            "starting",
+            "item1",
+            "item2",
+            "item3",
+            "item4",
+            "item5",
+            "item6"
+          ]
+        }
+      ]
+    }
+  ],
+  "source_gets": 4
+}

@@ -2,14 +2,32 @@
 import math
 
 from config import APP_VERSION, get_config_float, get_config_option, set_config_options
+from lolalytics.risk import DEFAULT_RISK_LEVEL, validate_risk_level
+from sexo2.install.identity import display_version
+
+
+def get_risk_level():
+    """Return the saved LoLalytics risk level, falling back on corrupt values."""
+    value = get_config_option('LoLalytics', 'risk_level', DEFAULT_RISK_LEVEL)
+    try:
+        return validate_risk_level(value)
+    except (TypeError, ValueError):
+        return DEFAULT_RISK_LEVEL
+
+
+def get_overlay_enabled():
+    # Quarantined after a real freeze/crash report; persisted old preferences cannot opt in.
+    return False
 
 
 class SettingsService:
-    def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path):
+    def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path,
+                 overlay_status=lambda: {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}):
         self.validate_path = validate_path
         self.autostart_status = autostart_status
         self.set_autostart = set_autostart
         self.infer_client_path = infer_client_path
+        self.overlay_status = overlay_status
 
     def snapshot(self):
         path = get_config_option('General', 'leaguePath', '') or ''
@@ -18,11 +36,29 @@ class SettingsService:
             'monitorAutoResumeTimeout': int(get_config_float('General', 'monitor_auto_resume_timeout', 60)),
             'autostart': bool(self.autostart_status()),
             'hideEmptyCategories': (get_config_option('General', 'hide_empty_categories', 'false') or '').lower() == 'true',
+            'lolalyticsRiskLevel': get_risk_level(),
+            'buildOverlayEnabled': False,
+            'buildOverlayAvailable': False,
+            'buildOverlayStatus': self.overlay_status(),
             'gamePath': path, 'gamePathValid': bool(path and self.validate_path(path)),
-            'version': APP_VERSION,
+            'version': display_version(APP_VERSION),
         }
 
     def save(self, payload):
+        overlay_enabled = payload.get('buildOverlayEnabled', get_overlay_enabled())
+        if type(overlay_enabled) is not bool:
+            raise ValueError('Confira a opção do overlay durante a partida.')
+        # Do not re-enable the quarantined renderer through an older panel.
+        overlay_enabled = False
+        if 'lolalyticsRiskLevel' in payload:
+            try:
+                risk_level = validate_risk_level(payload['lolalyticsRiskLevel'])
+            except (TypeError, ValueError):
+                raise ValueError('Escolha um nível de risco válido para as recomendações.') from None
+            save_risk_level = True
+        else:
+            risk_level = get_risk_level()
+            save_risk_level = False
         try:
             threshold = float(payload['threshold'])
             timeout = float(payload['monitorAutoResumeTimeout'])
@@ -50,6 +86,9 @@ class SettingsService:
             'hide_empty_categories': 'true' if payload['hideEmptyCategories'] else 'false',
             'leaguePath': path, 'clientPath': client_path,
         }}
+        if save_risk_level:
+            changes['LoLalytics'] = {'risk_level': risk_level}
+        changes.setdefault('LoLalytics', {})['overlay_enabled'] = 'false'
         if changed_autostart:
             self.set_autostart(payload['autostart'])
         try:
@@ -64,5 +103,9 @@ class SettingsService:
         return {
             'threshold': threshold, 'monitorAutoResumeTimeout': int(timeout),
             'autostart': payload['autostart'], 'hideEmptyCategories': payload['hideEmptyCategories'],
-            'gamePath': path, 'gamePathValid': bool(path), 'version': APP_VERSION,
+            'lolalyticsRiskLevel': risk_level,
+            'buildOverlayEnabled': False,
+            'buildOverlayAvailable': False,
+            'buildOverlayStatus': self.overlay_status(),
+            'gamePath': path, 'gamePathValid': bool(path), 'version': display_version(APP_VERSION),
         }
