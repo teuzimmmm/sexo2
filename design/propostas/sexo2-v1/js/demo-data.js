@@ -59,35 +59,24 @@ window.S2_DEMO = {
   },
 
   // Itens: trio observado em conjunto (WR do trio) e alternativas por posição (WR de cada item).
+  // Conjunto de itens SEXO2: uma página com até três grupos de três seções.
+  // Ahri: números e itens reais das fixtures LoLalytics do repositório (16.20, Esmeralda+, meio).
   items: {
     Ahri: {
-      win: { core: [6655, 3020, 4645], wr: 58.1, games: 3120 },
-      pick: { core: [6655, 3020, 3089], wr: 54.9, games: 18877 },
-      start: [
-        { items: [1056, 2003, 2003], wr: 52.4, games: 30512 },
-        { items: [1055, 2003], wr: 50.8, games: 2207 },
+      groups: [
+        { title: "59,3% — 1.077 partidas", tip: "Win rate dos três primeiros itens juntos|1.077 partidas com esses três itens", seq: [3118, 3020, 3100, 3041, 4645, 3089], start: [[1056, 1], [2003, 2]], alt: [3157] },
+        { title: "53,6% — 26.214 partidas", tip: "Win rate dos três primeiros itens juntos|26.214 partidas com esses três itens", seq: [3118, 3020, 4645, 3157, 3089, 3135], start: [[1056, 1], [2003, 2]], alt: [3041] },
       ],
-      boots: [
-        { id: 3020, wr: 53.6, games: 33120 },
-        { id: 3158, wr: 52.2, games: 4410 },
-        { id: 3111, wr: 51.4, games: 1380 },
-      ],
-      slots: [
-        [{ id: 3089, wr: 61.2, games: 8840 }, { id: 3157, wr: 60.4, games: 5121 }, { id: 3135, wr: 62.8, games: 2930 }],
-        [{ id: 3135, wr: 64.1, games: 3311 }, { id: 3157, wr: 63.0, games: 2208 }, { id: 3089, wr: 62.5, games: 1904 }],
-        [{ id: 3102, wr: 65.3, games: 912 }, { id: 3157, wr: 64.8, games: 780 }, { id: 3135, wr: 64.0, games: 701 }],
-      ],
-      vs: {
-        Annie: { core: [6655, 3020, 3157], wr: 57.3, games: 402 },
+      counter: {
+        Annie: { title: "Counter Annie — 49,57% — 1.852 partidas", tip: "Win rate de Ahri contra Annie|1.852 partidas no confronto", seq: [6655, 3158, 3041, 4645, 3157, 3089], start: [[1056, 1], [2003, 2]], alt: [3135] },
       },
     },
     Syndra: {
-      win: { core: [6655, 3020, 3089], wr: 55.0, games: 2804 },
-      pick: { core: [6655, 3020, 3089], wr: 55.0, games: 2804 },
-      start: [{ items: [1056, 2003, 2003], wr: 51.9, games: 20114 }],
-      boots: [{ id: 3020, wr: 52.8, games: 21010 }],
-      slots: [[{ id: 3135, wr: 60.0, games: 4100 }], [{ id: 3157, wr: 61.2, games: 2010 }], []],
-      vs: {},
+      groups: [
+        { title: "55,0% — 2.804 partidas", tip: "Win rate dos três primeiros itens juntos|2.804 partidas com esses três itens", seq: [6655, 3020, 3089, 3135, 3157, 3102], start: [[1056, 1], [2003, 2]], alt: [3165] },
+        { title: "53,1% — 14.020 partidas", tip: "Win rate dos três primeiros itens juntos|14.020 partidas com esses três itens", seq: [6655, 3020, 4645, 3089, 3135, 3157], start: [[1056, 1], [2003, 2]], alt: [3102] },
+      ],
+      counter: {},
     },
   },
 

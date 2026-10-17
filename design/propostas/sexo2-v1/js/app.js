@@ -28,7 +28,7 @@
     sim: { open: true, timer: 30, running: true, latency: 700, fail: false, noPage: false, data: "ok", log: [] },
     cs: { phase: "pick", hover: "Ahri", champion: null, lane: "middle", opponent: null },
     asst: { open: true, tab: "runes", screen: "home", draft: null, source: null },
-    items: { pick: { win: true, pick: false, vs: false }, pending: false, done: null, error: null },
+    items: { pending: false, done: null, error: null },
     mod: null,
     game: { minute: 22, tab: true },
     hub: { open: true, section: "skins", category: "skins", auto: "favorite", profile: "Padrão", room: "connected", toast: null },
@@ -135,6 +135,7 @@
     S.items.done = null;
     S.mod = null;
     importer.reset(reason || `campeão: ${champName(key)}`);
+    if (S.cs.champion) importItems();
   }
 
   // ---------------------------------------------------------------- tooltips
@@ -337,44 +338,50 @@
   }
 
   // ------------------------------------------------------------ itens
+  // Página "SEXO2 — Campeão" como fica na loja: três seções por recomendação.
+  function itemPage(me) {
+    const it = D.items[me];
+    if (!it) return null;
+    const opp = laneOpponent();
+    const counter = opp && it.counter[opp.key];
+    return { title: `SEXO2 — ${champName(me)}`, groups: counter ? it.groups.concat([counter]) : it.groups };
+  }
+
   function itemsTab(me) {
     const st = dataState();
     if (st) return st;
-    const it = D.items[me];
-    if (!it) return `<div class="state">Sem dados para ${esc(champName(me))}.</div>`;
-    const icon = (id, size) => `<img class="s2-icon sq" width="${size}" height="${size}" src="${img.item(id)}" alt="${esc(itemName(id))}" data-tip="${esc(itemName(id))}|${nf0.format(G.items[id] ? G.items[id].gold : 0)} de ouro">`;
-    const card = (kind, label, b) => `<button class="rec-card items" data-act="item-pick" data-kind="${kind}" aria-pressed="${S.items.pick[kind]}">
-        <div class="label">${label}</div>
-        <div class="main"><span class="t-stat-big" data-tip="Win rate dos três itens|Partidas com os três itens juntos: ${nf0.format(b.games)}.">${pct(b.wr)}</span>
-          <span class="core">${b.core.map((id) => icon(id, 30)).join("")}</span></div>
-        <div class="sub"><span class="games">${nf0.format(b.games)} partidas</span></div>
-      </button>`;
-    const opt = (o) => `<span class="slot-opt">${icon(o.id, 26)}<span><span class="num t-stat">${pct(o.wr)}</span><br><span class="n num">${nf0.format(o.games)}</span></span></span>`;
-    const combo = (o) => `<span class="slot-opt combo">${o.items.map((id) => icon(id, 22)).join("")}<span><span class="num t-stat">${pct(o.wr)}</span><br><span class="n num">${nf0.format(o.games)}</span></span></span>`;
-    const opp = laneOpponent();
-    const vs = opp && it.vs[opp.key];
-    const slotRow = (label, opts, fn) => `<div class="slot-row"><span class="t-category">${label}</span><span class="opts">${opts.length ? opts.map(fn).join("") : `<span class="t-muted t-small">Sem dados</span>`}</span></div>`;
-    return `<div class="rec-cards">${card("win", "Maior WR", it.win)}${card("pick", "Mais comum", it.pick)}</div>
-      <div style="margin-top:10px">
-        ${slotRow("Iniciais", it.start, combo)}
-        ${slotRow("Botas", it.boots, opt)}
-        ${it.slots.map((s, i) => slotRow(`${i + 4}º item`, s, opt)).join("")}
-      </div>
-      <div class="section-head"><span class="t-heading">${opp ? "Contra " + esc(champName(opp.key)) : "Contra"}</span></div>
-      ${vs ? `<button class="rec-row" data-act="item-pick" data-kind="vs" aria-pressed="${S.items.pick.vs}">
-          <span class="core" style="display:flex;gap:3px">${vs.core.map((id) => icon(id, 26)).join("")}</span><span class="grow"></span>
-          <span class="wr t-stat">${pct(vs.wr)}</span><span class="n">${nf0.format(vs.games)}</span></button>`
-        : `<div class="s2-empty">${opp ? `Sem dados suficientes contra ${esc(champName(opp.key))}.` : "Adversário de rota incerto."}</div>`}`;
+    const page = itemPage(me);
+    if (!page) return `<div class="state">Sem dados para ${esc(champName(me))}.</div>`;
+    const icon = (id, count) => `<span class="ip-item"><img class="s2-icon sq" width="34" height="34" src="${img.item(id)}" alt="${esc(itemName(id))}" data-tip="${esc(itemName(id))}|${nf0.format(G.items[id] ? G.items[id].gold : 0)} de ouro">${count > 1 ? `<span class="ip-count num">${count}</span>` : ""}</span>`;
+    const section = (title, items, tip) => `<div class="ip-section"><div class="ip-title"${tip ? ` data-tip="${esc(tip)}"` : ""}>${esc(title)}</div><div class="ip-items">${items}</div></div>`;
+    return `<div class="ip-page"><div class="ip-head t-heading">${esc(page.title)}</div>
+      ${page.groups.map((g) => section(g.title, g.seq.map((id) => icon(id, 1)).join(""), g.tip)
+        + section("Itens iniciais", g.start.map(([id, n]) => icon(id, n)).join(""))
+        + (g.alt.length ? section("Alternativas", g.alt.map((id) => icon(id, 1)).join("")) : "")).join("")}</div>`;
   }
 
   function itemsFoot() {
-    const n = Object.values(S.items.pick).filter(Boolean).length;
     let left = "";
     if (S.items.pending) left = `<span class="s2-spinner"></span><span>Importando…</span>`;
     else if (S.items.error) left = `<span class="err">${S.items.error}</span>`;
     else if (S.items.done) left = `<span>${S.items.done}</span>`;
-    return `<div class="asst-foot">${left}<span class="grow"></span>
-      <button class="s2-btn primary" data-act="items-import" ${!n || S.items.pending || !canEdit() ? "disabled" : ""}>Importar ${n === 1 ? "conjunto" : n + " conjuntos"}</button></div>`;
+    const retry = S.items.error && canEdit() ? `<button class="s2-btn primary" data-act="items-import">Importar conjunto</button>` : "";
+    return `<div class="asst-foot">${left}<span class="grow"></span>${retry}</div>`;
+  }
+
+  // Importação automática ao confirmar o campeão (sem abrir o painel), simulada.
+  function importItems() {
+    const champ = S.cs.champion;
+    if (!champ) return;
+    S.items.pending = true; S.items.error = null; S.items.done = null;
+    setTimeout(() => {
+      if (S.cs.champion !== champ) return; // trocou de campeão: vale a importação mais recente
+      S.items.pending = false;
+      if (S.sim.fail) S.items.error = "O cliente recusou o conjunto.";
+      else if (!itemPage(champ)) S.items.error = `Sem dados para ${champName(champ)}.`;
+      else { S.items.done = "Conjunto importado"; log(`Conjunto "SEXO2 — ${champName(champ)}" gravado; conjuntos pessoais mantidos.`); }
+      render();
+    }, S.sim.latency);
   }
 
   // ------------------------------------------------------------- mods
@@ -607,7 +614,7 @@
     const p = S.asst.draft;
     switch (name) {
       case "hover": switchChampion(el.dataset.champ, `campeão em foco: ${champName(el.dataset.champ)}`); break;
-      case "lock": S.cs.champion = S.cs.hover; S.cs.phase = "final"; S.sim.timer = 30; log(`${champName(S.cs.champion)} confirmado.`); break;
+      case "lock": S.cs.champion = S.cs.hover; S.cs.phase = "final"; S.sim.timer = 30; log(`${champName(S.cs.champion)} confirmado.`); importItems(); break;
       case "asst-toggle": S.asst.open = !S.asst.open; break;
       case "tab": S.asst.tab = el.dataset.tab; break;
       case "rune-open": {
@@ -627,19 +634,7 @@
       case "s-rune": S.asst.draft = R.edit.secondaryRune(RD, p, +el.dataset.row, +el.dataset.id); importer.edit(S.asst.draft); break;
       case "shard": S.asst.draft = R.edit.shard(RD, p, +el.dataset.row, +el.dataset.id); importer.edit(S.asst.draft); break;
       case "data-retry": S.sim.data = "loading"; render(); setTimeout(() => { S.sim.data = "ok"; render(); }, 900); return;
-      case "item-pick": S.items.pick[el.dataset.kind] = !S.items.pick[el.dataset.kind]; S.items.done = null; break;
-      case "items-import": {
-        const n = Object.values(S.items.pick).filter(Boolean).length;
-        S.items.pending = true; S.items.error = null;
-        setTimeout(() => {
-          S.items.pending = false;
-          if (!canEdit()) S.items.error = "A seleção terminou.";
-          else if (S.sim.fail) S.items.error = "O cliente recusou os conjuntos.";
-          else { S.items.done = n === 1 ? "Conjunto importado" : `${n} conjuntos importados`; log(`${n} conjunto(s) de itens gravados; conjuntos pessoais mantidos.`); }
-          render();
-        }, S.sim.latency);
-        break;
-      }
+      case "items-import": importItems(); break;
       case "mod": S.mod = el.dataset.mod; toast(S.mod ? "Mod selecionado." : "Sem mod."); return;
       case "open-library": S.view = "home"; S.hub.open = true; S.hub.section = "mods"; break;
       case "hub-toggle": S.hub.open = !S.hub.open; break;
