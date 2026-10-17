@@ -23,7 +23,7 @@ print(json.dumps({'context':context,'result':result}));s.close()
    window.emit=(type,message)=>(window.handlers[type]||[]).forEach(fn=>fn(message));
    window.__roseBridge={ready:true,subscribe(type,fn){(window.handlers[type]??=[]).push(fn);},onReady(fn){fn();},send(message){
     window.sent.push(message);
-    if(message.type==='sexo2-build-context')setTimeout(()=>window.emit('sexo2-build-context-data',{requestId:message.requestId,context:structuredClone(window.sample.context)}),0);
+    if(message.type==='sexo2-build-context')setTimeout(()=>window.contextError?window.emit('sexo2-build-error',{requestId:message.requestId,error:'Cliente temporariamente indisponível.'}):window.emit('sexo2-build-context-data',{requestId:message.requestId,context:structuredClone(window.sample.context)}),0);
     if(message.type==='sexo2-build-query'){
      const response={requestId:message.requestId,result:{...structuredClone(window.sample.result),revision:message.revision}};
      if(window.holdQueries)window.pending.push(response);
@@ -46,6 +46,12 @@ print(json.dumps({'context':context,'result':result}));s.close()
   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length),0,'closed panel must not scrape');
   await page.evaluate(()=>{window.sample.context=structuredClone(window.originalContext);});
   await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds button')).find(b=>b.textContent==='Consultar').disabled);
+  // Transient context errors must disable actions rather than remove the launcher.
+  await page.evaluate(()=>{window.contextError=true;});
+  await page.waitForFunction(()=>Array.from(document.querySelectorAll('#sexo2-builds button')).find(b=>b.textContent==='Consultar')?.disabled);
+  assert.equal(await page.getByRole('button',{name:'Abrir builds do SEXO2'}).isVisible(),true);
+  await page.evaluate(()=>{window.contextError=false;});
+  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds button')).find(b=>b.textContent==='Consultar')?.disabled);
   await page.getByRole('button',{name:'Abrir builds do SEXO2'}).click();
   await page.getByRole('button',{name:'Importar runas',exact:true}).waitFor();
   await page.waitForFunction(()=>!document.querySelector('#sexo2-builds button')?.disabled&&document.querySelector('#sexo2-builds')?.textContent.includes('Sugestões prontas'));
@@ -112,6 +118,12 @@ print(json.dumps({'context':context,'result':result}));s.close()
   const contextCount=await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-context').length);
   await page.waitForTimeout(2100);
   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-context').length),contextCount,'context polling must pause in game');
+  // Recover the next draft even if its phase-change broadcast was lost.
+  const pausedQueries=await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length);
+  await page.evaluate(()=>{window.sample.context={...structuredClone(window.originalContext),revision:'lost-phase-event'};window.originalNow=Date.now;Date.now=()=>window.originalNow()+15000;});
+  await page.getByRole('button',{name:'Abrir builds do SEXO2'}).waitFor();
+  await page.evaluate(()=>{Date.now=window.originalNow;});
+  assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length),pausedQueries,'recovery must not auto-open or scrape');
   assert.deepEqual(errors,[]);
   console.log('Build panel: normal/ranked without legacy DOM selectors, before-pick mount, Arena excluded, imports, stale replies, errors and phase exit passed.');
  }finally{await browser.close();}

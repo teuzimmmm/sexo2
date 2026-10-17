@@ -27,6 +27,8 @@ class NativeOverlay:
         self._renders = self._raises = 0
         self._view = None
         self._registered = set()
+        self._opponent_action = None
+        self._opponent_attempted = False
         self._hotkey_attempted = False
         self._visible = False
         self._position = None
@@ -35,7 +37,10 @@ class NativeOverlay:
 
     def diagnostic(self):
         return dict(self._diagnostic, engine='directcomposition-d3d11', renders=self._renders,
-                    raises=self._raises, driver=getattr(self._renderer, 'driver', None), hotkeys={f'F{i + 7}': i in self._registered for i in (1, 2, 3)})
+                    raises=self._raises, driver=getattr(self._renderer, 'driver', None), hotkeys={key: i in self._registered for i, key in ((1,'F8'),(2,'F9'),(3,'F10'),(4,'F7'))})
+
+    def set_opponent_action(self, action):
+        self._opponent_action = action
 
     def _status(self, code, message):
         self._diagnostic = {'code': code, 'message': message,
@@ -116,7 +121,7 @@ class NativeOverlay:
     def _foreground_game(self):
         return self._foreground_bounds()
 
-    def _hotkeys(self, active):
+    def _hotkeys(self, active, opponent_switch=False):
         if active and not self._hotkey_attempted:
             self._hotkey_attempted = True
             for identifier, key in ((1, 0x77), (2, 0x78), (3, 0x79)):  # F8/F9/F10, MOD_NOREPEAT
@@ -130,6 +135,16 @@ class NativeOverlay:
                 self.u.UnregisterHotKey(self.hwnd, identifier)
             self._registered.clear()
             self._hotkey_attempted = False
+        if active and opponent_switch and self._opponent_action is not None:
+            if not self._opponent_attempted:
+                self._opponent_attempted = True
+                if self.u.RegisterHotKey(self.hwnd, 4, 0x4000, 0x76):
+                    self._registered.add(4)
+        else:
+            if 4 in self._registered:
+                self.u.UnregisterHotKey(self.hwnd, 4)
+                self._registered.discard(4)
+            self._opponent_attempted = False
 
     def _tick(self):
         if self._stop.is_set():
@@ -147,7 +162,7 @@ class NativeOverlay:
                 self._status('process-unavailable', 'Não foi possível enumerar os processos; tentando novamente.')
                 return
         active = bounds is not None
-        self._hotkeys(active)
+        self._hotkeys(active, frame.opponent_switch)
         if not active:
             if self._visible:
                 self.u.ShowWindow(self.hwnd, 0)
@@ -156,9 +171,16 @@ class NativeOverlay:
                          'Jogo não detectado em primeiro plano.' if frame.active else 'Aguardando contexto da partida ou uma prévia.')
             return
         if self._view != frame.view:
-            new_match = self._view is None or self._view.key != frame.view.key
+            previous = self._view
+            new_match = previous is None or previous.key != frame.view.key
+            if new_match or previous.selected != frame.view.selected:
+                self._index, self._page = frame.view.selected, 0
+            else:
+                self._index %= max(1, len(frame.view.cards))
+                if (self._index >= len(previous.cards) or self._index >= len(frame.view.cards)
+                        or previous.cards[self._index] != frame.view.cards[self._index]):
+                    self._page = 0
             self._view = frame.view
-            self._index, self._page = frame.view.selected, 0
             if new_match:
                 self._expanded = True
         x, y, width, height = bounds
@@ -226,7 +248,10 @@ class NativeOverlay:
                     self._tick(); return 0
                 if not frame.active or not foreground:
                     self._tick(); return 0
-                if int(wparam) == 1:
+                if int(wparam) == 4:
+                    if frame.opponent_switch and self._opponent_action is not None:
+                        self._opponent_action()
+                elif int(wparam) == 1:
                     self._expanded = not self._expanded
                 elif int(wparam) == 2:
                     self._index += 1; self._page = 0

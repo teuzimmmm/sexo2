@@ -63,7 +63,7 @@ class BuildService:
                 self._filter = None
         result = draft.to_dict()
         result.update(revision=revision, riskLevel=level, champion=None,
-                      available=draft.phase == 'ChampSelect' and bool(draft.champion_id)
+                      available=draft.phase == 'ChampSelect' and bool(draft.champion_id) and draft.game_key is not None
                       and draft.mode in ('ranked', 'aram'))
         if draft.champion_id:
             result['champion'] = self.reader.champion(draft.champion_id)

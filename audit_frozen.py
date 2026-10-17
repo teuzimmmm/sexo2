@@ -15,7 +15,7 @@ for name in ['main','main.setup.initialization','sexo2.update.lifecycle','main.r
              'sexo2.services.draft','sexo2.services.builds','sexo2.services.loadouts',
              'sexo2.overlay.model','sexo2.overlay.runtime','sexo2.overlay.win32',
              'sexo2.overlay.arena','sexo2.overlay.processes',
-             'sexo2.overlay.composition','sexo2.overlay.offers','sexo2.overlay.reader','sexo2.overlay.screen','sexo2.overlay.wire',
+             'sexo2.overlay.gold','sexo2.overlay.composition','sexo2.overlay.offers','sexo2.overlay.reader','sexo2.overlay.screen','sexo2.overlay.wire',
              'sexo2.install.identity','lolalytics.client','lolalytics.builds','lolalytics.matchups','lolalytics.risk']:
     source=root/'main/__init__.py' if name=='main' else root/(name.replace('.','/')+'.py')
     expected=compile(source.read_text(encoding='utf-8-sig'),str(source),'exec')

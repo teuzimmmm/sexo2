@@ -145,6 +145,30 @@ class NativeWindowTests(unittest.TestCase):
         self.assertNotEqual(u.WindowFromPoint(W.POINT(px, py)), window.hwnd)
         self.assertNotEqual(u.GetForegroundWindow(), window.hwnd)
 
+    def test_f7_opponent_switch_and_live_gold_do_not_reset_build_navigation(self):
+        values=[Frame(True, View('match', (Card('Ouro em itens', ('+600 G',)),
+            Card('Build preparada', tuple('Item '+str(i) for i in range(50))))), opponent_switch=True)]
+        switched=[]
+        window=NativeOverlay(lambda:values[0], foreground=lambda:(0,0,1280,720))
+        window.set_opponent_action(lambda:switched.append(True))
+        self.addCleanup(window.stop)
+        window.start();self.assertTrue(window.ready.wait(8));self.assertIsNone(window.error)
+        self.until(lambda:window._visible and 4 in window._registered)
+        u=window.u
+        u.SendMessageW.argtypes=[W.HWND,W.UINT,W.WPARAM,W.LPARAM];u.SendMessageW.restype=C.c_ssize_t
+        u.SendMessageW(window.hwnd,0x312,4,0)
+        self.assertEqual(switched,[True])
+        u.SendMessageW(window.hwnd,0x312,2,0)
+        u.SendMessageW(window.hwnd,0x312,3,0)
+        self.assertEqual((window._index,window._page),(1,1))
+        values[0]=Frame(True,View('match',(Card('Ouro em itens',('+900 G',)),values[0].view.cards[1])),opponent_switch=True)
+        self.until(lambda:window._view==values[0].view)
+        self.assertEqual((window._index,window._page),(1,1))
+        values[0]=Frame(True,values[0].view)
+        self.until(lambda:4 not in window._registered)
+        u.SendMessageW(window.hwnd,0x312,4,0)
+        self.assertEqual(switched,[True])
+
     def test_stop_during_creation_and_repeated_shutdown(self):
         window = NativeOverlay(lambda: Frame(), foreground=lambda: None)
         window.start()

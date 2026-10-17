@@ -133,7 +133,7 @@ function receiveImported(message){
  importRequest=null;say(message.result.verified?message.result.message:'Importação não confirmada.',!message.result.verified);lock();
 }
 function receiveError(message){
- if(message.requestId===contextRequest?.id){contextRequest=null;reset();ctx=null;say(message.error,true);}
+ if(message.requestId===contextRequest?.id){contextRequest=null;reset();if(supportsPanel(ctx))ctx={...ctx,available:false};else ctx=null;say(message.error,true);lock();}
  else if(message.requestId===queryRequest?.id){queryRequest=null;say(message.error,true);lock();}
  else if(message.requestId===importRequest?.id){importRequest=null;say(message.error,true);lock();}
 }
@@ -185,8 +185,9 @@ const tick=setInterval(()=>{
  if(!bridge?.ready){if(host){reset();say('Reconectando ao SEXO2…',true);}contextRequest=null;return;}
  const now=Date.now();
  // Discover late screen/phase changes even when no old carousel selector exists.
- // Lobby/unsupported modes use a slower local poll; source queries remain opt-in.
- if(!pausedForGame&&now-lastContextAt>=(supportsPanel(ctx)?1200:5000))requestContext();
+ // A slow in-game probe recovers a lost next-draft notification.
+ // Only local context is read; source queries remain opt-in.
+ if(now-lastContextAt>=(pausedForGame?10000:supportsPanel(ctx)?1200:5000))requestContext();
  if(!supportsPanel(ctx)&&host){host.remove();host=null;opened=false;reset();}
  if(contextRequest&&now-contextRequest.at>12000){contextRequest=null;reset();say('O cliente não respondeu. Tentando reconectar…',true);}
  if(queryRequest&&now-queryRequest.at>180000){queryRequest=null;say('A fonte demorou demais. Tente novamente.',true);lock();}

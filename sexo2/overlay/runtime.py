@@ -16,11 +16,12 @@ class Frame:
     active: bool = False
     view: View = View('', ())
     preview: bool = False
+    opponent_switch: bool = False
 
 
 class OverlayRuntime:
     def __init__(self, lcu, *, enabled, champion=lambda: None, window_factory=None,
-                 arena_factory=None, offer_reader_factory=None, clock=time.monotonic):
+                 arena_factory=None, offer_reader_factory=None, gold_factory=None, clock=time.monotonic):
         self.lcu, self.enabled = lcu, enabled
         self.champion = champion
         self.store = OverlayStore(clock=clock)
@@ -38,6 +39,8 @@ class OverlayRuntime:
         self._offer_factory = offer_reader_factory
         self._offers = None
         self._offer_context = None
+        self._gold_factory = gold_factory
+        self._gold = self._gold_context = None
         self._preview_until = float('-inf')
         self._diagnostic = {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}
 
@@ -46,6 +49,8 @@ class OverlayRuntime:
             result = dict(self._diagnostic)
         if self._window is not None and hasattr(self._window, 'diagnostic'):
             result['window'] = self._window.diagnostic()
+        if self._gold is not None:
+            result['itemGold'] = self._gold.diagnostic()
         if self._offers is not None:
             result['offers'] = self._offers.diagnostic()
             if result.get('code') == 'offers' and result['offers'] == 'unavailable':
@@ -67,6 +72,7 @@ class OverlayRuntime:
         """Public seam for deterministic tests; never called by the GDI thread."""
         frame = Frame()
         offer_context = None
+        gold_context = None
         status = {'code': 'disabled', 'message': 'Overlay desativado nas configurações.'}
         try:
             enabled = self.enabled()
@@ -91,6 +97,11 @@ class OverlayRuntime:
                     if (data.get('queueId', queue.get('id')) == 2400
                             or str(data.get('gameMode', queue.get('gameMode', ''))).upper() == 'KIWI'):
                         mode = 'mayhem'
+                    # Explicit Swiftplay support for inventory comparison only.
+                    if (data.get('mapId', queue.get('mapId')) == 11
+                            and (data.get('queueId', queue.get('id')) == 480
+                                 or str(data.get('gameMode', queue.get('gameMode', ''))).upper() == 'SWIFTPLAY')):
+                        mode = 'swiftplay'
                     if key is None:
                         raise ValueError('Unknown game identity')
                     self.store.observe(phase, key, mode)
@@ -128,7 +139,14 @@ class OverlayRuntime:
                                     ('Partida reconhecida.', 'Aguardando identificação local do seu campeão.',
                                      'Nenhuma oferta ou estatística foi presumida.')),)))
                             status = {'code': 'offers', 'message': 'Leitura local: aguardando cartas na tela; nenhuma lista geral será exibida.'}
-                        elif mode in ('ranked', 'aram'):
+                        elif mode in ('ranked', 'aram', 'swiftplay'):
+                            if mode in ('ranked', 'swiftplay'):
+                                gold_context = (key, mode)
+                                if self._gold is None and (self._gold_factory or os.name == 'nt'):
+                                    from .gold import GoldFeed
+                                    self._gold = self._gold_factory() if self._gold_factory else GoldFeed(clock=self._clock)
+                                if self._gold is not None:
+                                    self._gold.refresh(gold_context)
                             frame = Frame(True, self.store.view(key, mode))
                             status = {'code': 'match', 'message': 'Partida reconhecida; aguardando a janela do jogo em primeiro plano.'}
                         else:
@@ -144,15 +162,25 @@ class OverlayRuntime:
             # No false empty success, no exception repr (may contain local credentials).
             # Keep bounded snapshot for same-match reconnect; frame expires/hides.
             offer_context = None
+            gold_context = None
             status = {'code': 'client-unavailable', 'message': 'Não foi possível confirmar a partida pelo LCU. Confira se o cliente permanece aberto.'}
         with self._lock:
             self._frame = frame
             self._offer_context = offer_context
+            self._gold_context = gold_context
             self._diagnostic = status
             self._observed_at = self._clock()
         if offer_context is None and self._offers is not None:
             self._offers.clear()
+        if gold_context is None and self._gold is not None:
+            self._gold.clear()
         return frame
+
+    def cycle_gold_opponent(self):
+        with self._lock:
+            context = self._gold_context
+        return bool(not self._stop.is_set() and context is not None and self._gold is not None
+                    and self._gold.cycle(context))
 
     def _offered_frame(self, context):
         offer = self._offers.current(context) if self._offers is not None else None
@@ -186,6 +214,10 @@ class OverlayRuntime:
                 return Frame()
             if self._offer_context is not None:
                 return self._offered_frame(self._offer_context)
+            if self._gold_context is not None and self._gold is not None and self._frame.active:
+                view = self._frame.view
+                return Frame(True, View(view.key, (self._gold.card(self._gold_context), *view.cards)),
+                             opponent_switch=True)
             return self._frame
 
     def display_frame(self):
@@ -219,6 +251,8 @@ class OverlayRuntime:
             self._factory = NativeOverlay
         try:
             self._window = self._factory(self.display_frame)
+            if hasattr(self._window, 'set_opponent_action'):
+                self._window.set_opponent_action(self.cycle_gold_opponent)
             self._window.start()
             self._thread = threading.Thread(target=self._run, name='SEXO2-Overlay-context', daemon=True)
             self._thread.start()
@@ -234,6 +268,8 @@ class OverlayRuntime:
     def stop(self):
         self._stop.set()
         self.store.close()
+        if self._gold is not None:
+            self._gold.close()
         if self._offers is not None:
             self._offers.close()
         if self._arena is not None:

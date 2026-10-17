@@ -4,7 +4,7 @@
 if(window.__sexo2Settings)return;
 const CATEGORIES={skins:'Skins',maps:'Mapas',fonts:'Fontes',announcers:'Anunciadores',ui:'Interface',voiceover:'Vozes',loading_screen:'Carregamento',vfx:'Efeitos visuais',sfx:'Sons',others:'Outros'};
 let bridge=null,root=null,form=null,status=null,dirty=false,pending=null,sequence=0,settings=null;
-const fields={};let updateStatus=null,updateButton=null,github=null,overlayStatus=null;
+const fields={};let updateStatus=null,updateButton=null,github=null,overlayStatus=null,versionLabel=null;
 window.__sexo2Settings={};
 function el(tag,text){const node=document.createElement(tag);if(text)node.textContent=text;return node;}
 function button(text,fn){const b=el('button',text);b.type='button';b.onclick=fn;return b;}
@@ -34,6 +34,7 @@ function build(){
  #sexo2-settings-panel details{border-top:1px solid #1e282d;margin-top:16px;padding-top:12px;font-size:11px}
  #sexo2-settings-panel a{color:#c8aa6e}#sexo2-settings-panel summary{cursor:pointer}
  `;root.append(style,el('h2','Configurações'));
+ versionLabel=el('p','SEXO2 · aguardando versão');versionLabel.className='s2-help';versionLabel.setAttribute('aria-label','Versão do SEXO2');root.append(versionLabel);
  form=el('form');form.noValidate=true;root.append(form);
  field('threshold','Espera após o fim da seleção (s)','number',.3,2,.05);
  field('monitorAutoResumeTimeout','Limite de pausa do jogo (s)','number',20,180,1);
@@ -45,7 +46,7 @@ function build(){
  riskSelect.addEventListener('change',()=>{dirty=true;message('Alterações ainda não salvas.');});
  const riskHelp=el('p','Níveis mais altos confiam mais em amostras pequenas; níveis mais baixos dão mais peso à referência geral.');riskHelp.className='s2-help';form.append(riskHelp);
  field('buildOverlayEnabled','Mostrar builds durante a partida (F8)','checkbox');
- const overlayHelp=el('p','SR/ARAM usam as sugestões da seleção. Arena consulta popularidade durante a partida. F8 expande, F9 troca e F10 percorre o texto.');overlayHelp.className='s2-help';form.append(overlayHelp);
+ const overlayHelp=el('p','SR/ARAM usam as sugestões da seleção. SR/Swiftplay comparam itens equipados; F7 troca o adversário. F8 expande, F9 troca o cartão e F10 percorre o texto. Arena usa somente cartas reconhecidas na tela.');overlayHelp.className='s2-help';form.append(overlayHelp);
  overlayStatus=el('p','Overlay: aguardando diagnóstico.');overlayStatus.className='s2-help';overlayStatus.setAttribute('aria-label','Estado do overlay');form.append(overlayStatus);
  const overlayTools=el('div');overlayTools.className='s2-actions';
  overlayTools.append(button('Testar janela (20 s)',()=>bridge?.send({type:'sexo2-overlay-preview',requestId:'s2-overlay-'+(++sequence)})),button('Reconsultar Arena',()=>bridge?.send({type:'sexo2-overlay-retry',requestId:'s2-overlay-'+(++sequence)})));form.append(overlayTools);
@@ -72,7 +73,7 @@ function build(){
  const credits=el('details');credits.append(el('summary','Créditos da base'));const note=el('p','SEXO2 utiliza componentes de Rose, Pengu Loader e LTK. BORK pertence à Riot Games; o escudo pertence ao Clube Atlético Mineiro.');credits.append(note);const link=el('a','Código e licença da base Rose');link.href='https://github.com/Alban1911/Rose';link.target='_blank';link.rel='noopener noreferrer';credits.append(link);root.append(credits);
 }
 function overlayReceived(data){if(overlayStatus){const state=data.status||data.buildOverlayStatus||{};overlayStatus.textContent=[state.message,state.window?.message].filter(Boolean).join(' · ')||'Overlay: diagnóstico indisponível.';if(data.accepted===false)overlayStatus.textContent+=' Ação indisponível agora; aguarde ou confira o estado da partida.';}}
-function populate(data){settings=data;overlayReceived(data);if(dirty||pending?.saving)return;for(const[key,input]of Object.entries(fields)){if(input.type==='checkbox')input.checked=key==='buildOverlayEnabled'?data[key]!==false:data[key]===true;else input.value=data[key]??(key==='lolalyticsRiskLevel'?'medium':'');}}
+function populate(data){settings=data;if(versionLabel)versionLabel.textContent='SEXO2 · '+(data.version||'versão indisponível');overlayReceived(data);if(dirty||pending?.saving)return;for(const[key,input]of Object.entries(fields)){if(input.type==='checkbox')input.checked=key==='buildOverlayEnabled'?data[key]!==false:data[key]===true;else input.value=data[key]??(key==='lolalyticsRiskLevel'?'medium':'');}}
 function lock(value){for(const input of form.querySelectorAll('input,button'))input.disabled=value;fields.lolalyticsRiskLevel.disabled=value;}
 function request(){if(!bridge?.ready||pending)return;pending={id:'s2-settings-'+(++sequence),saving:false,at:Date.now()};bridge.send({type:'settings-request',requestId:pending.id});}
 function saveSettings(){

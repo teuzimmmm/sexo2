@@ -121,8 +121,9 @@ class DraftReader:
                 enemies = sorted(set(enemies))
                 session_id = game.get('gameId') or data.get('gameId') or session.get('gameId')
                 if not positive(session_id):
-                    raise BuildError('O identificador deste draft ainda não está disponível.')
-                if positive(session.get('gameId')) and session['gameId'] != session_id:
+                    session_id = None
+                    warning = 'Aguardando o identificador deste draft no cliente.'
+                if positive(session_id) and positive(session.get('gameId')) and session['gameId'] != session_id:
                     raise BuildError('O cliente está trocando de seleção. Aguarde um instante.')
             identity = (phase, cid, mode, own_lane, finalization, tuple(enemies), session_id)
             if identity != self._previous:

@@ -53,8 +53,9 @@ test('LoLalytics selector loads persisted value, preserves dirty choice during p
   const request = sent.find(message => message.type === 'settings-request');
   const emit = (type, data) => { for (const fn of handlers[type] || []) fn(data); };
   emit('settings-data', { requestId: request.requestId, threshold: .5, monitorAutoResumeTimeout: 60,
-    autostart: false, hideEmptyCategories: false, gamePath: '', lolalyticsRiskLevel: 'high' });
+    autostart: false, hideEmptyCategories: false, gamePath: '', lolalyticsRiskLevel: 'high', version:'2.0.0.7 (teste)' });
   assert.equal(risk.value, 'high');
+  assert.ok(host.querySelectorAll('p').some(node=>node.textContent==='SEXO2 · 2.0.0.7 (teste)'));
   const overlay = host.querySelectorAll('input').find(node => node.name === 'buildOverlayEnabled');
   assert.equal(overlay.checked, true);
   host.querySelectorAll('button').find(node => node.textContent === 'Testar janela (20 s)').onclick();

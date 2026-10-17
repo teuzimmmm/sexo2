@@ -253,3 +253,15 @@ Arena mesmo com classes antigas presentes, WR/Common, importação explícita e
 descarte de respostas antigas. Normal e ranked usam as mesmas estatísticas de SR;
 o aviso no normal deixa claro que a amostra vem da fila Ranked. Isso continua
 distinto de testar o encaixe no cliente real do usuário.
+
+## Painel ausente na seleção — rodada 17/10/2026
+
+Relato/screenshot: nenhum SEXO2 · Builds visível em draft normal. Sem acesso ao
+cliente real, não atribuir causa única ao relato. Problemas encontrados no código:
+pausa de consulta ao contexto sem recuperação se o evento do próximo draft for
+perdido; erros temporários de contexto removem o botão; exigir gameId antes de
+permitir sequer mostrar o estado de espera; a configuração nova recebe a versão,
+mas não a apresenta. Corrigir estes caminhos com testes de navegador/backend e
+exibir a versão, sem mostrar painel em Arena nem liberar importações sem contexto
+completo. Pengu externo antigo continua sendo hipótese separada, não comprovada
+pela imagem; não sobrescrever uma instalação externa como se isso fosse diagnóstico.

@@ -146,7 +146,13 @@ class DraftTests(unittest.TestCase):
 
     def test_missing_draft_identity_blocks_ambiguous_session(self):
         lcu=FakeLCU();lcu.session.pop('gameId');lcu.game['gameData'].pop('gameId')
-        with self.assertRaises(BuildError):DraftReader(lcu).read()
+        context=DraftReader(lcu).read()
+        self.assertIsNone(context.game_key)
+        self.assertEqual(context.mode,'ranked')
+        s,_,transport=service(lcu);self.addCleanup(s.close)
+        self.assertFalse(s.context()['available'])
+        with self.assertRaises(BuildError):query(s)
+        self.assertEqual(transport.calls,[])
 
     def test_missing_player_and_malformed_timer_fail_understandably(self):
         lcu=FakeLCU();lcu.session['localPlayerCellId']=None
