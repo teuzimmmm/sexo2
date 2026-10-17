@@ -226,8 +226,9 @@ DX11 com esse teste de reconhecimento. Nenhuma escolha automática é necessári
   na tabela geral do campeão. As tabelas de posição 1–4 não são a oferta atual.
   Mayhem pode identificar nomes sem consultar Arena como substituto estatístico.
 - `OverlayRuntime` conecta um worker de leitura separado à projeção. Só funciona
-  em partida e modo elegível, captura no máximo uma vez por segundo e expira a
-  oferta em 2 s. Sem leituras sobrepostas ou rede no worker OCR.
+  em partida e modo elegível, lê um grupo de três recortes no máximo uma vez por
+  segundo e expira a oferta em 2 s. Sem leituras sobrepostas ou consultas externas
+  no worker OCR; o catálogo é carregado pelo LCU local uma vez por contexto.
 - Geometria inicial dos títulos, em unidades da altura, é referência do projeto
   MIT [ARAM Mayhem Tracker](https://github.com/Sygnano/aram-mayhem-tracker/tree/7c28471bf5b511e545d8d1c38b63707157edb134),
   `crates/mayhem-core/src/layout.rs`: centros -0.3346/0.0062/0.3470, banda
@@ -259,7 +260,7 @@ como títulos. Leitura aproximada é identificada no painel, sem inventar uma
 porcentagem de confiança nem misturá-la ao risco estatístico das recomendações.
 
 O leitor funciona em Arena ou Mayhem com o jogo em primeiro plano, no máximo uma
-captura por segundo. Duas leituras consistentes confirmam a oferta; ambiguidade,
+leitura de três recortes por segundo. Duas leituras consistentes confirmam a oferta; ambiguidade,
 mudança de opções ou falha invalidam a anterior. A validade de 2 s começa no
 momento da **captura**, não na conclusão do OCR. A inicialização fria do OCR pode
 levar até 8 s; uma imagem que envelheceu é descartada, preservando o helper já
@@ -281,3 +282,37 @@ recortes reais e aparência das cartas do jogo ainda exigem validação. A captu
 GDI foi projetada para janela/sem bordas; tela cheia exclusiva não está validada.
 O renderer anterior continua separado deste trabalho e ainda não foi corrigido
 ou substituído no LoL. O laboratório hudhook não foi ativado no processo do jogo.
+
+### Validação da implementação de ofertas
+
+Código final da rodada: `c5ba7620c874d39a87c78434a5f2fde95151cf58`.
+O [job Windows 39002956756](https://github.com/teuzimmmm/sexo2/actions/runs/39002956756)
+passou: 12 testes Python de protocolo/reconhecimento/ciclo de vida, cinco testes
+Rust, dois testes de integração com o OCR real do Windows e compilação/staging
+do helper com avisos de dependências. Também passou o laboratório DX11, que
+continua sem interagir com o LoL. O job do instalador foi ignorado.
+
+O teste OCR reconheceu três títulos sintéticos duas vezes no mesmo processo.
+Outro teste criou uma janela Win32 própria, capturou só os recortes, executou OCR
+e conferiu os três nomes, incluindo a guarda que rejeita o processo Python nas
+regras de produção. O contexto de pixels físicos foi exercitado; monitores reais
+com escalas diferentes e a geometria das cartas do LoL não foram testados.
+
+SHA-256 do helper compilado/staged nesse job:
+`785e87555945f1338fe39510457c2298f551b4d08f0c46a48d22dee270f06419`.
+Não foi gerado instalador nem realizado teste do pacote PyInstaller completo.
+A construção futura do instalador compila o helper e a auditoria compara seu
+conteúdo e avisos, além dos novos módulos Python, com o staging.
+
+Passaram 88 testes locais de regressão dos serviços/overlay, dois testes Node
+de configurações e 58 testes focados após a correção final de DPI. São cobertos
+matching conservador, nomes ambíguos/numéricos, posições, identificação parcial,
+rerrolagem, expiração, contexto diferente, EOF/esquema inválido, escrita bloqueada
+no pipe, encerramento do filho e OCR demorado. O teste de demora também confirma
+que a ausência de renovação do contexto interrompe a captura.
+
+**Limites de conclusão:** leitura/projeção integradas no código e testadas com
+Windows real e imagens/janela sintéticas; nenhuma carta real de partida foi
+validada. A fonte de estatísticas de Mayhem no LoLalytics e a correção do renderer
+em jogo continuam pendentes. Não apresentar os testes acima como prova dessas
+funcionalidades.
