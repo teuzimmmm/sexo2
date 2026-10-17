@@ -57,7 +57,8 @@ class BuildService:
                 self._filter = None
         result = draft.to_dict()
         result.update(revision=revision, riskLevel=level, champion=None,
-                      available=draft.phase == 'ChampSelect' and bool(draft.champion_id and draft.mode))
+                      available=draft.phase == 'ChampSelect' and bool(draft.champion_id)
+                      and draft.mode in ('ranked', 'aram'))
         if draft.champion_id:
             result['champion'] = self.reader.champion(draft.champion_id)
         result['enemies'] = [dict(self.reader.champion(cid), lane=position) for cid, position in draft.enemies]
@@ -76,6 +77,8 @@ class BuildService:
             if ticket != self._generation or revision != self._revision:
                 raise BuildError('A seleção mudou. Consulte novamente antes de importar.')
         if not context['available']:
+            if context['mode'] == 'arena':
+                raise BuildError('Este painel não é usado na seleção de Arena.')
             raise BuildError('Escolha um campeão em um modo compatível antes de consultar.')
         return context
 
@@ -102,28 +105,22 @@ class BuildService:
             recommendation = self.collector.recommend(query, risk_level=context['riskLevel'])
             self._current(ticket, payload.get('revision'))
             entries = OrderedDict()
-            if query.mode == 'arena':
-                arena = {key: deepcopy([row for row in rows if all(str(i).isdigit() and int(i) > 0
-                          for i in row['identifiers'])][:3]) for key, rows in recommendation.item_rankings.items()
-                         if key.startswith('augment_statistics:') or 'popularItem' in key}
-            else:
-                arena = None
-                page = recommendation.build_page
-                if page is None:
-                    raise BuildError('A fonte não retornou uma página completa.')
-                winner = recommendation.rune_candidates[0]
-                key = 'vs:' + str(opponent['id']) if opponent else 'wr'
-                entries[key] = {'page': page, 'label': 'vs ' + opponent['name'] if opponent else 'WR · risco',
-                                'rune_metrics': winner['metrics'], 'policy': recommendation.policy}
-                if not opponent:
-                    common = next((r for r in recommendation.rune_candidates if r['selection'] == 'pick'), None)
-                    if common is None:
-                        raise BuildError('A fonte não retornou a sugestão Common completa.')
-                    filtered = replace(query, patch=recommendation.resolved['patch'],
-                                       lane=page.query['lane'], keystone=common['keystone'])
-                    common_page = build_page(self.collector.collect(filtered), 'pick', common['keystone'])
-                    entries['common'] = {'page': common_page, 'label': 'Common',
-                                         'rune_metrics': common['metrics'], 'policy': recommendation.policy}
+            page = recommendation.build_page
+            if page is None:
+                raise BuildError('A fonte não retornou uma página completa.')
+            winner = recommendation.rune_candidates[0]
+            key = 'vs:' + str(opponent['id']) if opponent else 'wr'
+            entries[key] = {'page': page, 'label': 'vs ' + opponent['name'] if opponent else 'WR · risco',
+                            'rune_metrics': winner['metrics'], 'policy': recommendation.policy}
+            if not opponent:
+                common = next((r for r in recommendation.rune_candidates if r['selection'] == 'pick'), None)
+                if common is None:
+                    raise BuildError('A fonte não retornou a sugestão Common completa.')
+                filtered = replace(query, patch=recommendation.resolved['patch'],
+                                   lane=page.query['lane'], keystone=common['keystone'])
+                common_page = build_page(self.collector.collect(filtered), 'pick', common['keystone'])
+                entries['common'] = {'page': common_page, 'label': 'Common',
+                                     'rune_metrics': common['metrics'], 'policy': recommendation.policy}
         except CollectorError as error:
             raise BuildError(str(error)) from None
         self._current(ticket, payload.get('revision'))
@@ -148,7 +145,7 @@ class BuildService:
                 self._pages.pop(next(k for k in self._pages if k.startswith('vs:')))
             self._result_id = uuid.uuid4().hex
             return {'revision': self._revision, 'resultId': self._result_id,
-                    'riskLevel': context['riskLevel'], 'arena': arena,
+                    'riskLevel': context['riskLevel'], 'arena': None,
                     'entries': [dict(id=key, label=value['label'], page=value['page'].to_dict(),
                                      runeMetrics=deepcopy(value['rune_metrics']),
                                      runeMetricScope='keystone_observation', policy=deepcopy(value['policy']))

@@ -50,7 +50,7 @@ com alterações registradas no Git:
 
 ```powershell
 python -m pip install -r requirements.txt
-python scripts/build_test_installer.py --base "C:\pacotes\SEXO2-baseline.zip" --version 2.0.0.1
+python scripts/build_test_installer.py --base "C:\pacotes\SEXO2-baseline.zip" --version 2.0.0.2
 ```
 
 `--base` também aceita uma pasta existente do SEXO2 contendo `_internal`.
@@ -87,12 +87,14 @@ O relatório `installer-smoke.json` é incluído somente se a verificação pass
 Abra o instalador e siga o fluxo convencional. Ele instala em
 `%LOCALAPPDATA%\Programs\SEXO2-2.0-Teste`, com cadastro próprio e atalho
 `SEXO2 2.0 Teste`. Feche o SEXO2/Rose antes de instalar e de abrir a outra edição;
-as duas não podem controlar o LoL ao mesmo tempo. O instalador não fecha processos
+as duas não podem controlar o LoL ao mesmo tempo. Para carregar a correção do painel,
+feche também o cliente do LoL antes de instalar e abra-o novamente depois.
+O instalador não fecha processos
 à força nem abre o programa automaticamente por padrão.
 
 Na seleção, abra `SEXO2 · Builds`, consulte WR/Common e importe explicitamente
 runas/itens. Ao finalizar o draft, escolha um adversário. A edição aparece como
-`2.0.0.1 (teste)` nas configurações. Se houver um Pengu externo ativo, aplica-se a
+`2.0.0.2 (teste)` nas configurações. Se houver um Pengu externo ativo, aplica-se a
 limitação de sincronização descrita em `DESENVOLVIMENTO_2_0.md`; não sobrescrevemos
 uma instalação externa silenciosamente.
 

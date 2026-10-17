@@ -19,7 +19,7 @@ O workflow atual prioriza execução direta; Luna atingiu a cota anteriormente.
   `sexo2-build-import`; filas pequenas, execução fora do loop WebSocket,
   payloads sem URLs/IDs de conta vindos do plugin e encerramento definido.
 - `SEXO2-Builds`: painel específico para ChampSelect, recolhível, somente exibido
-  com uma raiz de seleção reconhecida; sem painel na navegação normal. O nó fica
+  em SR/ARAM conforme o LCU; sem painel na navegação inicial ou em Arena. O nó fica
   no `body` para evitar recorte por carrosséis/ancestrais transformados do cliente.
   Fonte de contexto é o backend; plugin não faz scraping nem decide importação.
 
@@ -77,11 +77,11 @@ O workflow atual prioriza execução direta; Luna atingiu a cota anteriormente.
   começam quando o painel é aberto; erro não inicia um loop automático de retries.
   O polling de contexto pausa durante GameStart/InProgress/Reconnect.
 - Fonte de Ranked global para SR (inclusive como referência de jogos normais),
-  ARAM padrão da queue 450 e popularidade de Arena da queue 1700. Variantes
+  ARAM padrão da queue 450. Variantes
   desconhecidas não são convertidas em modos suportados por aproximação.
-- Arena exibe itens/aprimoramentos por popularidade, sem recuperar WR proibida.
-  Registros sem ID positivo não viram sugestões. Nomes dos aprimoramentos vêm
-  de `cherry-augments.json`. Não há importação de páginas de Arena nesta rodada.
+- Arena não possui este painel de seleção. A biblioteca independente mantém
+  consultas de popularidade de itens/aprimoramentos, sem recuperar WR proibida;
+  isso não habilita uma interface de seleção de campeão em Arena.
 
 ### Importação e propriedade
 
@@ -183,9 +183,8 @@ O ambiente `PYSTRAY_BACKEND=dummy` é para testes Linux, não execução normal.
 
 ## O que ainda precisa ser comprovado
 
-- Raiz e encaixe visual no cliente Pengu/LoL Windows atual; os seletores conhecidos
-  `.champion-select`/`.skin-selection-carousel` vêm do código existente. Não há
-  fallback para injetar o painel em qualquer tela se esses seletores mudarem.
+- Encaixe visual no cliente Pengu/LoL Windows atual. Após a correção reportada
+  abaixo, a exibição usa fase/modo do LCU e não depende de classes do carrossel.
 - Leitura dos schemas e importação/ativação no LCU real, inclusive conta com
   páginas cheias, configurações de idioma e componentes nativos efetivamente usados.
 - Aparência/percepção de tempo no draft e consumo total de CPU/RAM. Não foi feita
@@ -221,9 +220,32 @@ redirects. O transporte antigo dos outros recursos não foi alterado.
 
 O painel traduz os avisos relevantes e mantém o escopo das métricas visível;
 não mostra códigos internos da biblioteca. A montagem no `body` depende sempre
-da fase ChampSelect e dos seletores reconhecidos, e desaparece na saída.
+da fase ChampSelect e do modo SR/ARAM confirmado pelo LCU, e desaparece na saída.
 
 O workflow Windows existente agora inclui regressões de LCU/Pengu e o browser
 isolado. A configuração foi revisada; o job remoto não foi executado nesta rodada,
 pois não houve push. Esse workflow também usa servidor sintético, sem LoL instalado.
 Não é necessário aguardar uma ação do usuário para concluir estes itens de código.
+
+## Correção após o primeiro teste no cliente
+
+O usuário relatou painel indevido em Arena e ausência no normal. O pacote de teste
+permitia Arena e exigia classes DOM não confirmadas para montar/atualizar a tela.
+O suporte ao normal com draft existia no adaptador, mas não comprovava a exibição.
+Swiftplay/Quickplay não estavam cobertos: usam escolha no lobby, fora de ChampSelect.
+
+Plano antes das alterações: retirar Arena do painel de seleção, preservando o
+coletor independente; usar a fase e o modo do LCU para montar o painel de SR/ARAM,
+sem usar classes CSS como condição de funcionamento; testar normal 400/430 e
+ranked 420/440, ausência em Arena, montagem em DOM sem aquelas classes e parada
+em partida. Não afirmar suporte ao lobby do Modo Rápido por passar um teste de
+draft. O usuário confirmou o caso de normal com draft após encontrar a partida;
+não se trata de Swiftplay/Quickplay. A causa exata no DOM do PC não foi observada;
+retirar esse requisito de DOM resolve uma condição de ausência reproduzível.
+
+Testes focados: 45 testes do fluxo/bridge/HTTPS passaram. O navegador isolado
+comprova montagem pelo LCU antes do pick, em DOM sem classes antigas, exclusão de
+Arena mesmo com classes antigas presentes, WR/Common, importação explícita e
+descarte de respostas antigas. Normal e ranked usam as mesmas estatísticas de SR;
+o aviso no normal deixa claro que a amostra vem da fila Ranked. Isso continua
+distinto de testar o encaixe no cliente real do usuário.

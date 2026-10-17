@@ -6,10 +6,10 @@
   #error Define OutputDir for the test installer.
 #endif
 #ifndef BuildVersion
-  #define BuildVersion "2.0.0.1"
+  #define BuildVersion "2.0.0.2"
 #endif
 #ifndef OutputName
-  #define OutputName "SEXO2-2.0.0.1-Teste"
+  #define OutputName "SEXO2-2.0.0.2-Teste"
 #endif
 
 [Setup]
@@ -46,7 +46,7 @@ VersionInfoVersion={#BuildVersion}
 Name: "brazilian"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [Messages]
-brazilian.WelcomeLabel2=Este pacote instala o SEXO2 2.0 para teste, sem remover versões anteriores.%n%nO aplicativo usa seus dados e preferências atuais. A migração e a limpeza das versões antigas serão feitas no instalador definitivo.%n%nFeche o SEXO2/Rose antes de continuar. As atualizações estáveis ficam desativadas nesta edição.
+brazilian.WelcomeLabel2=Este pacote instala o SEXO2 2.0 para teste, sem remover versões anteriores.%n%nO aplicativo usa seus dados e preferências atuais. A migração e a limpeza das versões antigas serão feitas no instalador definitivo.%n%nFeche o SEXO2/Rose e o cliente do LoL antes de instalar. Abra-os novamente após concluir. As atualizações estáveis ficam desativadas nesta edição.
 
 [Tasks]
 Name: "desktopicon"; Description: "Criar atalho na área de trabalho"; GroupDescription: "Atalhos:"; Flags: unchecked

@@ -107,6 +107,14 @@ def query(s, **options):
 
 
 class DraftTests(unittest.TestCase):
+    def test_normal_draft_and_ranked_use_the_same_sr_source(self):
+        for queue_id in (400,430,420,440):
+            with self.subTest(queue_id=queue_id):
+                lcu=FakeLCU();lcu.game['gameData']['queue']['id']=queue_id
+                draft=DraftReader(lcu).read()
+                self.assertEqual(draft.mode,'ranked')
+                self.assertEqual(bool(draft.warning),queue_id in (400,430))
+
     def test_projection_ignores_countdown_and_personal_fields(self):
         lcu=FakeLCU();reader=DraftReader(lcu);first=reader.read()
         lcu.session['timer']['adjustedTimeLeftInPhase']=123
@@ -166,16 +174,24 @@ class BuildServiceTests(unittest.TestCase):
         self.assertNotIn('keystone=',transport.calls[0])
         with self.assertRaises(BuildError):query(s,selection='matchup',opponentId=222)
 
-    def test_arena_context_returns_only_popularity_and_no_importable_pages(self):
+    def test_arena_has_no_champion_select_builds_or_source_requests(self):
         s,lcu,transport=service();self.addCleanup(s.close)
         lcu.session['myTeam'][0]['championId']=222
         lcu.game['gameData'].update(queue={'id':1700},gameMode='CHERRY',mapId=30)
-        result=query(s)
-        self.assertEqual(result['entries'],[]);self.assertTrue(result['arena'])
-        for rows in result['arena'].values():
-            for row in rows:
-                self.assertIsNone(row['metrics']['win_rate']);self.assertIsNone(row['risk']['score'])
-                self.assertNotIn('0',row['identifiers'])
+        self.assertEqual(s.context()['mode'],'arena')
+        self.assertFalse(s.context()['available'])
+        with self.assertRaises(BuildError):query(s)
+        self.assertFalse(transport.calls)
+
+    def test_normal_draft_can_prepare_runes_and_related_items(self):
+        for queue_id in (400,430):
+            with self.subTest(queue_id=queue_id):
+                s,lcu,transport=service();self.addCleanup(s.close)
+                lcu.game['gameData']['queue']['id']=queue_id
+                self.assertTrue(s.context()['available'])
+                result=query(s)
+                self.assertEqual({r['id']for r in result['entries']},{'wr','common'})
+                self.assertTrue(all(r['page']['blocks']for r in result['entries']))
 
     def test_changing_champion_during_query_discards_result(self):
         s,lcu,transport=service();self.addCleanup(s.close)

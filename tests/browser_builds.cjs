@@ -17,9 +17,9 @@ print(json.dumps({'context':context,'result':result}));s.close()
  try{
   const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  await page.setContent('<html><head><style>body{margin:0;background:#09141b;color:#c8aa6e;font:16px Arial}.champion-select{height:100vh;background:linear-gradient(#172b37,#08121a)}.team{position:absolute;top:90px;width:190px;padding:15px}.enemy{right:0}.timer{text-align:center;padding:20px}.actions{position:absolute;bottom:15px;left:40%;padding:20px;border:1px solid #c8aa6e}</style></head><body><div id="home">Cliente simulado · início</div></body></html>');
+  await page.setContent('<html><head><style>body{margin:0;background:#09141b;color:#c8aa6e;font:16px Arial}.draft-fixture{height:100vh;background:linear-gradient(#172b37,#08121a)}.team{position:absolute;top:90px;width:190px;padding:15px}.enemy{right:0}.timer{text-align:center;padding:20px}.actions{position:absolute;bottom:15px;left:40%;padding:20px;border:1px solid #c8aa6e}</style></head><body><div id="home">Cliente simulado · início</div></body></html>');
   await page.evaluate(sample=>{
-   window.sample=sample;window.handlers={};window.sent=[];window.holdQueries=false;window.pending=[];window.queryError=false;
+   window.originalContext=structuredClone(sample.context);window.sample=sample;window.sample.context={...sample.context,phase:'Lobby',available:false};window.handlers={};window.sent=[];window.holdQueries=false;window.pending=[];window.queryError=false;
    window.emit=(type,message)=>(window.handlers[type]||[]).forEach(fn=>fn(message));
    window.__roseBridge={ready:true,subscribe(type,fn){(window.handlers[type]??=[]).push(fn);},onReady(fn){fn();},send(message){
     window.sent.push(message);
@@ -34,12 +34,18 @@ print(json.dumps({'context':context,'result':result}));s.close()
    }};
   },fixture);
   await page.addScriptTag({path:path.resolve('Pengu Loader/plugins/SEXO2-Builds/index.js')});
-  assert.equal(await page.locator('#sexo2-builds').count(),0,'must not mount on the normal screen');
+  await page.waitForFunction(()=>window.sent.some(x=>x.type==='sexo2-build-context'));
+  assert.equal(await page.locator('#sexo2-builds').count(),0,'must not mount in the client home/lobby');
   await page.evaluate(()=>{
-   document.body.innerHTML='<main class="champion-select"><div class="timer">SELEÇÃO SIMULADA · 00:30</div><aside class="team">Seu time<br>Ahri</aside><aside class="team enemy">Adversários<br>Annie<br>Ryze</aside><button class="actions">Confirmar campeão</button></main>';
+   document.body.innerHTML='<main class="draft-fixture"><div class="timer">DRAFT NORMAL SIMULADO · 00:30</div><aside class="team">Seu time<br>Ahri</aside><aside class="team enemy">Adversários<br>Annie<br>Ryze</aside><button class="actions">Confirmar campeão</button></main>';
+   // No DOM classes or phase-change notification: a fresh LCU context must suffice.
+   window.sample.context={...structuredClone(window.originalContext),champion:null,champion_id:0,available:false,revision:'before-pick'};
   });
   await page.getByRole('button',{name:'Abrir builds do SEXO2'}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Consultar',exact:true,includeHidden:true}).isDisabled(),true);
   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length),0,'closed panel must not scrape');
+  await page.evaluate(()=>{window.sample.context=structuredClone(window.originalContext);});
+  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('#sexo2-builds button')).find(b=>b.textContent==='Consultar').disabled);
   await page.getByRole('button',{name:'Abrir builds do SEXO2'}).click();
   await page.getByRole('button',{name:'Importar runas',exact:true}).waitFor();
   await page.waitForFunction(()=>!document.querySelector('#sexo2-builds button')?.disabled&&document.querySelector('#sexo2-builds')?.textContent.includes('Sugestões prontas'));
@@ -55,10 +61,10 @@ print(json.dumps({'context':context,'result':result}));s.close()
   await notices.getByText('A WR exibida corresponde à runa principal, não à página inteira.',{exact:true}).waitFor();
   await page.getByRole('combobox',{name:'Sugestão',exact:true}).selectOption('wr');
   // Client carousels can establish transformed/clipped containing blocks.
-  await page.evaluate(()=>{const root=document.querySelector('.champion-select');root.style.transform='translateY(10px)';root.style.overflow='hidden';root.style.height='200px';});
+  await page.evaluate(()=>{const root=document.querySelector('.draft-fixture');root.style.transform='translateY(10px)';root.style.overflow='hidden';root.style.height='200px';});
   await page.getByRole('button',{name:'Importar itens',exact:true}).click({trial:true});
   assert.equal(await page.evaluate(()=>document.querySelector('#sexo2-builds').parentElement===document.body),true);
-  await page.evaluate(()=>document.querySelector('.champion-select').removeAttribute('style'));
+  await page.evaluate(()=>document.querySelector('.draft-fixture').removeAttribute('style'));
   await page.screenshot({path:path.join(os.tmpdir(),'sexo2-builds-1280x720.png')});
   // A late response from an older revision cannot restore obsolete recommendations.
   await page.evaluate(()=>{window.holdQueries=true;});
@@ -84,12 +90,29 @@ print(json.dumps({'context':context,'result':result}));s.close()
    assert.ok(box.x>=0&&box.y>=0&&box.x+box.width<=width&&box.y+box.height<=height);
    for(const selector of ['.team:not(.enemy)','.team.enemy','.actions']){const other=await page.locator(selector).boundingBox();assert.ok(box.x+box.width<=other.x||other.x+other.width<=box.x||box.y+box.height<=other.y||other.y+other.height<=box.y,'panel covers a simulated roster or confirmation button');}
   }
+  // Arena must never display this panel, even with the old carousel CSS present.
+  const sourceCount=await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length);
+  await page.evaluate(()=>{
+   document.querySelector('main').classList.add('champion-select');
+   window.sample.context={...window.sample.context,mode:'arena',available:false,revision:'arena'};
+   window.emit('phase-change',{phase:'ChampSelect'});
+  });
+  await page.waitForFunction(()=>!document.querySelector('#sexo2-builds'));
+  await page.waitForTimeout(1700);
+  assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-query').length),sourceCount,'Arena must not query the source');
+  // Ranked uses the same LCU mode as normal SR; neither needs old carousel classes.
+  await page.evaluate(()=>{
+   document.querySelector('main').classList.remove('champion-select');
+   window.sample.context={...structuredClone(window.originalContext),revision:'ranked-again'};
+   window.emit('phase-change',{phase:'ChampSelect'});
+  });
+  await page.getByRole('button',{name:'Abrir builds do SEXO2'}).waitFor();
   await page.evaluate(()=>{window.sample.context.phase='InProgress';window.emit('phase-change',{phase:'InProgress'});});
   assert.equal(await page.locator('#sexo2-builds').count(),0);
   const contextCount=await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-context').length);
   await page.waitForTimeout(2100);
   assert.equal(await page.evaluate(()=>window.sent.filter(x=>x.type==='sexo2-build-context').length),contextCount,'context polling must pause in game');
   assert.deepEqual(errors,[]);
-  console.log('Build panel: isolated mount, explicit import, stale replies, source errors, 2 viewports and phase exit passed.');
+  console.log('Build panel: normal/ranked without legacy DOM selectors, before-pick mount, Arena excluded, imports, stale replies, errors and phase exit passed.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});

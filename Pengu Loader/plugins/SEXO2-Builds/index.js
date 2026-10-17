@@ -4,9 +4,9 @@
 if(window.__sexo2Builds)return;
 window.__sexo2Builds={};
 let bridge=null,host=null,panel=null,ctx=null,data=null,opened=false,sequence=0;
-let contextRequest=null,queryRequest=null,importRequest=null,queryTimer=null,lastQuery=null,pausedForGame=false;
+let contextRequest=null,queryRequest=null,importRequest=null,queryTimer=null,lastQuery=null,pausedForGame=false,lastContextAt=0;
 let summary,status,entries,enemy,position,tier,details,warnings,runesButton,itemsButton,queryButton;
-const selectors='.champion-select,.skin-selection-carousel'; // Selectors already used by ROSE-UI; always gated by LCU phase.
+const supportsPanel=context=>context?.phase==='ChampSelect'&&['ranked','aram'].includes(context.mode);
 const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
 function button(text,fn){const n=el('button',text);n.type='button';n.onclick=fn;return n;}
 function option(value,label){const n=el('option',label);n.value=value;return n;}
@@ -31,6 +31,7 @@ function reset(){
 function requestContext(){
  if(!bridge?.ready||contextRequest)return;
  contextRequest={id:requestId(),at:Date.now()};
+ lastContextAt=contextRequest.at;
  bridge.send({type:'sexo2-build-context',requestId:contextRequest.id});
 }
 function schedule(){
@@ -85,21 +86,10 @@ function renderPage(){
  }
  lock();
 }
-function arenaRows(result){
- details.replaceChildren();
- details.append(warnings);
- for(const [key,rows]of Object.entries(result.arena||{})){
-  const section=el('section');section.className='s2-build-block';
-  section.append(el('strong',key.includes('augment')?'Aprimoramentos · popularidade':'Itens · popularidade'));
-  for(const row of rows)section.append(el('p',`${row.identifiers.map(id=>(key.includes('augment')?result.augmentNames?.[id]:result.itemNames?.[id])||id).join(' + ')} · frequência ${row.metrics.pick_rate??'—'} · ${row.metrics.games??'—'} jogos`));
-  details.append(section);
- }
- details.append(el('p','Arena: consulta de popularidade; importação de páginas e WR de itens/aprimoramentos indisponíveis.'));
-}
 function receiveContext(message){
  if(message.requestId!==contextRequest?.id)return;
  contextRequest=null;const previous=ctx;ctx=message.context;pausedForGame=['GameStart','InProgress','Reconnect'].includes(ctx?.phase);
- if(!ctx||ctx.phase!=='ChampSelect'){reset();if(host)host.remove();host=null;return;}
+ if(!supportsPanel(ctx)){reset();host?.remove();host=null;opened=false;return;}
  mount();if(!host)return;
  if(previous?.revision!==ctx.revision){reset();}
  summary.textContent=ctx.champion?`${ctx.champion.name} · ${({ranked:'SR · dados Ranked',aram:'ARAM',arena:'Arena'})[ctx.mode]||'modo indisponível'} · risco ${({ 'very-low':'muito baixo',low:'baixo',medium:'médio',high:'alto','very-high':'muito alto'})[ctx.riskLevel]||ctx.riskLevel}`:'Escolha seu campeão.';
@@ -123,8 +113,8 @@ function receiveData(message){
  for(const text of notices)warnings.append(el('p',text));
  for(const row of data.entries)entries.append(option(row.id,row.label));
  if(enemy.value&&[...entries.options].some(o=>o.value==='vs:'+enemy.value))entries.value='vs:'+enemy.value;
- if(data.arena)arenaRows(data);else renderPage();
- say(data.arena?'Arena · popularidade.':'Sugestões prontas. Itens reúne as opções preparadas em até dois conjuntos próprios.');lock();
+ renderPage();
+ say('Sugestões prontas. Itens reúne as opções preparadas em até dois conjuntos próprios.');lock();
 }
 function sourceNotice(code){
  if(typeof code!=='string')return null;
@@ -147,8 +137,7 @@ function receiveError(message){
  else if(message.requestId===importRequest?.id){importRequest=null;say(message.error,true);lock();}
 }
 function mount(){
- const screen=document.querySelector(selectors);
- if(!screen||ctx?.phase!=='ChampSelect')return;
+ if(!document.body||!supportsPanel(ctx))return;
  if(host?.isConnected)return;
  host=el('aside');host.id='sexo2-builds';host.setAttribute('aria-label','SEXO2 · builds da seleção');
  const style=el('style');style.textContent=`
@@ -177,8 +166,8 @@ function mount(){
  actions.append(queryButton,runesButton,itemsButton);panel.append(actions);
  status=el('p');status.setAttribute('role','status');panel.append(status);details=el('div');details.className='s2-build-details';panel.append(details);
  warnings=el('div');warnings.className='s2-build-help';warnings.setAttribute('aria-label','Avisos da fonte');
- // The phase + recognized screen gate visibility. A viewport sibling avoids
- // clipping/fixed-position containment from animated client carousel ancestors.
+ // LCU phase/mode gates visibility; carousel classes vary across client screens.
+ // A viewport sibling avoids transformed/clipped containing blocks.
  document.body.append(host);lock();
 }
 function attach(){
@@ -193,9 +182,11 @@ const tick=setInterval(()=>{
  attach();
  if(host&&!host.isConnected){host=null;reset();}
  if(!bridge?.ready){if(host){reset();say('Reconectando ao SEXO2…',true);}contextRequest=null;return;}
- if(!pausedForGame&&document.querySelector(selectors))requestContext();
- else if(host){host.remove();host=null;opened=false;reset();}
  const now=Date.now();
+ // Discover late screen/phase changes even when no old carousel selector exists.
+ // Lobby/unsupported modes use a slower local poll; source queries remain opt-in.
+ if(!pausedForGame&&now-lastContextAt>=(supportsPanel(ctx)?1200:5000))requestContext();
+ if(!supportsPanel(ctx)&&host){host.remove();host=null;opened=false;reset();}
  if(contextRequest&&now-contextRequest.at>12000){contextRequest=null;reset();say('O cliente não respondeu. Tentando reconectar…',true);}
  if(queryRequest&&now-queryRequest.at>180000){queryRequest=null;say('A fonte demorou demais. Tente novamente.',true);lock();}
  if(importRequest&&now-importRequest.at>45000){importRequest=null;say('A confirmação demorou. Confira a página no cliente antes de repetir.',true);lock();}
