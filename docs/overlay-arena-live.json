@@ -1,0 +1,64 @@
+{
+  "source": "https://lolalytics.com/lol/jinx/arena/build/q-data.json?tier=emerald_plus&region=all",
+  "resolved": {
+    "champion": "jinx",
+    "cid": 222,
+    "mode": "arena",
+    "patch": "16.20",
+    "lane": "all",
+    "tier": "emerald_plus",
+    "region": "all",
+    "status": 200,
+    "key": "jinx_all_arena_list_emerald_plus_16.20_all__all",
+    "keystone": null,
+    "champion_name": "Jinx",
+    "current_patch": "16.20"
+  },
+  "collected_at": "2026-10-17T03:18:42.757118+00:00",
+  "card_count": 7,
+  "groups": {
+    "item_combination:joint_build_sample:payload.builtItemSet3": 136,
+    "item_statistics:item_observation:payload.startItem": 11,
+    "item_statistics:item_observation:payload.items": 164,
+    "item_statistics:item_observation:payload.item": 149,
+    "item_statistics:item_observation:payload.item1": 42,
+    "item_statistics:item_observation:payload.item2": 92,
+    "item_statistics:item_observation:payload.item3": 107,
+    "item_statistics:item_observation:payload.item4": 102,
+    "item_statistics:item_observation:payload.item5": 108,
+    "item_statistics:item_observation:payload.item6": 111,
+    "item_statistics:item_observation:payload.popularItem": 56,
+    "item_statistics:item_observation:payload.winningItem": 56,
+    "item_statistics:item_observation:payload.prismatic": 48,
+    "augment_statistics:augment_observation:payload.augment.augment0": 214,
+    "augment_statistics:augment_observation:payload.augment.augment1": 189,
+    "augment_statistics:augment_observation:payload.augment.augment2": 196,
+    "augment_statistics:augment_observation:payload.augment.augment3": 206,
+    "augment_statistics:augment_observation:payload.augment.augment4": 198
+  },
+  "sample_augments": [
+    {
+      "ids": [
+        "1328"
+      ],
+      "pick_rate": 35.45,
+      "games": 5561
+    },
+    {
+      "ids": [
+        "225"
+      ],
+      "pick_rate": 32.53,
+      "games": 5103
+    },
+    {
+      "ids": [
+        "0"
+      ],
+      "pick_rate": 32.21,
+      "games": 5052
+    }
+  ],
+  "restricted_win_rates": "suppressed",
+  "native_game_validation": false
+}

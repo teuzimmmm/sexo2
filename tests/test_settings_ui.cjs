@@ -57,6 +57,10 @@ test('LoLalytics selector loads persisted value, preserves dirty choice during p
   assert.equal(risk.value, 'high');
   const overlay = host.querySelectorAll('input').find(node => node.name === 'buildOverlayEnabled');
   assert.equal(overlay.checked, true);
+  host.querySelectorAll('button').find(node => node.textContent === 'Testar janela (20 s)').onclick();
+  assert.equal(sent.at(-1).type, 'sexo2-overlay-preview');
+  emit('sexo2-overlay-state', { accepted: true, status: { message: 'Prévia temporária.', window: { message: 'Janela exibida.' } } });
+  assert.ok(host.querySelectorAll('p').some(node => node.textContent.includes('Janela exibida.')));
   assert.deepEqual(risk.children.map(option => option.textContent), ['Muito baixo', 'Baixo', 'Médio', 'Alto', 'Muito alto']);
 
   risk.value = 'very-high'; risk.emit('change');

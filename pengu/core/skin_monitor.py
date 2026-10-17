@@ -115,6 +115,7 @@ class PenguSkinMonitorThread(threading.Thread):
                                             champion=lambda: getattr(shared_state, 'locked_champ_id', None)
                                             or getattr(shared_state, 'hovered_champ_id', None))
         self.message_handler.overlay_store = self._build_overlay.store
+        self.message_handler.overlay_runtime = self._build_overlay
 
     def run(self) -> None:
         """Run the WebSocket server"""

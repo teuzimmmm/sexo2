@@ -30,7 +30,8 @@ def game_mode(data):
     qid = queue.get('id', data.get('queueId'))
     if qid == 450:
         return 'aram'
-    if qid == 1700:
+    mode_name = str(data.get('gameMode') or queue.get('gameMode', '')).upper()
+    if qid == 1700 or mode_name == 'CHERRY':
         return 'arena'
     if (str(data.get('gameMode', queue.get('gameMode', ''))).upper() == 'CLASSIC'
             and data.get('mapId', queue.get('mapId')) == 11):

@@ -1,5 +1,10 @@
 # Overlay de recomendações durante a partida
 
+**Estado atual:** a correção 2.0.0.4 amplia a edição inicial descrita abaixo.
+Arena, detecção sem abrir o processo e diagnóstico/prévia estão documentados em
+[OVERLAY_CORRECOES.md](OVERLAY_CORRECOES.md). Os limites da edição 2.0.0.3 a seguir
+são históricos, incluindo sua exclusão de Arena e ausência de consultas em jogo.
+
 Plano registrado antes da implementação. O painel Pengu permanece na seleção;
 a janela durante a partida é um componente Windows separado, no mesmo programa.
 

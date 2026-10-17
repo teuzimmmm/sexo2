@@ -120,6 +120,20 @@ class BuildBridgeTests(unittest.TestCase):
                 release.set();self.assertEqual(self.wait('query-1')['type'],'sexo2-build-data')
         finally:release.set()
 
+    def test_overlay_preview_and_retry_are_explicit_and_do_not_import(self):
+        runtime=Mock()
+        runtime.preview.return_value=True
+        runtime.retry_arena.return_value=False
+        runtime.diagnostic.return_value={'code':'preview','message':'Prévia temporária.'}
+        self.handler.overlay_runtime=runtime
+        before=len(self.lcu.requests)
+        self.handler._route('sexo2-overlay-preview',{'type':'sexo2-overlay-preview','requestId':'preview-1'})
+        self.assertTrue(self.wait('preview-1')['accepted'])
+        runtime.preview.assert_called_once()
+        self.handler._route('sexo2-overlay-retry',{'type':'sexo2-overlay-retry','requestId':'retry-1'})
+        self.assertFalse(self.wait('retry-1')['accepted'])
+        self.assertEqual(len(self.lcu.requests),before)
+
     def test_query_then_import_reaches_real_services_with_fake_lcu(self):
         revision=self.wait('context-1')['context']['revision']
         self.handler._route('sexo2-build-query',{'type':'sexo2-build-query','requestId':'query-1','revision':revision})

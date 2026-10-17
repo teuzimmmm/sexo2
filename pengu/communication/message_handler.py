@@ -293,6 +293,8 @@ class MessageHandler:
 
     def _route(self, payload_type: Optional[str], payload: dict) -> None:
         # Route to appropriate handler
+        if payload_type in ('sexo2-overlay-preview', 'sexo2-overlay-retry'):
+            self._handle_overlay(payload); return
         if payload_type in ('sexo2-build-context', 'sexo2-build-query', 'sexo2-build-import', 'sexo2-build-select'):
             self._handle_builds(payload); return
         if payload_type == 'sexo2-library-request':
@@ -644,6 +646,19 @@ class MessageHandler:
         worker=getattr(self,'_library_worker',None)
         if worker is not None:worker.close(timeout=.3)
 
+    def _handle_overlay(self, payload):
+        request_id = payload.get('requestId')
+        if not isinstance(request_id, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', request_id):
+            return
+        runtime = getattr(self, 'overlay_runtime', None)
+        accepted = False
+        status = {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}
+        if runtime is not None:
+            accepted = runtime.preview() if payload['type'] == 'sexo2-overlay-preview' else runtime.retry_arena()
+            status = runtime.diagnostic()
+        self._send_response(json.dumps({'type': 'sexo2-overlay-state', 'requestId': request_id,
+                                       'accepted': accepted, 'status': status}, ensure_ascii=False))
+
     def _handle_builds(self, payload):
         from sexo2.services.work_queue import SerialWorker
         from sexo2.services.draft import BuildError
@@ -778,6 +793,8 @@ class MessageHandler:
                 autostart_status=is_registered_for_autostart,
                 set_autostart=set_autostart,
                 infer_client_path=ConfigManager().infer_client_path_from_league_path,
+                overlay_status=lambda: self.overlay_runtime.diagnostic() if getattr(self, 'overlay_runtime', None)
+                else {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'},
             )
         return self._settings_service
 

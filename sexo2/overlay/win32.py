@@ -4,14 +4,17 @@ from ctypes import wintypes as W
 import logging
 import threading
 import textwrap
+from .processes import ProcessCatalog
 
 log = logging.getLogger(__name__)
 
 
 class NativeOverlay:
-    def __init__(self, frame, *, foreground=None):
+    def __init__(self, frame, *, foreground=None, process_catalog=None, foreground_hwnd=None):
         self.frame = frame
         self.foreground = foreground
+        self.processes = process_catalog or ProcessCatalog()
+        self.foreground_hwnd = foreground_hwnd
         self.ready = threading.Event()
         self._stop = threading.Event()
         self._thread = None
@@ -24,6 +27,14 @@ class NativeOverlay:
         self._hotkey_attempted = False
         self._visible = False
         self._state = None
+        self._diagnostic = {'code': 'not-started', 'message': 'Janela ainda não iniciada.', 'windowShown': False}
+
+    def diagnostic(self):
+        return dict(self._diagnostic, hotkeys={f'F{i + 7}': i in self._registered for i in (1, 2, 3)})
+
+    def _status(self, code, message):
+        self._diagnostic = {'code': code, 'message': message,
+                            'windowShown': self._diagnostic['windowShown'] or (code == 'visible' and not self._view.key == 'preview')}
 
     def start(self):
         if self._thread is None and not self._stop.is_set():
@@ -55,9 +66,6 @@ class NativeOverlay:
             fn = getattr(dll, name); fn.restype = result; fn.argtypes = args
             return fn
         bind(self.k, 'GetModuleHandleW', W.HMODULE, W.LPCWSTR)
-        bind(self.k, 'OpenProcess', W.HANDLE, W.DWORD, W.BOOL, W.DWORD)
-        bind(self.k, 'QueryFullProcessImageNameW', W.BOOL, W.HANDLE, W.DWORD, W.LPWSTR, C.POINTER(W.DWORD))
-        bind(self.k, 'CloseHandle', W.BOOL, W.HANDLE)
         bind(self.u, 'RegisterClassW', W.ATOM, C.POINTER(WindowClass))
         bind(self.u, 'UnregisterClassW', W.BOOL, W.LPCWSTR, W.HINSTANCE)
         bind(self.u, 'CreateWindowExW', W.HWND, W.DWORD, W.LPCWSTR, W.LPCWSTR, W.DWORD,
@@ -95,27 +103,22 @@ class NativeOverlay:
         bind(self.g, 'SetTextColor', W.DWORD, W.HDC, W.DWORD)
         bind(self.g, 'GetTextExtentPoint32W', W.BOOL, W.HDC, W.LPCWSTR, C.c_int, C.POINTER(W.SIZE))
 
-    def _foreground_game(self):
-        hwnd = self.u.GetForegroundWindow()
+    def _foreground_bounds(self, preview=False):
+        hwnd = self.foreground_hwnd() if self.foreground_hwnd else self.u.GetForegroundWindow()
         if not hwnd or self.u.IsIconic(hwnd) or not self.u.IsWindowVisible(hwnd):
             return None
-        pid = W.DWORD()
-        self.u.GetWindowThreadProcessId(hwnd, C.byref(pid))
-        process = self.k.OpenProcess(0x1000, False, pid.value)  # QUERY_LIMITED_INFORMATION
-        if not process:
-            return None
-        try:
-            path, length = C.create_unicode_buffer(32768), W.DWORD(32768)
-            if not self.k.QueryFullProcessImageNameW(process, 0, path, C.byref(length)):
+        if not preview:
+            pid = W.DWORD()
+            self.u.GetWindowThreadProcessId(hwnd, C.byref(pid))
+            if not self.processes.contains(pid.value):
                 return None
-            if path.value.rsplit('\\', 1)[-1].lower() not in ('league of legends.exe', 'league of legends (tm) client.exe'):
-                return None
-        finally:
-            self.k.CloseHandle(process)
         rect, origin = W.RECT(), W.POINT()
         if not self.u.GetClientRect(hwnd, C.byref(rect)) or not self.u.ClientToScreen(hwnd, C.byref(origin)):
             return None
         return (origin.x, origin.y, rect.right, rect.bottom)
+
+    def _foreground_game(self):
+        return self._foreground_bounds()
 
     def _hotkeys(self, active):
         if active and not self._hotkey_attempted:
@@ -124,11 +127,8 @@ class NativeOverlay:
                 if self.u.RegisterHotKey(self.hwnd, identifier, 0x4000, key):
                     self._registered.add(identifier)
             if 1 not in self._registered:
-                self.error = 'F8 já está em uso; overlay oculto.'
-                log.warning(self.error)
-                for identifier in self._registered:
-                    self.u.UnregisterHotKey(self.hwnd, identifier)
-                self._registered.clear()
+                log.warning('F8 já está em uso; overlay expandido sem esse atalho.')
+                self._expanded = True
         elif not active:
             for identifier in self._registered:
                 self.u.UnregisterHotKey(self.hwnd, identifier)
@@ -140,20 +140,31 @@ class NativeOverlay:
             self.u.DestroyWindow(self.hwnd)
             return
         frame = self.frame()
-        bounds = (self.foreground or self._foreground_game)() if frame.active else None
+        bounds = None
+        if frame.active:
+            try:
+                bounds = self.foreground() if self.foreground else self._foreground_bounds(frame.preview)
+            except OSError:
+                self._hotkeys(False)
+                self.u.ShowWindow(self.hwnd, 0)
+                self._visible = False
+                self._status('process-unavailable', 'Não foi possível enumerar os processos; tentando novamente.')
+                return
         active = bounds is not None
         self._hotkeys(active)
-        if not active or 1 not in self._registered:
+        if not active:
             if self._visible:
                 self.u.ShowWindow(self.hwnd, 0)
                 self._visible = False
+            self._status('not-game-foreground' if frame.active else 'inactive',
+                         'Jogo não detectado em primeiro plano.' if frame.active else 'Aguardando contexto da partida ou uma prévia.')
             return
         if self._view != frame.view:
             new_match = self._view is None or self._view.key != frame.view.key
             self._view = frame.view
             self._index, self._page = frame.view.selected, 0
             if new_match:
-                self._expanded = False
+                self._expanded = frame.preview or 1 not in self._registered
         x, y, width, height = bounds
         width = min(420, width - 24)
         height = min(570, height - 160) if self._expanded else 40
@@ -163,11 +174,17 @@ class NativeOverlay:
         state = (x, y, width, height, frame.view, self._expanded, self._index, self._page)
         if state != self._state or not self._visible:
             # HWND_TOPMOST, SWP_NOACTIVATE | SWP_SHOWWINDOW
-            self.u.SetWindowPos(self.hwnd, W.HWND(-1), x + bounds[2] - width - 12, y + 110,
-                                width, height, 0x10 | 0x40)
+            if not self.u.SetWindowPos(self.hwnd, W.HWND(-1), x + bounds[2] - width - 12, y + 110,
+                                       width, height, 0x10 | 0x40):
+                self.u.ShowWindow(self.hwnd, 0)
+                self._visible = False
+                self._status('show-failed', 'O Windows recusou exibir a janela do overlay.')
+                return
             self.u.InvalidateRect(self.hwnd, None, True)
             self._state = state
             self._visible = True
+            self._status('preview' if frame.preview else 'visible',
+                         'Prévia temporária exibida pelo Windows.' if frame.preview else 'Janela do overlay exibida pelo Windows.')
 
     def _paint(self, hwnd):
         paint, rect = self.Paint(), W.RECT()
@@ -185,7 +202,7 @@ class NativeOverlay:
             def draw(value, y):
                 r = W.RECT(14, y, rect.right - 14, y + line_height)
                 self.u.DrawTextW(dc, value, -1, C.byref(r), 0x800 | 0x20)  # NOPREFIX | SINGLELINE
-            draw('SEXO2 · F8 expandir/recolher', 10)
+            draw('SEXO2 · F8 expandir/recolher' if 1 in self._registered else 'SEXO2 · F8 ocupado em outro aplicativo', 10)
             if self._expanded:
                 cards = self._view.cards if self._view else ()
                 if cards:
@@ -199,7 +216,8 @@ class NativeOverlay:
                     self._page %= count
                     for i, line in enumerate(rows[self._page * capacity:(self._page + 1) * capacity]):
                         draw(line, 42 + i * line_height)
-                    footer = f'F9 sugestão {self._index + 1}/{len(cards)} · F10 {self._page + 1}/{count}'
+                    footer = (f"{'F9' if 2 in self._registered else 'F9 ocupado'} {self._index + 1}/{len(cards)} · "
+                              f"{'F10' if 3 in self._registered else 'F10 ocupado'} {self._page + 1}/{count}")
                 else:
                     for i, line in enumerate(('Nenhuma sugestão preparada.', 'Consulte SEXO2 · Builds na seleção', 'da próxima partida.')):
                         draw(line, 46 + i * line_height)
@@ -214,7 +232,12 @@ class NativeOverlay:
             if message == 0x113:  # WM_TIMER
                 self._tick(); return 0
             if message == 0x312 and int(wparam) in self._registered:  # WM_HOTKEY
-                if not self.frame().active or not (self.foreground or self._foreground_game)():
+                frame = self.frame()
+                try:
+                    foreground = self.foreground() if self.foreground else self._foreground_bounds(frame.preview)
+                except OSError:
+                    self._tick(); return 0
+                if not frame.active or not foreground:
                     self._tick(); return 0
                 if int(wparam) == 1:
                     self._expanded = not self._expanded
@@ -234,6 +257,7 @@ class NativeOverlay:
                 self.u.PostQuitMessage(0); return 0
         except Exception:
             self.error = 'Falha na janela do overlay.'
+            self._status('window-error', self.error)
             self._stop.set()
             log.warning(self.error)
         return self.u.DefWindowProcW(hwnd, message, wparam, lparam)
@@ -270,6 +294,7 @@ class NativeOverlay:
                 self.u.DispatchMessageW(C.byref(message))
         except Exception:
             self.error = 'Não foi possível iniciar o overlay Windows.'
+            self._status('window-error', self.error)
             log.warning(self.error)
         finally:
             if self.hwnd:

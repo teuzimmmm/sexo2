@@ -4,7 +4,7 @@
 if(window.__sexo2Settings)return;
 const CATEGORIES={skins:'Skins',maps:'Mapas',fonts:'Fontes',announcers:'Anunciadores',ui:'Interface',voiceover:'Vozes',loading_screen:'Carregamento',vfx:'Efeitos visuais',sfx:'Sons',others:'Outros'};
 let bridge=null,root=null,form=null,status=null,dirty=false,pending=null,sequence=0,settings=null;
-const fields={};let updateStatus=null,updateButton=null,github=null;
+const fields={};let updateStatus=null,updateButton=null,github=null,overlayStatus=null;
 window.__sexo2Settings={};
 function el(tag,text){const node=document.createElement(tag);if(text)node.textContent=text;return node;}
 function button(text,fn){const b=el('button',text);b.type='button';b.onclick=fn;return b;}
@@ -45,7 +45,10 @@ function build(){
  riskSelect.addEventListener('change',()=>{dirty=true;message('Alterações ainda não salvas.');});
  const riskHelp=el('p','Níveis mais altos confiam mais em amostras pequenas; níveis mais baixos dão mais peso à referência geral.');riskHelp.className='s2-help';form.append(riskHelp);
  field('buildOverlayEnabled','Mostrar builds durante a partida (F8)','checkbox');
- const overlayHelp=el('p','Prepare as sugestões na seleção. Em janela/sem bordas: F8 expande, F9 troca a sugestão e F10 percorre o texto.');overlayHelp.className='s2-help';form.append(overlayHelp);
+ const overlayHelp=el('p','SR/ARAM usam as sugestões da seleção. Arena consulta popularidade durante a partida. F8 expande, F9 troca e F10 percorre o texto.');overlayHelp.className='s2-help';form.append(overlayHelp);
+ overlayStatus=el('p','Overlay: aguardando diagnóstico.');overlayStatus.className='s2-help';overlayStatus.setAttribute('aria-label','Estado do overlay');form.append(overlayStatus);
+ const overlayTools=el('div');overlayTools.className='s2-actions';
+ overlayTools.append(button('Testar janela (20 s)',()=>bridge?.send({type:'sexo2-overlay-preview',requestId:'s2-overlay-'+(++sequence)})),button('Reconsultar Arena',()=>bridge?.send({type:'sexo2-overlay-retry',requestId:'s2-overlay-'+(++sequence)})));form.append(overlayTools);
  field('autostart','Iniciar com Windows','checkbox');field('hideEmptyCategories','Ocultar categorias de mods vazias','checkbox');
  const path=field('gamePath','Pasta do LoL (Game)','text');path.placeholder='Automática';path.parentElement.classList.add('s2-path');
  const help=el('p','Deixe em branco para usar a detecção automática.');help.className='s2-help';form.append(help);
@@ -68,7 +71,8 @@ function build(){
  github=el('a','Abrir GitHub do projeto');github.target='_blank';github.rel='noopener noreferrer';github.setAttribute('aria-disabled','true');updates.append(github);root.append(updates);
  const credits=el('details');credits.append(el('summary','Créditos da base'));const note=el('p','SEXO2 utiliza componentes de Rose, Pengu Loader e LTK. BORK pertence à Riot Games; o escudo pertence ao Clube Atlético Mineiro.');credits.append(note);const link=el('a','Código e licença da base Rose');link.href='https://github.com/Alban1911/Rose';link.target='_blank';link.rel='noopener noreferrer';credits.append(link);root.append(credits);
 }
-function populate(data){settings=data;if(dirty||pending?.saving)return;for(const[key,input]of Object.entries(fields)){if(input.type==='checkbox')input.checked=key==='buildOverlayEnabled'?data[key]!==false:data[key]===true;else input.value=data[key]??(key==='lolalyticsRiskLevel'?'medium':'');}}
+function overlayReceived(data){if(overlayStatus){const state=data.status||data.buildOverlayStatus||{};overlayStatus.textContent=[state.message,state.window?.message].filter(Boolean).join(' · ')||'Overlay: diagnóstico indisponível.';if(data.accepted===false)overlayStatus.textContent+=' Ação indisponível agora; aguarde ou confira o estado da partida.';}}
+function populate(data){settings=data;overlayReceived(data);if(dirty||pending?.saving)return;for(const[key,input]of Object.entries(fields)){if(input.type==='checkbox')input.checked=key==='buildOverlayEnabled'?data[key]!==false:data[key]===true;else input.value=data[key]??(key==='lolalyticsRiskLevel'?'medium':'');}}
 function lock(value){for(const input of form.querySelectorAll('input,button'))input.disabled=value;fields.lolalyticsRiskLevel.disabled=value;}
 function request(){if(!bridge?.ready||pending)return;pending={id:'s2-settings-'+(++sequence),saving:false,at:Date.now()};bridge.send({type:'settings-request',requestId:pending.id});}
 function saveSettings(){
@@ -92,6 +96,7 @@ function receive(data){
 }
 window.addEventListener('rose-hub-settings',e=>{if(!root)build();root.hidden=false;e.detail.target.append(root);if(root.dataset.libraryOpen==='true'){const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;}request();});
 window.addEventListener('rose-hub-settings-close',()=>{if(root)root.hidden=true;});
-const timer=setInterval(()=>{if(!root)build();if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('settings-data',receive);bridge.subscribe('settings-saved',receive);bridge.subscribe('sexo2-update-state',updateReceived);bridge.onReady(()=>{pending=null;lock(false);request();checkUpdate();});clearInterval(timer);}},100);
+const timer=setInterval(()=>{if(!root)build();if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('settings-data',receive);bridge.subscribe('settings-saved',receive);bridge.subscribe('sexo2-update-state',updateReceived);bridge.subscribe('sexo2-overlay-state',overlayReceived);bridge.onReady(()=>{pending=null;lock(false);request();checkUpdate();});clearInterval(timer);}},100);
+setInterval(()=>{if(root?.isConnected&&!root.hidden&&!document.hidden&&!pending)request();},3000);
 setInterval(()=>{if(pending&&Date.now()-pending.at>15000){pending=null;lock(false);message('Não houve confirmação. Confira a conexão; suas alterações foram mantidas.',true);}},1000);
 })();

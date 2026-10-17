@@ -20,11 +20,13 @@ def get_overlay_enabled():
 
 
 class SettingsService:
-    def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path):
+    def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path,
+                 overlay_status=lambda: {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}):
         self.validate_path = validate_path
         self.autostart_status = autostart_status
         self.set_autostart = set_autostart
         self.infer_client_path = infer_client_path
+        self.overlay_status = overlay_status
 
     def snapshot(self):
         path = get_config_option('General', 'leaguePath', '') or ''
@@ -35,6 +37,7 @@ class SettingsService:
             'hideEmptyCategories': (get_config_option('General', 'hide_empty_categories', 'false') or '').lower() == 'true',
             'lolalyticsRiskLevel': get_risk_level(),
             'buildOverlayEnabled': get_overlay_enabled(),
+            'buildOverlayStatus': self.overlay_status(),
             'gamePath': path, 'gamePathValid': bool(path and self.validate_path(path)),
             'version': display_version(APP_VERSION),
         }
@@ -100,5 +103,6 @@ class SettingsService:
             'autostart': payload['autostart'], 'hideEmptyCategories': payload['hideEmptyCategories'],
             'lolalyticsRiskLevel': risk_level,
             'buildOverlayEnabled': overlay_enabled,
+            'buildOverlayStatus': self.overlay_status(),
             'gamePath': path, 'gamePathValid': bool(path), 'version': display_version(APP_VERSION),
         }

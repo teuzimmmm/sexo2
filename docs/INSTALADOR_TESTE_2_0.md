@@ -50,7 +50,7 @@ com alterações registradas no Git:
 
 ```powershell
 python -m pip install -r requirements.txt
-python scripts/build_test_installer.py --base "C:\pacotes\SEXO2-baseline.zip" --version 2.0.0.3
+python scripts/build_test_installer.py --base "C:\pacotes\SEXO2-baseline.zip" --version 2.0.0.4
 ```
 
 `--base` também aceita uma pasta existente do SEXO2 contendo `_internal`.
@@ -94,7 +94,7 @@ O instalador não fecha processos
 
 Na seleção, abra `SEXO2 · Builds`, consulte WR/Common e importe explicitamente
 runas/itens. Ao finalizar o draft, escolha um adversário. A edição aparece como
-`2.0.0.3 (teste)` nas configurações. Se houver um Pengu externo ativo, aplica-se a
+`2.0.0.4 (teste)` nas configurações. Se houver um Pengu externo ativo, aplica-se a
 limitação de sincronização descrita em `DESENVOLVIMENTO_2_0.md`; não sobrescrevemos
 uma instalação externa silenciosamente.
 
@@ -102,6 +102,11 @@ A partir de 2.0.0.3, a janela de partida usa as sugestões preparadas na seleç�
 Em janela/sem bordas, F8 expande/recolhe, F9 troca a sugestão e F10 percorre o texto.
 A opção **Mostrar builds durante a partida** fica nas configurações. O componente
 não usa Pengu para desenhar sobre a partida; veja [OVERLAY_PARTIDA.md](OVERLAY_PARTIDA.md).
+
+Na 2.0.0.4, Arena consulta popularidade durante a partida, sem painel de seleção.
+As configurações incluem diagnóstico e **Testar janela (20 s)**; use essa prévia
+para distinguir problemas de desenho e leitura da partida. Veja
+[OVERLAY_CORRECOES.md](OVERLAY_CORRECOES.md) para testes, dados e limites.
 
 Desinstalar esta edição remove os arquivos instalados e seus atalhos próprios;
 não remove os dados compartilhados, versões anteriores nem um Pengu externo.

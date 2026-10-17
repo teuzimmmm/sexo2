@@ -81,11 +81,26 @@ class OverlayTests(unittest.TestCase):
         self.assertFalse(self.runtime.poll().active)
         self.assertIsNone(self.store._data)
 
-    def test_unknown_modes_and_arena_never_show(self):
-        for data in [{'gameId': 10, 'queue': {'id': 1700}}, {'gameId': 10, 'queue': {'id': 2400}}]:
+    def test_unknown_modes_never_show(self):
+        for data in [{'gameId': 10, 'queue': {'id': 2400}}]:
             self.lcu.game['gameData'] = data
             self.assertFalse(self.playing().active)
             self.assertEqual(self.store.view(self.key, 'ranked').cards, ())
+
+    def test_arena_is_active_during_game_without_selection_panel_or_champion(self):
+        self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'gameMode': 'CHERRY'}}
+        self.assertTrue(self.playing().active)
+        self.assertIn('aguardando campeão', self.runtime.frame().view.cards[0].title)
+        self.assertEqual(self.store.view(self.key, 'ranked').cards, ())
+
+    def test_preview_is_explicit_temporary_and_independent_of_client(self):
+        self.lcu.draft_request = Mock(side_effect=OSError('PRIVATE'))
+        self.runtime.poll()
+        self.assertEqual(self.runtime.diagnostic()['code'], 'client-unavailable')
+        self.assertTrue(self.runtime.preview())
+        self.assertTrue(self.runtime.frame().preview)
+        self.now = 21
+        self.assertFalse(self.runtime.frame().active)
 
     def test_standard_aram_supported_but_separated_from_sr(self):
         self.lcu.game['gameData'] = {'gameId': 10, 'queue': {'id': 450}}
