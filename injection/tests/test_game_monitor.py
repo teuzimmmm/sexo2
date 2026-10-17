@@ -119,3 +119,18 @@ class FailedResumeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FatalMonitorErrorTests(unittest.TestCase):
+    def test_a_fatal_loop_error_is_logged_with_its_traceback(self):
+        monitor = GameMonitor(lambda: 60.0)
+        with (
+            patch.object(game_monitor.psutil, "process_iter", return_value=[]),
+            patch.object(game_monitor.time, "sleep", side_effect=RuntimeError("loop broke")),
+            self.assertLogs(game_monitor.log, level="ERROR") as logs,
+        ):
+            monitor.start()
+            monitor._monitor_thread.join(timeout=5)
+        fatal = [record for record in logs.records if "Fatal error" in record.getMessage()]
+        self.assertEqual(len(fatal), 1)
+        self.assertIsNotNone(fatal[0].exc_info)

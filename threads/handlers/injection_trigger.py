@@ -1089,13 +1089,13 @@ class InjectionTrigger:
                     except Exception as e:
                         log.warning(f"[INJECT] Failed to request UI destruction after injection: {e}")
                 except Exception as e:
-                    log.error(f"[INJECT] injection thread error: {e}")
+                    log.exception(f"[INJECT] injection thread error: {e}")
 
             injection_thread = threading.Thread(target=run_injection, daemon=True, name="InjectionThread")
             injection_thread.start()
 
         except Exception as e:
-            log.error(f"[INJECT] injection error: {e}")
+            log.exception(f"[INJECT] injection error: {e}")
 
     def _has_party_skins(self) -> bool:
         """Check if party mode has friends' skins to inject for this game"""

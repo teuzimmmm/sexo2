@@ -1,4 +1,5 @@
 """Every bridge message type reaches the same handler (contract for the dispatch table)."""
+
 import unittest
 from unittest.mock import patch
 

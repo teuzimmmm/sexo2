@@ -361,7 +361,7 @@ class GameMonitor:
                 log.debug("[monitor] Stopped")
 
             except Exception as e:
-                log.error(f"[monitor] Fatal error: {e}")
+                log.exception(f"[monitor] Fatal error: {e}")
 
         self._monitor_thread = threading.Thread(target=game_monitor, daemon=True, name="GameMonitor")
         self._monitor_thread.start()
