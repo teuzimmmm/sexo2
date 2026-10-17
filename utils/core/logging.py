@@ -387,16 +387,16 @@ def setup_logging(log_mode: str = "customer", *, write_logs: bool = True):
             if _CURRENT_LOG_MODE == "customer":
                 # Clean startup for customer mode
                 if log_file:
-                    logger.info(f"Rose Started (Log: {log_file.name})")
+                    logger.info(f"SEXO2 Started (Log: {log_file.name})")
                 else:
-                    logger.info("Rose Started (logs disabled)")
+                    logger.info("SEXO2 Started (logs disabled)")
             else:
                 # Detailed startup for verbose/debug modes
                 logger.info("=" * LOG_SEPARATOR_WIDTH)
                 if log_file:
-                    logger.info(f"Rose - Starting... (Log file: {log_file.name})")
+                    logger.info(f"SEXO2 - Starting... (Log file: {log_file.name})")
                 else:
-                    logger.info("Rose - Starting... (logs disabled)")
+                    logger.info("SEXO2 - Starting... (logs disabled)")
                 logger.info("=" * LOG_SEPARATOR_WIDTH)
 
                 # Log mode information

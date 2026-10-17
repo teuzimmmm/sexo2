@@ -17,7 +17,7 @@ def parse_server_link(link):
     if parts.scheme not in ("https", "wss") or not parts.hostname or parts.username or parts.password:
         raise ValueError("Cole o endereço https:// da sala, sem usuário ou senha no endereço.")
     if parts.path not in ("", "/") or parts.query:
-        raise ValueError("Use o endereço completo copiado pelo Rose Sala.")
+        raise ValueError("Use o endereço completo da sala, copiado pelo anfitrião.")
     if parts.port not in (None, 443):
         raise ValueError("O endereço da sala deve usar a conexão segura padrão.")
     token = parse_qs(parts.fragment).get("rose", [""])[0]

@@ -319,11 +319,11 @@ def extract_modpkg(source: Union[str, Path], dest_dir: Union[str, Path], *, chec
     dest_dir = Path(dest_dir)
     with ModPackage.open(source) as package:
         if not package.wad_file_count:
-            raise ModpkgError("The .modpkg has no game files Rose can inject")
+            raise ModpkgError("The .modpkg has no game files SEXO2 can inject")
         if package.optional_layers:
             log.info(
                 f"[MODPKG] {source.name}: skipping optional layers "
-                f"{', '.join(package.optional_layers)} (Rose injects the base layer)"
+                f"{', '.join(package.optional_layers)} (SEXO2 injects the base layer)"
             )
         if package.unplaced_file_count:
             log.warning(f"[MODPKG] {source.name}: skipping {package.unplaced_file_count} files that target no game WAD")

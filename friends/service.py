@@ -242,7 +242,7 @@ class FriendsService:
             entry = changes[cid]
             sid = entry["skinId"]
             if getattr(self.state, "locked_champ_id", None) != cid:
-                raise ValueError("Seu campeão ainda não foi confirmado pelo Rose.")
+                raise ValueError("Seu campeão ainda não foi confirmado pelo SEXO2.")
             target = sid if sid in self.owned() else cid * 1000
             if not self.lcu.set_my_selection_skin(target):
                 raise ValueError("O cliente não confirmou a escolha. Tente novamente.")

@@ -128,11 +128,11 @@ class TrayIssueTests(unittest.TestCase):
         tray._base_icon_image = Image.new("RGBA", (128, 128))
         tray._locked_icon_image = tray._base_icon_image
         with patch("utils.integration.tray_manager.time.monotonic", side_effect=[100, 100.5, 104]):
-            tray.report_match_issue("GAME_EXIT", "Rose perdeu o processo do LoL", "Causa desconhecida")
-            tray.report_match_issue("GAME_EXIT", "Rose perdeu o processo do LoL", "Causa desconhecida")
-            tray.report_match_issue("GAME_EXIT", "Rose perdeu o processo do LoL", "Causa desconhecida")
+            tray.report_match_issue("GAME_EXIT", "SEXO2 perdeu o processo do LoL", "Causa desconhecida")
+            tray.report_match_issue("GAME_EXIT", "SEXO2 perdeu o processo do LoL", "Causa desconhecida")
+            tray.report_match_issue("GAME_EXIT", "SEXO2 perdeu o processo do LoL", "Causa desconhecida")
         self.assertEqual(tray._match_issue["count"], 2)
-        self.assertIn("Rose perdeu", tray._issue_menu_label())
+        self.assertIn("SEXO2 perdeu", tray._issue_menu_label())
         tray.icon.notify.assert_called_once()
         tray.clear_match_issue()
         self.assertIsNone(tray._match_issue)

@@ -115,7 +115,7 @@ class LCUMonitorThread(threading.Thread):
                     if self._initial_ws_done and self._lcu_reconnected and self.reconnect_callback:
                         self._lcu_reconnected = False
                         try:
-                            log.info("[LCU Monitor] Account swap detected - refreshing Rose state...")
+                            log.info("[LCU Monitor] Account swap detected - refreshing SEXO2 state...")
                             self.reconnect_callback()
                         except Exception as e:
                             log.warning(f"[LCU Monitor] Reconnection callback failed: {e}")

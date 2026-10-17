@@ -20,7 +20,7 @@ from config import (
 
 def setup_arguments() -> argparse.Namespace:
     """Parse and return command line arguments"""
-    ap = argparse.ArgumentParser(description="Rose - Windows UI API skin detection")
+    ap = argparse.ArgumentParser(description="SEXO2 - Windows UI API skin detection")
 
     # General arguments
     ap.add_argument(
@@ -39,7 +39,7 @@ def setup_arguments() -> argparse.Namespace:
         "--dev",
         action="store_true",
         default=False,
-        help="Skip the Windows launcher so Rose runs directly for development",
+        help="Skip the Windows launcher so SEXO2 runs directly for development",
     )
     ap.add_argument(
         "--logs",

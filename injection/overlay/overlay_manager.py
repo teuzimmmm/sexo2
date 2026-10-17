@@ -171,7 +171,7 @@ class OverlayManager:
                 "overlay_path": str(self.mods_dir.parent),
                 "mods": "/".join(mod_names or ()),
             },
-            hint="Free up disk space on the drive containing Rose injection files, then retry the skin.",
+            hint="Free up disk space on the drive containing SEXO2 injection files, then retry the skin.",
         )
         return True
 
@@ -213,7 +213,7 @@ class OverlayManager:
                 ctx.report_issue(
                     "OVERLAY_RUN_FAILED",
                     "Falha ao aplicar a skin",
-                    "A aplicação terminou sem sucesso. Consulte os logs do Rose para os detalhes do aplicador.",
+                    "A aplicação terminou sem sucesso. Consulte os logs do SEXO2 para os detalhes do aplicador.",
                 )
             return result
         finally:
@@ -256,7 +256,7 @@ class OverlayManager:
                 "LTK_PATCHER_MISSING",
                 "error",
                 "Injection failed: the LTK patcher is missing.",
-                hint="Copy ltk_patcher_host.exe and ltk_patcher_dll.dll into Rose's tools folder.",
+                hint="Copy ltk_patcher_host.exe and ltk_patcher_dll.dll into SEXO2's tools folder.",
             )
             return 1
 
@@ -407,7 +407,7 @@ class OverlayManager:
                 "error",
                 "Injection failed while preparing the overlay.",
                 details={"error": str(e)},
-                hint="Check Rose logs for details, then retry.",
+                hint="Check SEXO2 logs for details, then retry.",
             )
             self._report_low_disk_space_failure(output_lines + error_lines, mod_names)
             self._abort_ltk_patcher(patcher_session)
@@ -667,7 +667,7 @@ class OverlayManager:
             if not game_ended and proc.returncode not in (0, None):
                 if getattr(proc, "stopped_by_rose", False):
                     # Rose's own cleanup killed it (end of game, lobby, shutdown)
-                    log.info(f"[INJECT] LTK patcher stopped by Rose (exit code {proc.returncode})")
+                    log.info(f"[INJECT] LTK patcher stopped by SEXO2 (exit code {proc.returncode})")
                     return 0
                 log.error(
                     f"[INJECT] LTK patcher exited with return code: {proc.returncode} (0x{proc.returncode & 0xFFFFFFFF:08X})"
@@ -698,7 +698,7 @@ class OverlayManager:
             "LTK_PATCHER_EOL",
             "error",
             f"Injection failed: LTK patcher reached its end of life{since}.",
-            hint="Update LTK Manager, copy its new ltk_patcher_host.exe and ltk_patcher_dll.dll into Rose's tools folder, then restart Rose.",
+            hint="Update LTK Manager, copy its new ltk_patcher_host.exe and ltk_patcher_dll.dll into SEXO2's tools folder, then restart SEXO2.",
         )
 
     def _log_patcher_context(self, session: dict, resumed_at: float):
@@ -733,7 +733,7 @@ class OverlayManager:
                 f"if every skin fails, update your LTK patcher files. {logs}"
             )
         if reason.startswith("could not start"):
-            return f"Rose could not start ltk_patcher_host.exe. Check that it is still in Rose's tools folder. {logs}"
+            return f"SEXO2 could not start ltk_patcher_host.exe. Check that it is still in SEXO2's tools folder. {logs}"
         return f"Make sure your LTK patcher files are up to date, then retry. {logs}"
 
     @classmethod

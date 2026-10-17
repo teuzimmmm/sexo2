@@ -222,7 +222,7 @@ def show_message_box_threaded(message: str, title: str, flags: int = 0x40):
 def show_admin_required_dialog():
     """Show a dialog box explaining that admin rights are required"""
     show_message_box_threaded(
-        "Rose requires Administrator privileges to function properly.\n\n"
+        "SEXO2 requires Administrator privileges to function properly.\n\n"
         "The application will now request elevation.\n\n"
         "Click 'Yes' on the UAC prompt to continue.",
         "Administrator Rights Required",
@@ -233,7 +233,7 @@ def show_admin_required_dialog():
 def show_autostart_success_dialog():
     """Show a dialog box confirming auto-start registration"""
     show_message_box_threaded(
-        "Rose will now start automatically when turn on your computer.",
+        "SEXO2 will now start automatically when you turn on your computer.",
         "Auto-Start Enabled",
         0x40,  # MB_ICONINFORMATION
     )
@@ -242,7 +242,7 @@ def show_autostart_success_dialog():
 def show_autostart_removed_dialog():
     """Show a dialog box confirming auto-start removal"""
     show_message_box_threaded(
-        "Rose has been removed from auto-start.\n\n"
+        "SEXO2 has been removed from auto-start.\n\n"
         "The application will no longer start automatically with Windows.\n\n"
         "You can re-enable auto-start from the settings menu.",
         "Auto-Start Removed",

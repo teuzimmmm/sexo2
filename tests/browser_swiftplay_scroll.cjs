@@ -14,7 +14,7 @@ const path=require('node:path'),assert=require('node:assert/strict');
  });
  await page.addScriptTag({path:path.resolve('Pengu Loader/plugins/ROSE-SwiftplayPins/index.js')});
  await page.evaluate(()=>window.reply());
- await page.getByRole('button',{name:'ROSE · Fixar skins',exact:true}).click();
+ await page.getByRole('button',{name:'SEXO2 · Fixar skins',exact:true}).click();
  await page.getByRole('button',{name:'Escolher',exact:true}).first().click();
  await page.locator('.rsp-grid').evaluate(e=>{e.scrollTop=e.scrollHeight;e.dataset.original='yes';});
  const bottom=await page.locator('.rsp-grid').evaluate(e=>e.scrollTop);assert.ok(bottom>0);

@@ -88,7 +88,7 @@ def resume_orphaned_game() -> int:
                 continue
             proc.resume()
             resumed += 1
-            log.warning(f"[monitor] Resumed a game left suspended by a previous Rose (PID={proc.info['pid']})")
+            log.warning(f"[monitor] Resumed a game left suspended by a previous SEXO2 (PID={proc.info['pid']})")
         except (NoSuchProcess, AccessDenied) as e:
             log.warning(f"[monitor] Could not resume the suspended game (PID={proc.info['pid']}): {e}")
     return resumed
@@ -240,7 +240,7 @@ class GameMonitor:
                                         break
                                     except AccessDenied:
                                         log.error("[monitor] ACCESS DENIED - Cannot suspend game")
-                                        log.error("[monitor] Try running Rose as Administrator")
+                                        log.error("[monitor] Try running SEXO2 as Administrator")
                                         self._monitor_active = False
                                         break
                                     except Exception as e:
@@ -278,7 +278,7 @@ class GameMonitor:
                                 self._report_issue_async(
                                     "SAFETY_RELEASE",
                                     "Limite de pausa do LoL atingido",
-                                    "O Rose atingiu o limite de pausa e tentou liberar o jogo. A skin pode não ter sido aplicada.",
+                                    "O SEXO2 atingiu o limite de pausa e tentou liberar o jogo. A skin pode não ter sido aplicada.",
                                 )
                                 log.warning(f"[monitor] AUTO-RESUME after {auto_resume_timeout:.0f}s (safety timeout)")
                                 log.warning(f"[monitor] Injection took too long - releasing game to prevent freeze")
@@ -333,7 +333,7 @@ class GameMonitor:
                                     break
                                 except AccessDenied:
                                     log.error("[monitor] ACCESS DENIED - Cannot suspend game")
-                                    log.error("[monitor] Try running Rose as Administrator")
+                                    log.error("[monitor] Try running SEXO2 as Administrator")
                                     self._monitor_active = False
                                     # Clear reference if we couldn't suspend (game is running anyway)
                                     with self._process_lock:

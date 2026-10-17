@@ -98,11 +98,11 @@ def _confirm_update(dialog: UpdateDialog, remote_version: str, local_version: st
     """Ask whether the user wants to download an available Rose update."""
     dialog.set_marquee(False)
     dialog.set_detail("Update available")
-    dialog.set_status(f"Rose {remote_version} is ready to install.")
+    dialog.set_status(f"SEXO2 {remote_version} is ready to install.")
     dialog.pump_messages()
 
     message = (
-        f"A new version of Rose is available.\n\n"
+        f"A new version of SEXO2 is available.\n\n"
         f"Current version: {local_version}\n"
         f"New version: {remote_version}\n\n"
         "Do you want to download and install it now?"
@@ -110,7 +110,7 @@ def _confirm_update(dialog: UpdateDialog, remote_version: str, local_version: st
     result = user32.MessageBoxW(
         dialog.hwnd or None,
         message,
-        "Rose update available",
+        "SEXO2 update available",
         MB_YESNO | MB_ICONINFORMATION | MB_DEFBUTTON2 | MB_TOPMOST,
     )
     accepted = result == IDYES
@@ -122,7 +122,7 @@ def _confirm_update(dialog: UpdateDialog, remote_version: str, local_version: st
     )
 
     if accepted:
-        dialog.set_detail("Updating Rose...")
+        dialog.set_detail("Updating SEXO2...")
         dialog.set_status("Downloading update...")
     else:
         dialog.set_detail("Update skipped")
