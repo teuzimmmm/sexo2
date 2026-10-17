@@ -15,6 +15,10 @@ def get_risk_level():
         return DEFAULT_RISK_LEVEL
 
 
+def get_overlay_enabled():
+    return str(get_config_option('LoLalytics', 'overlay_enabled', 'true')).lower() == 'true'
+
+
 class SettingsService:
     def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path):
         self.validate_path = validate_path
@@ -30,11 +34,15 @@ class SettingsService:
             'autostart': bool(self.autostart_status()),
             'hideEmptyCategories': (get_config_option('General', 'hide_empty_categories', 'false') or '').lower() == 'true',
             'lolalyticsRiskLevel': get_risk_level(),
+            'buildOverlayEnabled': get_overlay_enabled(),
             'gamePath': path, 'gamePathValid': bool(path and self.validate_path(path)),
             'version': display_version(APP_VERSION),
         }
 
     def save(self, payload):
+        overlay_enabled = payload.get('buildOverlayEnabled', get_overlay_enabled())
+        if type(overlay_enabled) is not bool:
+            raise ValueError('Confira a opção do overlay durante a partida.')
         # Older panels do not send this field; retain the saved preference.
         if 'lolalyticsRiskLevel' in payload:
             try:
@@ -74,6 +82,8 @@ class SettingsService:
         }}
         if save_risk_level:
             changes['LoLalytics'] = {'risk_level': risk_level}
+        if 'buildOverlayEnabled' in payload:
+            changes.setdefault('LoLalytics', {})['overlay_enabled'] = 'true' if overlay_enabled else 'false'
         if changed_autostart:
             self.set_autostart(payload['autostart'])
         try:
@@ -89,5 +99,6 @@ class SettingsService:
             'threshold': threshold, 'monitorAutoResumeTimeout': int(timeout),
             'autostart': payload['autostart'], 'hideEmptyCategories': payload['hideEmptyCategories'],
             'lolalyticsRiskLevel': risk_level,
+            'buildOverlayEnabled': overlay_enabled,
             'gamePath': path, 'gamePathValid': bool(path), 'version': display_version(APP_VERSION),
         }

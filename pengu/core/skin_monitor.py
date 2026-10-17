@@ -108,14 +108,24 @@ class PenguSkinMonitorThread(threading.Thread):
         
         # Set message handler on WebSocket server
         self.websocket_server.message_handler = self.message_handler.handle_message
+        # Separate, read-only Windows window; never runs HTTP on the GUI thread.
+        from sexo2.overlay.runtime import OverlayRuntime
+        from sexo2.services.settings import get_overlay_enabled
+        self._build_overlay = OverlayRuntime(lcu, enabled=get_overlay_enabled)
+        self.message_handler.overlay_store = self._build_overlay.store
 
     def run(self) -> None:
         """Run the WebSocket server"""
-        self.websocket_server.run()
+        self._build_overlay.start()
+        try:
+            self.websocket_server.run()
+        finally:
+            self._build_overlay.stop()
 
     def stop(self) -> None:
         """Stop the server"""
         try:
+            self._build_overlay.stop()
             self.message_handler.close_builds()
             self.message_handler.close_library()
             self.websocket_server.stop()

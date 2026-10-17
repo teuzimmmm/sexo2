@@ -14,6 +14,20 @@ class SettingsTests(unittest.TestCase):
         with patch('sexo2.services.settings.set_config_options')as write:
             with self.assertRaises(ValueError):self.service.save(self.payload)
         write.assert_not_called();self.autostart.assert_not_called()
+    def test_overlay_setting_persists_and_old_panels_preserve_it(self):
+        with patch('sexo2.services.settings.set_config_options') as write:
+            self.payload['buildOverlayEnabled']=False
+            self.assertFalse(self.service.save(self.payload)['buildOverlayEnabled'])
+            self.assertEqual(write.call_args.args[0]['LoLalytics']['overlay_enabled'],'false')
+        self.payload.pop('buildOverlayEnabled')
+        with patch('sexo2.services.settings.get_overlay_enabled',return_value=False), patch('sexo2.services.settings.set_config_options') as write:
+            self.assertFalse(self.service.save(self.payload)['buildOverlayEnabled'])
+            self.assertNotIn('LoLalytics',write.call_args.args[0])
+    def test_invalid_overlay_setting_has_no_side_effects(self):
+        self.payload['buildOverlayEnabled']='false'
+        with patch('sexo2.services.settings.set_config_options') as write,self.assertRaises(ValueError):
+            self.service.save(self.payload)
+        write.assert_not_called()
     def test_failed_write_restores_windows_autostart(self):
         self.payload['autostart']=True
         with patch('sexo2.services.settings.set_config_options',side_effect=OSError('full')):

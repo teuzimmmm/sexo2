@@ -55,9 +55,12 @@ test('LoLalytics selector loads persisted value, preserves dirty choice during p
   emit('settings-data', { requestId: request.requestId, threshold: .5, monitorAutoResumeTimeout: 60,
     autostart: false, hideEmptyCategories: false, gamePath: '', lolalyticsRiskLevel: 'high' });
   assert.equal(risk.value, 'high');
+  const overlay = host.querySelectorAll('input').find(node => node.name === 'buildOverlayEnabled');
+  assert.equal(overlay.checked, true);
   assert.deepEqual(risk.children.map(option => option.textContent), ['Muito baixo', 'Baixo', 'Médio', 'Alto', 'Muito alto']);
 
   risk.value = 'very-high'; risk.emit('change');
+  overlay.checked = false; overlay.emit('change');
   window.dispatchEvent(new context.CustomEvent('rose-hub-settings', { detail: { target: host } }));
   const poll = sent.filter(message => message.type === 'settings-request').at(-1);
   emit('settings-data', { requestId: poll.requestId, threshold: .5, monitorAutoResumeTimeout: 60,
@@ -68,12 +71,14 @@ test('LoLalytics selector loads persisted value, preserves dirty choice during p
   saveButton.onclick();
   const save = sent.findLast(message => message.type === 'settings-save');
   assert.equal(save.lolalyticsRiskLevel, 'very-high');
+  assert.equal(save.buildOverlayEnabled, false);
   assert.equal(risk.disabled, true);
   emit('settings-saved', { requestId: save.requestId, success: true,
     settings: { threshold: .5, monitorAutoResumeTimeout: 60, autostart: false,
-      hideEmptyCategories: false, gamePath: '', lolalyticsRiskLevel: 'very-high' } });
+      hideEmptyCategories: false, gamePath: '', lolalyticsRiskLevel: 'very-high', buildOverlayEnabled: false } });
   assert.equal(risk.disabled, false);
   assert.equal(risk.value, 'very-high');
+  assert.equal(overlay.checked, false);
 });
 
 test('missing risk field from an older backend populates the medium default', () => {

@@ -13,6 +13,7 @@ from lcu.core.client import LCU
 from lolalytics import Client
 from pengu.communication.message_handler import MessageHandler
 from tests.test_build_workflow import FakeLCU, FixtureTransport
+from sexo2.overlay.model import OverlayStore
 
 
 class GatewayTests(unittest.TestCase):
@@ -84,6 +85,7 @@ class BuildBridgeTests(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.handler=MessageHandler.__new__(MessageHandler)
         self.handler._background_lock=threading.Lock()
+        self.handler.overlay_store=OverlayStore()
         self.lcu=FakeLCU();self.handler.skin_scraper=SimpleNamespace(lcu=self.lcu)
         self.handler._send_response=Mock()
         self.client=Client(transport=FixtureTransport())
@@ -124,6 +126,10 @@ class BuildBridgeTests(unittest.TestCase):
         response=self.wait('query-1')
         self.assertEqual(response['type'],'sexo2-build-data')
         self.assertIn('8992',response['result']['runeNames'])
+        self.handler._route('sexo2-build-select',{'type':'sexo2-build-select','requestId':'select-1',
+            'revision':revision,'resultId':response['result']['resultId'],'entryId':'common'})
+        self.assertTrue(self.wait('select-1')['result']['selected'])
+        self.assertEqual(self.handler.overlay_store._data['selected'],1)
         self.handler._handle_builds({'type':'sexo2-build-import','requestId':'import-1',
             'revision':revision,'resultId':response['result']['resultId'],'entryId':'wr','target':'runes'})
         answer=self.wait('import-1')

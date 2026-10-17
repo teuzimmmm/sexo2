@@ -14,6 +14,30 @@ def positive(value):
     return type(value) is int and value > 0
 
 
+def game_key(value):
+    """Stable in-memory match binding without publishing the native game ID."""
+    if not positive(value):
+        return None
+    return hashlib.sha256(('sexo2-game:' + str(value)).encode()).hexdigest()[:24]
+
+
+def game_mode(data):
+    """Confirmed queue/map combinations; never approximate unknown variants."""
+    if not isinstance(data, dict):
+        return None
+    queue = data.get('queue')
+    queue = queue if isinstance(queue, dict) else {}
+    qid = queue.get('id', data.get('queueId'))
+    if qid == 450:
+        return 'aram'
+    if qid == 1700:
+        return 'arena'
+    if (str(data.get('gameMode', queue.get('gameMode', ''))).upper() == 'CLASSIC'
+            and data.get('mapId', queue.get('mapId')) == 11):
+        return 'ranked'
+    return None
+
+
 def lane(value):
     return {'top': 'top', 'jungle': 'jungle', 'middle': 'middle',
             'mid': 'middle', 'bottom': 'bottom', 'adc': 'bottom',
@@ -30,6 +54,7 @@ class DraftContext:
     finalization: bool
     enemies: tuple
     warning: str | None = None
+    game_key: str | None = None
 
     def to_dict(self):
         return asdict(self)
@@ -78,17 +103,11 @@ class DraftReader:
                 if not isinstance(queue, dict):
                     queue = {}
                 qid = queue.get('id', data.get('queueId'))
-                game_mode = str(data.get('gameMode', queue.get('gameMode', ''))).upper()
-                map_id = data.get('mapId', queue.get('mapId'))
-                if qid == 450:
-                    mode = 'aram'
-                elif qid == 1700:
-                    mode = 'arena'
-                elif game_mode == 'CLASSIC' and map_id == 11:
-                    mode = 'ranked'
+                mode = game_mode(data)
+                if mode == 'ranked':
                     if qid not in (420, 440):
                         warning = 'As estatísticas de Summoner’s Rift são da fila Ranked.'
-                else:
+                elif mode is None:
                     warning = 'Este modo/variante ainda não tem uma fonte confirmada.'
                 timer = session.get('timer') or {}
                 if not isinstance(timer, dict):
@@ -109,7 +128,8 @@ class DraftReader:
                 self._epoch += 1
                 self._previous = identity
             revision = hashlib.sha256(json.dumps((self._epoch, identity)).encode()).hexdigest()[:24]
-            return DraftContext(revision, phase, cid, mode, own_lane, finalization, tuple(enemies), warning)
+            return DraftContext(revision, phase, cid, mode, own_lane, finalization,
+                                tuple(enemies), warning, game_key(session_id))
 
     def champions(self):
         with self._lock:

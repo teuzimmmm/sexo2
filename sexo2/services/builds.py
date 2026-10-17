@@ -3,6 +3,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from dataclasses import replace
 import hashlib
+import logging
 import threading
 import uuid
 
@@ -14,12 +15,15 @@ from lolalytics.risk import validate_risk_level
 from .draft import BuildError, DraftReader, positive
 from .settings import get_risk_level
 
+log = logging.getLogger(__name__)
+
 
 class BuildService:
-    def __init__(self, lcu, collector, *, risk=get_risk_level):
+    def __init__(self, lcu, collector, *, risk=get_risk_level, overlay=None):
         self.reader = DraftReader(lcu)
         self.collector = collector
         self.risk = risk
+        self.overlay = overlay
         self._lock = threading.RLock()
         self._context_lock = threading.Lock()
         self._revision = None
@@ -53,6 +57,8 @@ class BuildService:
                 raise BuildError('O serviço de builds foi encerrado.')
             if revision != self._revision:
                 self.invalidate()
+                if self.overlay is not None and draft.phase == 'ChampSelect':
+                    self.overlay.clear()
                 self._revision = revision
                 self._filter = None
         result = draft.to_dict()
@@ -144,13 +150,31 @@ class BuildService:
             while sum(k.startswith('vs:') for k in self._pages) > 2:
                 self._pages.pop(next(k for k in self._pages if k.startswith('vs:')))
             self._result_id = uuid.uuid4().hex
-            return {'revision': self._revision, 'resultId': self._result_id,
+            result = {'revision': self._revision, 'resultId': self._result_id,
                     'riskLevel': context['riskLevel'], 'arena': None,
                     'entries': [dict(id=key, label=value['label'], page=value['page'].to_dict(),
                                      runeMetrics=deepcopy(value['rune_metrics']),
                                      runeMetricScope='keystone_observation', policy=deepcopy(value['policy']))
                                 for key, value in self._pages.items()],
                     'warnings': recommendation.warnings}
+            if self.overlay is not None:
+                try:
+                    self.overlay.prepare(context, result, selected_id='vs:' + str(opponent['id']) if opponent else 'wr')
+                except Exception:
+                    log.warning('Não foi possível preparar a visualização em partida; consulta preservada.')
+            return result
+
+    def select_overlay(self, payload):
+        """Select only a prepared result from this draft, never accept page data."""
+        context = self.context()
+        with self._lock:
+            if (not context['available'] or payload.get('revision') != self._revision
+                    or payload.get('resultId') != self._result_id
+                    or payload.get('entryId') not in self._pages):
+                raise BuildError('Esta recomendação expirou. Consulte novamente.')
+            if self.overlay is not None:
+                self.overlay.select(self._result_id, payload['entryId'])
+        return {'selected': True}
 
     def import_selection(self, payload, importer):
         result_id, entry_id = payload.get('resultId'), payload.get('entryId')

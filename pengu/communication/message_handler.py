@@ -293,7 +293,7 @@ class MessageHandler:
 
     def _route(self, payload_type: Optional[str], payload: dict) -> None:
         # Route to appropriate handler
-        if payload_type in ('sexo2-build-context', 'sexo2-build-query', 'sexo2-build-import'):
+        if payload_type in ('sexo2-build-context', 'sexo2-build-query', 'sexo2-build-import', 'sexo2-build-select'):
             self._handle_builds(payload); return
         if payload_type == 'sexo2-library-request':
             self._handle_library(payload); return
@@ -671,7 +671,8 @@ class MessageHandler:
                 lcu = self.skin_scraper.lcu if self.skin_scraper else None
                 if lcu is None:
                     failed(BuildError('O cliente LoL ainda não está conectado.')); return
-                self._build_service = BuildService(lcu, Client(cache_dir=get_user_data_dir() / 'lolalytics-cache'))
+                self._build_service = BuildService(lcu, Client(cache_dir=get_user_data_dir() / 'lolalytics-cache'),
+                                                   overlay=getattr(self, 'overlay_store', None))
                 self._loadout_importer = LoadoutImporter(lcu, get_user_data_dir() / 'sexo2-loadouts.json')
                 self._build_context_worker = SerialWorker('SEXO2-Build-context', capacity=1)
                 self._build_worker = SerialWorker('SEXO2-Builds', capacity=2)
@@ -694,7 +695,14 @@ class MessageHandler:
                         result['augmentNames'] = importer.catalog.names('cherry-augments')
                 except Exception:
                     result['warnings'].append('Catálogo de nomes indisponível; exibindo IDs da fonte.')
+                if service.overlay is not None:
+                    try:
+                        service.overlay.enrich(result)
+                    except Exception:
+                        log.warning('Nomes indisponíveis no overlay; consulta preservada.')
                 send('sexo2-build-data', result=result)
+            elif action == 'select':
+                send('sexo2-build-selected', result=service.select_overlay(payload))
             elif action == 'import':
                 result = service.import_selection(payload, importer)
                 send('sexo2-build-imported', result=result)

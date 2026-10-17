@@ -6,10 +6,10 @@
   #error Define OutputDir for the test installer.
 #endif
 #ifndef BuildVersion
-  #define BuildVersion "2.0.0.2"
+  #define BuildVersion "2.0.0.3"
 #endif
 #ifndef OutputName
-  #define OutputName "SEXO2-2.0.0.2-Teste"
+  #define OutputName "SEXO2-2.0.0.3-Teste"
 #endif
 
 [Setup]

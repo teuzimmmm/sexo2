@@ -134,6 +134,10 @@ reúne as opções preparadas em até dois conjuntos. As configurações existen
 continuam fornecendo o nível de risco. Não há nova janela externa ou overlay
 sobre a partida.
 
+Esse limite descreve a entrega inicial. A implementação posterior da janela em
+partida e seus critérios constam em [OVERLAY_PARTIDA.md](OVERLAY_PARTIDA.md),
+incluída a partir da edição de teste 2.0.0.3.
+
 Se o programa reutilizar um Pengu externo já registrado, ele preserva essa
 instalação e não sincroniza automaticamente os novos plugins para ela. Nesse
 ambiente de desenvolvimento, o Pengu ativo também precisa conter a pasta

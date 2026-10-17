@@ -13,6 +13,7 @@ function option(value,label){const n=el('option',label);n.value=value;return n;}
 function requestId(){return 's2-build-'+Date.now().toString(36)+'-'+(++sequence);}
 function say(text,error=false){if(status){status.textContent=text;status.dataset.error=String(error);}}
 function selected(){return data?.entries?.find(row=>row.id===entries?.value);}
+function selectOverlay(){if(data&&ctx?.available&&bridge?.ready)bridge.send({type:'sexo2-build-select',requestId:requestId(),revision:ctx.revision,resultId:data.resultId,entryId:entries.value});}
 function lock(){
  const available=!!ctx?.available&&bridge?.ready;
  if(queryButton)queryButton.disabled=!available||!!importRequest;
@@ -113,7 +114,7 @@ function receiveData(message){
  for(const text of notices)warnings.append(el('p',text));
  for(const row of data.entries)entries.append(option(row.id,row.label));
  if(enemy.value&&[...entries.options].some(o=>o.value==='vs:'+enemy.value))entries.value='vs:'+enemy.value;
- renderPage();
+ renderPage();selectOverlay();
  say('Sugestões prontas. Itens reúne as opções preparadas em até dois conjuntos próprios.');lock();
 }
 function sourceNotice(code){
@@ -160,7 +161,7 @@ function mount(){
  tier=select('Amostra');tier.append(option('emerald_plus','Emerald+'),option('all','Todos os elos'));
  enemy=select('Adversário');enemy.append(option('','Geral · WR / Common'));enemy.title='Matchups disponíveis ao finalizar o draft de Summoner’s Rift.';
  for(const input of [position,tier,enemy])input.onchange=()=>{data=null;queryRequest=null;entries.replaceChildren();details.replaceChildren();lastQuery=null;lock();query(false);};
- entries=select('Sugestão');entries.onchange=renderPage;
+ entries=select('Sugestão');entries.onchange=()=>{renderPage();selectOverlay();};
  const actions=el('div');actions.className='s2-build-actions';
  queryButton=button('Consultar',()=>query(true));runesButton=button('Importar runas',()=>importPage('runes'));itemsButton=button('Importar itens',()=>importPage('items'));
  actions.append(queryButton,runesButton,itemsButton);panel.append(actions);

@@ -8,7 +8,7 @@ on:
         required: true
       version:
         description: Test edition (2.0.0.1 through 2.0.0.65535)
-        default: 2.0.0.2
+        default: 2.0.0.3
         required: true
   push:
     branches: ['test/installer-2.0']
@@ -40,6 +40,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Smoke test native overlay window
+        shell: pwsh
+        env:
+          SEXO2_TEST_NATIVE_OVERLAY: '1'
+        run: |
+          python -m unittest tests.test_overlay_win32 -v
+          if ($LASTEXITCODE -ne 0) { throw 'Native overlay smoke failed.' }
       - name: Test build panel modes with isolated browser
         shell: pwsh
         run: |
@@ -62,7 +69,7 @@ jobs:
       - name: Build and audit test installer
         shell: pwsh
         env:
-          TEST_VERSION: ${{ inputs.version || '2.0.0.2' }}
+          TEST_VERSION: ${{ inputs.version || '2.0.0.3' }}
         run: |
           python scripts/build_test_installer.py --base "$env:RUNNER_TEMP/sexo2-baseline/SEXO2-baseline.zip" --version $env:TEST_VERSION
           if ($LASTEXITCODE -ne 0) { throw 'Test installer build failed.' }
