@@ -14,8 +14,7 @@ from ui.handlers.randomization_handler import RandomizationHandler
 from ui.handlers.skin_display_handler import SkinDisplayHandler
 
 __all__ = [
-    'HistoricModeHandler',
-    'RandomizationHandler',
-    'SkinDisplayHandler',
+    "HistoricModeHandler",
+    "RandomizationHandler",
+    "SkinDisplayHandler",
 ]
-
