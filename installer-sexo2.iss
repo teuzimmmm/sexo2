@@ -1,5 +1,5 @@
 ﻿#define MyAppName "SEXO2"
-#define MyAppVersion "1.4.7.10"
+#define MyAppVersion "1.6.4.0"
 [Setup]
 AppId={{B876AA51-DB38-448E-BD13-716F1C9DE750}
 AppName={#MyAppName}

@@ -1,7 +1,8 @@
 """Serialized local operations. Network callbacks only read a prepared metadata snapshot."""
 import asyncio,copy,json,secrets,sys,threading,time,zipfile
 from pathlib import Path
-from config import APP_VERSION,get_config_option
+from config import get_config_option
+from sexo2.version import RELEASE_VERSION
 from utils.core.paths import get_user_data_dir,get_skins_dir,get_classic_skins_dir
 from utils.core.historic import load_historic_map
 from pengu.processing.swiftplay_pins import SwiftplayPanelService,get_pins,read_lobby
@@ -282,7 +283,7 @@ class FriendsService:
             row=copy.deepcopy(self.catalogs.catalog(cid));row['selectedSkinId']=self.selected(cid)
             for skin in row['skins']:skin['excluded']=skin['skinId']in data['excluded'];skin['available']=self.available(cid,skin['skinId'])
             champions.append(row)
-        return {'type':'friends-state','libraryChampions':self.library,'browseChampion':self.browsed_catalog(),'autoAccept':self.auto_accept.enabled,'autoAcceptMessage':self.auto_accept.message,'room':self.room.poll(),'automatic':data.get('automatic','off'),'favorites':data.get('favorites',{}),'manualChoice':is_manual(self.state),'version':APP_VERSION,'phase':self.phase(),'queueId':getattr(self.state,'current_queue_id',None),'editable':self.editable(),'readiness':readiness,'members':self.members(),'profiles':data['profiles'],'activeProfile':data['active_profile'],'excluded':data['excluded'],'preferenceError':self.preferences.error,'champions':champions,'themes':THEMES,'lotteryOptin':self.optin,'drawResult':self.draw_result,'message':self.last_message}
+        return {'type':'friends-state','libraryChampions':self.library,'browseChampion':self.browsed_catalog(),'autoAccept':self.auto_accept.enabled,'autoAcceptMessage':self.auto_accept.message,'room':self.room.poll(),'automatic':data.get('automatic','off'),'favorites':data.get('favorites',{}),'manualChoice':is_manual(self.state),'version':RELEASE_VERSION,'phase':self.phase(),'queueId':getattr(self.state,'current_queue_id',None),'editable':self.editable(),'readiness':readiness,'members':self.members(),'profiles':data['profiles'],'activeProfile':data['active_profile'],'excluded':data['excluded'],'preferenceError':self.preferences.error,'champions':champions,'themes':THEMES,'lotteryOptin':self.optin,'drawResult':self.draw_result,'message':self.last_message}
 
     def handle(self,payload):
         with self.lock:

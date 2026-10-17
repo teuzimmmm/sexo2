@@ -1,7 +1,8 @@
 """Settings validation and commit owned by SEXO2, independent of panel DOM."""
 import math
 
-from config import APP_VERSION, get_config_float, get_config_option, set_config_options
+from sexo2.version import RELEASE_VERSION
+from config import get_config_float, get_config_option, set_config_options
 
 
 class SettingsService:
@@ -19,7 +20,7 @@ class SettingsService:
             'autostart': bool(self.autostart_status()),
             'hideEmptyCategories': (get_config_option('General', 'hide_empty_categories', 'false') or '').lower() == 'true',
             'gamePath': path, 'gamePathValid': bool(path and self.validate_path(path)),
-            'version': APP_VERSION,
+            'version': RELEASE_VERSION,
         }
 
     def save(self, payload):
@@ -64,5 +65,5 @@ class SettingsService:
         return {
             'threshold': threshold, 'monitorAutoResumeTimeout': int(timeout),
             'autostart': payload['autostart'], 'hideEmptyCategories': payload['hideEmptyCategories'],
-            'gamePath': path, 'gamePathValid': bool(path), 'version': APP_VERSION,
+            'gamePath': path, 'gamePathValid': bool(path), 'version': RELEASE_VERSION,
         }

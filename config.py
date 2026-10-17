@@ -17,16 +17,20 @@ import configparser
 from utils.core.atomic_file import atomic_write
 from utils.core.paths import get_user_data_dir
 
+from sexo2.version import RELEASE_VERSION
+
 log = logging.getLogger(__name__)
 
 # =============================================================================
 # APPLICATION METADATA
 # =============================================================================
 
-APP_VERSION = "1.4.7"                           # Application version
+# Inherited Rose protocol version, not the release: the party relay (`v=`) and
+# the legacy launcher compare it. The version users see is RELEASE_VERSION.
+APP_VERSION = "1.4.7"
 FORK_LABEL = "SEXO2"
 FORK_BUILD = True
-APP_USER_AGENT = f"Rose/{APP_VERSION}"  # User-Agent header for HTTP requests
+APP_USER_AGENT = f"SEXO2/{RELEASE_VERSION}"  # User-Agent header for HTTP requests
 GAME_EXECUTABLE_NAMES = ("League of Legends.exe", "League of Legends (TM) Client.exe")
 
 # Values are raw text: a '%' in a path must not be read as interpolation
