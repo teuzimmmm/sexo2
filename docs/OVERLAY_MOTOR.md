@@ -7,6 +7,9 @@ ou validado no LoL.** Não entregar novamente a janela anterior como correção.
 
 ## Restrições e situação
 
+- Requisito confirmado pelo usuário: as cartas do overlay devem corresponder
+  **às opções oferecidas na tela naquele momento**, tanto em Arena quanto no
+  ARAM com aprimoramentos/Mayhem. Uma lista geral por campeão não atende a isso.
 - Overwolf foi explicitamente rejeitado. Não adicionar Electron.
 - Game Bar foi explicitamente rejeitada depois da explicação de funcionamento.
   A solução deve ser independente; não torná-la dependência nem fallback.
@@ -167,3 +170,42 @@ gh workflow run 387235855 --ref test/installer-2.0 -f native_host_only=true
 
 A versão de teste instalada pelo usuário continua com o motor anterior. Nenhuma
 mudança desta rodada consertou ou substituiu silenciosamente esse motor.
+
+## Cartas oferecidas na tela — requisito obrigatório
+
+O `ArenaFeed` atual conhece estatísticas por campeão e tabelas de aprimoramentos;
+ele **não conhece as opções que o jogo está oferecendo**. As tabelas
+`augment1..4` são posições de aquisição observadas na fonte, não as opções da
+oferta atual. O laboratório DX11 usa cartões sintéticos e também não detecta
+cartas. Corrigir o renderer sozinho não conclui essa funcionalidade.
+
+Pipeline necessário: identificar a oferta atual → resolver seus IDs → cruzar
+somente esses IDs com estatísticas do campeão/modo/patch → exibir os resultados
+na mesma ordem/posição das opções do jogo. Usar pick rate e jogos em Arena,
+preservando as restrições de WR; popularidade não é probabilidade de vitória.
+
+1. Investigar primeiro uma fonte local acessível que exponha **opções oferecidas**,
+   distinguindo-as de aprimoramentos já escolhidos. Nenhum endpoint para essas
+   opções está confirmado. Não ler memória do jogo nem contornar Vanguard.
+2. Se essa fonte não existir, avaliar captura local da janela do jogo e
+   reconhecimento de nomes/ícones no recorte das cartas. O usuário quer dados
+   correspondentes à tela; não presumir que precisamos capturar o desktop inteiro.
+   Não transmitir imagens, salvar capturas ou colocá-las em logs por padrão.
+3. A observação deve carregar revisão da partida/oferta, modo, IDs reconhecidos,
+   momento de observação e estado de reconhecimento. Limitar trabalho e descartar
+   resultados atrasados. Confiança de reconhecimento e filtro estatístico de
+   risco são conceitos distintos.
+4. Rerrolar, escolher uma carta, fechar a oferta, perder o contexto ou expirar a
+   observação invalida a projeção anterior. Um erro de reconhecimento deixa a
+   opção sem identificação; estatística ausente aparece como indisponível.
+   Não substituir por cartas populares que não estão na tela.
+5. Confirmar modo e fonte de estatísticas separadamente para Arena e ARAM com
+   aprimoramentos/Mayhem. Identificar uma carta na imagem não confirma a existência
+   de dados LoLalytics daquele modo; não usar dados Arena/ARAM clássico como
+   equivalentes de Mayhem. A fonte Mayhem continua não confirmada.
+
+Critérios de teste futuros: ofertas reais dos modos suportados, posições e
+resoluções diferentes, idioma/escala de UI, rerrolagem e escolha, identificação
+parcial/ambígua, perda da janela e respostas atrasadas. Confirmar visualmente que
+cada métrica pertence à opção correspondente; não confundir o teste de render
+DX11 com esse teste de reconhecimento. Nenhuma escolha automática é necessária.
