@@ -45,12 +45,13 @@ Linux não existem Inno Setup, runtime Windows ou binários Pengu/LTK/mod-tools.
 
 ## Compilação local no Windows
 
-Com Python 3.14 x64, Git, dependências e Inno Setup 6 instalados, em um checkout
+Com Python 3.14 x64, Git, Rust stable com ferramentas C++ do Windows,
+dependências e Inno Setup 6 instalados, em um checkout
 com alterações registradas no Git:
 
 ```powershell
 python -m pip install -r requirements.txt
-python scripts/build_test_installer.py --base "C:\pacotes\SEXO2-baseline.zip" --version 2.0.0.4
+python scripts/build_test_installer.py --base "C:\pacotes\SEXO2-baseline.zip" --version 2.0.0.5
 ```
 
 `--base` também aceita uma pasta existente do SEXO2 contendo `_internal`.
@@ -94,7 +95,7 @@ O instalador não fecha processos
 
 Na seleção, abra `SEXO2 · Builds`, consulte WR/Common e importe explicitamente
 runas/itens. Ao finalizar o draft, escolha um adversário. A edição aparece como
-`2.0.0.4 (teste)` nas configurações. Se houver um Pengu externo ativo, aplica-se a
+`2.0.0.5 (teste)` nas configurações. Se houver um Pengu externo ativo, aplica-se a
 limitação de sincronização descrita em `DESENVOLVIMENTO_2_0.md`; não sobrescrevemos
 uma instalação externa silenciosamente.
 
@@ -152,3 +153,21 @@ O primeiro job Windows identificou a mudança do limite de recursão JSON no Pyt
 explicitamente a profundidade do cache a 128 contêineres; um cache inválido vira
 miss e é buscado novamente. O empacotador verifica também o nome original do ZIP,
 e o teste constrói cabeçalhos realmente malformados nas duas plataformas.
+
+### Plano da edição 2.0.0.5 — leitor de cartas
+
+Registrar a nova identidade de teste, compilar no Windows com o leitor OCR nativo
+e conferir a auditoria dos módulos, helper e licenças antes de empacotar. Rodar
+os testes do projeto, painel em navegador isolado e instalação/reinstalação/
+desinstalação; baixar o artefato e comparar seu SHA-256 com o relatório.
+
+Esta edição incorpora o reconhecimento dos três títulos visíveis na oferta,
+confirmação em duas leituras e expiração da leitura. Arena associa pick rate e
+jogos somente às cartas reconhecidas; Mayhem não recebe estatísticas de Arena.
+O helper usa OCR local do Windows, sem salvar capturas. A validação anterior
+foi sintética em Windows, conforme [OVERLAY_MOTOR.md](OVERLAY_MOTOR.md).
+
+O renderer visual continua sendo o anterior, que falhou no teste do usuário.
+Este instalador não comprova correção de visibilidade no LoL nem leitura de
+cartas reais; o host DX11 experimental não é integrado ou injetado no jogo.
+A migração/limpeza de Rose continua reservada à fase final.
