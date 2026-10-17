@@ -3,8 +3,10 @@
 Usage:
     python scripts/ast_equal.py [BASE [HEAD]]   (defaults: HEAD~1 HEAD)
 
-Positions, comments and formatting are ignored; any change to names, literals,
-docstrings or structure is reported and the exit code is 1.
+Positions, comments and formatting are ignored, and so is whitespace inside
+docstrings (the formatter strips trailing spaces there; only ``__doc__`` sees it).
+Any change to names, literals, docstring text or structure is reported and the
+exit code is 1.
 """
 
 from __future__ import annotations
@@ -22,8 +24,22 @@ def source(rev: str, path: str) -> str:
     return git("show", f"{rev}:{path}")
 
 
+def _normalize_docstrings(node: ast.AST) -> None:
+    for owner in ast.walk(node):
+        if not isinstance(owner, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        body = owner.body
+        if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
+            value = body[0].value.value
+            if isinstance(value, str):
+                lines = [line.strip() for line in value.strip().splitlines()]
+                body[0].value.value = "\n".join(line for line in lines if line)
+
+
 def tree(text: str) -> str:
-    return ast.dump(ast.parse(text), include_attributes=False)
+    parsed = ast.parse(text)
+    _normalize_docstrings(parsed)
+    return ast.dump(parsed, include_attributes=False)
 
 
 def main() -> int:
