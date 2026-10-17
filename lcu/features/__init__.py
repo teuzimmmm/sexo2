@@ -11,9 +11,8 @@ from .lcu_game_mode import LCUGameMode
 from .lcu_swiftplay import LCUSwiftplay
 
 __all__ = [
-    'LCUProperties',
-    'LCUSkinSelection',
-    'LCUGameMode',
-    'LCUSwiftplay',
+    "LCUProperties",
+    "LCUSkinSelection",
+    "LCUGameMode",
+    "LCUSwiftplay",
 ]
-

@@ -71,8 +71,9 @@ class LCUAPI:
                 if key.startswith(path_prefix) or key in ancestors:
                     self._cache.pop(key, None)
 
-    def get(self, path: str, timeout: float = 1.0,
-            cache_ttl: Optional[float] = None, use_cache: bool = True) -> Optional[dict]:
+    def get(
+        self, path: str, timeout: float = 1.0, cache_ttl: Optional[float] = None, use_cache: bool = True
+    ) -> Optional[dict]:
         """Make GET request to LCU API.
 
         Responses are cached for ``cache_ttl`` seconds (default
@@ -132,7 +133,7 @@ class LCUAPI:
             except requests.exceptions.RequestException as e:
                 log.debug(f"[LCU] GET {path} failed after reconnecting: {e}")
                 return None
-    
+
     def put(self, path: str, json_data, timeout: float, headers: Optional[dict] = None) -> Optional[requests.Response]:
         """Make PUT request to LCU API
 
@@ -187,12 +188,12 @@ class LCUAPI:
 
     def patch(self, path: str, json_data: dict, timeout: float) -> Optional[requests.Response]:
         """Make PATCH request to LCU API
-        
+
         Args:
             path: API endpoint path
             json_data: JSON data to send
             timeout: Request timeout in seconds
-            
+
         Returns:
             Response object or None if failed
         """
@@ -236,4 +237,3 @@ class LCUAPI:
             except requests.exceptions.RequestException as e:
                 log.debug(f"[LCU] PATCH {path} failed after reconnecting: {e}")
                 return None
-

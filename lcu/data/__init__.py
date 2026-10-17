@@ -11,13 +11,12 @@ from .types import ChromaData, SkinData, ChampionData, SessionData
 from .utils import map_cells, compute_locked
 
 __all__ = [
-    'LCUSkinScraper',
-    'ChampionSkinCache',
-    'ChromaData',
-    'SkinData',
-    'ChampionData',
-    'SessionData',
-    'map_cells',
-    'compute_locked',
+    "LCUSkinScraper",
+    "ChampionSkinCache",
+    "ChromaData",
+    "SkinData",
+    "ChampionData",
+    "SessionData",
+    "map_cells",
+    "compute_locked",
 ]
-

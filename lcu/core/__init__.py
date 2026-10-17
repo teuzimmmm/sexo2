@@ -11,13 +11,12 @@ from .lcu_api import LCUAPI
 from .lockfile import Lockfile, find_lockfile, parse_lockfile, SWIFTPLAY_MODES, SWIFTPLAY_QUEUE_IDS
 
 __all__ = [
-    'LCU',
-    'LCUConnection',
-    'LCUAPI',
-    'Lockfile',
-    'find_lockfile',
-    'parse_lockfile',
-    'SWIFTPLAY_MODES',
-    'SWIFTPLAY_QUEUE_IDS',
+    "LCU",
+    "LCUConnection",
+    "LCUAPI",
+    "Lockfile",
+    "find_lockfile",
+    "parse_lockfile",
+    "SWIFTPLAY_MODES",
+    "SWIFTPLAY_QUEUE_IDS",
 ]
-
