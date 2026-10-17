@@ -108,3 +108,10 @@ cobrem rollback após falha de escrita, script particular, symlink, manifesto
 malformado, preservação do datastore e idempotência. O manifesto é auditado no
 pacote e testado contra os scripts efetivamente entregues. Isso não reproduz
 a instalação do Pengu no PC do usuário.
+
+CI 39043855589: 549 testes gerais passaram; a regressão de retomada do processo
+sintético falhou ao encontrar zero processos parados. O teste suspendia Python
+logo após Popen, sem esperar a inicialização nem verificar a pré-condição.
+Agora há sinal de prontidão e espera limitada pelo estado parado. Nenhuma mudança
+no mecanismo de suspensão do jogo decorre desse ajuste; falha persistente deve
+continuar bloqueando o pacote.

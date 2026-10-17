@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -13,12 +14,23 @@ class SuspendedGameTests(unittest.TestCase):
     """A stand-in game process, suspended the way Rose suspends League"""
 
     def setUp(self):
-        child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+        child = subprocess.Popen([sys.executable, '-u', '-c',
+                                  'import time; print("ready", flush=True); time.sleep(60)'],
+                                 stdout=subprocess.PIPE)
         self.addCleanup(child.wait)
         self.addCleanup(lambda: child.poll() is None and child.kill())
+        self.addCleanup(child.stdout.close)
+        # Windows can create startup threads after Popen returns. Suspend only
+        # once Python has initialized, then verify the test's actual precondition.
+        self.assertEqual(child.stdout.readline(), b'ready\n' if sys.platform != 'win32' else b'ready\r\n')
         self.game = psutil.Process(child.pid)
-        self.game.suspend()
         self.addCleanup(self._resume_quietly)
+        self.game.suspend()
+        deadline = time.monotonic() + 2
+        while self.game.status() != psutil.STATUS_STOPPED and time.monotonic() < deadline:
+            time.sleep(.02)
+        self.assertEqual(self.game.status(), psutil.STATUS_STOPPED,
+                         'Stand-in game did not enter the suspended state')
         # Only the stand-in counts as the game, never a real League process
         names = patch.object(game_monitor, '_GAME_PROCESS_NAMES', frozenset({self.game.name().lower()}))
         names.start()
