@@ -40,10 +40,10 @@ def print_step(step_num, total_steps, description):
 def clean_previous_builds():
     """Clean previous build output (preserves build/ cache for faster rebuilds)"""
     print_step(1, 4, "Cleaning Previous Build Output")
-    
+
     # Only clean dist/ - preserve build/ folder for PyInstaller cache
     dirs_to_clean = ["dist"]
-    
+
     for dir_name in dirs_to_clean:
         directory = ROOT / dir_name
         if directory.exists():
@@ -52,16 +52,16 @@ def clean_previous_builds():
                 print(f"[OK] Removed {dir_name}/")
             except Exception as e:
                 print(f"[ERROR] Failed to remove {dir_name}/: {e}")
-    
+
     # Check if build cache exists
     if (ROOT / "build").exists():
         print("[INFO] Preserved build/ folder for faster incremental builds")
     else:
         print("[INFO] No build/ cache found - this will be a full build")
-    
+
     # Note: injection/ directories are no longer cleaned as they contain real scripts
     # that need to be preserved (tools, config, etc.)
-    
+
     return True
 
 
@@ -111,9 +111,9 @@ def build_with_pyinstaller():
         "--noconfirm",
         "Rose.spec",
     ]
-    
+
     print(f"Running: {' '.join(cmd)}\n")
-    
+
     try:
         result = subprocess.run(cmd, check=True, cwd=ROOT)
         print("\n[OK] PyInstaller build completed successfully!")
@@ -126,22 +126,22 @@ def build_with_pyinstaller():
 def organize_output():
     """Organize output files and verify"""
     print_step(4, 4, "Organizing Output & Verification")
-    
+
     dist_folder = ROOT / "dist/Rose"
-    
+
     if not dist_folder.exists():
         print("[ERROR] Build output not found!")
         return False
-    
+
     return True
 
 
 def main():
     """Main build process"""
     print_header("Rose - PyInstaller Build")
-    
+
     start_time = time.time()
-    
+
     # Execute build steps
     if not check_relay_config():
         sys.exit(1)
@@ -155,38 +155,38 @@ def main():
 
     if not build_cslol_stub():
         sys.exit(1)
-    
+
     if not build_with_pyinstaller():
         sys.exit(1)
-    
+
     if not organize_output():
         print("[WARNING] Verification incomplete, but build may have succeeded")
-    
+
     # Print summary
     elapsed_time = time.time() - start_time
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
-    
+
     print_header("[OK] BUILD COMPLETED SUCCESSFULLY!")
-    
+
     exe_path = ROOT / "dist/Rose/Rose.exe"
-    
+
     if exe_path.exists():
         size_mb = exe_path.stat().st_size / (1024 * 1024)
         print(f"Executable: {exe_path}")
         print(f"Size: {size_mb:.1f} MB")
         print(f"Build time: {minutes}m {seconds}s")
-        
+
         print(f"\nYour application is ready!")
         print(f"\nMode: STANDALONE (folder with all dependencies)")
         print(f"  - All DLLs and dependencies included")
         print(f"  - CSLOL tools included")
-        
+
         print(f"\nProtection:")
         print(f"  - Python bytecode (not raw source)")
         print(f"  - Requires decompiler tools to reverse")
         print(f"  - Good enough against casual theft")
-        
+
         print(f"\nTo test:")
         print(f"  cd dist\\Rose")
         print(f"  Rose.exe")
@@ -197,4 +197,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

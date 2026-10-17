@@ -1,4 +1,5 @@
 """Explicit, limited live integration checks. Offline unittest never invokes this."""
+
 import argparse
 from datetime import datetime, timezone
 import json
@@ -37,18 +38,28 @@ def main(argv=None):
                             raise CollectorError("live check: Arena item/augment win rate was not suppressed")
                     elif not any(r.category == "rune_suggestion" for r in snapshot.records):
                         raise CollectorError("live check: missing rune layouts")
-                    report["checks"].append({"query": query.to_dict(), "resolved": snapshot.resolved,
-                                             "source_url": snapshot.source_url, "records": len(snapshot.records),
-                                             "categories": sorted({r.category for r in snapshot.records}),
-                                             "status": "passed"})
+                    report["checks"].append(
+                        {
+                            "query": query.to_dict(),
+                            "resolved": snapshot.resolved,
+                            "source_url": snapshot.source_url,
+                            "records": len(snapshot.records),
+                            "categories": sorted({r.category for r in snapshot.records}),
+                            "status": "passed",
+                        }
+                    )
             # Separate historical patch/filter check, never infer it from the current patch.
             old = client.collect(Query("ahri", patch="16.19", lane="middle", tier="gold", region="br"))
-            report["checks"].append({"query": old.query, "resolved": old.resolved,
-                                     "source_url": old.source_url, "status": "passed"})
+            report["checks"].append(
+                {"query": old.query, "resolved": old.resolved, "source_url": old.source_url, "status": "passed"}
+            )
         # Lazy source is independent. One request; inspect only schema, not a ranking.
         from lolalytics.transport import HTTPTransport
-        url = ("https://a1.lolalytics.com/mega/?ep=build-itemset&v=1&patch=16.20&c=ahri"
-               "&lane=all&tier=emerald_plus&queue=ranked&region=all")
+
+        url = (
+            "https://a1.lolalytics.com/mega/?ep=build-itemset&v=1&patch=16.20&c=ahri"
+            "&lane=all&tier=emerald_plus&queue=ranked&region=all"
+        )
         with HTTPTransport() as transport:
             extra = json.loads(transport.get(url))
         if not isinstance(extra.get("itemSets"), dict) or extra.get("response", {}).get("valid") is not True:
