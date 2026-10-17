@@ -27,12 +27,15 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-011 | A injeção funciona na 1.6.4. Não refazer por antecipação; preservar testes e recuperação. | ajuste A4 |
 | D-012 | Sem Electron. Propostas de interface em Markdown, ASCII ou HTML estático; nunca imagens geradas. | instruções do projeto |
 | D-013 | Desenvolvimento na branch `sexoatividade`, por marcos. A `main` e as releases só mudam com autorização. | instruções do projeto |
+| D-014 | Escala tipográfica: opção B de `design/propostas/tipografia.html`, compactada para o cliente. O dimensionamento final segue em avaliação no protótipo `sexo2-v1`. | usuário, sessão v1.0 |
+| D-015 | Fluxo de runas: recomendação exibida não importa nada. Clicar num card importa a página original na hora. Edições válidas são aplicadas sozinhas, agrupadas, uma de cada vez; a mais recente vence. A última página confirmada é preservada se a seleção terminar. Uma operação antiga nunca afeta outra sessão ou campeão. Páginas pessoais não são sobrescritas. | usuário, sessão v1.0 |
+| D-016 | Não há rótulos de origem dos dados, mas a natureza da estatística aparece no tooltip: WR da runa-chave, do trio de itens ou de cada item. O valor no placar é o preço dos itens, não o ouro obtido. | usuário, sessão v1.0 |
 
 ## Pendentes
 
 | ID | Assunto | Onde será decidido |
 |---|---|---|
-| D-101 | Escala tipográfica: tamanhos, pesos e espaçamento | proposta em `design/propostas/tipografia.html` |
+| D-101 | Dimensionamento final da escala B compactada | protótipo `design/propostas/sexo2-v1` |
 | D-102 | Cores, incluindo a cor de sinal | proposta futura (M4) |
 | D-103 | Componentes base: botão, lista, cartão, seletor, aviso | proposta futura, com `design/wireframes.md` |
 | D-104 | Navegação e menus (Hub, assistente, configurações) | antes do M7 |
