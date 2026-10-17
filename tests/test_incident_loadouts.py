@@ -83,20 +83,20 @@ class IncidentImportTests(unittest.TestCase):
         self.assertFalse(any(m!='GET' for m,p,b in self.lcu.requests))
 
 class IncidentRuntimeTests(unittest.TestCase):
-    def test_production_start_never_creates_renderer_or_ocr_even_when_old_setting_is_true(self):
-        lcu=FakeLCU();lcu.phase='InProgress'
-        items=Mock()
+    def test_production_loading_never_creates_legacy_renderer_ocr_or_display_child(self):
+        lcu=FakeLCU();lcu.phase='InProgress';items=Mock()
         runtime=OverlayRuntime(lcu,enabled=lambda:True,items_factory=lambda plans:items)
         self.addCleanup(runtime.stop)
-        with patch('sexo2.overlay.win32.NativeOverlay',side_effect=AssertionError('renderer must not start')),patch('sexo2.overlay.reader.OfferReader',side_effect=AssertionError('OCR must not start')):
+        with patch('sexo2.overlay.win32.NativeOverlay',side_effect=AssertionError('legacy renderer')),patch('sexo2.overlay.reader.OfferReader',side_effect=AssertionError('OCR during loading')),patch('sexo2.overlay.readiness.GameReadiness.check',return_value=False),patch('sexo2.overlay.isolated.subprocess.Popen') as spawn:
             runtime.start()
             deadline=time.monotonic()+2
             while not items.tick.called and time.monotonic()<deadline:time.sleep(.01)
             self.assertTrue(items.tick.called)
-            self.assertIsNone(runtime._window)
-            self.assertFalse(runtime.preview());self.assertFalse(runtime.frame().active)
-            self.assertEqual(runtime.diagnostic()['code'],'suspended')
+            self.assertIsNone(runtime._window._child)
+            self.assertFalse(runtime.frame().active)
+            self.assertEqual(runtime.diagnostic()['code'],'loading')
+            spawn.assert_not_called()
         with patch('sexo2.services.settings.get_config_option',return_value='true'):
-            self.assertFalse(get_overlay_enabled())
+            self.assertTrue(get_overlay_enabled())
 
 if __name__=='__main__':unittest.main()

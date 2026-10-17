@@ -1,5 +1,4 @@
 """Bounded LCU observation off the native window thread; no live game scraping."""
-from dataclasses import dataclass
 import logging
 import os
 import threading
@@ -11,13 +10,7 @@ from .model import Card, OverlayStore, View
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class Frame:
-    active: bool = False
-    view: View = View('', ())
-    preview: bool = False
-    opponent_switch: bool = False
-    offer_layout: bool = False
+from .display import Frame
 
 
 class OverlayRuntime:
@@ -49,6 +42,7 @@ class OverlayRuntime:
         self._items = items_factory(self.item_plans) if items_factory else None
         self._live_started = False
         self._production_suspended = False
+        self._readiness = None
         self._preview_until = float('-inf')
         self._diagnostic = {'code': 'not-started', 'message': 'Overlay ainda não iniciado.'}
 
@@ -118,6 +112,12 @@ class OverlayRuntime:
                     self.store.verify_champion(self.champion())
                     status = {'code': 'draft', 'message': 'Aguardando a partida; não há overlay na seleção.'}
                     if phase in ('InProgress', 'Reconnect'):
+                        if self._readiness is not None and not self._readiness.check((key,mode)):
+                            with self._lock:
+                                self._frame=Frame();self._offer_context=self._gold_context=None
+                                self._diagnostic={'code':'loading','message':'Aguardando a API local confirmar que a partida começou.'}
+                            if self._offers is not None:self._offers.clear()
+                            return Frame()
                         if mode in ('arena', 'mayhem'):
                             if mode == 'arena' and self._arena is None:
                                 from .arena import ArenaFeed
@@ -221,7 +221,7 @@ class OverlayRuntime:
         return Frame(bool(view.cards), view, offer_layout=len(view.cards) == 3)
 
     def frame(self):
-        if self._production_suspended:return Frame()
+        if self._production_suspended or (self._readiness is not None and not self._readiness.fresh()):return Frame()
         with self._lock:
             if not self._stop.is_set() and self._clock() < self._preview_until:
                 from .model import Card
@@ -249,6 +249,7 @@ class OverlayRuntime:
         the metrics when the League client disconnects/minimizes/closes.
         """
         frame = self.frame()
+        if self._readiness is not None and not self._readiness.fresh():return Frame()
         if frame.active or self._stop.is_set():
             return frame
         with self._lock:
@@ -269,15 +270,14 @@ class OverlayRuntime:
         if self._thread is not None or self._stop.is_set():
             return
         if self._factory is None:
-            # Incident quarantine: never import/start a production renderer or OCR,
-            # including when a prior release persisted overlay_enabled=true.
-            self._production_suspended = True
-            if self._items is None and os.name == 'nt':
+            from .isolated import IsolatedOverlay
+            from .readiness import GameReadiness
+            self._readiness=GameReadiness()
+            self._factory=IsolatedOverlay
+            self._live_started=True
+            if self._items is None and os.name=='nt':
                 from sexo2.services.auto_items import AutoItems
-                self._items = AutoItems(self.lcu, plans=self.item_plans)
-            self._thread = threading.Thread(target=self._run, name='SEXO2-Items-context', daemon=True)
-            self._thread.start()
-            return
+                self._items=AutoItems(self.lcu,plans=self.item_plans)
         try:
             self._window = self._factory(self.display_frame)
             if hasattr(self._window, 'set_opponent_action'):
@@ -297,6 +297,7 @@ class OverlayRuntime:
     def stop(self):
         self._stop.set()
         self.store.close()
+        if self._readiness is not None:self._readiness.close()
         self.item_plans.clear()
         if self._items is not None:
             self._items.close()

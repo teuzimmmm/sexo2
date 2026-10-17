@@ -56,7 +56,7 @@ test('LoLalytics selector loads persisted value, preserves dirty choice during p
     autostart: false, hideEmptyCategories: false, gamePath: '', lolalyticsRiskLevel: 'high', version:'2.0.0.7 (teste)' });
   assert.equal(risk.value, 'high');
   assert.ok(host.querySelectorAll('p').some(node=>node.textContent==='SEXO2 · 2.0.0.7 (teste)'));
-  assert.equal(host.querySelectorAll('input').some(node=>node.name==='buildOverlayEnabled'),false);
+  assert.equal(host.querySelectorAll('input').some(node=>node.name==='buildOverlayEnabled'),true);
   assert.equal(host.querySelectorAll('button').some(node=>node.textContent==='Testar janela (20 s)'),false);
   assert.deepEqual(risk.children.map(option => option.textContent), ['Muito baixo', 'Baixo', 'Médio', 'Alto', 'Muito alto']);
 
@@ -71,7 +71,7 @@ test('LoLalytics selector loads persisted value, preserves dirty choice during p
   saveButton.onclick();
   const save = sent.findLast(message => message.type === 'settings-save');
   assert.equal(save.lolalyticsRiskLevel, 'very-high');
-  assert.equal(save.buildOverlayEnabled, false);
+  assert.equal(save.buildOverlayEnabled, true);
   assert.equal(risk.disabled, true);
   emit('settings-saved', { requestId: save.requestId, success: true,
     settings: { threshold: .5, monitorAutoResumeTimeout: 60, autostart: false,

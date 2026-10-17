@@ -8,7 +8,7 @@ import configparser
 class SettingsTests(unittest.TestCase):
     def setUp(self):
         self.autostart=Mock();self.service=SettingsService(validate_path=lambda p:p=='valid',autostart_status=lambda:False,set_autostart=self.autostart,infer_client_path=lambda p:'client')
-        self.payload=dict(threshold=.5,monitorAutoResumeTimeout=60,autostart=False,hideEmptyCategories=True,gamePath='valid')
+        self.payload=dict(threshold=.5,monitorAutoResumeTimeout=60,autostart=False,hideEmptyCategories=True,gamePath='valid',buildOverlayEnabled=False)
     def test_invalid_path_changes_nothing(self):
         self.payload['gamePath']='invalid'
         with patch('sexo2.services.settings.set_config_options')as write:

@@ -15,6 +15,11 @@ if not getattr(sys, 'frozen', False):
     if str(_project_root) not in sys.path:
         sys.path.insert(0, str(_project_root))
 
+# Renderer process must never initialize app locks, Pengu, skins or configuration.
+if __name__ == '__main__' and sys.argv[1:] == ['--overlay-worker']:
+    from sexo2.overlay.worker import main as overlay_worker
+    raise SystemExit(overlay_worker())
+
 # Import from the modularized main package
 from main import main
 

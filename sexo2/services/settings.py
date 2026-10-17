@@ -16,8 +16,7 @@ def get_risk_level():
 
 
 def get_overlay_enabled():
-    # Quarantined after a real freeze/crash report; persisted old preferences cannot opt in.
-    return False
+    return str(get_config_option('LoLalytics','overlay_enabled','true')).lower() == 'true'
 
 
 class SettingsService:
@@ -37,8 +36,8 @@ class SettingsService:
             'autostart': bool(self.autostart_status()),
             'hideEmptyCategories': (get_config_option('General', 'hide_empty_categories', 'false') or '').lower() == 'true',
             'lolalyticsRiskLevel': get_risk_level(),
-            'buildOverlayEnabled': False,
-            'buildOverlayAvailable': False,
+            'buildOverlayEnabled': get_overlay_enabled(),
+            'buildOverlayAvailable': True,
             'buildOverlayStatus': self.overlay_status(),
             'gamePath': path, 'gamePathValid': bool(path and self.validate_path(path)),
             'version': display_version(APP_VERSION),
@@ -48,8 +47,6 @@ class SettingsService:
         overlay_enabled = payload.get('buildOverlayEnabled', get_overlay_enabled())
         if type(overlay_enabled) is not bool:
             raise ValueError('Confira a opção do overlay durante a partida.')
-        # Do not re-enable the quarantined renderer through an older panel.
-        overlay_enabled = False
         if 'lolalyticsRiskLevel' in payload:
             try:
                 risk_level = validate_risk_level(payload['lolalyticsRiskLevel'])
@@ -88,7 +85,7 @@ class SettingsService:
         }}
         if save_risk_level:
             changes['LoLalytics'] = {'risk_level': risk_level}
-        changes.setdefault('LoLalytics', {})['overlay_enabled'] = 'false'
+        changes.setdefault('LoLalytics', {})['overlay_enabled'] = 'true' if overlay_enabled else 'false'
         if changed_autostart:
             self.set_autostart(payload['autostart'])
         try:
@@ -104,8 +101,8 @@ class SettingsService:
             'threshold': threshold, 'monitorAutoResumeTimeout': int(timeout),
             'autostart': payload['autostart'], 'hideEmptyCategories': payload['hideEmptyCategories'],
             'lolalyticsRiskLevel': risk_level,
-            'buildOverlayEnabled': False,
-            'buildOverlayAvailable': False,
+            'buildOverlayEnabled': overlay_enabled,
+            'buildOverlayAvailable': True,
             'buildOverlayStatus': self.overlay_status(),
             'gamePath': path, 'gamePathValid': bool(path), 'version': display_version(APP_VERSION),
         }

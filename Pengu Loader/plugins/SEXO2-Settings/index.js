@@ -45,7 +45,8 @@ function build(){
  fields.lolalyticsRiskLevel=riskSelect;riskRow.append(riskSelect);form.append(riskRow);
  riskSelect.addEventListener('change',()=>{dirty=true;message('Alterações ainda não salvas.');});
  const riskHelp=el('p','Níveis mais altos confiam mais em amostras pequenas; níveis mais baixos dão mais peso à referência geral.');riskHelp.className='s2-help';form.append(riskHelp);
- overlayStatus=el('p','Overlay suspenso após falha no jogo. Importação de runas e itens continua separada.');overlayStatus.className='s2-help';overlayStatus.setAttribute('aria-label','Estado do overlay');form.append(overlayStatus);
+ field('buildOverlayEnabled','Overlay durante a partida (janela/sem bordas)','checkbox');
+ overlayStatus=el('p','Aguardando diagnóstico do overlay isolado.');overlayStatus.className='s2-help';overlayStatus.setAttribute('aria-label','Estado do overlay');form.append(overlayStatus);
  field('autostart','Iniciar com Windows','checkbox');field('hideEmptyCategories','Ocultar categorias de mods vazias','checkbox');
  const path=field('gamePath','Pasta do LoL (Game)','text');path.placeholder='Automática';path.parentElement.classList.add('s2-path');
  const help=el('p','Deixe em branco para usar a detecção automática.');help.className='s2-help';form.append(help);
@@ -76,7 +77,7 @@ function saveSettings(){
  if(!bridge?.ready){message('O aplicativo está desconectado. Suas alterações foram mantidas.',true);return;}
  if(pending){message('Aguarde a confirmação anterior.');return;}
  if(!form.reportValidity())return;
- const values={threshold:Number(fields.threshold.value),monitorAutoResumeTimeout:Number(fields.monitorAutoResumeTimeout.value),autostart:fields.autostart.checked,hideEmptyCategories:fields.hideEmptyCategories.checked,gamePath:fields.gamePath.value.trim(),lolalyticsRiskLevel:fields.lolalyticsRiskLevel.value,buildOverlayEnabled:false};
+ const values={threshold:Number(fields.threshold.value),monitorAutoResumeTimeout:Number(fields.monitorAutoResumeTimeout.value),autostart:fields.autostart.checked,hideEmptyCategories:fields.hideEmptyCategories.checked,gamePath:fields.gamePath.value.trim(),lolalyticsRiskLevel:fields.lolalyticsRiskLevel.value,buildOverlayEnabled:fields.buildOverlayEnabled.checked};
  pending={id:'s2-settings-'+(++sequence),saving:true,at:Date.now()};lock(true);message('Salvando…');bridge.send({type:'settings-save',requestId:pending.id,...values});
 }
 function checkUpdate(){if(bridge?.ready){updateStatus.textContent='Verificando atualizações…';bridge.send({type:'sexo2-update-request',requestId:'s2-update-'+(++sequence)});}}
