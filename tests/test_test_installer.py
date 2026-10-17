@@ -120,7 +120,12 @@ class TestPackagingTests(unittest.TestCase):
     def test_zip_traversal_absolute_paths_and_symlinks_are_rejected(self):
         for name in ['../escape.dll', '/escape.dll', 'C:/escape.dll', '_internal\\escape.dll']:
             with self.subTest(name=name):
-                self.baseline([(name, synthetic_pe())])
+                self.baseline([(name.replace('\\', '/'), synthetic_pe())])
+                if '\\' in name:
+                    # ZipInfo normalizes separators when writing on Windows.
+                    # Patch equal-length header names to test a genuinely bad ZIP.
+                    self.base.write_bytes(self.base.read_bytes().replace(
+                        name.replace('\\', '/').encode(), name.encode()))
                 with self.assertRaises(ValueError): restore_native(self.base, self.stage)
         self.baseline()
         with zipfile.ZipFile(self.base, 'a') as archive:

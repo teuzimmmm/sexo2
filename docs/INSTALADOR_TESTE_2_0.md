@@ -110,3 +110,9 @@ O suporte final a instalação independente e limpeza permanece pendente.
   limitado à etapa de download e publicação restrita ao artefato de teste.
 - Compilação efetiva de PyInstaller/Inno Setup permanece dependente de Windows.
   Não foi produzido um `.exe` neste ambiente Linux.
+
+O primeiro job Windows identificou a mudança do limite de recursão JSON no Python
+3.14 e a normalização de nomes ZIP pela stdlib no Windows. O cliente agora limita
+explicitamente a profundidade do cache a 128 contêineres; um cache inválido vira
+miss e é buscado novamente. O empacotador verifica também o nome original do ZIP,
+e o teste constrói cabeçalhos realmente malformados nas duas plataformas.

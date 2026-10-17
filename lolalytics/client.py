@@ -25,6 +25,24 @@ def _reject_nonfinite(_):
     raise ValueError("non-finite JSON constant")
 
 
+def _bounded_cache_depth(value):
+    # Python 3.14 can decode deeper JSON than 3.12. Enforce our own limit
+    # instead of relying on the interpreter's recursion limit for cache safety.
+    stack = [iter((value,))]
+    while stack:
+        try:
+            node = next(stack[-1])
+        except StopIteration:
+            stack.pop()
+            continue
+        children = node.values() if isinstance(node, dict) else node if isinstance(node, list) else None
+        if children is not None:
+            if len(stack) > 128:
+                return False
+            stack.append(iter(children))
+    return True
+
+
 def _validate_item_sets(data):
     if not isinstance(data, dict) or not isinstance(data.get("itemSets"), dict):
         raise SchemaError("Lazy item sets: missing itemSets object")
@@ -69,7 +87,11 @@ class Client:
                     age = self._clock() - envelope["stored_at"]
                     if not 0 <= age < self.ttl:
                         return None
-                    return json.loads(envelope["value"], parse_constant=_reject_nonfinite)
+                    body = envelope["value"]
+                    if not isinstance(body, bytes) or len(body) > 4 * 1024 * 1024:
+                        return None
+                    value = json.loads(body, parse_constant=_reject_nonfinite)
+                    return value if _bounded_cache_depth(value) else None
                 except (ValueError, UnicodeError, TypeError, KeyError, RecursionError):
                     return None
 

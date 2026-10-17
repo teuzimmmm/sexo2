@@ -131,7 +131,7 @@ def restore_native(base, destination):
             raise ValueError('A baseline excede o limite de 1 GiB.')
         with zipfile.ZipFile(base) as archive:
             for info in archive.infolist():
-                member = member_path(info.filename)
+                member = member_path(info.orig_filename)
                 if stat.S_ISLNK(info.external_attr >> 16):
                     raise ValueError('Links não são aceitos na baseline.')
                 if not info.is_dir():

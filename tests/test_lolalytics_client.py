@@ -76,9 +76,9 @@ def lazy_itemsets_url(query, patch="16.20"):
     return "https://a1.lolalytics.com/mega/?" + urlencode(params)
 
 
-def add_deep_json_member(encoded, name="deep"):
-    """Append JSON nesting beyond Python's decoder recursion limit without re-encoding."""
-    depth = "[" * 12000 + "0" + "]" * 12000
+def add_deep_json_member(encoded, name="deep", levels=12000):
+    """Append JSON nesting without relying on a platform-specific recursion limit."""
+    depth = "[" * levels + "0" + "]" * levels
     return encoded[:-1] + b',"' + name.encode() + b'":' + depth.encode() + b'}'
 
 
@@ -228,7 +228,7 @@ class ClientCacheTests(unittest.TestCase):
         transport = FixtureTransport(("ahri-ranked.json",))
         client = Client(transport=transport)
         client.collect(q)
-        client._memory[q.key]["value"] = add_deep_json_member(client._memory[q.key]["value"])
+        client._memory[q.key]["value"] = add_deep_json_member(client._memory[q.key]["value"], levels=160)
         result = client.collect(q)
         self.assertFalse(result.cache_hit)
         self.assertEqual(len(transport.calls), 2)
@@ -245,7 +245,7 @@ class ClientCacheTests(unittest.TestCase):
             cache_path = next(Path(tmp).glob("*.json"))
             envelope = json.loads(cache_path.read_text())
             value = base64.b64decode(envelope["value"])
-            envelope["value"] = base64.b64encode(add_deep_json_member(value)).decode("ascii")
+            envelope["value"] = base64.b64encode(add_deep_json_member(value, levels=160)).decode("ascii")
             cache_path.write_text(json.dumps(envelope, separators=(",", ":")))
 
             refresh_transport = FixtureTransport(("ahri-ranked.json",))
