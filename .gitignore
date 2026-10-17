@@ -21,6 +21,7 @@ classic/
 diagnosticos/
 *.lock
 test-reports/
+/native/overlay-host/target/
 *-verification.json
 
 release-secrets/
