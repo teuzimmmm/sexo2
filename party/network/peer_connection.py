@@ -15,6 +15,7 @@ from ..protocol.message_types import SkinSelection
 
 class ConnectionState(Enum):
     """Peer connection state"""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     HANDSHAKING = "handshaking"
@@ -26,12 +27,16 @@ class PeerConnection:
     """Legacy stub — party mode now uses PartyRelay shared rooms."""
 
     def __init__(self, **kwargs):
-        self.peer_info = type('PeerInfo', (), {
-            'summoner_id': 0,
-            'summoner_name': 'Unknown',
-            'skin_selection': None,
-            'in_lobby': False,
-        })()
+        self.peer_info = type(
+            "PeerInfo",
+            (),
+            {
+                "summoner_id": 0,
+                "summoner_name": "Unknown",
+                "skin_selection": None,
+                "in_lobby": False,
+            },
+        )()
         self.state = ConnectionState.DISCONNECTED
 
     @property

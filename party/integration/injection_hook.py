@@ -69,9 +69,7 @@ class PartyInjectionHook:
         peer_skins = [s for s in all_skins if not s.is_local]
 
         if peer_skins:
-            log.info(
-                f"[PARTY_INJECT] Found {len(peer_skins)} party member skin(s) to inject"
-            )
+            log.info(f"[PARTY_INJECT] Found {len(peer_skins)} party member skin(s) to inject")
             for skin in peer_skins:
                 log.info(
                     f"  - {skin.summoner_name}: Champion {skin.champion_id} -> Skin {skin.skin_id}"
@@ -111,9 +109,7 @@ class PartyInjectionHook:
                 if mod_name:
                     mod_folder_names.append(mod_name)
             except Exception as e:
-                log.warning(
-                    f"[PARTY_INJECT] Failed to prepare skin for {skin_data.summoner_name}: {e}"
-                )
+                log.warning(f"[PARTY_INJECT] Failed to prepare skin for {skin_data.summoner_name}: {e}")
 
         return mod_folder_names
 
@@ -151,9 +147,7 @@ class PartyInjectionHook:
                 )
                 source = local_mod
             else:
-                log.warning(
-                    f"[PARTY_INJECT] Custom mod path not found: {skin_data.custom_mod_path}"
-                )
+                log.warning(f"[PARTY_INJECT] Custom mod path not found: {skin_data.custom_mod_path}")
 
         if source is None:
             source = self._resolve_skin_zip(skin_data, injector, classic)
@@ -172,9 +166,7 @@ class PartyInjectionHook:
             log.warning(f"[PARTY_INJECT] Mod folder missing after extraction: {mod_dest}")
             return None
 
-        log.info(
-            f"[PARTY_INJECT] Prepared {skin_data.summoner_name}'s skin: {source.name}"
-        )
+        log.info(f"[PARTY_INJECT] Prepared {skin_data.summoner_name}'s skin: {source.name}")
         return mod_folder_name
 
     @staticmethod
@@ -193,10 +185,7 @@ class PartyInjectionHook:
             )
             if zip_path and zip_path.exists():
                 return zip_path
-            log.info(
-                f"[PARTY_INJECT] Chroma {skin_data.chroma_id} not found, "
-                f"using base skin {skin_data.skin_id}"
-            )
+            log.info(f"[PARTY_INJECT] Chroma {skin_data.chroma_id} not found, using base skin {skin_data.skin_id}")
 
         zip_path = injector._resolve_zip(
             skin_name,

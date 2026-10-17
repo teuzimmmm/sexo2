@@ -15,6 +15,7 @@ from ..protocol.message_types import SkinSelection
 @dataclass
 class PartyPeerState:
     """State for a single party peer"""
+
     summoner_id: int
     summoner_name: str = "Unknown"
     connected: bool = False
@@ -125,11 +126,7 @@ class PartyState:
     def get_all_skin_selections(self) -> Dict[int, SkinSelection]:
         """Get all skin selections from peers (summoner_id -> selection)"""
         with self._lock:
-            return {
-                p.summoner_id: p.skin_selection
-                for p in self.peers.values()
-                if p.connected and p.skin_selection
-            }
+            return {p.summoner_id: p.skin_selection for p in self.peers.values() if p.connected and p.skin_selection}
 
     def clear_all(self):
         """Clear all party state"""
@@ -156,9 +153,7 @@ class PartyState:
                         "connected": p.connected,
                         "connection_state": p.connection_state,
                         "in_lobby": p.in_lobby,
-                        "skin_selection": (
-                            p.skin_selection.to_dict() if p.skin_selection else None
-                        ),
+                        "skin_selection": (p.skin_selection.to_dict() if p.skin_selection else None),
                     }
                     for p in self.peers.values()
                 ],

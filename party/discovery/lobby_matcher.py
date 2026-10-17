@@ -146,9 +146,7 @@ class LobbyMatcher:
 
         return "Unknown"
 
-    def match_peers_to_lobby(
-        self, peers: List[PeerConnection]
-    ) -> Dict[int, PeerConnection]:
+    def match_peers_to_lobby(self, peers: List[PeerConnection]) -> Dict[int, PeerConnection]:
         """Match connected peers to lobby members
 
         Args:

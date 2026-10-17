@@ -143,7 +143,9 @@ class SkinCollectorSelectionTests(unittest.TestCase):
 
     def test_historic_then_random_take_priority(self):
         self.assertEqual(
-            self.pick(historic_mode_active=True, historic_skin_id=103015, random_mode_active=True, random_skin_id=103020),
+            self.pick(
+                historic_mode_active=True, historic_skin_id=103015, random_mode_active=True, random_skin_id=103020
+            ),
             (103015, None, None),
         )
         self.assertEqual(self.pick(random_mode_active=True, random_skin_id=103020), (103020, None, None))
@@ -163,15 +165,24 @@ class SkinCollectorSelectionTests(unittest.TestCase):
         # injection applies it all the same
         for mod_skin_id in (103004, 103015):
             self.assertEqual(
-                self.pick(selected_custom_mod={
-                    "skin_id": mod_skin_id, "champion_id": 103, "relative_path": "skins/103000/Mod",
-                }),
+                self.pick(
+                    selected_custom_mod={
+                        "skin_id": mod_skin_id,
+                        "champion_id": 103,
+                        "relative_path": "skins/103000/Mod",
+                    }
+                ),
                 (103001, None, "skins/103000/Mod"),
             )
         self.assertEqual(
-            self.pick(last_hovered_skin_id=None, selected_custom_mod={
-                "skin_id": 103000, "champion_id": 103, "relative_path": "skins/103000/Mod",
-            }),
+            self.pick(
+                last_hovered_skin_id=None,
+                selected_custom_mod={
+                    "skin_id": 103000,
+                    "champion_id": 103,
+                    "relative_path": "skins/103000/Mod",
+                },
+            ),
             (103000, None, "skins/103000/Mod"),
         )
 
@@ -181,9 +192,13 @@ class SkinCollectorSelectionTests(unittest.TestCase):
             (103001, None, None),
         )
         self.assertEqual(
-            self.pick(selected_custom_mod={
-                "skin_id": 103001, "champion_id": 60025, "relative_path": "skins/60025000/Mod",
-            }),
+            self.pick(
+                selected_custom_mod={
+                    "skin_id": 103001,
+                    "champion_id": 60025,
+                    "relative_path": "skins/60025000/Mod",
+                }
+            ),
             (103001, None, None),
         )
 
@@ -192,7 +207,9 @@ class SkinCollectorSelectionTests(unittest.TestCase):
         collector = SkinCollector(state)
         # HistoricMode off: the injection auto-selects the saved mod, then freezes
         state.selected_custom_mod = {
-            "skin_id": 103001, "champion_id": 103, "relative_path": "skins/103000/Mod",
+            "skin_id": 103001,
+            "champion_id": 103,
+            "relative_path": "skins/103000/Mod",
         }
         collector.freeze_my_selection(1, "Me")
         state.selected_custom_mod = None
@@ -293,6 +310,7 @@ class MergedMembersTests(unittest.TestCase):
 
         async def send_state(state):
             relay.sent.append(state)
+
         relay.send_state = send_state
         manager._relays = {"a" * 32: relay}
 
@@ -335,6 +353,7 @@ class RelayQuietWhenAloneTests(unittest.TestCase):
 
     def setUp(self):
         from party.network.ws_relay import PartyRelay
+
         self.relay = PartyRelay("a" * 32, 1, "Me")
         self.socket = FakeSocket()
         self.relay._ws = self.socket
@@ -342,6 +361,7 @@ class RelayQuietWhenAloneTests(unittest.TestCase):
 
     def skins_sent(self):
         import json
+
         return [json.loads(m)["skin"] for m in self.socket.sent if json.loads(m)["type"] == "skin"]
 
     def test_alone_in_the_room_nothing_is_sent(self):
@@ -351,6 +371,7 @@ class RelayQuietWhenAloneTests(unittest.TestCase):
 
     def test_a_friend_joining_gets_our_state(self):
         import json
+
         self.relay.members = [member(1, "Me")]
         asyncio.run(self.relay.send_state({"skin_id": 103001}))
         self.socket._incoming = [json.dumps({"type": "members", "members": [member(1, "Me"), member(2, "B")]})]
@@ -380,6 +401,7 @@ class RelayReconnectTests(unittest.TestCase):
 
     def setUp(self):
         from party.network import ws_relay
+
         self.module = ws_relay
         self.relay = ws_relay.PartyRelay("a" * 32, 1, "Me")
         self.clock = [0.0]
@@ -455,6 +477,7 @@ class RelayReconnectTests(unittest.TestCase):
             self.opens += 1
             self.relay._room_full = True
             return False
+
         self.relay._open = open_
         asyncio.run(self.relay._run())
         self.assertEqual(self.opens, 1)
@@ -465,6 +488,7 @@ class RelayReconnectTests(unittest.TestCase):
             self.opens += 1
             self.relay._update_required = True
             return False
+
         self.relay._open = open_
         asyncio.run(self.relay._run())
         self.assertEqual(self.opens, 1)
@@ -494,6 +518,7 @@ class SkinBroadcastSettleTests(unittest.TestCase):
 
     def run_loop(self, picks, frozen=False):
         from party.core import party_manager as module
+
         manager = PartyManager(Mock(), make_state())
         manager._running = True
         manager._skin_collector = Mock(is_frozen=Mock(return_value=frozen))
@@ -551,6 +576,7 @@ class InjectionHookTests(unittest.TestCase):
     def injector(self):
         def resolve_zip(zip_arg, chroma_id=None, **_):
             return None if chroma_id else self.skin_zip
+
         return SimpleNamespace(mods_dir=self.mods_dir, _resolve_zip=Mock(side_effect=resolve_zip))
 
     def test_skin_is_linked_under_a_party_folder(self):

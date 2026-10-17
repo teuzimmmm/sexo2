@@ -68,6 +68,7 @@ def _ssl_contexts() -> List[ssl.SSLContext]:
         contexts = []
         try:
             import certifi
+
             contexts.append(ssl.create_default_context(cafile=certifi.where()))
         except Exception as e:
             log.debug(f"[RELAY] certifi CA bundle unavailable: {e}")

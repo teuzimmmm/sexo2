@@ -188,11 +188,13 @@ def broadcast_party_state(broadcaster, party_manager: PartyManager):
         return
 
     state = party_manager.get_state_dict()
-    message = json.dumps({
-        "type": "party-state",
-        **state,
-        "timestamp": __import__("time").time(),
-    })
+    message = json.dumps(
+        {
+            "type": "party-state",
+            **state,
+            "timestamp": __import__("time").time(),
+        }
+    )
 
     try:
         broadcaster.broadcast_raw(message)

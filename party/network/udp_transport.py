@@ -16,20 +16,21 @@ from utils.core.logging import get_logger
 log = get_logger()
 
 # Hole punching configuration
-HOLE_PUNCH_TIMEOUT = 60.0          # total time to keep punching (seconds)
-HOLE_PUNCH_BURST_COUNT = 10        # fast initial burst packet count
-HOLE_PUNCH_BURST_INTERVAL = 0.3    # seconds between burst packets
+HOLE_PUNCH_TIMEOUT = 60.0  # total time to keep punching (seconds)
+HOLE_PUNCH_BURST_COUNT = 10  # fast initial burst packet count
+HOLE_PUNCH_BURST_INTERVAL = 0.3  # seconds between burst packets
 HOLE_PUNCH_SUSTAINED_INTERVAL = 1.5  # seconds between sustained packets
-HOLE_PUNCH_RECV_TIMEOUT = 0.8      # wait for reply per iteration
+HOLE_PUNCH_RECV_TIMEOUT = 0.8  # wait for reply per iteration
 
 # Keepalive configuration
 KEEPALIVE_INTERVAL = 15.0  # seconds
-KEEPALIVE_TIMEOUT = 45.0   # consider dead after this
+KEEPALIVE_TIMEOUT = 45.0  # consider dead after this
 
 
 @dataclass
 class PeerEndpoint:
     """Represents a peer's network endpoint"""
+
     external_ip: str
     external_port: int
     internal_ip: str
@@ -226,9 +227,7 @@ class UDPTransport:
         # Launch one puncher task per address, all run simultaneously
         tasks = []
         for addr in addresses:
-            task = asyncio.create_task(
-                self._punch_one_address(addr, all_peer_ips, punch_data, success_event, result)
-            )
+            task = asyncio.create_task(self._punch_one_address(addr, all_peer_ips, punch_data, success_event, result))
             tasks.append(task)
 
         try:
@@ -272,7 +271,9 @@ class UDPTransport:
                     log.debug(f"[UDP] Punch send to {addr} failed: {e}")
 
                 # Choose interval: fast burst first, then slower sustained
-                interval = HOLE_PUNCH_BURST_INTERVAL if packet_num <= HOLE_PUNCH_BURST_COUNT else HOLE_PUNCH_SUSTAINED_INTERVAL
+                interval = (
+                    HOLE_PUNCH_BURST_INTERVAL if packet_num <= HOLE_PUNCH_BURST_COUNT else HOLE_PUNCH_SUSTAINED_INTERVAL
+                )
                 await asyncio.sleep(interval)
 
                 # Check for response from any peer address
