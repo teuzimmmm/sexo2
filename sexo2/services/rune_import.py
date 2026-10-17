@@ -105,6 +105,8 @@ class RuneImportSnapshot:
     pending: bool
     error: str | None
     violations: tuple[Violation, ...] = ()
+    # Increases with every snapshot; listeners may receive them out of order and keep the highest.
+    sequence: int = 0
 
 
 class _Abort(Exception):
@@ -147,6 +149,7 @@ class RuneImportController:
         self._timer_token: object | None = None
         self._error: str | None = None
         self._violations: tuple[Violation, ...] = ()
+        self._sequence = 0
 
     # Public API -----------------------------------------------------------
 
@@ -189,8 +192,9 @@ class RuneImportController:
     def edit(self, page: PageSpec) -> RuneImportSnapshot:
         """The player changed the page: valid edits are sent after a pause."""
         with self._lock:
+            # An invalid page also cancels a pending earlier edit: the player moved past it.
+            self._cancel_timer()
             if self._accept(page):
-                self._cancel_timer()
                 token = object()
                 self._timer_token = token
                 self._timer = self._scheduler.call_later(self._debounce, lambda: self._on_timer(token))
@@ -206,10 +210,9 @@ class RuneImportController:
         return self._notify(snapshot)
 
     def back(self) -> RuneImportSnapshot:
-        """Leave the editor: drop unsent edits and keep the confirmed page."""
+        """Leave the editor. A valid edit still waiting is applied as usual (edits apply
+        without Confirm); the confirmed page is never discarded."""
         with self._lock:
-            self._cancel_timer()
-            self._chosen = None
             self._violations = ()
             snapshot = self._snapshot()
         return self._notify(snapshot)
@@ -221,6 +224,7 @@ class RuneImportController:
     # State changes (lock held) ---------------------------------------------
 
     def _snapshot(self) -> RuneImportSnapshot:
+        self._sequence += 1
         return RuneImportSnapshot(
             session=self._session,
             displayed=self._displayed,
@@ -229,9 +233,11 @@ class RuneImportController:
             pending=self._timer is not None or self._in_flight is not None,
             error=self._error,
             violations=self._violations,
+            sequence=self._sequence,
         )
 
     def _accept(self, page: PageSpec) -> bool:
+        page = PageSpec(page.primary_style_id, page.sub_style_id, tuple(page.perk_ids))
         if self._session is None:
             self._error = "no_session"
             return False
@@ -293,7 +299,12 @@ class RuneImportController:
         self._finish(epoch, generation, page, outcome)
 
     def _guard(self, epoch: int) -> None:
-        """Called before every write."""
+        """Called before every write.
+
+        A write already sent when the session changes cannot be recalled: it finishes, its
+        answer is dropped and nothing follows it, but the managed page may briefly hold the
+        previous champion's page until the player picks one in the new session.
+        """
         with self._lock:
             live = epoch == self._epoch
         if not live:

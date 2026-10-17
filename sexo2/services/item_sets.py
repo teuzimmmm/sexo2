@@ -114,6 +114,8 @@ def import_item_sets(api: LCUItemSets, champion_id: int, new_sets: list[dict]) -
         after = api.read(summoner_id)
     except ItemSetsError as error:
         return ItemSetImportResult(confirmed=False, written=written, error=f"lcu_{error.code}")
+    except ValueError:
+        return ItemSetImportResult(confirmed=False, written=written, error="invalid_sets")
     managed_after = [item for item in after["itemSets"] if is_managed(item, champion_id)]
     confirmed = _others(after, champion_id) == _others(before, champion_id) and _essentials(
         managed_after

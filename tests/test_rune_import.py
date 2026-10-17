@@ -272,21 +272,42 @@ class EditTests(ControllerTestCase):
         self.assertEqual(self.controller.snapshot().applied, HAIL)
         self.assertEqual(len([call for call in self.perks.writes if call[0] in ("POST", "PUT")]), 1)
 
-    def test_back_drops_unsent_edits_and_keeps_applied(self):
+    def test_back_keeps_applied_and_still_applies_the_pending_valid_edit(self):
         self.controller.choose(ELECTROCUTE)
         self.executor.run_all()
         self.controller.edit(HAIL)
         snapshot = self.controller.back()
+        self.assertEqual(snapshot.applied, ELECTROCUTE)
         self.scheduler.advance(1)
         self.executor.run_all()
-        self.assertEqual(snapshot.applied, ELECTROCUTE)
-        self.assertIsNone(snapshot.chosen)
-        self.assertFalse(snapshot.pending)
+        self.assertEqual(self.controller.snapshot().applied, HAIL)
+        self.assertFalse(self.controller.snapshot().pending)
+
+    def test_invalid_edit_cancels_the_earlier_pending_edit(self):
+        self.controller.choose(ELECTROCUTE)
+        self.executor.run_all()
+        self.controller.edit(HAIL)
+        self.controller.edit(PageSpec(HAIL.primary_style_id, HAIL.sub_style_id, HAIL.perk_ids[:5]))
+        self.scheduler.advance(1)
+        self.executor.run_all()
+        self.assertEqual(self.controller.snapshot().applied, ELECTROCUTE)
         self.assertEqual(len([call for call in self.perks.writes if call[0] in ("POST", "PUT")]), 1)
+
+    def test_list_perk_ids_are_confirmed_by_read_back(self):
+        self.controller.choose(
+            PageSpec(ELECTROCUTE.primary_style_id, ELECTROCUTE.sub_style_id, list(ELECTROCUTE.perk_ids))
+        )
+        self.executor.run_all()
+        self.assertEqual(self.controller.snapshot().applied, ELECTROCUTE)
+
+    def test_snapshots_are_numbered(self):
+        first = self.controller.choose(ELECTROCUTE)
+        self.executor.run_all()
+        self.assertGreater(self.controller.snapshot().sequence, first.sequence)
 
 
 class SessionTests(ControllerTestCase):
-    def test_late_answer_from_previous_champion_is_ignored(self):
+    def test_answer_from_previous_champion_is_dropped_and_nothing_follows_it(self):
         self.perks.hooks.append(lambda: self.controller.set_session(ANNIE))
         self.controller.choose(ELECTROCUTE)
         self.controller.edit(HAIL)
