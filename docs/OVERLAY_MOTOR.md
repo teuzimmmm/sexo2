@@ -372,3 +372,21 @@ DLL efetivamente instalada. Sucesso em HWND próprio não é prova de tela cheia
 exclusiva, compatibilidade com Vanguard ou leitura de cartas reais. O laboratório
 hudhook permanece separado e não foi promovido a injetor. Não foi medido consumo
 comparativo com Blitz/U.GG; a composição só é repintada quando muda o conteúdo.
+
+### Pacote final da rodada
+
+A edição 2.0.0.6, commit `abc17e58d7b0f51556881b36a8081b953f6703f6`, passou no
+[job Windows 39004586918](https://github.com/teuzimmmm/sexo2/actions/runs/39004586918):
+501 testes gerais (oito ignorados), cinco testes nativos de composição e painel
+em Chromium isolado. A DLL de produção foi auditada no pacote e a DLL instalada
+foi carregada/desenhou em um HWND sintético. Instalação, reinstalação e
+desinstalação passaram. Hashes e download estão em
+[INSTALADOR_TESTE_2_0.md](INSTALADOR_TESTE_2_0.md#validação-windows--2006).
+Otimização conferida: reafirmação de z-order sem repaint nem resize quando
+conteúdo/posição não mudam. Foco/cliques e ciclo de vida passaram no teste
+sintético. Não confundir isso com validação dentro de uma partida do LoL.
+
+Situação atual: renderer DirectComposition integrado e pacote testável entregue;
+pendentes confirmação em LoL janela/sem bordas, calibração de cartas reais, fonte
+estatística Mayhem e medidas de consumo no programa completo. Tela cheia
+exclusiva não faz parte do suporte confirmado. Nenhum hook/injetor foi integrado.

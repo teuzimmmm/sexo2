@@ -203,3 +203,20 @@ abre o painel expandido. A espera pelo OCR e a perda do LCU têm avisos visívei
 somente sobre o processo do jogo em primeiro plano; não exibem dados antigos
 ou ofertas presumidas. Janela/sem bordas é o caminho previsto. Tela cheia
 exclusiva e uma partida real do LoL não foram validadas neste runner.
+
+### Validação Windows — 2.0.0.6
+
+O [job privado 39004586918](https://github.com/teuzimmmm/sexo2/actions/runs/39004586918)
+compilou `abc17e58d7b0f51556881b36a8081b953f6703f6`. A suíte executou 501 testes
+(oito ignorados), sem falhas; passaram cinco testes nativos, incluindo pixels e
+recuperação do z-order sem repaint, e o painel em Chromium isolado. A auditoria
+comparou a DLL e os módulos com o staging. O smoke conferiu o hash da DLL
+instalada, carregou-a e desenhou em um HWND sintético no próprio processo Python.
+Instalação, reinstalação e desinstalação passaram, sem abrir SEXO2/Pengu/LoL.
+
+Artefato privado `12090396803`: `SEXO2-2.0.0.6-Teste-abc17e58.exe` (61.083.333 bytes).
+Download conferido contra checksum, commit, versão e recibo de instalação:
+SHA-256 `09d63fc083a03e1b93dcda420eea66ea4fa7cc168aecdea16bcf8652f0c661ce`.
+DLL incluída: `a45c43197b82897f1117a27737dc9581f3db84a56debc61b6eaa06a9c91d4400`.
+O leitor OCR continua incluído. Não houve validação de partida real; a janela
+externa destina-se a janela/sem bordas e não garante tela cheia exclusiva.

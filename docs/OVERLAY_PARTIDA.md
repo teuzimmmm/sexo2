@@ -1,11 +1,11 @@
 # Overlay de recomendações durante a partida
 
-**Estado atual:** o usuário informou que a edição 2.0.0.4 também não funcionou.
-A substituição do motor está em investigação em [OVERLAY_MOTOR.md](OVERLAY_MOTOR.md);
-não há novo motor confirmado no LoL. A correção 2.0.0.4 amplia a edição inicial descrita abaixo.
-Arena, detecção sem abrir o processo e diagnóstico/prévia estão documentados em
-[OVERLAY_CORRECOES.md](OVERLAY_CORRECOES.md). Os limites da edição 2.0.0.3 a seguir
-são históricos, incluindo sua exclusão de Arena e ausência de consultas em jogo.
+**Estado atual:** a 2.0.0.6 integra DirectComposition no lugar do desenho GDI,
+com testes Windows de pixels, z-order, foco e ciclo de vida. O pacote instalado
+foi auditado e sua DLL carregou/desenhou em um HWND sintético. O teste real no LoL
+continua pendente; o caminho previsto é janela/sem bordas. Veja
+[OVERLAY_MOTOR.md](OVERLAY_MOTOR.md) para implementação, evidências e limitações.
+As etapas e limites das edições anteriores abaixo são históricos.
 
 Plano registrado antes da implementação. O painel Pengu permanece na seleção;
 a janela durante a partida é um componente Windows separado, no mesmo programa.
