@@ -120,7 +120,7 @@ def _sanitize_plugin_entrypoints(pengu_dir: Path) -> None:
                         )
     except Exception as exc:
         # Non-fatal: never block Rose launch for a best-effort cleanup.
-        log.debug("Failed to sanitize plugin entrypoints: %s", exc)
+        log.warning("Failed to sanitize plugin entrypoints: %s", exc)
 
 
 def _snapshot_plugin_enable_state(pengu_dir: Path) -> tuple[set[str], set[str]]:
@@ -154,7 +154,7 @@ def _snapshot_plugin_enable_state(pengu_dir: Path) -> tuple[set[str], set[str]]:
             elif enabled_entry.exists():
                 enabled.add(plugin_dir.name)
     except Exception as exc:
-        log.debug("Failed to snapshot plugin enable state: %s", exc)
+        log.warning("Failed to snapshot plugin enable state: %s", exc)
 
     return enabled, disabled
 
@@ -191,7 +191,7 @@ def _restore_plugin_enable_state(pengu_dir: Path, enabled: set[str], disabled: s
                         disabled_entry,
                     )
                 except Exception as exc:
-                    log.debug(
+                    log.warning(
                         "Failed to remove bundled disabled entrypoint for enabled plugin %s: %s",
                         plugin_name,
                         exc,
@@ -201,7 +201,7 @@ def _restore_plugin_enable_state(pengu_dir: Path, enabled: set[str], disabled: s
         # (This also handles the "both files exist" case by parking `index.js`.)
         _sanitize_plugin_entrypoints(pengu_dir)
     except Exception as exc:
-        log.debug("Failed to restore plugin enable state: %s", exc)
+        log.warning("Failed to restore plugin enable state: %s", exc)
 
 
 def _get_bundled_pengu_dir() -> Optional[Path]:
