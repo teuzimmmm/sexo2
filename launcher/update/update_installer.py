@@ -34,10 +34,10 @@ UPDATER_EXE_NAME = "updater.exe"
 
 class UpdateInstaller:
     """Handles update extraction and installation"""
-    
+
     def __init__(self):
         pass
-    
+
     def extract_update(
         self,
         zip_path: Path,
@@ -46,13 +46,13 @@ class UpdateInstaller:
         status_callback: Callable[[str], None],
     ) -> Optional[Path]:
         """Extract update ZIP to staging directory
-        
+
         Args:
             zip_path: Path to the update ZIP file
             staging_dir: Directory to extract to
             progress_callback: Callback for progress updates
             status_callback: Callback for status updates
-            
+
         Returns:
             Path to extracted root directory, or None if failed
         """
@@ -69,7 +69,7 @@ class UpdateInstaller:
                     safe_extract(zip_path, member.filename, staging_dir)
                     progress = 40 + int(20 * index / total_members)
                     progress_callback(min(progress, 60))
-            
+
             extracted_root = self._resolve_extracted_root(staging_dir)
             if extracted_root is None:
                 status_callback("Invalid update package")
@@ -79,7 +79,7 @@ class UpdateInstaller:
             status_callback(f"Extraction failed: {exc}")
             updater_log.error(f"Update extraction failed: {exc}")
             return None
-    
+
     def prepare_installation(
         self,
         extracted_root: Path,
@@ -90,7 +90,7 @@ class UpdateInstaller:
         status_callback: Callable[[str], None],
     ) -> bool:
         """Prepare update installation by creating batch script
-        
+
         Args:
             extracted_root: Root directory of extracted update
             install_dir: Directory where application is installed
@@ -98,7 +98,7 @@ class UpdateInstaller:
             zip_path: Path to the update ZIP file
             staging_dir: Staging directory
             status_callback: Callback for status updates
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -152,21 +152,25 @@ class UpdateInstaller:
                 batch.write('echo [%date% %time%] Update start > "%LOG%"\n')
                 batch.write("ping 127.0.0.1 -n 4 >nul\n")
                 batch.write('echo [%date% %time%] Mirroring files >> "%LOG%"\n')
-                batch.write('robocopy "%SOURCE%" "%DEST%" /MIR /NFL /NDL /NJH /NJS /XD __pycache__ "Pengu Loader\\plugins" /XF config.ini ltk_patcher_host.exe ltk_patcher_dll.dll hashes.game.txt >> "%LOG%" 2>&1\n')
+                batch.write(
+                    'robocopy "%SOURCE%" "%DEST%" /MIR /NFL /NDL /NJH /NJS /XD __pycache__ "Pengu Loader\\plugins" /XF config.ini ltk_patcher_host.exe ltk_patcher_dll.dll hashes.game.txt >> "%LOG%" 2>&1\n'
+                )
                 batch.write("if %ERRORLEVEL% GEQ 8 goto :robofail\n")
                 batch.write('echo [%date% %time%] Updating ROSE plugins (preserving user-installed) >> "%LOG%"\n')
                 batch.write('if exist "%SOURCE%\\Pengu Loader\\plugins" (\n')
                 batch.write('    if not exist "%DEST%\\Pengu Loader\\plugins" mkdir "%DEST%\\Pengu Loader\\plugins"\n')
                 batch.write('    for /d %%D in ("%SOURCE%\\Pengu Loader\\plugins\\ROSE-*") do (\n')
                 batch.write('        echo [%date% %time%]   Sync plugin %%~nxD >> "%LOG%"\n')
-                batch.write('        robocopy "%%D" "%DEST%\\Pengu Loader\\plugins\\%%~nxD" /MIR /NFL /NDL /NJH /NJS /XD __pycache__ >> "%LOG%" 2>&1\n')
-                batch.write('    )\n')
-                batch.write(')\n')
+                batch.write(
+                    '        robocopy "%%D" "%DEST%\\Pengu Loader\\plugins\\%%~nxD" /MIR /NFL /NDL /NJH /NJS /XD __pycache__ >> "%LOG%" 2>&1\n'
+                )
+                batch.write("    )\n")
+                batch.write(")\n")
                 batch.write(f'start "" /D "{install_dir}" "{install_dir / exe_name}"\n')
                 batch.write('echo [%date% %time%] Cleaning staging >> "%LOG%"\n')
                 batch.write('if exist "%STAGING%" rd /s /q "%STAGING%" >> "%LOG%" 2>&1\n')
                 batch.write('if exist "%ZIPFILE%" del "%ZIPFILE%" >> "%LOG%" 2>&1\n')
-                batch.write("del \"%~f0\" >nul 2>&1\n")
+                batch.write('del "%~f0" >nul 2>&1\n')
                 batch.write("exit\n")
                 batch.write("")
                 batch.write(":robofail\n")
@@ -179,7 +183,7 @@ class UpdateInstaller:
             status_callback(f"Failed to prepare updater: {exc}")
             updater_log.error(f"Failed to create batch script: {exc}")
             return False
-    
+
     def launch_installer(self, batch_path: Path, status_callback: Callable[[str], None]) -> bool:
         """Launch the update installer batch script (legacy method)
 
@@ -299,9 +303,12 @@ class UpdateInstaller:
         try:
             cmd = [
                 str(updater_path),
-                "--pid", str(updater_params["pid"]),
-                "--install-dir", updater_params["install_dir"],
-                "--staging-dir", updater_params["staging_dir"],
+                "--pid",
+                str(updater_params["pid"]),
+                "--install-dir",
+                updater_params["install_dir"],
+                "--staging-dir",
+                updater_params["staging_dir"],
             ]
 
             if updater_params.get("log_file"):
@@ -365,4 +372,3 @@ class UpdateInstaller:
         if len(candidates) == 1 and candidates[0].is_dir():
             return candidates[0]
         return staging_dir
-

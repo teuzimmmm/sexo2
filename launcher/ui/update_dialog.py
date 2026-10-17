@@ -39,7 +39,7 @@ updater_log = get_named_logger("updater", prefix="log_updater")
 
 class UpdateDialog(Win32Window):
     """Win32 dialog window for showing update progress"""
-    
+
     STATUS_ID = 1001
     DETAIL_ID = 1002
     PROGRESS_ID = 1003
@@ -134,11 +134,13 @@ class UpdateDialog(Win32Window):
     def allow_close(self) -> None:
         def _apply() -> None:
             self._allow_close = True
+
         self.invoke(_apply)
         updater_log.debug("Update dialog marked as closable.")
 
     def set_detail(self, text: str) -> None:
         updater_log.info(f"Detail: {text}")
+
         def _apply() -> None:
             self._current_status = text
             self._status_text = ""
@@ -146,10 +148,12 @@ class UpdateDialog(Win32Window):
                 user32.SetWindowTextW(self.detail_hwnd, text)
                 user32.InvalidateRect(self.detail_hwnd, None, True)
             self._render_status_text()
+
         self.invoke(_apply)
 
     def set_status(self, text: str) -> None:
         updater_log.info(f"Status: {text}")
+
         def _apply() -> None:
             clean_text = re.sub(r"\s*/\s*\?\s*$", "", text).strip()
             title_text = re.sub(
@@ -161,6 +165,7 @@ class UpdateDialog(Win32Window):
             self._status_text = title_text or clean_text
             self._render_status_text()
             self._update_transfer_from_message(clean_text)
+
         self.invoke(_apply)
 
     def set_progress(self, value: int) -> None:
@@ -169,6 +174,7 @@ class UpdateDialog(Win32Window):
         def _apply() -> None:
             if self.progress_hwnd:
                 self.set_marquee(True)
+
         self.invoke(_apply)
 
     def reset_progress(self) -> None:
@@ -177,12 +183,14 @@ class UpdateDialog(Win32Window):
         def _apply() -> None:
             if self.progress_hwnd:
                 self.set_marquee(True)
+
         self.invoke(_apply)
 
     def set_transfer_text(self, text: str) -> None:
         def _apply_change() -> None:
             self._transfer_text = text
             self._render_status_text()
+
         self.invoke(_apply_change)
 
     def clear_transfer_text(self) -> None:
@@ -318,4 +326,3 @@ class UpdateDialog(Win32Window):
         user32.InvalidateRect(self.detail_hwnd, None, True)
         user32.SetWindowTextW(self.status_hwnd, self._transfer_text or "")
         user32.InvalidateRect(self.status_hwnd, None, True)
-

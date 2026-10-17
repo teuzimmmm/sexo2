@@ -10,9 +10,4 @@ from .update_downloader import UpdateDownloader
 from .update_installer import UpdateInstaller
 from .github_client import GitHubClient
 
-__all__ = ['UpdateSequence', 'UpdateDownloader', 'UpdateInstaller', 'GitHubClient']
-
-
-
-
-
+__all__ = ["UpdateSequence", "UpdateDownloader", "UpdateInstaller", "GitHubClient"]

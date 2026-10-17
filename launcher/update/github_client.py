@@ -18,13 +18,13 @@ GITHUB_RELEASE_API = "https://api.github.com/repos/Alban1911/Rose/releases/lates
 
 class GitHubClient:
     """Client for interacting with GitHub API"""
-    
+
     def __init__(self, timeout: int = 20):
         self.timeout = timeout
-    
+
     def get_latest_release(self) -> Optional[dict]:
         """Get the latest release information from GitHub
-        
+
         Returns:
             Release data dictionary or None if failed
         """
@@ -35,18 +35,17 @@ class GitHubClient:
         except Exception as e:
             log.warning("Update check failed while fetching latest release: %s", e)
             return None
-    
+
     def get_release_version(self, release: dict) -> str:
         """Extract version string from release data"""
         return release.get("tag_name") or release.get("name") or ""
-    
+
     def get_zip_asset(self, release: dict) -> Optional[dict]:
         """Get the ZIP asset from release data"""
         assets = release.get("assets", [])
         return next((a for a in assets if a.get("name", "").lower().endswith(".zip")), None)
-    
+
     def get_hash_asset(self, release: dict) -> Optional[dict]:
         """Get the hash file asset from release data"""
         assets = release.get("assets", [])
         return next((a for a in assets if a.get("name", "").lower() == "hashes.game.txt"), None)
-

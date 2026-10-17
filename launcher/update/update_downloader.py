@@ -18,11 +18,11 @@ updater_log = get_named_logger("updater", prefix="log_updater")
 
 class UpdateDownloader:
     """Handles downloading update files"""
-    
+
     def __init__(self, chunk_size: int = 1024 * 128, timeout: int = 60):
         self.chunk_size = chunk_size
         self.timeout = timeout
-    
+
     def _download(
         self,
         url: str,
@@ -70,14 +70,14 @@ class UpdateDownloader:
         total_size: Optional[int] = None,
     ) -> bool:
         """Download update ZIP file
-        
+
         Args:
             download_url: URL to download from
             zip_path: Path to save the ZIP file
             status_callback: Callback for status updates
             bytes_callback: Optional callback for download progress
             total_size: Optional total file size
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -88,7 +88,7 @@ class UpdateDownloader:
             status_callback(f"Download failed: {exc}")
             updater_log.error(f"Update download failed: {exc}")
             return False
-    
+
     def download_hash_file(
         self,
         download_url: str,
@@ -96,12 +96,12 @@ class UpdateDownloader:
         status_callback: Callable[[str], None],
     ) -> bool:
         """Download hash file from release assets
-        
+
         Args:
             download_url: URL to download from
             target_path: Path to save the hash file
             status_callback: Callback for status updates
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -113,4 +113,3 @@ class UpdateDownloader:
             status_callback(f"Warning: failed to download hash file: {exc}")
             updater_log.warning(f"Hash file download failed: {exc}")
             return False
-
