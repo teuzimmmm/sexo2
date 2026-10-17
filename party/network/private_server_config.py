@@ -26,19 +26,10 @@ def parse_server_link(link):
 
 def save_server_link(link):
     endpoint, token = parse_server_link(link)
-    # One atomic configuration write to prevent mixing one host with another token.
-    from config import get_config_file_path
-    import configparser
-    from utils.core.atomic_file import atomic_write
-    path = get_config_file_path()
-    parser = configparser.ConfigParser(interpolation=None)
-    from config import read_config_file
-    if path.exists(): read_config_file(parser,path)
-    if not parser.has_section('Party'): parser.add_section('Party')
-    parser.set('Party','relay_url',endpoint)
-    parser.set('Party','relay_access',token)
-    with atomic_write(path,mode='w',encoding='utf-8') as stream:
-        parser.write(stream)
+    # One write through the shared config writer: atomic, under the config lock and
+    # in the ANSI code page core.dll reads, so a host never mixes with another token.
+    from config import set_config_options
+    set_config_options({'Party': {'relay_url': endpoint, 'relay_access': token}}, strict=True)
     return endpoint
 
 def relay_settings():

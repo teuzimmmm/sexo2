@@ -29,6 +29,16 @@ class LinkTests(unittest.TestCase):
             data=p.read_text(encoding='utf-8')
             self.assertIn('my-old-room',data);self.assertIn('100%',data);self.assertIn('relay_access',data)
 
+    def test_saving_the_room_keeps_non_ascii_paths_in_the_config_encoding(self):
+        import config
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'config.ini'
+            p.write_bytes('[General]\r\nleaguepath=C:\\Users\\José\\Riot Games\r\n'.encode(config._CONFIG_ENCODING))
+            with patch('config.get_config_file_path',return_value=p):save_server_link('https://host.trycloudflare.com/#rose='+'a'*43)
+            text=p.read_bytes().decode(config._CONFIG_ENCODING)
+            self.assertIn('C:\\Users\\José\\Riot Games',text)
+            self.assertIn('relay_url = wss://host.trycloudflare.com',text)
+
 class PrivateRelayTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.token=secrets.token_urlsafe(32);self.server=FriendsRelay(self.token)
