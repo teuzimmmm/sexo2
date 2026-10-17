@@ -1105,7 +1105,7 @@
         toggleBtn.disabled = false;
       } else if (reconnecting) {
         relayTitle.textContent = "Reconectando ao servidor...";
-        relayDetail.textContent = "O Rose fará novas tentativas sozinho.";
+        relayDetail.textContent = "O SEXO2 fará novas tentativas sozinho.";
         toggleBtn.className = "party-toggle-btn disable";
         toggleBtn.innerHTML = '<span class="spinner"></span> Reconectando...';
         toggleBtn.disabled = true;

@@ -1,7 +1,7 @@
 /**
  * @name ROSE-I18n
  * @author Rose Team
- * @description Language of Rose's menus: the one picked in Settings, else the League client's, else English
+ * @description Language of SEXO2's menus: the one picked in Settings, else the League client's, else English
  */
 (function initRoseI18n() {
   const LOG_PREFIX = "[ROSE-I18n]";
