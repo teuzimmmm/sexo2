@@ -195,7 +195,7 @@ def get_historic_mod(mod_type: str) -> Union[Optional[str], Optional[List[str]]]
 
 def write_historic_mod(mod_type: str, relative_path: Union[str, List[str]]) -> None:
     """Write or overwrite the entry for the mod type.
-    
+
     Args:
         mod_type: "map"/"font"/"announcer" or a category key (ui/voiceover/loading_screen/vfx/sfx/others).
         relative_path: For category keys, can be a list of relative paths. For single-select keys, must be a string.
@@ -236,7 +236,7 @@ def _write_historic_mod_locked(mod_type: str, relative_path: Union[str, List[str
             m[mod_type] = str(relative_path[0]) if relative_path else ""
         else:
             m[mod_type] = str(relative_path)
-    
+
     try:
         _write_json(p, m)
     except Exception as e:
@@ -245,7 +245,7 @@ def _write_historic_mod_locked(mod_type: str, relative_path: Union[str, List[str
 
 def clear_historic_mod(mod_type: str) -> None:
     """Clear the historic entry for a specific mod type.
-    
+
     Args:
         mod_type: One of "map", "font", "announcer", "other"
     """
@@ -277,4 +277,3 @@ def _clear_historic_mod_locked(mod_type: str) -> None:
         _write_json(p, m)
     except Exception as e:
         log.warning(f"[HISTORIC] Could not clear {mod_type} mod history: {e}")
-

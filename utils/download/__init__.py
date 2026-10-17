@@ -18,13 +18,12 @@ from utils.download.hashes_downloader import HashesDownloader, ensure_hashes_fil
 from utils.download.hash_updater import update_hash_files
 
 __all__ = [
-    'RepoDownloader',
-    'download_skins_from_repo',
-    'SkinDownloader',
-    'SmartSkinDownloader',
-    'download_skins_smart',
-    'HashesDownloader',
-    'ensure_hashes_file',
-    'update_hash_files',
+    "RepoDownloader",
+    "download_skins_from_repo",
+    "SkinDownloader",
+    "SmartSkinDownloader",
+    "download_skins_smart",
+    "HashesDownloader",
+    "ensure_hashes_file",
+    "update_hash_files",
 ]
-

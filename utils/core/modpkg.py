@@ -174,7 +174,7 @@ class ModPackage:
         name = self.paths[record.path_index]
         if record.uncompressed_size > _MAX_CHUNK_SIZE:
             raise ModpkgError(f"File too large in the .modpkg: {name}")
-        stored = self._data[record.data_offset:record.data_offset + record.compressed_size]
+        stored = self._data[record.data_offset : record.data_offset + record.compressed_size]
         content = _decompress(stored, record.uncompressed_size) if record.compression == _ZSTD else stored
         if (
             content is None
@@ -192,6 +192,7 @@ class ModPackage:
         source = _RegionReader(self._data, record.data_offset, record.compressed_size)
         checksum = xxhash.xxh3_64()
         size = 0
+
         def blocks(reader):
             nonlocal size
             while True:
@@ -203,6 +204,7 @@ class ModPackage:
                     raise ModpkgError(f"Corrupted file in the .modpkg: {name}")
                 checksum.update(block)
                 yield block
+
         if record.compression == _ZSTD:
             try:
                 with zstandard.ZstdDecompressor().stream_reader(source) as reader:
@@ -218,14 +220,16 @@ class ModPackage:
         """Commit only a verified file; retain the original on extraction failure."""
         destination = Path(destination)
         destination.parent.mkdir(parents=True, exist_ok=True)
-        fd, temporary = tempfile.mkstemp(prefix='.sexo2-chunk-', dir=destination.parent)
+        fd, temporary = tempfile.mkstemp(prefix=".sexo2-chunk-", dir=destination.parent)
         temporary = Path(temporary)
         try:
-            with os.fdopen(fd, 'wb') as output:
+            with os.fdopen(fd, "wb") as output:
                 for block in self.record_blocks(record):
-                    if check_continue is not None:check_continue()
+                    if check_continue is not None:
+                        check_continue()
                     output.write(block)
-            if check_continue is not None:check_continue()
+            if check_continue is not None:
+                check_continue()
             temporary.replace(destination)
         finally:
             temporary.unlink(missing_ok=True)
@@ -233,6 +237,7 @@ class ModPackage:
     def iter_file_digests(self):
         """SHA-256 content digests with the same layout as an extracted folder."""
         import hashlib
+
         for relative_path, content in sorted(self._layout().items()):
             checksum = hashlib.sha256()
             if isinstance(content, bytes):
@@ -245,7 +250,8 @@ class ModPackage:
     def _meta_file(self, path: bytes) -> Optional[_Record]:
         return next(
             (
-                record for record in self.records
+                record
+                for record in self.records
                 if record.layer_index == _NONE
                 and record.wad_index == _NONE
                 and _canonical(self.paths[record.path_index]) == path
@@ -260,7 +266,8 @@ class ModPackage:
             if record is None:
                 continue
             try:
-                if record.uncompressed_size>4*1024*1024:raise ModpkgError("Package metadata exceeds the limit")
+                if record.uncompressed_size > 4 * 1024 * 1024:
+                    raise ModpkgError("Package metadata exceeds the limit")
                 document = _unpack_msgpack(self.read(record))
             except ModpkgError as e:
                 log.warning(f"[MODPKG] Ignoring the package metadata: {e}")
@@ -322,7 +329,8 @@ def extract_modpkg(source: Union[str, Path], dest_dir: Union[str, Path], *, chec
             log.warning(f"[MODPKG] {source.name}: skipping {package.unplaced_file_count} files that target no game WAD")
         file_count = 0
         for relative_path, content in sorted(package._layout().items()):
-            if check_continue is not None:check_continue()
+            if check_continue is not None:
+                check_continue()
             target = dest_dir.joinpath(*relative_path.split("/"))
             target.parent.mkdir(parents=True, exist_ok=True)
             if isinstance(content, bytes):
@@ -335,6 +343,7 @@ def extract_modpkg(source: Union[str, Path], dest_dir: Union[str, Path], *, chec
 
 class _RegionReader:
     """Bounded reads of an mmap region; no exported views survive its lifetime."""
+
     def __init__(self, data, offset, size):
         self.data = data
         self.offset = offset
@@ -343,7 +352,7 @@ class _RegionReader:
     def read(self, size=-1):
         size = _STREAM_STEP if size < 0 else min(size, _STREAM_STEP)
         end = min(self.end, self.offset + size)
-        block = self.data[self.offset:end]
+        block = self.data[self.offset : end]
         self.offset = end
         return block
 
@@ -362,7 +371,7 @@ class _Cursor:
     def take(self, size: int) -> bytes:
         if size > self.remaining:
             raise ModpkgError("The .modpkg file is truncated")
-        value = self.data[self.offset:self.offset + size]
+        value = self.data[self.offset : self.offset + size]
         self.offset += size
         return value
 

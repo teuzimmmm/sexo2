@@ -99,6 +99,7 @@ def resolve_language(setting: Optional[str], client_locale: Optional[str]) -> st
 
 def locales_dir() -> Path:
     from utils.integration.pengu_loader import PENGU_DIR
+
     return Path(PENGU_DIR) / "plugins" / "ROSE-I18n" / "locales"
 
 
@@ -121,6 +122,7 @@ def load_strings(language: str, directory: Optional[Path] = None) -> Dict[str, s
 def current_language(shared_state=None) -> str:
     """The language Rose's menus use right now."""
     from config import get_config_option
+
     setting = get_config_option("General", "language")
     client_locale = getattr(shared_state, "current_locale", None) if shared_state else None
     return resolve_language(setting, client_locale)
@@ -130,6 +132,7 @@ def i18n_payload(shared_state=None) -> dict:
     """What the plugins load: the language, its direction and its texts."""
     language = current_language(shared_state)
     from config import get_config_option
+
     return {
         "language": language,
         "setting": get_config_option("General", "language") or AUTO,

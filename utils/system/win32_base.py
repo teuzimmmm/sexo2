@@ -69,9 +69,7 @@ WS_CHILD = 0x40000000
 WS_GROUP = 0x00020000
 WS_TABSTOP = 0x00010000
 
-WS_OVERLAPPEDWINDOW = (
-    WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
-)
+WS_OVERLAPPEDWINDOW = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
 
 WS_EX_APPWINDOW = 0x00040000
 WS_EX_CLIENTEDGE = 0x00000200
@@ -366,7 +364,9 @@ class Win32Window:
         user32.DestroyWindow(self.hwnd)
         return 0
 
-    def on_command(self, command_id: int, notification_code: int, control_hwnd: Optional[wintypes.HWND]) -> Optional[int]:
+    def on_command(
+        self, command_id: int, notification_code: int, control_hwnd: Optional[wintypes.HWND]
+    ) -> Optional[int]:
         return None
 
     def on_hscroll(self, request_code: int, position: int, trackbar_hwnd: Optional[wintypes.HWND]) -> Optional[int]:
@@ -597,6 +597,7 @@ class Win32Window:
                 pass
         self._icon_handles.clear()
 
+
 __all__ = [
     "Win32Window",
     "HIWORD",
@@ -644,4 +645,3 @@ __all__ = [
     "kernel32",
     "SW_SHOWNORMAL",
 ]
-

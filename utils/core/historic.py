@@ -100,7 +100,7 @@ def clear_historic_target(champion_id: int) -> None:
 
 def load_historic_map() -> Dict[str, Union[int, str]]:
     """Load the historic mapping. Returns empty dict if missing or invalid.
-    
+
     Returns:
         Dict mapping champion IDs to either skin/chroma IDs (int) or custom mod paths (str with "path:" prefix)
     """
@@ -132,7 +132,7 @@ def load_historic_map() -> Dict[str, Union[int, str]]:
 
 def get_historic_skin_for_champion(champion_id: int) -> Optional[Union[int, str]]:
     """Get historic entry for a champion.
-    
+
     Returns:
         Integer skin/chroma ID, or string custom mod path (with "path:" prefix), or None
     """
@@ -143,7 +143,7 @@ def get_historic_skin_for_champion(champion_id: int) -> Optional[Union[int, str]
 
 def write_historic_entry(champion_id: int, skin_or_chroma_id: Union[int, str]) -> None:
     """Write or overwrite the entry for the champion ID.
-    
+
     Args:
         champion_id: Champion ID
         skin_or_chroma_id: Either an integer skin/chroma ID, or a string custom mod path (with "path:" prefix)
@@ -173,10 +173,10 @@ def clear_historic_entry(champion_id: int) -> None:
 
 def is_custom_mod_path(value: Union[int, str]) -> bool:
     """Check if a historic value is a custom mod path.
-    
+
     Args:
         value: Historic value (int or str)
-    
+
     Returns:
         True if value is a string starting with "path:", False otherwise
     """
@@ -185,10 +185,10 @@ def is_custom_mod_path(value: Union[int, str]) -> bool:
 
 def get_custom_mod_path(value: Union[int, str]) -> Optional[str]:
     """Extract custom mod path from historic value.
-    
+
     Args:
         value: Historic value (int or str)
-    
+
     Returns:
         Custom mod path without "path:" prefix, or None if not a custom mod path
     """

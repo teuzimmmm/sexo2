@@ -35,12 +35,12 @@ from utils.core.paths import get_app_dir, get_state_dir, get_user_data_dir
 
 log = get_logger("pengu_loader")
 
-_SESSION_FILE = get_state_dir() / 'pengu_session.json'
+_SESSION_FILE = get_state_dir() / "pengu_session.json"
 # core.dll reads its hook switch (disabled, loaderpath) from this file
 _CONFIG_FILE = get_config_file_path()
 # The loader runs elevated: when Rose was elevated with another account's
 # credentials, its own LocalApplicationData isn't the desktop user's config.ini
-os.environ['ROSE_CONFIG_PATH'] = str(_CONFIG_FILE)
+os.environ["ROSE_CONFIG_PATH"] = str(_CONFIG_FILE)
 
 _ACTIVE_FLAG = get_state_dir() / "pengu_active.flag"
 _LEGACY_PENGU_LOGS = (
@@ -214,7 +214,7 @@ def _get_bundled_pengu_dir() -> Optional[Path]:
             return candidate
 
     # 2. PyInstaller onedir: resources in _internal folder
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         app_dir = get_app_dir()
         candidate = app_dir / "_internal" / "Pengu Loader"
         if candidate.exists():
@@ -236,13 +236,13 @@ def _get_bundled_pengu_dir() -> Optional[Path]:
 def _resolve_pengu_dir() -> Path:
     """
     Locate the Pengu Loader directory for execution.
-    
+
     For frozen builds, copies Pengu Loader to AppData to ensure write permissions
     (Program Files is read-only, causing datastore failures).
     For development, uses the source directory directly.
     """
     # Development mode: use source directory directly (it's writable)
-    if not getattr(sys, 'frozen', False):
+    if not getattr(sys, "frozen", False):
         bundled = _get_bundled_pengu_dir()
         if bundled:
             _remove_legacy_pengu_logs(bundled)
@@ -260,7 +260,7 @@ def _resolve_pengu_dir() -> Path:
 
     # Runtime location in user data directory
     runtime_dir = get_user_data_dir() / "Pengu Loader"
-    
+
     try:
         # Keep the runtime directory and overlay updates on top of it.
         #
@@ -316,11 +316,13 @@ _PENGU_LOG = PENGU_DIR / "pengu.log"
 # leaves Rose unable to exit with the game still suspended.
 _CLI_TIMEOUT_S = 15.0
 _LEAGUE_PROCESSES: set[str] = {
-    'LeagueClient.exe', 'LeagueClientUx.exe',
-    'LeagueClientUxRender.exe', 'League of Legends.exe',
-    'League of Legends (TM) Client.exe',
+    "LeagueClient.exe",
+    "LeagueClientUx.exe",
+    "LeagueClientUxRender.exe",
+    "League of Legends.exe",
+    "League of Legends (TM) Client.exe",
 }
-_CREATE_NO_WINDOW = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+_CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 _operation_lock = threading.RLock()
 # The clients (LeagueClientUx.exe PIDs) Rose's loader waits to restart until a
 # safe phase (see retry_deferred_restart). A client started since then loads it.
@@ -328,17 +330,17 @@ _restart_pending: frozenset[int] = frozenset()
 
 
 class PenguStatus(Enum):
-    ACTIVE = 'active'
-    INACTIVE = 'inactive'
-    UNKNOWN = 'unknown'
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    UNKNOWN = "unknown"
 
 
 @dataclass(frozen=True)
 class CommandResult:
     args: tuple[str, ...]
     returncode: Optional[int]
-    stdout: str = ''
-    stderr: str = ''
+    stdout: str = ""
+    stderr: str = ""
 
     @property
     def succeeded(self) -> bool:
@@ -346,7 +348,7 @@ class CommandResult:
 
 
 def _is_windows() -> bool:
-    return sys.platform == 'win32'
+    return sys.platform == "win32"
 
 
 def _is_available() -> bool:
@@ -363,32 +365,32 @@ def _read_log_tail(
     try:
         path = Path(path)
         if max_lines <= 0 or max_chars <= 0:
-            return ''
+            return ""
         if not path.is_file():
-            return f'Pengu log is missing: {path}'
+            return f"Pengu log is missing: {path}"
 
         max_bytes = min(max(4096, max_chars * 4), 1024 * 1024)
-        with path.open('rb') as handle:
+        with path.open("rb") as handle:
             handle.seek(0, os.SEEK_END)
             file_size = handle.tell()
             start = max(0, file_size - max_bytes)
             handle.seek(start)
             raw = handle.read(max_bytes)
 
-        text = raw.decode('utf-8', errors='replace')
+        text = raw.decode("utf-8", errors="replace")
         if start > 0:
-            newline = text.find('\n')
-            text = text[newline + 1:] if newline >= 0 else ''
+            newline = text.find("\n")
+            text = text[newline + 1 :] if newline >= 0 else ""
 
         lines = text.splitlines()
         if len(lines) > max_lines:
             lines = lines[-max_lines:]
-        tail = '\n'.join(lines)
+        tail = "\n".join(lines)
         if len(tail) > max_chars:
             tail = tail[-max_chars:]
-        return tail or f'Pengu log is empty: {path}'
+        return tail or f"Pengu log is empty: {path}"
     except Exception as exc:
-        return f'Pengu log could not be read: {path}: {exc}'
+        return f"Pengu log could not be read: {path}: {exc}"
 
 
 def is_available() -> bool:
@@ -403,57 +405,63 @@ def _run_cli_result(args: Sequence[str], ok_codes: Iterable[int] = (0,)) -> Opti
     expected = tuple(ok_codes)
     command_args = tuple(str(arg) for arg in args)
     if not _is_available():
-        log.warning('Pengu Loader executable is unavailable: %s', PENGU_EXE)
+        log.warning("Pengu Loader executable is unavailable: %s", PENGU_EXE)
         return None
 
     command = [str(PENGU_EXE), *command_args]
     try:
         result = subprocess.run(
-            command, cwd=str(PENGU_DIR), text=True, capture_output=True,
-            check=False, creationflags=_CREATE_NO_WINDOW,
+            command,
+            cwd=str(PENGU_DIR),
+            text=True,
+            capture_output=True,
+            check=False,
+            creationflags=_CREATE_NO_WINDOW,
             timeout=_CLI_TIMEOUT_S,
         )
     except FileNotFoundError:
-        log.error('Pengu Loader executable is missing at %s', PENGU_EXE)
+        log.error("Pengu Loader executable is missing at %s", PENGU_EXE)
         return None
     except subprocess.TimeoutExpired:
         # TimeoutExpired derives from SubprocessError, not OSError, so the
         # handler below would not catch it and the exception would abort the
         # remaining cleanup steps (ADR-007).
-        log.error(
-            'Pengu Loader CLI timed out after %.0fs: %s', _CLI_TIMEOUT_S, command
-        )
+        log.error("Pengu Loader CLI timed out after %.0fs: %s", _CLI_TIMEOUT_S, command)
         return None
     except OSError as exc:
-        log.error('Failed to launch Pengu Loader CLI %s: %s', command, exc)
+        log.error("Failed to launch Pengu Loader CLI %s: %s", command, exc)
         return None
 
-    stdout = (result.stdout or '').strip()
-    stderr = (result.stderr or '').strip()
+    stdout = (result.stdout or "").strip()
+    stderr = (result.stderr or "").strip()
     returncode = result.returncode
     command_result = CommandResult(command_args, returncode, stdout, stderr)
     if returncode not in expected:
         signed = _signed_exit_code(returncode) if returncode is not None else None
         unsigned = (returncode & 0xFFFFFFFF) if returncode is not None else None
         log.error(
-            'Pengu command failed: command=%s exit_code=%s signed_exit_code=%s hex=%s stdout=%r stderr=%r',
-            ' '.join(command), returncode, signed,
-            hex(unsigned) if unsigned is not None else None, stdout, stderr,
+            "Pengu command failed: command=%s exit_code=%s signed_exit_code=%s hex=%s stdout=%r stderr=%r",
+            " ".join(command),
+            returncode,
+            signed,
+            hex(unsigned) if unsigned is not None else None,
+            stdout,
+            stderr,
         )
         try:
             pengu_log_tail = _read_log_tail(_PENGU_LOG)
         except Exception as exc:
-            pengu_log_tail = f'Pengu log tail could not be read: {_PENGU_LOG}: {exc}'
+            pengu_log_tail = f"Pengu log tail could not be read: {_PENGU_LOG}: {exc}"
         log.error(
-            'Pengu Loader log tail from %s:\n%s',
+            "Pengu Loader log tail from %s:\n%s",
             _PENGU_LOG,
             pengu_log_tail,
         )
     else:
         if stdout:
-            log.debug('Pengu Loader CLI stdout: %s', stdout)
+            log.debug("Pengu Loader CLI stdout: %s", stdout)
         if stderr:
-            log.debug('Pengu Loader CLI stderr: %s', stderr)
+            log.debug("Pengu Loader CLI stderr: %s", stderr)
     return command_result
 
 
@@ -467,11 +475,11 @@ def _is_league_running() -> bool:
     if not _is_windows() or psutil is None:
         return False
     try:
-        for proc in psutil.process_iter(['name']):
-            if proc.info.get('name') in _LEAGUE_PROCESSES:
+        for proc in psutil.process_iter(["name"]):
+            if proc.info.get("name") in _LEAGUE_PROCESSES:
                 return True
     except (psutil.Error, OSError) as exc:  # type: ignore[attr-defined]
-        log.debug('Failed to inspect running League processes: %s', exc)
+        log.debug("Failed to inspect running League processes: %s", exc)
     return False
 
 
@@ -481,43 +489,43 @@ def _close_loader_menu() -> None:
         return
     current = os.getpid()
     try:
-        for proc in psutil.process_iter(['pid', 'name']):
-            if proc.info.get('name') != PENGU_EXE.name or proc.info.get('pid') == current:
+        for proc in psutil.process_iter(["pid", "name"]):
+            if proc.info.get("name") != PENGU_EXE.name or proc.info.get("pid") == current:
                 continue
-            log.info('Closing the open Pengu Loader window (PID %s) so Rose can toggle Pengu.', proc.info['pid'])
+            log.info("Closing the open Pengu Loader window (PID %s) so Rose can toggle Pengu.", proc.info["pid"])
             try:
                 proc.terminate()
                 proc.wait(timeout=3)
             except psutil.TimeoutExpired:  # type: ignore[attr-defined]
                 proc.kill()
             except psutil.Error as exc:  # type: ignore[attr-defined]
-                log.warning('Could not close Pengu Loader PID %s: %s', proc.info['pid'], exc)
+                log.warning("Could not close Pengu Loader PID %s: %s", proc.info["pid"], exc)
     except (psutil.Error, OSError) as exc:  # type: ignore[attr-defined]
-        log.debug('Failed to inspect running Pengu Loader processes: %s', exc)
+        log.debug("Failed to inspect running Pengu Loader processes: %s", exc)
 
 
 def set_league_path(league_path: str) -> bool:
     if not _is_available():
-        log.warning('Pengu Loader is unavailable; cannot set League path.')
+        log.warning("Pengu Loader is unavailable; cannot set League path.")
         return False
     if not league_path or not league_path.strip():
-        log.warning('Empty League path provided; skipping --set-league-path.')
+        log.warning("Empty League path provided; skipping --set-league-path.")
         return False
     path = league_path.strip()
-    log.info('Setting League path: executable=%s league_path=%s', PENGU_EXE, path)
+    log.info("Setting League path: executable=%s league_path=%s", PENGU_EXE, path)
     with _operation_lock:
-        return _run_cli(['--set-league-path', path, '--silent'])
+        return _run_cli(["--set-league-path", path, "--silent"])
 
 
 def get_status() -> PenguStatus:
     with _operation_lock:
-        result = _run_cli_result(['--status', '--silent'], ok_codes=(0, 1))
+        result = _run_cli_result(["--status", "--silent"], ok_codes=(0, 1))
     if result is None:
         return PenguStatus.UNKNOWN
-    output = f'{result.stdout}\n{result.stderr}'.upper()
-    if re.search(r'\bINACTIVE\b', output):
+    output = f"{result.stdout}\n{result.stderr}".upper()
+    if re.search(r"\bINACTIVE\b", output):
         return PenguStatus.INACTIVE
-    if re.search(r'\bACTIVE\b', output):
+    if re.search(r"\bACTIVE\b", output):
         return PenguStatus.ACTIVE
     if result.returncode == 0:
         return PenguStatus.ACTIVE
@@ -529,13 +537,13 @@ def get_status() -> PenguStatus:
 def activate() -> bool:
     with _operation_lock:
         _close_loader_menu()
-        result = _run_cli_result(['--install', '--silent'])
+        result = _run_cli_result(["--install", "--silent"])
         if result is None or not result.succeeded:
-            log.error('Pengu activation failed.')
+            log.error("Pengu activation failed.")
             return False
         status = get_status()
         if status is not PenguStatus.ACTIVE:
-            log.error('Pengu activation command succeeded, but status is %s.', status.value)
+            log.error("Pengu activation command succeeded, but status is %s.", status.value)
             return False
         return True
 
@@ -546,16 +554,16 @@ def deactivate() -> bool:
         if other is not None:
             # --uninstall only removes a hook that runs our core.dll, but it would
             # still switch off the config.ini the other loader's core.dll reads
-            log.info('The Pengu hook runs another loader (%s); leaving it on.', other)
+            log.info("The Pengu hook runs another loader (%s); leaving it on.", other)
             return True
         _close_loader_menu()
-        result = _run_cli_result(['--uninstall', '--silent'])
+        result = _run_cli_result(["--uninstall", "--silent"])
         if result is None or not result.succeeded:
-            log.error('Pengu deactivation failed.')
+            log.error("Pengu deactivation failed.")
             return False
         status = get_status()
         if status is not PenguStatus.INACTIVE:
-            log.error('Pengu deactivation command succeeded, but status is %s.', status.value)
+            log.error("Pengu deactivation command succeeded, but status is %s.", status.value)
             return False
         return True
 
@@ -564,25 +572,25 @@ def restart_client() -> bool:
     """Use the regional-aware LCU connection and verify the restart response."""
     with _operation_lock:
         from config import GAME_EXECUTABLE_NAMES
+
         if _process_running(GAME_EXECUTABLE_NAMES):
             return False
         from lcu.core.lcu_connection import LCUConnection
+
         connection = LCUConnection()
         try:
             if not connection.ok:
                 return False
-            response = connection.session.get(
-                connection.base + '/lol-gameflow/v1/gameflow-phase', timeout=3)
-            if response.status_code != 200 or response.json() not in {'None', 'Lobby', 'EndOfGame'}:
+            response = connection.session.get(connection.base + "/lol-gameflow/v1/gameflow-phase", timeout=3)
+            if response.status_code != 200 or response.json() not in {"None", "Lobby", "EndOfGame"}:
                 return False
-            response = connection.session.post(
-                connection.base + '/riotclient/kill-and-restart-ux', timeout=5)
+            response = connection.session.post(connection.base + "/riotclient/kill-and-restart-ux", timeout=5)
             if 200 <= response.status_code < 300:
-                log.info('League client UX restart accepted through LCU.')
+                log.info("League client UX restart accepted through LCU.")
                 return True
-            log.warning('League client UX restart returned HTTP %s.', response.status_code)
+            log.warning("League client UX restart returned HTTP %s.", response.status_code)
         except Exception as exc:
-            log.warning('League client UX restart not confirmed (%s).', type(exc).__name__)
+            log.warning("League client UX restart not confirmed (%s).", type(exc).__name__)
         finally:
             connection.session.close()
         return False
@@ -593,8 +601,7 @@ def _process_running(names: Iterable[str]) -> bool:
         return True  # Do not restart anything without a reliable process check.
     eligible = {name.lower() for name in names}
     try:
-        return any((proc.info.get('name') or '').lower() in eligible
-                   for proc in psutil.process_iter(['name']))
+        return any((proc.info.get("name") or "").lower() in eligible for proc in psutil.process_iter(["name"]))
     except (psutil.Error, OSError):
         return True
 
@@ -604,8 +611,11 @@ def _process_ids(names: Iterable[str]) -> frozenset[int]:
         return frozenset()
     eligible = {name.lower() for name in names}
     try:
-        return frozenset(proc.info['pid'] for proc in psutil.process_iter(['pid', 'name'])
-                         if (proc.info.get('name') or '').lower() in eligible)
+        return frozenset(
+            proc.info["pid"]
+            for proc in psutil.process_iter(["pid", "name"])
+            if (proc.info.get("name") or "").lower() in eligible
+        )
     except (psutil.Error, OSError):
         return frozenset()
 
@@ -627,61 +637,62 @@ def _ensure_loader_config() -> None:
     parser = configparser.ConfigParser(interpolation=None)
     try:
         read_config_file(parser, _CONFIG_FILE)
-        if (parser.get('General', 'disabled', fallback=None) == '0'
-                and _same_path(parser.get('General', 'loaderpath', fallback=None), loader_dir)):
+        if parser.get("General", "disabled", fallback=None) == "0" and _same_path(
+            parser.get("General", "loaderpath", fallback=None), loader_dir
+        ):
             return
-        log.info('Enabling the Pengu hook in %s (loaderpath=%s)', _CONFIG_FILE, loader_dir)
-        if not parser.has_section('General'):
-            parser.add_section('General')
-        parser.set('General', 'disabled', '0')
-        parser.set('General', 'loaderpath', loader_dir)
+        log.info("Enabling the Pengu hook in %s (loaderpath=%s)", _CONFIG_FILE, loader_dir)
+        if not parser.has_section("General"):
+            parser.add_section("General")
+        parser.set("General", "disabled", "0")
+        parser.set("General", "loaderpath", loader_dir)
         write_config_file(parser, _CONFIG_FILE)
     except (OSError, configparser.Error) as exc:
-        log.warning('Could not enable the Pengu hook in %s: %s', _CONFIG_FILE, exc)
+        log.warning("Could not enable the Pengu hook in %s: %s", _CONFIG_FILE, exc)
 
 
 def _write_active_flag() -> None:
     try:
         _ACTIVE_FLAG.parent.mkdir(parents=True, exist_ok=True)
-        _ACTIVE_FLAG.write_text('active', encoding='utf-8')
+        _ACTIVE_FLAG.write_text("active", encoding="utf-8")
     except OSError as exc:
-        log.error('Failed to write legacy Pengu active flag %s: %s', _ACTIVE_FLAG, exc)
+        log.error("Failed to write legacy Pengu active flag %s: %s", _ACTIVE_FLAG, exc)
 
 
 def _clear_active_flag() -> None:
     try:
         _ACTIVE_FLAG.unlink(missing_ok=True)
     except OSError as exc:
-        log.warning('Failed to clear legacy Pengu active flag %s: %s', _ACTIVE_FLAG, exc)
+        log.warning("Failed to clear legacy Pengu active flag %s: %s", _ACTIVE_FLAG, exc)
 
 
 def _read_session() -> Optional[dict[str, object]]:
     try:
         if not _SESSION_FILE.exists():
             return None
-        data = json.loads(_SESSION_FILE.read_text(encoding='utf-8'))
+        data = json.loads(_SESSION_FILE.read_text(encoding="utf-8"))
         return data if isinstance(data, dict) else None
     except (OSError, ValueError, TypeError) as exc:
-        log.error('Could not read Pengu session state %s: %s', _SESSION_FILE, exc)
+        log.error("Could not read Pengu session state %s: %s", _SESSION_FILE, exc)
         return None
 
 
 def _write_session(was_active: bool, rose_activated: bool) -> bool:
     record = {
-        'version': 1,
-        'rose_pid': os.getpid(),
-        'pengu_was_active_before_rose': was_active,
-        'rose_activated_pengu': rose_activated,
-        'activated_at': datetime.now().astimezone().isoformat(),
+        "version": 1,
+        "rose_pid": os.getpid(),
+        "pengu_was_active_before_rose": was_active,
+        "rose_activated_pengu": rose_activated,
+        "activated_at": datetime.now().astimezone().isoformat(),
     }
-    temporary = _SESSION_FILE.with_suffix(f'{_SESSION_FILE.suffix}.tmp')
+    temporary = _SESSION_FILE.with_suffix(f"{_SESSION_FILE.suffix}.tmp")
     try:
         _SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
-        temporary.write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
+        temporary.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
         temporary.replace(_SESSION_FILE)
         return True
     except OSError as exc:
-        log.error('Failed to write Pengu session state %s: %s', _SESSION_FILE, exc)
+        log.error("Failed to write Pengu session state %s: %s", _SESSION_FILE, exc)
         return False
 
 
@@ -689,13 +700,11 @@ def _clear_session() -> None:
     try:
         _SESSION_FILE.unlink(missing_ok=True)
     except OSError as exc:
-        log.warning('Failed to clear Pengu session state %s: %s', _SESSION_FILE, exc)
+        log.warning("Failed to clear Pengu session state %s: %s", _SESSION_FILE, exc)
 
 
 def _session_requires_deactivation(session: dict[str, object]) -> bool:
-    return bool(session.get('rose_activated_pengu')) and not bool(
-        session.get('pengu_was_active_before_rose')
-    )
+    return bool(session.get("rose_activated_pengu")) and not bool(session.get("pengu_was_active_before_rose"))
 
 
 def recover_stale_session(*, adopt_active: bool = False) -> bool:
@@ -715,34 +724,30 @@ def recover_stale_session(*, adopt_active: bool = False) -> bool:
             if _session_requires_deactivation(session):
                 status = get_status()
                 if status is PenguStatus.UNKNOWN:
-                    log.error('Cannot recover stale Pengu session because status is unknown.')
+                    log.error("Cannot recover stale Pengu session because status is unknown.")
                     return False
                 if status is PenguStatus.ACTIVE:
                     if adopt_active and _is_league_running():
-                        log.info(
-                            'Adopting active stale Pengu session because League is still running.'
-                        )
+                        log.info("Adopting active stale Pengu session because League is still running.")
                         return True
                     if not deactivate():
-                        log.error('Failed to recover stale Pengu session; keeping state.')
+                        log.error("Failed to recover stale Pengu session; keeping state.")
                         return False
             _clear_session()
             if legacy:
                 _clear_active_flag()
             return True
-        log.info('Detected legacy Pengu active flag; running migration deactivation.')
+        log.info("Detected legacy Pengu active flag; running migration deactivation.")
         if adopt_active:
             status = get_status()
             if status is PenguStatus.UNKNOWN:
-                log.error('Cannot recover legacy Pengu session because status is unknown.')
+                log.error("Cannot recover legacy Pengu session because status is unknown.")
                 return False
             if status is PenguStatus.ACTIVE and _is_league_running():
-                log.info(
-                    'Adopting active legacy Pengu session because League is still running.'
-                )
+                log.info("Adopting active legacy Pengu session because League is still running.")
                 return True
         if not deactivate():
-            log.error('Legacy Pengu session recovery failed; keeping the active flag.')
+            log.error("Legacy Pengu session recovery failed; keeping the active flag.")
             return False
         _clear_active_flag()
         return True
@@ -758,16 +763,16 @@ def _registered_pengu_core() -> Optional[Path]:
         return None
     try:
         import winreg
+
         key_path = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LeagueClientUx.exe"
         # The 64-bit view, where Pengu registers it, whatever Rose's own bitness
-        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path, 0,
-                            winreg.KEY_READ | winreg.KEY_WOW64_64KEY) as key:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path, 0, winreg.KEY_READ | winreg.KEY_WOW64_64KEY) as key:
             debugger, _ = winreg.QueryValueEx(key, "Debugger")
         match = re.fullmatch(r'rundll32(?:\.exe)?\s+"([^"]+)",\s*#6000\s*', debugger, re.IGNORECASE)
         if not match:
             return None
         core = Path(match.group(1))
-        if core.name.lower() == 'core.dll' and core.is_file():
+        if core.name.lower() == "core.dll" and core.is_file():
             return core
     except (OSError, TypeError, ValueError):
         pass
@@ -789,9 +794,11 @@ def _external_pengu_with_rose_plugins() -> Optional[Path]:
     if core is None:
         return None
     external = core.parent
-    if ((external / 'Pengu Loader.exe').is_file()
-            and (external / 'plugins' / 'ROSE-SkinMonitor' / 'index.js').is_file()
-            and (external / 'plugins' / 'ROSE-UI' / 'index.js').is_file()):
+    if (
+        (external / "Pengu Loader.exe").is_file()
+        and (external / "plugins" / "ROSE-SkinMonitor" / "index.js").is_file()
+        and (external / "plugins" / "ROSE-UI" / "index.js").is_file()
+    ):
         return external
     return None
 
@@ -810,11 +817,14 @@ def ensure_active_for_client() -> None:
         # Both editions share the loader window's mutex: don't close a window
         # the user has open, try again at the next client start
         if _process_running((PENGU_EXE.name,)):
-            log.info('No active Pengu Loader, but its window is open; Rose enables its loader at the next client start.')
+            log.info(
+                "No active Pengu Loader, but its window is open; Rose enables its loader at the next client start."
+            )
             return
         from config import get_config_option
-        log.info('No active Pengu Loader; enabling the loader bundled with Rose.')
-        activate_on_start(get_config_option('General', 'clientPath'))
+
+        log.info("No active Pengu Loader; enabling the loader bundled with Rose.")
+        activate_on_start(get_config_option("General", "clientPath"))
 
 
 def retry_deferred_restart() -> None:
@@ -828,13 +838,13 @@ def retry_deferred_restart() -> None:
         with _operation_lock:
             if not _restart_pending:
                 return
-            if _restart_pending & _process_ids(('LeagueClientUx.exe',)):
+            if _restart_pending & _process_ids(("LeagueClientUx.exe",)):
                 if restart_client():
                     _restart_pending = frozenset()
             else:
                 _restart_pending = frozenset()  # A client started since loads the registered loader
 
-    threading.Thread(target=restart, name='PenguClientRestart', daemon=True).start()
+    threading.Thread(target=restart, name="PenguClientRestart", daemon=True).start()
 
 
 def activate_on_start(league_path: Optional[str] = None) -> bool:
@@ -842,47 +852,45 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
     with _operation_lock:
         external = _external_pengu_with_rose_plugins()
         if external is not None:
-            log.info('Using existing external Pengu Loader with Rose plugins: %s', external)
+            log.info("Using existing external Pengu Loader with Rose plugins: %s", external)
             # This activation belongs to the user, so Rose must not remove it
             # on exit or replace its registry entry with the bundled loader.
             return _write_session(was_active=True, rose_activated=False)
         if not _is_available():
-            log.error('Pengu Loader executable is unavailable: %s', PENGU_EXE)
+            log.error("Pengu Loader executable is unavailable: %s", PENGU_EXE)
             return False
 
         stale_rose_owned = False
         if _SESSION_FILE.exists() or _ACTIVE_FLAG.exists():
             session = _read_session()
-            stale_rose_owned = (
-                _session_requires_deactivation(session)
-                if session is not None
-                else _ACTIVE_FLAG.exists()
-            )
+            stale_rose_owned = _session_requires_deactivation(session) if session is not None else _ACTIVE_FLAG.exists()
             if not recover_stale_session(adopt_active=True):
                 return False
 
         initial = get_status()
         if initial is PenguStatus.UNKNOWN:
-            log.error('Cannot start Rose Pengu integration because initial status is unknown.')
+            log.error("Cannot start Rose Pengu integration because initial status is unknown.")
             return False
         if league_path and not set_league_path(league_path):
             log.warning(
-                'Could not configure League path: executable=%s league_path=%r',
-                PENGU_EXE, league_path,
+                "Could not configure League path: executable=%s league_path=%r",
+                PENGU_EXE,
+                league_path,
             )
 
         # A running client loads Rose's plugins only when it starts, so it restarts
         # whatever state an earlier Rose left the loader in
-        restart_needed = _process_running(('LeagueClientUx.exe',))
+        restart_needed = _process_running(("LeagueClientUx.exe",))
         activated_now = False
         if initial is PenguStatus.INACTIVE:
-            log.info('Activating Pengu through official CLI (restart League: %s).', restart_needed)
+            log.info("Activating Pengu through official CLI (restart League: %s).", restart_needed)
             if not activate():
                 return False
             activated_now = True
         elif stale_rose_owned:
-            log.info('Adopted the active Pengu session from the previous Rose process (restart League: %s).',
-                     restart_needed)
+            log.info(
+                "Adopted the active Pengu session from the previous Rose process (restart League: %s).", restart_needed
+            )
         else:
             # --status only reports this loader's own core.dll as active, so an
             # earlier Rose left it on: it's Rose's, and goes when Rose quits
@@ -891,16 +899,15 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
 
         if not _write_session(was_active=False, rose_activated=True):
             if activated_now:
-                log.error('Could not persist session state; reverting activation.')
+                log.error("Could not persist session state; reverting activation.")
                 deactivate()
             return False
         if _ACTIVE_FLAG.exists():
             _clear_active_flag()
         if restart_needed:
-            _restart_pending = (frozenset() if restart_client()
-                                else _process_ids(('LeagueClientUx.exe',)))
+            _restart_pending = frozenset() if restart_client() else _process_ids(("LeagueClientUx.exe",))
             if _restart_pending:
-                log.info('Rose Loader enabled; client restart deferred until the client is ready.')
+                log.info("Rose Loader enabled; client restart deferred until the client is ready.")
         return True
 
 
@@ -910,28 +917,26 @@ def restore_after_rose() -> bool:
         legacy = _ACTIVE_FLAG.exists()
         if session is None and not legacy:
             return True
-        should_deactivate = (
-            _session_requires_deactivation(session) if session is not None else True
-        )
+        should_deactivate = _session_requires_deactivation(session) if session is not None else True
         other = _hook_of_another_loader() if should_deactivate else None
         if other is not None:
             # Another loader took the hook over: not ours to switch off (see
             # deactivate), and the client runs its plugins, not ours
-            log.info('The Pengu hook runs another loader (%s); leaving it on.', other)
+            log.info("The Pengu hook runs another loader (%s); leaving it on.", other)
             should_deactivate = False
         if should_deactivate:
             restart_needed = _is_league_running()
             if not _is_available():
-                log.error('Cannot restore Pengu state; executable is unavailable: %s', PENGU_EXE)
+                log.error("Cannot restore Pengu state; executable is unavailable: %s", PENGU_EXE)
                 return False
-            log.info('Deactivating Pengu through official CLI.')
+            log.info("Deactivating Pengu through official CLI.")
             if not deactivate():
-                log.error('Pengu deactivation failed; keeping recovery state.')
+                log.error("Pengu deactivation failed; keeping recovery state.")
                 return False
             if restart_needed and not restart_client():
                 log.warning(
-                    'Pengu was deactivated, but League could not be restarted automatically. '
-                    'Please close and reopen the League client to unload the plugins.'
+                    "Pengu was deactivated, but League could not be restarted automatically. "
+                    "Please close and reopen the League client to unload the plugins."
                 )
         _clear_session()
         if legacy:

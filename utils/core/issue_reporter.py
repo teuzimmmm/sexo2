@@ -27,16 +27,15 @@ _LAST: Dict[str, float] = {}  # naive dedupe: key -> last timestamp
 # resource failures that commonly confuse users. Everything else should go to
 # the normal logs.
 _ALLOWED_CODES = {
-    'AUTO_RESUME_TRIGGERED',  # Suggest increasing Monitor Auto-Resume Timeout
-    'BASE_SKIN_FORCE_SLOW',   # Suggest increasing Injection Threshold
-    'BASE_SKIN_VERIFY_FAILED',  # Base skin verification mismatch (often causes skin not to show)
-    'LOW_DISK_SPACE',         # Injection could not build an overlay with available disk space
-    'LTK_PATCHER_MISSING',    # User-provided LTK patcher files are missing
-    'LTK_PATCHER_EOL',        # LTK patcher DLL no longer supports the current game build
-    'LTK_PATCHER_FAILED',     # LTK patcher host/DLL reported an error
-    'PENGU_ACTIVATION_FAILED',  # Pengu Loader could not be activated: Rose is missing from the client
+    "AUTO_RESUME_TRIGGERED",  # Suggest increasing Monitor Auto-Resume Timeout
+    "BASE_SKIN_FORCE_SLOW",  # Suggest increasing Injection Threshold
+    "BASE_SKIN_VERIFY_FAILED",  # Base skin verification mismatch (often causes skin not to show)
+    "LOW_DISK_SPACE",  # Injection could not build an overlay with available disk space
+    "LTK_PATCHER_MISSING",  # User-provided LTK patcher files are missing
+    "LTK_PATCHER_EOL",  # LTK patcher DLL no longer supports the current game build
+    "LTK_PATCHER_FAILED",  # LTK patcher host/DLL reported an error
+    "PENGU_ACTIVATION_FAILED",  # Pengu Loader could not be activated: Rose is missing from the client
 }
-
 
 
 def _issues_path():
@@ -111,7 +110,7 @@ def read_issues_tail(*, max_lines: int = 60) -> list[str]:
             lines = p.read_text(encoding="utf-8", errors="ignore").splitlines()
         if max_lines <= 0:
             return []
-        return lines[-int(max_lines):]
+        return lines[-int(max_lines) :]
     except Exception as e:
         log.debug("[ISSUES] Could not read diagnostics file: %s", e)
         return []
@@ -156,4 +155,3 @@ def clear_issues() -> bool:
     except Exception as e:
         log.debug("[ISSUES] Could not clear diagnostics file: %s", e)
         return False
-

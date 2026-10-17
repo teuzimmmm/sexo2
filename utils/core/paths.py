@@ -43,17 +43,20 @@ def _get_desktop_user_info() -> Tuple[Optional[str], Optional[str]]:
 
         # Find explorer.exe - it always runs as the desktop user
         import subprocess
+
         result = subprocess.run(
-            ['tasklist', '/FI', 'IMAGENAME eq explorer.exe', '/FO', 'CSV', '/NH'],
-            capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW
+            ["tasklist", "/FI", "IMAGENAME eq explorer.exe", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW,
         )
 
         if result.returncode != 0 or not result.stdout.strip():
             return None, None
 
         # Parse PID from CSV output: "explorer.exe","1234",...
-        line = result.stdout.strip().split('\n')[0]
-        parts = line.split(',')
+        line = result.stdout.strip().split("\n")[0]
+        parts = line.split(",")
         if len(parts) < 2:
             return None, None
 
@@ -93,8 +96,13 @@ def _get_desktop_user_info() -> Tuple[Optional[str], Optional[str]]:
                 sid_type = wintypes.DWORD()
 
                 if not advapi32.LookupAccountSidW(
-                    None, sid_ptr, name, ctypes.byref(name_size),
-                    domain, ctypes.byref(domain_size), ctypes.byref(sid_type)
+                    None,
+                    sid_ptr,
+                    name,
+                    ctypes.byref(name_size),
+                    domain,
+                    ctypes.byref(domain_size),
+                    ctypes.byref(sid_type),
                 ):
                     return None, None
 
@@ -265,7 +273,7 @@ def get_app_dir() -> Path:
     Get the main application directory (where the exe is located).
     This is read-only for installed applications.
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Running as compiled executable
         return Path(sys.executable).parent
     else:
@@ -278,10 +286,10 @@ def get_assets_dir() -> Path:
     """
     Get the base assets directory.
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Running as compiled executable
         # PyInstaller extracts data files to _MEIPASS (onefile) or _internal (onedir)
-        if hasattr(sys, '_MEIPASS'):
+        if hasattr(sys, "_MEIPASS"):
             # One-file mode: use _MEIPASS
             base_path = Path(sys._MEIPASS)
         else:
