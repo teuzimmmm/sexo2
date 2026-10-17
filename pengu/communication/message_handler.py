@@ -125,6 +125,13 @@ def _choose_mod_file() -> Optional[Path]:
 
 # Message type -> handler method. Special cases live in MessageHandler._route.
 _ROUTES = {
+    "assistant-request": "_handle_assistant",
+    "assistant-opponent": "_handle_assistant",
+    "assistant-runes-choose": "_handle_assistant",
+    "assistant-runes-edit": "_handle_assistant",
+    "assistant-runes-confirm": "_handle_assistant",
+    "assistant-runes-back": "_handle_assistant",
+    "assistant-items-import": "_handle_assistant",
     "sexo2-library-request": "_handle_library",
     "sexo2-update-request": "_handle_sexo2_update",
     "sexo2-update-open": "_open_sexo2_updater",
@@ -221,6 +228,30 @@ class MessageHandler:
         self.port = port
         self.mod_storage = mod_storage or ModStorageService()
         self.injection_manager = injection_manager
+
+    def _handle_assistant(self, payload):
+        """Champion-select assistant: runes and item sets (sexo2/services/assistant.py)."""
+        from sexo2.services.assistant import AssistantService
+
+        with self._background_lock:
+            if not hasattr(self, "_assistant"):
+                lcu = self.skin_scraper.lcu if self.skin_scraper else None
+                if lcu is None:
+                    self._send_response(json.dumps({"type": "assistant-state", "error": "no_client"}))
+                    return
+                self._assistant = AssistantService(
+                    lcu,
+                    lambda state: self._send_response(json.dumps(state, ensure_ascii=False)),
+                    queue_id=lambda: getattr(self.shared_state, "current_queue_id", None),
+                    in_champ_select=lambda: (
+                        getattr(self.shared_state, "phase", None) in ("ChampSelect", "FINALIZATION")
+                    ),
+                )
+        try:
+            self._assistant.handle(payload)
+        except ValueError as error:
+            response = {"type": "assistant-error", "requestId": payload.get("requestId"), "error": str(error)}
+            self._send_response(json.dumps(response, ensure_ascii=False))
 
     def _handle_friends(self, payload):
         from friends.service import FriendsService

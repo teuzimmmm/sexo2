@@ -7,6 +7,13 @@ from pengu.communication.message_handler import MessageHandler
 
 # Captured from the if/elif router before it became a table (commit after b73ba87).
 ROUTES = {
+    "assistant-request": "_handle_assistant",
+    "assistant-opponent": "_handle_assistant",
+    "assistant-runes-choose": "_handle_assistant",
+    "assistant-runes-edit": "_handle_assistant",
+    "assistant-runes-confirm": "_handle_assistant",
+    "assistant-runes-back": "_handle_assistant",
+    "assistant-items-import": "_handle_assistant",
     "sexo2-library-request": "_handle_library",
     "sexo2-update-request": "_handle_sexo2_update",
     "sexo2-update-open": "_open_sexo2_updater",
