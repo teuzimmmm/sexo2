@@ -134,6 +134,21 @@ class LCUAPI:
                 log.debug(f"[LCU] GET {path} failed after reconnecting: {e}")
                 return None
 
+    def get_bytes(self, path: str, timeout: float = 2.0) -> Optional[bytes]:
+        """Raw body of a GET, uncached (game data assets such as icons); None when unavailable."""
+        if not self.connection.ok:
+            self.connection.refresh_if_needed()
+            if not self.connection.ok:
+                return None
+        try:
+            r = self.connection.session.get((self.connection.base or "") + path, timeout=timeout)
+            if r.status_code != 200:
+                return None
+            return r.content
+        except requests.exceptions.RequestException as e:
+            log.debug(f"[LCU] GET {path} failed: {e}")
+            return None
+
     def put(self, path: str, json_data, timeout: float, headers: Optional[dict] = None) -> Optional[requests.Response]:
         """Make PUT request to LCU API
 

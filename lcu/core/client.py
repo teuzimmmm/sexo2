@@ -70,9 +70,21 @@ class LCU:
         """Return a consistent port/password snapshot for the LCU WebSocket."""
         return self._connection.websocket_credentials()
 
-    def get(self, path: str, timeout: float = 1.0):
+    def get(self, path: str, timeout: float = 1.0, cache_ttl: Optional[float] = None, use_cache: bool = True):
         """Make GET request to LCU API"""
-        return self._api.get(path, timeout)
+        return self._api.get(path, timeout, cache_ttl=cache_ttl, use_cache=use_cache)
+
+    def put(self, path: str, json_data, timeout: float, headers: Optional[dict] = None):
+        """Make PUT request to LCU API (see LCUAPI.put)"""
+        return self._api.put(path, json_data, timeout, headers)
+
+    def post(self, path: str, json_data, timeout: float):
+        """Make POST request to LCU API, never retried (see LCUAPI.post)"""
+        return self._api.post(path, json_data, timeout)
+
+    def get_bytes(self, path: str, timeout: float = 2.0) -> Optional[bytes]:
+        """Raw body of a GET (game data assets such as icons), or None"""
+        return self._api.get_bytes(path, timeout)
 
     def accept_ready_check(self) -> bool:
         if not self.ok:
