@@ -1,0 +1,66 @@
+name: Build private test installer
+on:
+  workflow_dispatch:
+    inputs:
+      base_tag:
+        description: Existing baseline release tag
+        default: v1.6.4
+        required: true
+      version:
+        description: Test edition (2.0.0.1 through 2.0.0.65535)
+        default: 2.0.0.1
+        required: true
+  push:
+    branches: ['test/installer-2.0']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install -r requirements.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Python dependencies failed.' }
+          choco install innosetup --no-progress -y
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup install failed.' }
+      - name: Test before packaging
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -q
+          if ($LASTEXITCODE -ne 0) { throw 'Tests failed; installer will not be built.' }
+      - name: Download existing native baseline
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BASE_TAG: ${{ inputs.base_tag || 'v1.6.4' }}
+        run: |
+          if ($env:BASE_TAG -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') { throw 'Invalid baseline tag.' }
+          gh release download $env:BASE_TAG --pattern SEXO2-baseline.zip --dir "$env:RUNNER_TEMP/sexo2-baseline"
+          if ($LASTEXITCODE -ne 0) { throw 'Native baseline download failed.' }
+      - name: Build and audit test installer
+        shell: pwsh
+        env:
+          TEST_VERSION: ${{ inputs.version || '2.0.0.1' }}
+        run: |
+          python scripts/build_test_installer.py --base "$env:RUNNER_TEMP/sexo2-baseline/SEXO2-baseline.zip" --version $env:TEST_VERSION
+          if ($LASTEXITCODE -ne 0) { throw 'Test installer build failed.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEXO2-2.0-Teste
+          path: |
+            build-test-installer/output/*.exe
+            build-test-installer/output/*.sha256
+            build-test-installer/output/*.json
+          if-no-files-found: error
+          retention-days: 7
+# Private test artifact only: no release, push from the job, or signing key.

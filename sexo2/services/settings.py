@@ -3,6 +3,7 @@ import math
 
 from config import APP_VERSION, get_config_float, get_config_option, set_config_options
 from lolalytics.risk import DEFAULT_RISK_LEVEL, validate_risk_level
+from sexo2.install.identity import display_version
 
 
 def get_risk_level():
@@ -30,7 +31,7 @@ class SettingsService:
             'hideEmptyCategories': (get_config_option('General', 'hide_empty_categories', 'false') or '').lower() == 'true',
             'lolalyticsRiskLevel': get_risk_level(),
             'gamePath': path, 'gamePathValid': bool(path and self.validate_path(path)),
-            'version': APP_VERSION,
+            'version': display_version(APP_VERSION),
         }
 
     def save(self, payload):
@@ -88,5 +89,5 @@ class SettingsService:
             'threshold': threshold, 'monitorAutoResumeTimeout': int(timeout),
             'autostart': payload['autostart'], 'hideEmptyCategories': payload['hideEmptyCategories'],
             'lolalyticsRiskLevel': risk_level,
-            'gamePath': path, 'gamePathValid': bool(path), 'version': APP_VERSION,
+            'gamePath': path, 'gamePathValid': bool(path), 'version': display_version(APP_VERSION),
         }

@@ -40,6 +40,10 @@ integrado no código. Testes isolados e fontes reais foram verificados; a
 validação no cliente Windows ainda está pendente. Consulte
 [DESENVOLVIMENTO_2_0.md](docs/DESENVOLVIMENTO_2_0.md) para uso, testes e limites.
 
+O [instalador de teste](docs/INSTALADOR_TESTE_2_0.md) tem build Windows separado,
+cadastro próprio e atualizações estáveis desativadas. Ainda preserva o caminho
+de dados compatível com o runtime antigo; não executa a migração/limpeza final.
+
 ## Coletor LoLalytics (fase 1)
 
 A fase 1 entregou a biblioteca e CLI independentes para Ranked, ARAM e Arena;

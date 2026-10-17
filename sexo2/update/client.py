@@ -12,6 +12,9 @@ def assets_root():
 
 
 def configuration():
+    from sexo2.install.identity import test_identity
+    if test_identity():
+        return '', ''
     base=assets_root()
     source=json.loads((base/'update-source.json').read_text(encoding='utf-8'))
     access=base/'update-access.json'
@@ -36,6 +39,11 @@ def version(value):
 
 
 def check_release(repository=None,token=None,current=RELEASE_VERSION):
+    from sexo2.install.identity import test_identity
+    identity = test_identity()
+    if identity:
+        return {'configured':False, 'available':False, 'version':identity['version'],
+                'channel':'test', 'message':'Edição de teste: atualizações estáveis desativadas. Instale o próximo pacote de teste para atualizar.'}
     if repository is None:repository,token=configuration()
     if not repository:return {'configured':False,'available':False,'version':current,'message':'O repositório do projeto ainda não foi conectado.'}
     url='https://api.github.com/repos/'+repository+'/releases/latest'
