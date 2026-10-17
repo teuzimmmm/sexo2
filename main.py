@@ -17,7 +17,7 @@ if not getattr(sys, 'frozen', False):
 
 # Renderer process must never initialize app locks, Pengu, skins or configuration.
 if __name__ == '__main__' and sys.argv[1:] == ['--overlay-worker']:
-    from sexo2.overlay.worker import main as overlay_worker
+    from sexo2.overlay.worker_entry import entry as overlay_worker
     raise SystemExit(overlay_worker())
 
 # Import from the modularized main package

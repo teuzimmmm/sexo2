@@ -155,7 +155,7 @@ class OverlayRuntime:
                             if self._arena_champion is None or self._arena_champion[0] != key:
                                 from .arena import own_champion
                                 try:
-                                    cid = own_champion(self.lcu, game, self.champion())
+                                    cid = own_champion(self.lcu, game)
                                 except Exception:
                                     cid = None
                                 if positive(cid):

@@ -46,3 +46,11 @@ foco, z-order, TAB, processos e protocolo passaram. A execução do auxiliar
 compilado sem console não respondeu pelo pipe; empacotamento bloqueado. Adicionado
 tratamento estático para impedir diálogo modal de exceção do bootloader e obter
 a classe do erro pelo pipe privado; a rodada deve ser repetida.
+
+Revisão de integração: campeão do gameflow/LCU permanece autoritativo para Arena;
+não usar hover como fallback. A suíte completa flagrou essa regressão e a mudança
+foi revertida. O laboratório gráfico roda somente protocolo/processos/janelas;
+os testes de continuidade LCU usam as dependências completas no CI do aplicativo.
+O probe windowed passa --paths . explicitamente: a análise anterior não coletou
+os módulos do renderer/Pillow; a entrada também agora captura falhas de import
+sem abrir diálogo modal. O pacote final deve repetir o probe no SEXO2 instalado.

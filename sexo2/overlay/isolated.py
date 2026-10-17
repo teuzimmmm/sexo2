@@ -129,3 +129,4 @@ class IsolatedOverlay:
     def stop(self):
         self._stop.set()
         if self._thread and self._thread is not threading.current_thread():self._thread.join(timeout=1)
+        elif self._thread is None:self._end()

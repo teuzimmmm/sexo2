@@ -60,13 +60,6 @@ def main():
     except Exception as error:
         # A windowed bootloader otherwise opens a modal traceback dialog and
         # leaves an apparently hung child. Emit only an exception class.
-        if os.name=='nt':
-            import ctypes as C
-            from ctypes import wintypes as W
-            api=C.WinDLL('kernel32',use_last_error=True)
-            api.GetStdHandle.argtypes=[W.DWORD];api.GetStdHandle.restype=W.HANDLE
-            api.WriteFile.argtypes=[W.HANDLE,W.LPCVOID,W.DWORD,C.POINTER(W.DWORD),W.LPVOID]
-            api.WriteFile.restype=W.BOOL
-            value=('display-worker-error:'+type(error).__name__+'\n').encode()
-            count=W.DWORD();api.WriteFile(api.GetStdHandle(0xfffffff4),value,len(value),C.byref(count),None)
+        from .worker_entry import report_error
+        report_error(error)
         return 3

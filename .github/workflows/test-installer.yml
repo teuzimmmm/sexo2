@@ -193,13 +193,13 @@ jobs:
         env:
           SEXO2_TEST_SOFTWARE_OVERLAY: '1'
         run: |
-          python -m unittest tests.test_overlay_isolated tests.test_overlay_software_windows -v
+          python -m unittest tests.test_overlay_isolated.ProtocolTests tests.test_overlay_isolated.ReadinessTests tests.test_overlay_isolated.ChildTests tests.test_overlay_software_windows -v
           if ($LASTEXITCODE -ne 0) { throw 'Isolated display tests failed.' }
       - name: Build windowed worker entry and verify private standard handles
         shell: pwsh
         run: |
-          Set-Content -LiteralPath worker-probe-entry.py -Value 'from sexo2.overlay.worker import main; raise SystemExit(main())'
-          python -m PyInstaller --noconfirm --windowed --name OverlayProbe --distpath display-probe --workpath display-probe-work --specpath display-probe-work worker-probe-entry.py
+          Set-Content -LiteralPath worker-probe-entry.py -Value 'from sexo2.overlay.worker_entry import entry; raise SystemExit(entry())'
+          python -m PyInstaller --noconfirm --windowed --paths . --name OverlayProbe --distpath display-probe --workpath display-probe-work --specpath display-probe-work worker-probe-entry.py
           if ($LASTEXITCODE -ne 0) { throw 'Windowed worker build failed.' }
           python scripts/probe_overlay_worker.py --worker display-probe/OverlayProbe/OverlayProbe.exe
           if ($LASTEXITCODE -ne 0) { throw 'Windowed entry/private pipes failed.' }
