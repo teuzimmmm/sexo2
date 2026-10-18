@@ -61,18 +61,32 @@ def prepare(title: Image.Image) -> Image.Image:
     return grey.resize((round(grey.width * scale), round(grey.height * scale)), Image.Resampling.LANCZOS)
 
 
+UNAVAILABLE_REASON = ""
+
+
 def windows_reader() -> Callable[[Image.Image], str] | None:
-    """A function reading the text of an image with the Windows OCR, or None when unavailable."""
+    """A function reading the text of an image with the Windows OCR, or None when unavailable.
+
+    The user's profile languages come first; otherwise any OCR language installed on Windows.
+    """
+    global UNAVAILABLE_REASON
     try:
         import asyncio
 
         from winrt.windows.graphics.imaging import BitmapDecoder
         from winrt.windows.media.ocr import OcrEngine
         from winrt.windows.storage.streams import DataWriter, InMemoryRandomAccessStream
-    except Exception:
+    except Exception as error:
+        UNAVAILABLE_REASON = f"import: {error}"
         return None
     engine = OcrEngine.try_create_from_user_profile_languages()
     if engine is None:
+        for language in OcrEngine.available_recognizer_languages:
+            engine = OcrEngine.try_create_from_language(language)
+            if engine is not None:
+                break
+    if engine is None:
+        UNAVAILABLE_REASON = "no OCR language installed"
         return None
 
     async def recognise(png: bytes) -> str:

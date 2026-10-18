@@ -425,11 +425,13 @@ class WindowsOcrTests(unittest.TestCase):
     """Runs where the Windows OCR exists (the Windows CI); skipped elsewhere."""
 
     def test_titles_on_real_captures_are_read_and_named(self):
-        from sexo2.augments.ocr import read_titles, windows_reader
+        from sexo2.augments import ocr
 
-        reader = windows_reader()
+        reader = ocr.windows_reader()
         if reader is None:
-            self.skipTest("Windows OCR unavailable")
+            print(f"Windows OCR unavailable ({ocr.UNAVAILABLE_REASON})")
+            self.skipTest(f"Windows OCR unavailable ({ocr.UNAVAILABLE_REASON})")
+        read_titles = ocr.read_titles
         catalog = title_catalog()
         by_name = {a.name: a.id for a in catalog.augments}
         named = total = 0
