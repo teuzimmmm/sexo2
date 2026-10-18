@@ -27,3 +27,10 @@ Escolha sobre fontes: preferência para uso habitual, comparação simultânea s
 6. Antes de produção, testes dos comportamentos tocados e checks de CLAUDE; depois validar cliente Windows, ancoragem real, teclado, viewport e overlays. Nenhum desempenho ou ganho de cliques foi medido aqui.
 
 Base consultada: `teuzimmmm/sexo2@galinacio` — CLAUDE.md; docs/produto/decisoes.md (inclui D-120 e D-118 obsoleta), glossario.md; design/tokens.css; design/wireframes.md; .claude/skills/sexo2-ui/SKILL.md. AGENTS.md remoto: 404. Evidências locais e limitações em `diagnostico.md`.
+
+## Rodada v2 (Claude A/B/overlays) — rejeição visual e referência aprovada
+
+- O usuário rejeitou a direção visual dos HTMLs anteriores (rascunhos de comportamento). A v2 corrige só a identidade: base neutra `#0d0e10/#15171a/#22252a/#2a2d32/#ececec`, Oswald (títulos) + Inter (texto), WOFF2 locais, sem serifa e sem azul na interface.
+- Exceção aprovada: `sexo2-operacao/overlay-aprovado.png` = modo B de `sexo2-overlays/index.html#b` (padrão inicial). Blitz e Original A seguem como estudos secundários, não aprovados.
+- A organiza por recurso (Skins, Mods, Sala, Configurações, Suporte); B por atividade (Preparar partida, Personalizar coleção, Resolver problema). Evidências: `QA.md` e `evidencias/` de cada pasta.
+- Nada aqui é aprovação de produto; dados, Onetricks, Bravura, sala e importações são simulações.

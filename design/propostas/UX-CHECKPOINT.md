@@ -63,3 +63,10 @@ Tudo abaixo é proposta pendente, sem alterar decisões oficiais ou produção.
 - Localmente os recursos já estão extraídos; o arquivo codificado guarda imagens e fontes sem perda.
 - Dois gestores GPT-6.1 Sol Medium e Low para inventário/A/B foram usados; High não foi consultado.
 - Após o commit deste checkpoint, parar. A próxima execução retoma os arquivos, não a pesquisa.
+
+## Atualização v2
+- Base `5bfea7a` (galinacio). Recursos restaurados do ZIP (idênticos) em `sexo2-shared/` e `blitz-reference.webp`.
+- Entregas: `sexo2-ux-a`, `sexo2-ux-b`, `sexo2-overlays` (index, QA, PROGRESSO, evidencias). Painel em `sexo2-operacao/`.
+- Verificação: Chromium headless por file:// com CDP (A 95 checagens, B 130, overlays 47 em Firefox headless/Marionette). Sem Windows, cliente LoL, partida real, FPS, Safari ou leitor de tela.
+- Limitações abertas: overlays a 452×492 rola dentro do palco; A a 820×560 exige rolar para ver o botão SEXO2; seletor de fonte do overlay ainda lista Arial; recorte da comparação com a imagem aprovada estimado a olho.
+- Visual anterior rejeitado; referência aprovada: `sexo2-operacao/overlay-aprovado.png`. Nenhuma recomendação é aprovação de produto.
