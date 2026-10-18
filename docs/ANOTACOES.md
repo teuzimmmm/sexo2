@@ -18,3 +18,7 @@ for corrigido e verificado.
    rótulo "SEXO2" mesmo quando o assistente carrega depois do botão. A causa do "nada" no
    cliente real não foi reproduzida (no navegador o painel abre); o console do cliente agora
    registra `[SEXO2-Assistant] ready` e cada clique.
+5. **Nome do log:** os arquivos de log devem se chamar `sexo2_*.log`, não `rose_*.log`
+   (`utils/core/logging.py`, `LOG_FILE_PATTERN` em `config.py`, `friends/diagnostics.py`);
+   junto, `rose_diagnostics.txt` vira `sexo2_diagnostics.txt`. A limpeza de logs antigos precisa
+   continuar apagando os `rose_*.log` que vieram da pasta migrada.
