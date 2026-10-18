@@ -31,6 +31,10 @@ Coletor independente com CLI, builds/runas, matchups, cache e filtro de risco.
 Consulte [como executar e os limites](docs/lolalytics/README.md).
 Esta integração não adiciona overlay nem importação no cliente LoL.
 
+## Documentação
+
+Índice em [docs/README.md](docs/README.md). Regras do projeto em [CLAUDE.md](CLAUDE.md).
+
 ## Créditos
 
 Base Rose, Pengu Loader, LTK e dependências mantêm suas licenças/atribuições.
