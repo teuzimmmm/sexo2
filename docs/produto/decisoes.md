@@ -56,6 +56,7 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-112 | Papel do Galo e do BORK na nova identidade | com D-102 |
 | D-113 | Nome da página de runas gerenciada (provisório: “SEXO2”). O conjunto de itens foi decidido em D-018 | antes do M8 |
 | D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
+| D-118 | Escolha opcional de outras builds na aba Itens: fluxo, textos, filtros, agrupamento e importação manual, preservando o padrão atual. Proposta somente; não implementar antes da revisão do usuário. | [Projeto para revisão](../PROPOSTA_OUTRAS_BUILDS.md) |
 
 ## Rejeitadas
 
