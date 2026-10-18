@@ -1,4 +1,4 @@
-import io, json, queue, tempfile, unittest, zipfile
+import io, queue, tempfile, unittest, zipfile
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch

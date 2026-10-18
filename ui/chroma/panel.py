@@ -7,8 +7,7 @@ Chroma Panel Manager - Coordinates chroma panel and button widgets
 
 import threading
 from typing import Callable, List, Dict
-from utils.core.logging import get_logger, log_event, log_action, log_success
-from utils.core.utilities import is_default_skin, is_owned, is_base_skin_owned
+from utils.core.logging import get_logger, log_event
 
 log = get_logger()
 
@@ -305,7 +304,6 @@ class ChromaPanelManager:
         """Clean up resources (called on app exit or UI destruction)"""
         try:
             # Try to acquire lock with timeout to avoid deadlock
-            import time
 
             lock_acquired = False
             try:

@@ -10,7 +10,7 @@ import shutil
 import sys
 import threading
 import logging
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import Optional
 from pathlib import Path
 import configparser
 

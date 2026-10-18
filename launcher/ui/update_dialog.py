@@ -16,7 +16,6 @@ try:
 except ImportError:
     Image = None
 
-from config import APP_VERSION
 from utils.core.logging import get_named_logger
 from utils.core.paths import get_asset_path
 from utils.system.win32_base import (

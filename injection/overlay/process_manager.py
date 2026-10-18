@@ -7,7 +7,6 @@ Handles process management utilities for overlay processes
 
 import subprocess
 import time
-from pathlib import Path
 
 # Import psutil with fallback for development environments
 try:

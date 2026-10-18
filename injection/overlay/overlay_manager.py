@@ -27,7 +27,7 @@ except ImportError:
     PSUTIL_AVAILABLE = False
     psutil = None
 
-from utils.core.logging import get_logger, log_action, log_success, log_event
+from utils.core.logging import get_logger, log_success, log_event
 from utils.core.issue_reporter import report_issue
 from .. import result_codes
 from .match_context import MatchContext

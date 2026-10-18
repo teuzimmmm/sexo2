@@ -20,7 +20,7 @@ from pathlib import Path, PureWindowsPath
 from typing import Optional
 from urllib.parse import quote
 
-from config import get_config_float, get_config_option, set_config_option
+from config import get_config_option, set_config_option
 from injection.mods.storage import ModStorageService
 from utils.core.paths import get_user_data_dir, get_asset_path, get_injection_dir, open_folder_in_explorer
 from utils.core.issue_reporter import clear_issues, issues_path, read_issues_tail, remove_issues
@@ -3580,7 +3580,6 @@ class MessageHandler:
             if not party_manager:
                 # Initialize party manager
                 from party.core.party_manager import PartyManager
-                from lcu import LCU
 
                 # Get LCU instance from skin_scraper
                 lcu = self.skin_scraper.lcu if self.skin_scraper else None

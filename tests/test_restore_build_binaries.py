@@ -1,6 +1,5 @@
 """Build-only binaries come back from a previous SEXO2 folder; source plugins are untouched."""
 
-import os
 import sys
 import tempfile
 import unittest

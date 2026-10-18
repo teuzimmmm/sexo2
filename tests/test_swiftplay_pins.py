@@ -1,6 +1,5 @@
 """Offline regressions: local identity, persistence, validation and preparation."""
 
-import json
 import tempfile
 import threading
 import unittest
