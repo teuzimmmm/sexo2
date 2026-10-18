@@ -53,7 +53,7 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-116 | Favoritas: todos os campeões, busca por campeão e por skin, skins com imagem do cliente, cromas favoritáveis separadamente, só o botão "Favoritar". Implementado em `ROSE-Amigos` (e `skin-index` em `friends/service.py`). Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
 | D-117 | Assistente da seleção 452×492 (plugin `SEXO2-Assistant`): Rota, Confronto e Fonte no topo; abas Runas, Itens, Mods, Preferências rápidas e Todas as configurações; sem aba Skins; biblioteca de mods na aba Mods. Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
 | D-119 | Remover Conjuntos (perfis) e Sorteio como funções: apenas retirados da UI. O código e os testes ficam (o sorteio serve à Bravura). Remoção de código só com testes que provem equivalência. Nota para a equipe. | proposta A |
-| D-120 | Swiftplay: sorteio automático (estilo Bravura, favoritas primeiro) para o campeão que o usuário não escolheu. Não implementado: ver `docs/PROGRESSO-UX.md`. | proposta A |
+| D-120 | Swiftplay: o campeão sem escolha (nem pin do SEXO2 nem skin no cliente) recebe sorteio ponderado, favoritas primeiro; o sorteado nunca é gravado como escolha. Implementado; proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
 | D-121 | Renomear "Hub" e "Atividades": aguardando os nomes do usuário. Sem imagens de skins de mods, algoritmo ponderado nem rede nova. | proposta A |
 
 ## Rejeitadas

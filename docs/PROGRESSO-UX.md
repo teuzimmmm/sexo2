@@ -8,9 +8,9 @@ Nada foi validado no cliente real do LoL, no Windows nem em partida. Sem bump de
 | 1 Painel: cantos retos, só "SEXO2" (Oswald), Inter no resto | feito | ae56a8d |
 | 2 Menus Sala, Favoritas, Configurações, Suporte, Swiftplay; abre em Sala | feito | ae56a8d |
 | 3 Favoritas (campeões, busca por skin, cromas separados, só Favoritar) | feito | ca9fccf |
-| 4 Swiftplay | parcial | ae56a8d |
+| 4 Swiftplay (escolha de skin + sorteio de quem não escolheu) | feito, não validado em partida | ae56a8d + rodada 2 |
 | 5 Assistente 452x492 | feito (ver limites) | b332320 |
-| 6 Overlay de ouro: design aprovado (número com sinal + barra discreta por linha, total com sinal no topo, sem totais por equipe); posições e janela inalteradas | feito | ver git log |
+| 6 Overlay de ouro (refeito pelo coordenador) | feito | 0d4fe6b |
 
 ## Testes
 - `python scripts/run_tests.py -q`: 673 testes; as únicas falhas são as 7 da linha de base deste Mac
@@ -20,10 +20,12 @@ Nada foi validado no cliente real do LoL, no Windows nem em partida. Sem bump de
   (script descartável, fora do repositório). `tests/browser_hub.cjs` foi atualizado, mas não executado (Playwright).
 
 ## Bloqueios e limites
-- Item 4: o painel Swiftplay mostra os 2 campeões e a escolha de skin (plugin `ROSE-SwiftplayPins`, já existente).
-  NÃO foi feito o sorteio dos não tocados: as fixações são persistentes por campeão e `FriendsService.apply`
-  grava fixações; sem distinguir "escolhido pelo usuário" de "sorteado" o sorteio viraria fixação permanente.
-  Exige mudança no comportamento protegido de Swiftplay e teste próprio.
+- Item 4: quem não tem pin do SEXO2 nem skin escolhida na sessão recebe um sorteio ponderado (favoritas primeiro)
+  ao iniciar a busca (`SwiftplayHandler._draw_candidates`). O sorteado fica só em memória (`_drawn`): nunca vira pin
+  nem entrada do modo Histórico. Limite: a "escolha direta no LoL" só é vista pelo rastreio existente (`swiftplay_skin_tracking`);
+  skins que a conta possui não são sorteadas (o cliente as aplicaria). Remover a fixação conta como escolha do usuário.
+- Sorteio ponderado (`friends/skin_selector.py`, de /skins): usado em seleção automática, sorteio temático, "sortear agora",
+  Bravura e Swiftplay; histórico só em memória; `eligible` agora inclui cromas; catálogo expõe `rarity`/`chromaRarity`.
 - Item 5: Onetricks removido (sem como funcionar); a Fonte mostra só Lolalytics. Rota só exibe a rota do cliente (sem seletor).
   A aba Mods embute a biblioteca existente; a seleção de mod por skin segue no `ROSE-CustomWheel`
   (não removido). "Todas as configurações" abre o painel em Configurações, sem restaurar rascunho.
