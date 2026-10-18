@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Ícone do SEXO2</title>
+<style>
+@font-face{font-family:Oswald;src:url(../../fonts/oswald-latin-wght-normal.woff2) format("woff2");font-weight:200 700}
+@font-face{font-family:Inter;src:url(../../fonts/inter-latin-wght-normal.woff2) format("woff2");font-weight:100 900}
+:root{--bg:#0d0e10;--surface:#15171a;--surface2:#1b1d21;--line:#2a2d32;--fg:#ececec;--fg2:#a4a9b0;--fg3:#6e747b;--ally:#4f8cff}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 Inter,sans-serif;padding:28px 32px}
+h1{font:600 26px/1 Oswald;text-transform:uppercase;letter-spacing:.02em}
+.lead{color:var(--fg2);margin:8px 0 22px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.opt{background:var(--surface);border:1px solid var(--line);padding:18px}
+.opt h2{font:600 18px/1 Oswald;text-transform:uppercase;letter-spacing:.02em;display:flex;gap:10px;align-items:baseline}
+.opt h2 b{color:var(--fg3);font-weight:500}
+.opt p{color:var(--fg2);font-size:13px;margin:6px 0 14px;min-height:58px}
+.big{display:flex;justify-content:center;padding:6px 0 14px}
+.sizes{display:flex;align-items:flex-end;gap:14px;justify-content:center;border-top:1px solid var(--line);padding-top:12px}
+.sizes span{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--fg3)}
+.bars{margin-top:12px;display:grid;gap:6px}
+.bar{display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:4px;font:12px Segoe UI,Inter,sans-serif}
+.bar.dark{background:#202020;color:#fff}.bar.light{background:#eef1f5;color:#111}
+.bar i{font-style:normal;opacity:.7}
+.ic{display:block}
+</style>
+<h1>Ícone do SEXO2</h1>
+<p class="lead">Quatro opções no estilo do aplicativo: fundo escuro chapado, borda fina, branco e um único azul de sinal. Cada uma aparece grande, nos tamanhos que o Windows usa (64, 32 e 16 px) e numa barra de tarefas escura e clara.</p>
+<div class="grid" id="grid"></div>
+<script>
+// Each option is one SVG drawn on a 256 grid; the same drawing is used at every size.
+const tile=(inner)=>`<rect x="8" y="8" width="240" height="240" rx="52" fill="#15171a"/><rect x="8" y="8" width="240" height="240" rx="52" fill="none" stroke="#2a2d32" stroke-width="6"/>${inner}`;
+const S2=(two)=>`<text x="128" y="181" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="150" letter-spacing="-4"><tspan fill="#ececec">S</tspan><tspan fill="${two}">2</tspan></text>`;
+const blade=`<g transform="rotate(45 128 128)">
+  <path d="M128 22 L144 52 L144 168 L112 168 L112 52 Z" fill="#ececec"/>
+  <path d="M128 40 L128 162" stroke="#15171a" stroke-width="5"/>
+  <path d="M74 168 L182 168 L170 184 L86 184 Z" fill="#4f8cff"/>
+  <rect x="120" y="184" width="16" height="40" fill="#ececec"/>
+  <path d="M128 222 L140 234 L128 246 L116 234 Z" fill="#4f8cff"/>
+</g>`;
+const diamond=`<path d="M128 30 L226 128 L128 226 L30 128 Z" fill="none" stroke="#4f8cff" stroke-width="10" stroke-linejoin="round"/>
+<text x="128" y="164" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="104" letter-spacing="-2" fill="#ececec">S2</text>`;
+const options=[
+ ["A","Monograma",tile(S2("#ececec")),"“S2” em Oswald, a fonte dos títulos do app. Discreto e legível até em 16 px."],
+ ["B","Monograma com sinal",tile(S2("#4f8cff")),"O mesmo “S2”, com o 2 no azul de sinal do app. A cor ajuda a achar o ícone na barra."],
+ ["C","Lâmina",tile(blade),"Mantém a ideia da espada do ícone atual, redesenhada chapada: lâmina branca, guarda e pomo azuis."],
+ ["D","Losango",tile(diamond),"“S2” dentro de um losango azul, a mesma forma do ouro no placar. Liga o ícone ao jogo."],
+];
+const svg=(inner,size)=>`<svg class="ic" width="${size}" height="${size}" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+document.getElementById('grid').innerHTML=options.map(([id,name,inner,text])=>`
+<section class="opt">
+ <h2><b>${id}</b>${name}</h2><p>${text}</p>
+ <div class="big">${svg(inner,160)}</div>
+ <div class="sizes">${[64,32,16].map(n=>`<span>${svg(inner,n)}${n} px</span>`).join('')}</div>
+ <div class="bars">
+  <div class="bar dark">${svg(inner,24)}<span>SEXO2</span><i>barra escura</i></div>
+  <div class="bar light">${svg(inner,24)}<span>SEXO2</span><i>barra clara</i></div>
+ </div>
+</section>`).join('');
+</script>
+</html>
