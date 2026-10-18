@@ -488,6 +488,7 @@
     function open(anchor) {
       button = anchor;
       reattach();
+      if (!connectBridge()) console.log("[SEXO2-Assistant] SEXO2 not connected yet");
       panel.hidden = false;
       loadClientData();
       send({ type: "assistant-request" });
@@ -603,10 +604,11 @@
     console.log("[SEXO2-Assistant] ready");
     window.dispatchEvent(new Event("sexo2-assistant-ready"));
 
-    const attach = setInterval(() => {
+    // The bridge object appears once ROSE-SkinMonitor knows the SEXO2 port, which can be
+    // long after the client loaded (SEXO2 started later): the panel also connects on open.
+    function connectBridge() {
       const b = window.__roseBridge;
-      if (!b) return;
-      clearInterval(attach);
+      if (bridge || !b) return !!bridge;
       bridge = b;
       bridge.subscribe("assistant-state", receive);
       bridge.subscribe("assistant-error", () => render());
@@ -615,7 +617,9 @@
         if (d && d.phase === "ChampSelect") send({ type: "assistant-request" }); // know the queue before a click
         else if (d && d.phase !== "FINALIZATION") close();
       });
-    }, 250);
+      return true;
+    }
+    const attach = setInterval(() => connectBridge() && clearInterval(attach), 250);
     setTimeout(() => clearInterval(attach), 30000);
   }
 
