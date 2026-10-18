@@ -1,4 +1,7 @@
-/** SEXO2 loading surface. Independent of the Python bridge and network. */
+/**
+ * @name SEXO2-Startup
+ * @description SEXO2 loading surface. Independent of the Python bridge and network.
+ */
 (() => {
   const id = 'sexo2-startup-style';
   function mount() {
