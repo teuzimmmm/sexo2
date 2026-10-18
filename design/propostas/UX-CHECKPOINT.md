@@ -66,6 +66,7 @@ Tudo abaixo é proposta pendente, sem alterar decisões oficiais ou produção.
 
 ## Atualização v2
 - Base `5bfea7a` (galinacio). Recursos restaurados do ZIP (idênticos) em `sexo2-shared/` e `blitz-reference.webp`.
+- v2.1: A e B reenquadradas dentro do client simulado (cliente base + seleção, Hub 820×560, assistente 452×492 D-017); Bravura conforme docs/ARENA_BRAVURA.md (A 109 checagens, B 150, Chromium headless file://).
 - Entregas: `sexo2-ux-a`, `sexo2-ux-b`, `sexo2-overlays` (index, QA, PROGRESSO, evidencias). Painel em `sexo2-operacao/`.
 - Verificação: Chromium headless por file:// com CDP (A 95 checagens, B 130, overlays 47 em Firefox headless/Marionette). Sem Windows, cliente LoL, partida real, FPS, Safari ou leitor de tela.
 - Limitações abertas: overlays a 452×492 rola dentro do palco; A a 820×560 exige rolar para ver o botão SEXO2; seletor de fonte do overlay ainda lista Arial; recorte da comparação com a imagem aprovada estimado a olho.

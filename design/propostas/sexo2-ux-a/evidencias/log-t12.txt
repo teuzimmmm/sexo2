@@ -1,0 +1,110 @@
+OK   R2 palco 1280x720 (client simulado) {'x': 0, 'y': 0, 'w': 1280, 'h': 720, 'r': 1280, 'b': 720}
+OK   R2 faixa de simulacao fora do produto 
+OK   R2 sem cabecalho/rodape de app 
+OK   R2 Hub fechado no inicio; botao SEXO2 no cabecalho do client 
+OK   R2 Hub 820x560 sobre o client {'x': 443, 'y': 143, 'w': 820, 'h': 560, 'r': 1263, 'b': 703}
+OK   R2 foco entra no Hub h1
+OK   R2 Escape fecha Hub e devolve foco ao botao SEXO2 hubToggle|
+OK   R2 Fechar fecha Hub 
+OK   A01 nav Mods 
+OK   A01 nav Sala 
+OK   A01 nav Configurações 
+OK   A01 nav Suporte 
+OK   A01 nav Skins 
+OK   A01 alerta de erro 
+OK   A01 suporte com origem 
+OK   A01 selecao preservada 
+OK   A01 verificacao resolve 
+OK   A01 retorno sem perder escolha 
+OK   A02 aplicar skin visivel 
+OK   A02 croma inelegivel visivel 
+OK   A02 favorita 
+OK   A02 modal conjunto 
+OK   A02 conjunto salvo 
+OK   A08 foco restaurado apos modal setEdit|1
+OK   A02 aplicar conjunto 
+OK   A06 sorteio nunca inelegivel 
+OK   A06 inelegibilidade antes do ranking 
+OK   Bravura texto correto 
+OK   Bravura etapa 1 
+OK   Bravura etapa 2 revela em partida 
+OK   Bravura etapa 3 skin+reconexao 
+OK   Bravura favorita usada se houver 
+OK   Bravura aleatoria sem favorita e respeitando exclusao 
+OK   A02 coord bloqueado sem sala 
+OK   A03 sala criada 
+OK   A03 copiar chave 
+OK   A02 modal informa desativacao 
+OK   A02 perfil desativado efetivo 
+OK   A02 sorteio sala 
+OK   A03 sair 
+OK   A03 reconectar 
+OK   A03 chave invalida 
+OK   A03 conectar com chave 
+OK   A02 skins mostra desativado 
+OK   A02 aplicar bloqueado em coord 
+OK   A03 10 categorias 
+OK   A03 busca 
+OK   A03 importar exige campeao/skin-base 
+OK   A03 habilita apos campeao 
+OK   A03 fila ate fim da selecao 
+OK   A03 fim da selecao processa 
+OK   A03 editar 
+OK   A03 exportar 
+OK   A03 remover 
+OK   A01 erro mods 
+OK   A01 retorno Mods 
+OK   A06 rascunho 
+OK   A06 rascunho persiste 
+OK   A06 cancelar 
+OK   A06 salvar 
+OK   A06 ouro e aprimoramentos separados 
+OK   A01 relatorio 
+OK   A07 Hub Skins sem estouro 
+OK   A07 Hub Mods sem estouro 
+OK   A07 Hub Sala sem estouro 
+OK   A07 Hub Configurações sem estouro 
+OK   A07 Hub Suporte sem estouro 
+OK   A07 D-017 assistente 452x492 ancorado {'w': 452, 'h': 492, 'right': 0, 'gap': 8, 'inside': True, 'overlap': False}
+OK   R2 selecao: cena + botao SEXO2 inferior 
+OK   R2 escolher campeao na cena 
+OK   A04 importando 
+OK   A04 sucesso 
+OK   A04 no_free_page 
+OK   A04 falha 
+OK   A04 editor agrupa 
+OK   A04 fonte nao importa 
+OK   A06 todas as configuracoes preserva rascunho 
+OK   A06 volta a selecao panelToggle|
+OK   A06 cancelar no painel 
+OK   A04 comparacao 
+OK   A04 onetricks indisponivel 
+OK   A04 amostras/patch separados 
+OK   A05 ordenados por partidas 
+OK   A05 icones+WR 
+OK   A05 busca nome 
+OK   A05 busca id 
+OK   A05 trio antes do padrao 
+OK   A05 confirmar campeao simula importacao 
+OK   A05 restaurar 
+OK   A05 so trios 
+OK   A01 erro no assistente 
+OK   A01 assistente->suporte 
+OK   A01 retorna ao assistente 
+OK   A08 Escape fecha assistente e foca botao panelToggle|
+OK   A08 Enter reabre assistente 
+OK   A08 Escape fecha gaveta qpToggle|
+OK   A07 anel de foco claro 
+OK   A08 Enter no botao SEXO2 abre Hub com foco dentro h1
+OK   A08 Tab/Shift+Tab ciclam dentro do Hub ['recheck|', 'report|', 'reportCopy|', 'folder|Skins', 'folder|Mods', 'folder|Logs', 'hubClose|', 'nav|Skins', 'nav|Mods', 'nav|Sala', 'nav|Configurações', 'nav|Suporte', 'recheck|', 'report|']
+OK   A08 Enter abre modal 
+OK   A08 foco preso no modal [True, True, True, True, True, True, True, True, True, True, True, True]
+OK   A08 Escape fecha modal (Hub continua) 
+OK   A08 foco devolvido ao abridor coordAsk|
+OK   A08 foco mantido apos acao roomAdd|
+OK   A08 Escape fecha Hub hubToggle|
+OK   R2 partida: sem client/Hub 
+OK   A07 fontes carregadas 
+OK   A07 sem serif/azul na UI 
+OK   A08 imagens carregam por file:// []
+0 falhas de 109

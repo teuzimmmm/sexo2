@@ -1,42 +1,40 @@
-# QA da proposta B (atividades)
+# QA da proposta B (atividades dentro do client)
 
-Escopo: prototipo HTML estatico, dados ficticios, sem cliente do LoL, sem validacao Windows/producao, sem teste de usabilidade. Nada aqui aprova a proposta.
+Escopo: prototipo HTML estatico, dados ficticios, sem cliente do LoL, sem validacao Windows/producao, sem teste de usabilidade. Nada aqui aprova a proposta. A cena do client (nav dourada, lobby, champ select, partida) e uma simulacao propria do enquadramento, nao a replica.
+
+## Enquadramento (rodada 2)
+- Palco 1280x720 simulando o client: barra de navegacao, cena de fundo e botao SEXO2 no cabecalho. Sem cabecalho/rodape de app.
+- Faixa "Simulacao, fora do produto" com Cliente / Selecao / Partida (alterna o momento do client), estado da ultima acao e links para A e Overlays.
+- Momento 1 (Cliente/lobby): SEXO2 do cabecalho abre o workspace por atividade 820x560 sobre o client (Preparar partida, Personalizar colecao, Resolver problema). Fecha com Esc ou Fechar; foco volta ao botao.
+- Momento 2 (Selecao): cena de champ select (ids #champ-scene, #bottom, #confirm-champ); botao SEXO2 inferior abre o assistente 452x492 ancorado (D-017). Em jogo: cena de partida com placeholder de overlay (link ao laboratorio de overlays; nao redesenhado).
+- Preparar partida: Antes da fila = lobby do client, Na selecao = champ select, Em jogo = partida; a etapa do hub e a faixa de simulacao controlam o mesmo estado.
+- Bravura corrigida conforme ARENA_BRAVURA.md: so no Arena; confirmar Bravura na selecao (campeao -3) nao revela nada; o jogo revela em partida; o app detecta o campeao, escolhe a skin (favoritas, senao aleatoria, exclusoes respeitadas), encerra o executavel da partida uma vez e reconecta (interrupcao de carregamento); guard impede repetir; limite de 75 s mencionado. Sem estatisticas, desafios ou itens; aprimoramentos ficam em Configuracoes > Overlays.
 
 ## Como foi testado
-- Chromium headless (chrome-headless-shell do cache Playwright) acionado por CDP com cliente stdlib proprio (`evidencias/cdp.py`, `evidencias/qa_b.py`); Playwright nao esta instalado. Pagina aberta por `file://`, sem servidor.
-- Resolucoes: 1280x720, 820x560 (Hub), 452x492 (assistente compacto). Teclado real via `Input.dispatchKeyEvent` (Tab, Shift+Tab, Enter, Escape).
-- Resultado final: `evidencias/qa_resultado_r2.json`, 130 checagens, 0 falhas. Comando: `python3 evidencias/qa_b.py r2`.
-- Capturas em `evidencias/b-<largura>-*.png` (1280, 820, 452).
-- O navegador de teste do checkpoint recusava file://; aqui o Chromium headless aceitou. Safari/Firefox/Windows nao foram testados.
+- Chromium headless (chrome-headless-shell do cache Playwright) via CDP com cliente stdlib (`evidencias/cdp.py`, `evidencias/qa_b.py`); Playwright nao esta instalado. Pagina por `file://`, porta de debug aleatoria.
+- Viewports 1280x720, 820x560, 452x492, nos dois momentos (hub sobre o client e selecao com assistente). Teclado real (Tab, Shift+Tab, Enter, Escape).
+- Resultado: `evidencias/qa_resultado_r3.json`, 150 checagens, 0 falhas. Comando: `python3 evidencias/qa_b.py r3`.
+- Capturas: `evidencias/b-<largura>-*.png` (client-lobby, hub-*, selecao-*, partida, config).
 
 ## Criterios
-| Criterio | Resultado | Evidencia (ids em qa_resultado_r2.json) |
+| Criterio | Resultado | Ids |
 |---|---|---|
-| B01 entrar/sair, percorrer preparo, preservar estado, suporte e retorno | PASSA | B01.* (home, 3 etapas, retomar, preserva campeao/conjunto, erro de mod vai ao suporte com origem e volta a etapa e aba) |
-| B02 colecao por campeao, favoritas/conjuntos com resultado, arquivos separados de aplicacao | PASSA | B02.* |
-| B03 biblioteca e sala (A03), sorteio coordenado desativa conjunto com aviso | PASSA | B03.* (10 categorias, busca, importar, skin-base, espera fim da selecao, editar/exportar/remover, sala criar/copiar/queda/reconectar/sair/chave invalida, aviso e bloqueio de aplicar conjunto) |
-| B04 fontes, comparacao, runas | PASSA | B04.* (trocar fonte nao importa; Onetricks indisponivel sem numeros; simulacao separada; clique importa; importando/sucesso/falha/no_free_page; editor agrupa edicoes) |
-| B05 trios observados | PASSA | B05.* (ordem por partidas, 3 icones, WR do trio, busca, escolhido antes do padrao, restaurar, estado entre abas/painel, importacao ao confirmar campeao) |
-| B06 configuracoes, rascunho, futuros, limites | PASSA | B06.* (rapidas na selecao, completas com rascunho/Esc/cancelar/salvar, idioma imediato, ouro separado de aprimoramentos, Exalted+croma inelegivel antes do sorteio, Bravura oculta ate revelar e sem desafios/itens, aprimoramentos sem dados/ofertas/nao reconhecida) |
-| B07 visual e dimensoes, D-017 | PASSA | B07.* (fontes carregadas, so Oswald/Inter, nenhuma cor azul em computed styles, sem rolagem horizontal, textos sem corte, painel alinhado a direita do botao, 8px acima, dentro da janela e sem cobrir o botao nos 3 tamanhos) |
-| B08 offline, teclado, estados, evidencias, correcao | PASSA | B08.* (imagens locais, links existem, sem fetch/URLs remotas, sem erros de console, foco preso e restaurado em dialogos, Esc do painel) |
+| B01 entrar/sair, preparo, estado, suporte com retorno | PASSA | B01.* (hub 820x560, 3 etapas ligadas ao client, Esc/Fechar, estado preservado, erro de mod no assistente vai ao suporte do hub e volta ao assistente na aba de origem) |
+| B02 colecao por campeao, favoritas/conjuntos, arquivos separados da aplicacao | PASSA | B02.* |
+| B03 biblioteca, sala, coordenado desativa conjunto | PASSA | B03.* (lobby mostra o grupo da sala) |
+| B04 fontes, comparacao, runas | PASSA | B04.* |
+| B05 trios observados | PASSA | B05.* (confirmar campeao pelo botao do client simula a importacao) |
+| B06 configuracoes, rascunho, futuros, limites, Bravura | PASSA | B06.* (fluxo Bravura em 6 fases, favorita ou aleatoria, so Arena) |
+| B07 visual e dimensoes, D-017 | PASSA | B07.* (palco, hub 820x560 e dentro da janela nos 3 tamanhos, D-017 nos 3, sem azul na UI SEXO2, fontes) |
+| B08 offline, teclado, estados, evidencias, correcao | PASSA | B08.* |
 
-Valores D-017 medidos: 1280x720 painel 452x492, botao em (1102,640)-(1264,676); 820x560 painel 452x464; 452x492 painel 428x396, todos com borda direita igual a do botao e folga de 8px.
+D-017 medido: 1280x720 assistente 452x492; 820x560 452x464; 452x492 428x396. Borda direita igual a do botao, folga 8px, dentro da janela, sem cobrir.
 
-## Defeitos achados e corrigidos (rodada de correcao)
-1. Foco por Tab saia do dialogo para a interface do navegador (B08.tabtrap/shifttab falharam). Corrigido com trap de foco no dialogo; passou.
-2. Linha clara no topo do conteudo (contorno de foco do `main` apos navegacao programatica). Corrigido (`main:focus{outline:0}`).
-3. A 1280px o painel cobria o botao "Continuar" e o resumo da sessao. Corrigido: na selecao o conteudo reserva a coluna do painel (>=1000px) e o resumo desce.
-4. Botao primario pequeno com texto branco sobre fundo claro (ilegivel). Corrigido (`.b.sm.p`).
-5. Breadcrumb duplicado em Resolver problema e texto confuso no autoaceite. Corrigidos.
-6. Falhas iniciais do proprio script de teste (comparar texto transformado por CSS, Enter sem texto no CDP, porta de debug fixa que colidia com outras frentes). Corrigidas no script; nao eram defeitos do HTML.
-Rechecagem: execucao completa r2 apos todas as correcoes, 130/130.
+## Defeitos achados e corrigidos
+Rodada 1 (versao app-pagina): trap de foco no dialogo, contorno do main, botao primario ilegivel, breadcrumb duplicado.
+Rodada 2: apos o reenquadramento a primeira execucao falhou em 5 checagens: (a) rotulo de origem do suporte vinha como "Atividades" quando o erro nascia no assistente, (b) o retorno nao restaurava o assistente, (c) teste de foco clicava sem focar, (d) Bravura favorita assumia a primeira favorita. Corrigidos; reexecucao completa 150/150. Tambem: grade de campeoes realinhada para o assistente nao cobrir tiles; faixa de simulacao compacta a 452px.
 
-## Limitacoes e decisoes assumidas
-- Prototipo com dados ficticios (WR, amostras, patch 26.20, skins "exemplo"); Onetricks e Bravura sao simulacao futura declarada; nenhum algoritmo ponderado real.
-- Copiar chave e abrir pasta so alteram estado/rotulo visivel; nao usam clipboard ou sistema de arquivos.
-- A chave de sala e fabricada (SX2-XXXX) e omitida do diagnostico.
-- Os conflitos de sorteio coordenado usam o conjunto ativo; nao foi usado conflito fictício de dois mapas.
-- A preferencia de fonte do painel vale para a partida; o padrao salvo muda so em Configuracoes (Salvar).
-- Overlays: ha apenas link para `../sexo2-overlays/index.html#b`; a frente de overlays nao foi alterada nem validada aqui.
-- Nao foi feita avaliacao de contraste automatizada alem da escolha dos tokens neutros; leitura humana das capturas em 3 tamanhos.
+## Limitacoes
+- Dados ficticios (WR, amostras, patch 26.20, skins "exemplo"); Onetricks e a deteccao/reconexao do Bravura sao simulacao declarada, sem partida real de Arena.
+- Cena do client e aproximada; cores douradas valem so para a cena, a UI SEXO2 segue neutra (checagem de azul limitada a hub, assistente, botoes e dialogo).
+- Copiar chave e abrir pasta so mudam estado visivel. Sem Safari/Firefox/Windows/LoL reais. Sem medicao automatica de contraste.

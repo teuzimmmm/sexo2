@@ -1,23 +1,19 @@
-# PROGRESSO frente B (atividades)
+# PROGRESSO frente B (atividades dentro do client)
 
-Estado final: concluido, 8/8 criterios verificados em Chromium headless por file://.
+Estado: concluido (rodada 2), 8/8 verificados em Chromium headless por file://, 150/150 checagens.
 
-## Entregas
-- index.html: workspace por atividade (Preparar partida: Antes da fila, Na selecao, Em jogo; Personalizar colecao; Resolver problema), identidade neutra (#0d0e10/#15171a/#22252a/#2a2d32/#ececec), Oswald+Inter locais, sem azul/serifa.
-- QA.md, evidencias/*.png (1280, 820, 452), evidencias/qa_resultado_r2.json, evidencias/qa_b.py e cdp.py.
+## Rodada 2: reenquadramento
+- Palco 1280x720 simulando o client LoL: nav, cena, botao SEXO2 no cabecalho; faixa de simulacao Cliente/Selecao/Partida fora do produto.
+- Hub 820x560 abre sobre o client pelo SEXO2 do cabecalho (Esc/Fechar); entrada com as 3 atividades.
+- Selecao de campeoes: assistente 452x492 ancorado ao botao SEXO2 inferior (D-017 medido nos 3 tamanhos).
+- Antes da fila = lobby, Na selecao = champ select, Em jogo = partida.
+- Bravura reescrita conforme ARENA_BRAVURA.md (so Arena, -3, revela em partida, encerra o executavel uma vez, reconecta, interrupcao de carregamento).
 
 ## Criterios
-- B01 passa: entrar/sair, preparo em 3 etapas, estado preservado, erro vai ao suporte e volta a origem.
-- B02 passa: escolhas por campeao, favoritas e conjuntos com resultado visivel; arquivos separados da aplicacao de mods.
-- B03 passa: biblioteca (10 categorias, busca, importar, skin-base, espera fim da selecao, editar/exportar/remover) e sala simulada; coordenado desativa conjunto com aviso.
-- B04 passa: preferencia de fonte sem importar, comparacao sob demanda, Onetricks futuro, runas com os 4 estados e editor.
-- B05 passa: trios observados por partidas, busca, escolher e restaurar, estado mantido.
-- B06 passa: configuracoes rapidas e completas com rascunho, Exalted inelegivel, Bravura sem desafios, aprimoramentos separados.
-- B07 passa: fontes carregadas, sem azul, 3 tamanhos, D-017 medido.
-- B08 passa: offline, teclado, foco, evidencias e uma rodada de correcao com rechecagem.
+- B01 a B08 passam; ver QA.md e evidencias/qa_resultado_r3.json.
 
-## Correcao
-Rodada unica: trap de foco no dialogo, contorno do main, layout da selecao a 1280, botao primario pequeno, breadcrumb. Rechecagem r2: 130/130.
+## Entregas
+- index.html, QA.md, PROGRESSO.md, evidencias/ (PNG 1280/820/452, qa_b.py, cdp.py, qa_resultado_r3.json).
 
 ## Limites
-Simulacao com dados ficticios; sem Windows/LoL/Safari/Firefox; Playwright ausente (CDP proprio).
+Simulacao com dados ficticios; Bravura sem partida real; sem Windows/LoL/Safari/Firefox; cena do client aproximada; Playwright ausente (CDP proprio).

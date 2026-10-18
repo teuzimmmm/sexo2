@@ -10,12 +10,13 @@
 :root{--bg:#0d0e10;--sf:#15171a;--sf2:#1b1d21;--hv:#22252a;--ln:#2a2d32;--fg:#ececec;--fg2:#a4a9b0;--fg3:#6e747b;--err:#e5484d;--fd:"Oswald","Segoe UI",sans-serif;--ft:"Inter","Segoe UI",sans-serif;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font:400 14px/1.4 var(--ft);display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}
+body{margin:0;background:#000;color:var(--fg);font:400 14px/1.4 var(--ft);overflow:hidden}
+#stage{position:relative;width:100vw;height:100vh;overflow:hidden;background:#0b0d0e}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--fg);text-underline-offset:3px}
 :focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 h1,h2,h3,h4{font-family:var(--fd);text-transform:uppercase;font-weight:500;margin:0}
-h1{font-size:34px;line-height:1.1;letter-spacing:.01em}
+h1{font-size:26px;line-height:1.1;letter-spacing:.01em}
 h2{font-size:18px;line-height:1.15;letter-spacing:.02em}
 h3{font-size:12px;line-height:1.2;letter-spacing:.06em;color:var(--fg2)}
 h4{font-size:14px;letter-spacing:.04em}
@@ -28,7 +29,7 @@ p{margin:0}
 .col{display:flex;flex-direction:column;gap:12px}
 .col.s{gap:8px}
 .grow{flex:1;min-width:0}
-.hdr{display:flex;align-items:center;gap:16px;padding:0 20px;height:52px;border-bottom:1px solid var(--ln);background:var(--sf)}
+.hdr{display:flex;align-items:center;gap:12px;padding:0 12px;height:44px;flex:none;border-bottom:1px solid var(--ln);background:var(--sf)}
 .brand{display:flex;align-items:baseline;gap:10px}
 .brand strong{font:500 24px var(--fd);letter-spacing:.14em}
 .demo{font:500 11px var(--fd);letter-spacing:.08em;text-transform:uppercase;color:var(--fg2);border:1px solid var(--ln);padding:1px 6px}
@@ -53,11 +54,38 @@ p{margin:0}
 .tag{display:inline-block;border:1px solid var(--ln);padding:1px 6px;font:500 11px var(--fd);letter-spacing:.06em;text-transform:uppercase;color:var(--fg2);white-space:nowrap}
 .tag.f{color:var(--fg);border-color:var(--fg2)}
 .tag.e{color:var(--err);border-color:var(--err)}
-main{overflow:auto;padding:20px 24px 28px;min-height:0}
+main{overflow:auto;padding:16px 18px 22px;min-height:0;flex:1}
 main:focus{outline:0}
-main.sel{padding-bottom:64px}
-.split.one{grid-template-columns:minmax(0,1fr)}
-@media (min-width:1000px){main.sel{padding-right:484px}}
+.split,.split.c{grid-template-columns:minmax(0,1fr)}
+.nw{display:block}.wd{display:none}
+#hub{position:absolute;left:50%;top:calc((100% - 28px)/2);transform:translate(-50%,-50%);width:min(820px,100%);height:min(560px,calc(100% - 28px));display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--ln);box-shadow:0 14px 44px rgba(0,0,0,.65);z-index:30}
+#hub[hidden]{display:none}
+#clientnav{position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;gap:26px;padding:0 24px;border-bottom:1px solid #4a4233;background:rgba(8,10,10,.85);color:#c8aa6e;font:500 14px var(--fd);letter-spacing:.1em;text-transform:uppercase;z-index:5}
+#clientnav .ci{color:#a09b8c}#clientnav .ci.on{color:#c8aa6e;box-shadow:inset 0 -2px 0 #c8aa6e;padding-bottom:4px}
+#hub-launch{margin-left:auto;min-height:32px;padding:0 18px;background:transparent;color:var(--fg);border:1px solid var(--fg);font:500 14px var(--fd);letter-spacing:.12em}
+#hub-launch[aria-expanded=true]{background:var(--fg);color:#111}
+#scene{position:absolute;inset:56px 0 28px 0;overflow:hidden}
+.sc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:28px}
+.sc.lobby{background:radial-gradient(ellipse at 50% 30%,#1c2420 0%,#0e1211 60%,#0a0c0c 100%);justify-content:center;gap:16px}
+.sc.csel{background:linear-gradient(#151a18,#0b0d0d);align-items:flex-start;padding-left:48px}
+.sc.game{background:radial-gradient(ellipse at 50% 40%,#1d2a1d 0%,#101510 55%,#090b09 100%)}
+.cq{font:500 38px var(--fd);letter-spacing:.06em;text-transform:uppercase;color:#d8c595}
+.cm{color:#a09b8c}
+.slots{display:flex;gap:14px}
+.slot{width:110px;height:130px;border:1px solid #4a4233;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#a09b8c;background:rgba(0,0,0,.35);font-size:13px}
+.cbtn{background:#1e2328;color:#c8aa6e;border:1px solid #c8aa6e;padding:10px 30px;font:500 15px var(--fd);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.cbtn:hover{background:#2b2f35;color:#f0e6d2}
+.cgrid{display:grid;grid-template-columns:repeat(5,92px);gap:10px;margin-top:12px}
+.ct{font:500 24px var(--fd);letter-spacing:.1em;color:#d8c595}
+.ctile{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;background:rgba(0,0,0,.4);border:1px solid #3c3526;color:#cfc6ad;font-size:12px;cursor:pointer}
+.ctile[aria-pressed=true]{border-color:#c8aa6e;background:rgba(200,170,110,.12)}
+#bottom{position:absolute;bottom:14px;left:24px;right:200px;display:flex;justify-content:space-between;align-items:center;color:#a09b8c;gap:12px}
+.hud{position:absolute;bottom:0;left:30%;right:30%;height:70px;border:1px solid #3c3526;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#a09b8c}
+.ovl{position:absolute;top:24px;right:24px;border:1px dashed var(--fg2);padding:10px 14px;background:rgba(0,0,0,.6);font-size:13px;max-width:300px}
+#simbar{position:absolute;left:0;right:0;bottom:0;height:28px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#000;border-top:1px dashed #555;font-size:12px;color:var(--fg2);z-index:100}
+#simbar .b{min-height:20px;padding:0 8px;font-size:12px}
+#simbar .lv{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+#simbar a{color:var(--fg2);white-space:nowrap}#simbar>span:first-child{white-space:nowrap}
 .foot{display:flex;justify-content:space-between;gap:12px;padding:6px 20px;border-top:1px solid var(--ln);background:var(--sf);font-size:12px;color:var(--fg2);align-items:center}
 .foot .live{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .foot nav{display:flex;gap:14px;white-space:nowrap}
@@ -118,7 +146,7 @@ pre{margin:0;white-space:pre-wrap;font:12px/1.5 var(--ft);background:var(--bg);b
 .card.btnc:hover{background:var(--hv)}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--ln);border-top-color:var(--fg);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
 @keyframes sp{to{transform:rotate(360deg)}}
-#dock{position:fixed;right:16px;bottom:44px;z-index:40}
+#dock{position:fixed;right:16px;bottom:40px;z-index:40}
 #dock .b{min-height:36px;padding:0 16px;font:500 14px var(--fd);letter-spacing:.08em;text-transform:uppercase}
 #qp{position:fixed;z-index:60;background:var(--sf);border:1px solid var(--ln);box-shadow:0 10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden}
 #qp[hidden]{display:none}
@@ -133,38 +161,37 @@ dialog .mf{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:
 .dd{display:flex;gap:12px}
 .sr{position:absolute;left:-9999px}
 .nw{display:none}
-@media (max-width:960px){
- .nw{display:block}.wd{display:none}
- .split,.split.c{grid-template-columns:minmax(0,1fr)}
- h1{font-size:28px}
- main{padding:16px}
-}
+
 @media (max-width:820px){
  .grid3{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
- .act{min-height:170px;padding:14px}
+ .act{min-height:150px;padding:14px}
  .act .t{font-size:20px}
 }
 @media (max-width:640px){
  .grid3,.grid2{grid-template-columns:minmax(0,1fr)}
  .act{min-height:0}
- .hdr{padding:0 10px;gap:8px;height:46px}
- .brand .demo{display:none}
+ .hdr{padding:0 8px;gap:6px}
+ #clientnav{gap:12px;padding:0 10px}#clientnav .ci{display:none}
+ .cgrid{grid-template-columns:repeat(4,64px)}.ctile{font-size:11px}
+ #simbar .lv,#simbar .st,#simbar>span:first-child{display:none}
+ #simbar{gap:6px;padding:0 6px}
  .crumbs .hide-c{display:none}
  h1{font-size:22px}
  main{padding:12px}
- .foot{padding:4px 10px}
- .foot .live{display:none}
  .steps button{padding:8px 8px 7px;font-size:13px}
  .pick{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 </style>
 </head>
 <body>
-<header class="hdr" id="hdr"></header>
-<main id="main" tabindex="-1"></main>
-<footer class="foot"><span class="live" id="live" role="status" aria-live="polite">Pronto. Demonstração local, sem cliente do LoL.</span><nav aria-label="Outras propostas"><a href="../sexo2-ux-a/index.html">Proposta A</a><a href="../sexo2-overlays/index.html#b">Overlays</a></nav></footer>
+<div id="stage">
+<nav id="clientnav" aria-label="Navegação do client (simulado)"></nav>
+<div id="scene"></div>
+<section id="hub" role="dialog" aria-label="SEXO2 · workspace por atividade" hidden><div class="hdr" id="hdr"></div><main id="main" tabindex="-1"></main></section>
 <div id="dock" hidden></div>
 <section id="qp" role="dialog" aria-label="Painel rápido do assistente" hidden></section>
+<div id="simbar" role="group" aria-label="Controles de simulação, fora do produto"></div>
+</div>
 <dialog id="md" aria-labelledby="mdt"><div class="mh"><h2 id="mdt"></h2><button type="button" class="b" id="mdx" data-act="mclose">Fechar</button></div><div class="mb" id="mdb"></div><div class="mf" id="mdf"></div></dialog>
 <script>
 "use strict";
@@ -224,8 +251,8 @@ const S={
   errors:[],verify:0,folderOpen:{},diag:null,
   room:{st:'off',code:'',me:false,mem:[],coord:false,copied:0,input:'',err:''},
   drawMode:'Pessoal',drawN:0,draw:null,
-  brav:{shown:false,champ:null,n:0},
-  cfg:{iniciar:true,idioma:'Português (Brasil)',autoaceite:true,sugerirRunas:true,confirmSkin:false,fonte:'Lolalytics',ouro:true,arena:true,mayhem:false,tempoAceite:'2',tempoImport:'1',pasta:'C:\\Riot Games\\League of Legends'},
+  brav:{confirmed:false,phase:0,champ:null,skin:null,how:'',n:0},win:null,
+  cfg:{iniciar:true,idioma:'Português (Brasil)',autoaceite:true,sugerirRunas:true,confirmSkin:false,bravPref:'Favoritas, senão aleatória',fonte:'Lolalytics',ouro:true,arena:true,mayhem:false,tempoAceite:'2',tempoImport:'1',pasta:'C:\\Riot Games\\League of Legends'},
   draft:null,cfgTab:'Geral',sess:{},
   srcPref:'Lolalytics',cmp:false,oneSim:false,
   sim:'ok',rimp:{st:'idle',msg:''},edit:{open:false,key:8112,sec:'Precisão',shard:5008,n:0,msg:''},
@@ -267,7 +294,7 @@ function headerHTML(){
   const sub=LOC().split(' › ').slice(1).join(' › ');
   let cr=home?'<span aria-current="page">Atividades</span>':`<button type="button" class="b g sm" data-act="home">Atividades</button><span class="sep" aria-hidden="true">›</span>${sub?`<span class="hide-c">${names[S.view]}</span><span class="sep hide-c" aria-hidden="true">›</span><span aria-current="page">${esc(sub)}</span>`:`<span aria-current="page">${names[S.view]}</span>`}`;
   const dr=S.draft?' <span class="tag f">rascunho</span>':'';
-  return `<div class="brand"><strong>SEXO2</strong><span class="demo">Demonstração local</span></div><nav class="crumbs" aria-label="Localização">${cr}</nav><div class="row">${B('Configurações'+dr,'settings',{},'')}</div>`;
+  return `<div class="brand"><strong>SEXO2</strong></div><nav class="crumbs" aria-label="Localização">${cr}</nav><div class="row" style="flex-wrap:nowrap">${B('Configurações'+dr,'settings',{},'sm')}${B('Fechar','winClose',{},'sm')}</div>`;
 }
 function homeHTML(){
   const resume=(S.step>0||S.locked)?`Retomar: ${['Antes da fila','Na seleção','Em jogo'][S.step]} · ${S.champ}`:'Antes da fila → Na seleção → Em jogo';
@@ -295,7 +322,7 @@ function asideHTML(){
   <dt>Fonte</dt><dd>${esc(S.srcPref)}</dd>
   <dt>Runas</dt><dd>${ri.st==='success'?'Importadas':ri.st==='importing'?'Importando…':ri.st==='idle'?'Nenhuma importação':'Sem importar'}</dd>
   <dt>Itens</dt><dd>${S.trio[S.champ]?'Trio escolhido':'Padrão'}</dd>
-  <dt>Sala</dt><dd>${S.room.st==='conn'?esc(S.room.code):S.room.st==='disc'?'Desconectada':'Sem sala'}</dd></dl>
+  <dt>Bravura</dt><dd>${S.brav.confirmed?'confirmada (−3)':'não'}</dd><dt>Sala</dt><dd>${S.room.st==='conn'?esc(S.room.code):S.room.st==='disc'?'Desconectada':'Sem sala'}</dd></dl>
   <div class="sect"><h3>Importações simuladas</h3>${S.imports.length?`<ul style="margin:6px 0 0;padding-left:16px" class="sm">${S.imports.map(i=>`<li><b>${esc(i.t)}</b> · ${esc(i.d)}</li>`).join('')}</ul>`:'<p class="sm">Nenhuma até agora.</p>'}</div>
   <div class="row">${B('Escolhas na coleção','gotoBack',{a:'coll',b:'Por campeão'},'sm')}</div></aside>`;
 }
@@ -305,7 +332,7 @@ function prepHTML(){
   const stage=[stageBefore,stageSelect,stageGame][st]();
   return `${backBar()}<div class="row sp"><div><h3>Atividade 1</h3><h1>Preparar partida</h1></div><span class="tag f">${S.room.st==='conn'?'Sala '+esc(S.room.code):'Preparo pessoal'}</span></div>
   <nav class="steps" aria-label="Etapas do preparo">${steps}</nav>
-  <div class="split ${st===1?'one':''}"><section class="card" aria-label="${['Antes da fila','Na seleção','Em jogo'][st]}">${stage}</section>${asideHTML()}</div>`;
+  <div class="split"><section class="card" aria-label="${['Antes da fila','Na seleção','Em jogo'][st]}">${stage}</section>${asideHTML()}</div>`;
 }
 function sw(key,label,desc,scope){
   const on=!!sval(key);
@@ -335,29 +362,27 @@ function drawHTML(){
   return `<div class="row" role="group" aria-label="Modo do sorteio">${modes}</div><div style="margin-top:10px">${body}</div>${S.setNote?`<p class="note" style="margin-top:8px" role="status">${esc(S.setNote)}</p>`:''}`;
 }
 function bravHTML(){
-  const b=S.brav;
-  return `<div class="row">${b.shown?`<span>${ico('champions',b.champ,'l')}</span><div><h4>${esc(b.champ)}</h4><p class="sm">Campeão revelado. Rota, itens e desafios não são definidos pela Bravura.</p></div>`:`<span class="ph" aria-hidden="true">?</span><div><h4>Campeão oculto</h4><p class="sm">Nada é revelado antes da sua ação.</p></div>`}</div>
-  <div class="row" style="margin-top:10px">${b.shown?B('Sortear novamente','bravAgain',{})+B('Usar na seleção','bravUse',{},'p'):B('Revelar campeão','bravReveal',{},'p')}</div>`;
+  return `<p class="mut">Só no <b>Arena</b>. Se você confirmar <b>Bravura</b> na seleção (campeão −3), o jogo sorteia e revela o campeão <b>já em partida</b>. O SEXO2 então detecta o campeão, escolhe a skin (favoritas; sem favorita, aleatória; exclusões respeitadas), encerra o executável da partida <b>uma vez</b> e reconecta. O cliente continua aberto.</p><p class="sm" style="margin-top:6px">Há uma interrupção de carregamento: não é instantâneo. Se o campeão ou o arquivo da skin não chegarem em 75 s desde o início da partida, o jogo não é encerrado. ${S.queue==='Arena'?'Fila atual: Arena.':'Escolha a fila Arena acima para simular.'}</p>`;
 }
 function stageBefore(){
   const as=activeSet();
   const rd=readiness();const okn=rd.filter(x=>x[1]).length;
-  return `<div class="sect"><h2>Pronto para a fila</h2><div class="grid2" style="margin-top:10px"><div><label class="f" for="queue">Fila</label><select id="queue" data-act="queue">${['Ranqueada Solo/Duo','Normal','ARAM'].map(q=>`<option ${S.queue===q?'selected':''}>${q}</option>`).join('')}</select></div>
+  return `<div class="sect"><h2>Pronto para a fila</h2><div class="grid2" style="margin-top:10px"><div><label class="f" for="queue">Fila</label><select id="queue" data-act="queue">${['Ranqueada Solo/Duo','Normal','ARAM','Arena'].map(q=>`<option ${S.queue===q?'selected':''}>${q}</option>`).join('')}</select></div>
   <div><span class="lbl">Prontidão</span><div class="row"><span class="num">${okn} de ${rd.length}</span>${B('Detalhes no suporte','gotoBack',{a:'support'},'sm')}</div></div></div>
   ${sw('autoaceite','Aceitar partida automaticamente','Vale só para esta partida. O padrão salvo fica em Configurações.')}
   <div class="row sp"><span>Conjunto ativo: <b>${as?esc(as.name):'nenhum'}</b> ${as?'<span class="tag f">Ativo</span>':'<span class="tag">Desativado</span>'}</span>${B('Ver conjuntos','gotoBack',{a:'coll',b:'Conjuntos'},'sm')}</div></div>
   <div class="sect"><h2>Sala</h2><div style="margin-top:10px">${roomHTML()}</div></div>
   <div class="sect"><h2>Sorteio de skin</h2><div style="margin-top:10px">${drawHTML()}</div></div>
-  <div class="sect"><h2>Arena Bravura · proposta</h2><div style="margin-top:10px">${bravHTML()}</div></div>
-  <div class="row sp sect"><span class="sm">As etapas são navegação demonstrativa.</span>${B('Entrar na seleção →','step',{a:1},'p')}</div>`;
+  <div class="sect"><h2>Arena Bravura</h2><div style="margin-top:10px">${bravHTML()}</div></div>
+  <div class="row sp sect"><span class="sm">O client simulado muda de cena com a etapa.</span>${B('Encontrar partida →','simState',{a:1},'p')}</div>`;
 }
 /* ---------- Na seleção ---------- */
 function stageSelect(){
-  const imp=S.locked?`<div class="note ok" role="status">Campeão confirmado. Importação automática simulada: runas ${esc(S.srcPref==='Onetricks'?'(fonte indisponível, nada importado)':'da fonte '+S.srcPref)} e itens ${S.trio[S.champ]?'(trio escolhido primeiro)':'(padrão)'}.</div>`:'<p class="sm">Escolha um campeão e confirme. Ao confirmar, a importação automática é simulada.</p>';
-  return `<div class="row sp"><h2>Seleção de campeões (simulada)</h2><div class="row">${B('Todas as configurações','settings',{},'sm')}${B('Continuar: em jogo →','step',{a:2},'p')}</div></div>
-  <div class="pick" style="margin:12px 0" role="group" aria-label="Campeões">${CH.map(c=>`<button type="button" data-act="champ" data-a="${c}" aria-pressed="${S.champ===c}">${ico('champions',c,'m')}${c}</button>`).join('')}</div>
-  <div class="row">${B(S.locked?'Desfazer confirmação':'Confirmar campeão','lock',{},S.locked?'':'p')}<span class="sm">${esc(S.champ)} · ${esc(S.role)} · ${esc(S.vs)}</span></div><div style="margin-top:10px">${imp}</div>
-  <p class="sm" style="margin-top:10px">O painel do assistente ancora no botão SEXO2, canto inferior direito. Esc fecha o painel.</p>`;
+  const b=S.brav;
+  return `<div class="row sp"><h2>Na seleção de campeões</h2>${B('Abrir o assistente','openQp',{},'p')}</div>
+  <p class="mut" style="margin-top:8px">O assistente de 452×492 fica ancorado ao botão SEXO2 inferior do client. Aqui ficam o resumo e as preferências completas.</p>
+  <dl class="kv" style="margin-top:10px"><dt>Campeão</dt><dd>${b.confirmed?'Bravura (−3): revelado só em partida':esc(S.champ)+(S.locked?' · confirmado':' · não confirmado')}</dd><dt>Rota</dt><dd>${esc(S.role)}</dd><dt>Confronto</dt><dd>${esc(S.vs)}</dd></dl>
+  <div class="row" style="margin-top:12px">${B('Todas as configurações','settings',{},'sm')}${B('Continuar: em jogo →','simState',{a:2},'p')}</div>`;
 }
 /* ---------- Em jogo ---------- */
 function enhHTML(){
@@ -368,10 +393,19 @@ function enhHTML(){
   else b=`<div class="grid3">${e.cards.map((c,i)=>`<div class="card t"><h4>${esc(c)}</h4><p class="sm">Oferecida pelo jogo (simulação)</p></div>`).join('')}</div><p class="sm" style="margin-top:6px">O SEXO2 apenas mostra o que foi oferecido; ele nunca escolhe por você.</p>`;
   return `${b}<div class="row" style="margin-top:8px">${B('Simular ofertas','enhOffer',{},'sm')}${B('Simular carta não reconhecida','enhUnrec',{},'sm')}${B('Limpar','enhClear',{},'sm')}</div>`;
 }
+const BPH=['Aguardando o jogo sortear e revelar o campeão (em partida).','Campeão detectado pelo app: ','Skin escolhida: ','Encerrando o executável da partida (uma vez). O cliente continua aberto.','Reconectando: interrupção de carregamento, não é instantâneo.','Concluído. O guard impede repetir nesta partida.'];
+function bravFlow(){
+  const b=S.brav;
+  if(S.queue!=='Arena')return '<p class="sm">Bravura só vale no Arena. Escolha a fila Arena em Antes da fila.</p>';
+  if(!b.confirmed)return '<p class="sm">Bravura não foi confirmada na seleção: nada a fazer.</p>';
+  const lines=BPH.slice(0,b.phase+1).map((t,i)=>i===1?t+b.champ:i===2?t+b.skin+' ('+b.how+')':t);
+  return `<ol style="margin:0;padding-left:18px" class="col s" aria-live="polite">${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ol><div class="row" style="margin-top:8px">${b.phase<5?B('Avançar simulação','bravNext',{},'sm p'):''}</div><p class="sm" style="margin-top:6px">Sem estatísticas, desafios ou itens: Bravura só define campeão e skin. Aprimoramentos são outro assunto (Configurações › Overlays).</p>`;
+}
 function stageGame(){
   const done=S.mods.filter(m=>m.cat==='Skins'&&m.on&&m.champ&&m.base);
   return `<div class="row sp"><h2>Em jogo</h2>${B('Simular fim da partida','endMatch',{},'')}</div>
   ${done.length?`<div class="note ok" style="margin-top:10px" role="status">Fim da seleção: ${done.map(m=>esc(m.n)).join(', ')} aplicado(s).</div>`:''}
+  <div class="sect"><h3>Arena Bravura</h3><div style="margin-top:6px">${bravFlow()}</div></div>
   <div class="sect"><h3>Overlay de ouro no placar</h3>${sw('ouro','Mostrar ouro investido em itens no placar','Diferença assinada por linha e total no topo.')}<p class="sm">Prévia explícita: <a href="../sexo2-overlays/index.html#b">abrir o laboratório de overlays (modo B)</a>.</p></div>
   <div class="sect"><h3>Aprimoramentos (Arena/Mayhem) · separados do ouro</h3>${sw('arena','Aprimoramentos da Arena','Cartas realmente oferecidas.')}${sw('mayhem','Aprimoramentos do Mayhem','Mantidos separados da Arena.')}<div style="margin-top:8px">${enhHTML()}</div></div>`;
 }
@@ -532,12 +566,30 @@ function placePanel(){
   const w=Math.min(452,r.right-8);const h=Math.max(160,Math.min(492,r.top-16));
   p.style.width=w+'px';p.style.height=h+'px';p.style.left=(r.right-w)+'px';p.style.top=Math.max(8,r.top-8-h)+'px';
 }
+
+function navHTML(){
+  return `<span class="ci ${S.step===0?'on':''}">Jogar</span><span class="ci">Perfil</span><span class="ci">Coleção</span><span class="ci">Loja</span><button type="button" class="b" id="hub-launch" data-act="hub" aria-expanded="${S.win==='hub'}" aria-controls="hub">SEXO2</button>`;
+}
+function sceneHTML(){
+  if(S.step===0){
+    const mem=S.room.st==='conn'?S.room.mem:[{n:'Você',me:true}];
+    return `<div class="sc lobby" id="lobby"><div class="cq">${esc(S.queue)}</div><div class="cm">Lobby do client (simulado)${S.room.st==='conn'?' · grupo com sala '+esc(S.room.code):''}</div><div class="slots">${mem.map(m=>`<div class="slot">${ico('champions',m.me?S.champ:'Lux','m')}${esc(m.n)}</div>`).join('')}</div><button type="button" class="cbtn" data-act="simState" data-a="1">Encontrar partida</button></div>`;
+  }
+  if(S.step===1){
+    const ar=S.queue==='Arena';
+    return `<div class="sc csel" id="champ-scene"><div class="ct">ESCOLHA SEU CAMPEÃO</div><div class="cgrid" role="group" aria-label="Campeões">${CH.map(c=>`<button type="button" class="ctile" data-act="champ" data-a="${c}" aria-pressed="${S.champ===c&&!S.brav.confirmed}">${ico('champions',c,'m')}${c}</button>`).join('')}${ar?`<button type="button" class="ctile" data-act="bravConfirm" aria-pressed="${S.brav.confirmed}"><span class="ph" style="width:40px;height:40px;font-size:20px">−3</span>Bravura</button>`:''}</div><div id="bottom"><span>${S.brav.confirmed?'Bravura selecionada: o campeão será revelado em partida.':esc(S.champ)+' · '+esc(S.role)}</span><button type="button" class="cbtn" id="confirm-champ" data-act="lock">${S.locked?'Desfazer':'Confirmar'}</button></div></div>`;
+  }
+  return `<div class="sc game" id="game"><div class="ovl">${sval('ouro')?'Overlay de ouro SEXO2: ligado (prévia no laboratório de overlays).':'Overlay de ouro desligado.'}</div><div class="cq" style="margin-top:80px">Partida em andamento</div><div class="cm">${S.brav.confirmed&&S.brav.phase>=1?'Campeão: '+esc(S.brav.champ):'Cena de partida (simulada) · '+esc(S.champ)}</div><div class="hud">HUD do jogo</div></div>`;
+}
+function simHTML(){
+  return `<span><b>Simulação · fora do produto</b></span><span class="st">Estado do client:</span>${['Cliente','Seleção','Partida'].map((t,i)=>B(t,'simState',{a:i},'sm','aria-pressed="'+(S.step===i)+'"')).join('')}<span class="lv" id="live" role="status" aria-live="polite">${esc(S.last)}</span><a href="../sexo2-ux-a/index.html">Proposta A</a><a href="../sexo2-overlays/index.html#b">Overlays</a>`;
+}
 /* ===== Render, foco e modais ===== */
 const main=el('#main');
 function keyOf(e){
   if(!e||e===document.body||!e.dataset)return'';
   if(e.id)return'#'+e.id;
-  if(e.dataset.act)return(e.closest('#qp')?'qp:':e.closest('#hdr')?'hdr:':e.closest('#md')?'md:':'')+'a:'+Object.values(e.dataset).join('|');
+  if(e.dataset.act)return(e.closest('#qp')?'qp:':e.closest('#hdr')?'hdr:':e.closest('#simbar')?'sim:':e.closest('#scene')?'sc:':e.closest('#clientnav')?'nav:':e.closest('#md')?'md:':'')+'a:'+Object.values(e.dataset).join('|');
   return'';
 }
 function findKey(k){
@@ -549,21 +601,23 @@ function render(){
   const ae=document.activeElement,k=keyOf(ae);
   const sel=ae&&typeof ae.selectionStart==='number'&&/search|text/.test(ae.type||'')?[ae.selectionStart,ae.selectionEnd]:null;
   const ms=main.scrollTop,qbEl=el('#qp .qb'),qs=qbEl?qbEl.scrollTop:0;
-  el('#hdr').innerHTML=headerHTML();
-  main.innerHTML=({home:homeHTML,prep:prepHTML,coll:collHTML,support:supportHTML})[S.view]();
-  const inSel=S.view==='prep'&&S.step===1;
-  main.className=inSel?'sel':'';
+  el('#clientnav').innerHTML=navHTML();
+  el('#scene').innerHTML=sceneHTML();
+  el('#simbar').innerHTML=simHTML();
+  const hub=el('#hub');hub.hidden=S.win!=='hub';
+  if(S.win==='hub'){el('#hdr').innerHTML=headerHTML();main.innerHTML=({home:homeHTML,prep:prepHTML,coll:collHTML,support:supportHTML})[S.view]();}
+  const inSel=S.step===1;
   const dock=el('#dock'),qp=el('#qp');
   dock.hidden=!inSel;
   if(inSel){
-    dock.innerHTML=`<button type="button" class="b p" id="dockbtn" data-act="dock" aria-expanded="${S.panel}" aria-controls="qp">SEXO2 · Assistente</button>`;
-    qp.hidden=!S.panel;
-    if(S.panel){qp.innerHTML=panelHTML();placePanel();}
-  }else{qp.hidden=true;qp.innerHTML='';dock.innerHTML='';}
+    dock.innerHTML=`<button type="button" class="b p" id="dockbtn" data-act="dock" aria-expanded="${S.win==='qp'}" aria-controls="qp">SEXO2</button>`;
+    qp.hidden=S.win!=='qp';
+    if(S.win==='qp'){qp.innerHTML=panelHTML();placePanel();}
+  }else{qp.hidden=true;qp.innerHTML='';dock.innerHTML='';if(S.win==='qp')S.win=null}
   main.scrollTop=ms;const q2=el('#qp .qb');if(q2)q2.scrollTop=qs;
   const t=findKey(k);
   if(t&&t!==document.activeElement){t.focus({preventScroll:true});if(sel&&t.setSelectionRange){try{t.setSelectionRange(sel[0],sel[1])}catch(_){}}}
-  else if(!t&&k&&!el('#md').open)main.focus({preventScroll:true});
+  else if(!t&&k&&!el('#md').open){const m=S.win==='hub'?main:el('#hub-launch');if(m)m.focus({preventScroll:true})}
 }
 function modal(title,body,foot,onClose){
   const d=el('#md');
@@ -602,20 +656,24 @@ function settingsBody(){
   const tabs=['Geral','Seleção','Overlays','Avançado'].map(t=>`<button type="button" data-act="cfgTab" data-a="${t}" ${S.cfgTab===t?'aria-current="true"':''}>${t}</button>`).join('');
   const d=S.draft;let b='';
   if(S.cfgTab==='Geral')b=`${cfgChk('iniciar','Iniciar com o sistema','Grava ao salvar.')}<div style="margin:8px 0"><label class="f" for="cl">Idioma (aplica imediatamente)</label><select id="cl" data-bind="idioma">${['Português (Brasil)','English','Español'].map(x=>`<option ${d.idioma===x?'selected':''}>${x}</option>`).join('')}</select><p class="sm" style="margin-top:4px">Idioma atual: <b>${esc(S.cfg.idioma)}</b>. Diferente dos demais campos, ele não espera o botão Salvar.</p></div>`;
-  if(S.cfgTab==='Seleção')b=`${cfgChk('autoaceite','Aceitar partida automaticamente','Padrão salvo; a partida atual pode sobrepor.')}${cfgChk('sugerirRunas','Sugerir runas','Recomendações nunca importam sozinhas.')}${cfgChk('confirmSkin','Confirmar skin antes de aplicar','')}<div style="margin:8px 0"><label class="f" for="cf">Fonte preferida</label><select id="cf" data-bind="fonte">${['Lolalytics','Onetricks'].map(x=>`<option value="${x}" ${d.fonte===x?'selected':''}>${x}${x==='Onetricks'?' (futuro, indisponível)':''}</option>`).join('')}</select><p class="sm" style="margin-top:4px">Mudar a fonte não importa runas.</p></div>`;
+  if(S.cfgTab==='Seleção')b=`${cfgChk('autoaceite','Aceitar partida automaticamente','Padrão salvo; a partida atual pode sobrepor.')}${cfgChk('sugerirRunas','Sugerir runas','Recomendações nunca importam sozinhas.')}${cfgChk('confirmSkin','Confirmar skin antes de aplicar','')}<div style="margin:8px 0"><label class="f" for="cb">Skin do Arena Bravura</label><select id="cb" data-bind="bravPref">${['Favoritas, senão aleatória','Sempre aleatória'].map(x=>`<option ${d.bravPref===x?'selected':''}>${x}</option>`).join('')}</select></div><div style="margin:8px 0"><label class="f" for="cf">Fonte preferida</label><select id="cf" data-bind="fonte">${['Lolalytics','Onetricks'].map(x=>`<option value="${x}" ${d.fonte===x?'selected':''}>${x}${x==='Onetricks'?' (futuro, indisponível)':''}</option>`).join('')}</select><p class="sm" style="margin-top:4px">Mudar a fonte não importa runas.</p></div>`;
   if(S.cfgTab==='Overlays')b=`<h3>Ouro no placar</h3>${cfgChk('ouro','Mostrar ouro investido em itens','Diferença assinada por linha e total no topo.')}<h3 style="margin-top:12px">Aprimoramentos · separados do ouro</h3>${cfgChk('arena','Aprimoramentos da Arena','Só opções realmente oferecidas.')}${cfgChk('mayhem','Aprimoramentos do Mayhem','Não se misturam com a Arena.')}`;
   if(S.cfgTab==='Avançado')b=`<div class="grid2"><div><label class="f" for="ta">Espera do aceite (s)</label><input type="text" id="ta" data-bind="tempoAceite" value="${esc(d.tempoAceite)}" inputmode="numeric"></div><div><label class="f" for="ti">Espera da importação (s)</label><input type="text" id="ti" data-bind="tempoImport" value="${esc(d.tempoImport)}" inputmode="numeric"></div></div><div style="margin-top:8px"><label class="f" for="tp">Pasta do League</label><input type="text" id="tp" data-bind="pasta" value="${esc(d.pasta)}"></div><div class="row" style="margin-top:10px">${B('Abrir Resolver problema','cfgSupport',{},'sm')}</div>`;
   return `<div class="tabs" role="group" aria-label="Seções" style="margin-bottom:12px">${tabs}</div>${S.draft&&JSON.stringify(S.draft)!==JSON.stringify(S.cfg)?'<p class="tag f" style="margin-bottom:8px">Rascunho com alterações não salvas</p>':''}${b}`;
 }
 /* ===== Ações ===== */
 const A={};
-const needSupportBack=()=>{S.back={view:S.view,step:S.step,ptab:S.ptab,coll:S.coll,label:LOC()}};
+const needSupportBack=()=>{S.back={view:S.view,step:S.step,ptab:S.ptab,coll:S.coll,win:S.win||'hub',label:S.win==='qp'?'Preparar partida › Na seleção (assistente)':LOC()};S.win='hub'};
 A.home=()=>{S.view='home';S.back=null;render();main.focus()};
 A.goto=d=>{S.view=d.a;S.back=null;say('Atividade aberta: '+LOC());render();main.focus({preventScroll:true})};
 A.gotoBack=d=>{needSupportBack();S.view=d.a;if(d.b)S.coll=d.b;say('Aberto '+LOC()+' (voltar disponível)');render();main.scrollTop=0;main.focus({preventScroll:true})};
-A.back=()=>{const b=S.back;if(!b)return;S.view=b.view;S.step=b.step;S.ptab=b.ptab;S.coll=b.coll;S.back=null;say('De volta a '+LOC());render();main.scrollTop=0;main.focus({preventScroll:true})};
+A.back=()=>{const b=S.back;if(!b)return;S.win=b.win;S.view=b.view;S.step=b.step;S.ptab=b.ptab;S.coll=b.coll;S.back=null;say('De volta a '+LOC());render();main.scrollTop=0;main.focus({preventScroll:true})};
 A.gotoErr=()=>{needSupportBack();S.view='support';say('Erro enviado ao suporte; voltar leva a '+S.back.label);render();main.focus({preventScroll:true})};
-A.step=d=>{const n=+d.a;if(n===1&&S.step!==1)S.panel=true;S.step=n;say('Etapa: '+['Antes da fila','Na seleção','Em jogo'][n]);render()};
+A.step=d=>{S.step=+d.a;say('Etapa: '+['Antes da fila (client)','Na seleção (champ select)','Em jogo (partida)'][S.step]);render()};
+A.simState=d=>{const n=+d.a;S.step=n;if(n===1){S.win='qp'}else if(S.win==='qp')S.win=null;if(n===0){S.locked=false}say('Client simulado: '+['Cliente (lobby)','Seleção de campeões','Partida'][n]);render();if(n===1){const t=el('#qp .tabs button[aria-current=true]');}};
+A.hub=()=>{S.win=S.win==='hub'?null:'hub';if(S.win==='hub'&&S.view!=='home'&&false)S.view='home';render();if(S.win==='hub')main.focus({preventScroll:true})};
+A.winClose=()=>{const w=S.win;S.win=null;render();const b=w==='qp'?el('#dockbtn'):el('#hub-launch');if(b)b.focus()};
+A.openQp=()=>{S.win='qp';render();const t=el('#qp .tabs button[aria-current=true]');if(t)t.focus()};
 A.settings=()=>openSettings();
 A.mclose=()=>closeModal();
 A.queue=(d,t)=>{S.queue=t.value;say('Fila: '+t.value);render()};
@@ -637,14 +695,18 @@ A.coordEnter=()=>{const as=activeSet();
   modal('Entrar no sorteio coordenado?',`<div class="note e"><b>Isto desativa o conjunto "${esc(as.name)}".</b> Ele não volta sozinho ao sair do sorteio; você o reativa em Personalizar coleção.</div><p class="sm" style="margin-top:8px">Perfil é um conjunto de escolhas por campeão, não um usuário.</p>`,`${B('Cancelar','mclose',{})}${B('Entrar e desativar conjunto','coordYes',{},'p')}`)};
 A.coordYes=()=>{const as=activeSet();S.room.coord=true;S.activeSet=null;S.setNote='Conjunto "'+as.name+'" desativado ao entrar no sorteio coordenado.';say(S.setNote);closeModal()};
 A.coordLeave=()=>{S.room.coord=false;S.setNote='Saiu do sorteio coordenado. O conjunto continua desativado.';S.draw=null;say(S.setNote);render()};
-A.bravReveal=()=>{const b=S.brav;b.shown=true;b.champ=CH[(b.n*3+2)%CH.length];say('Bravura revelou '+b.champ);render()};
-A.bravAgain=()=>{const b=S.brav;b.n++;b.champ=CH[(b.n*3+2)%CH.length];say('Bravura sorteou novamente: '+b.champ);render()};
-A.bravUse=()=>{S.champ=S.brav.champ;S.collChamp=S.champ;S.locked=false;S.step=1;S.panel=true;say('Bravura: '+S.champ+' levado à seleção');render()};
+A.bravConfirm=()=>{if(S.queue!=='Arena')return;S.brav={confirmed:true,phase:0,champ:null,skin:null,how:'',n:S.brav.n};S.locked=true;say('Bravura confirmada na seleção (campeão −3). Revelação só em partida.');render()};
+A.bravNext=()=>{const b=S.brav;if(b.phase>=5)return;b.phase++;
+  if(b.phase===1){b.champ=CH[(b.n*3+1)%CH.length];b.n++}
+  if(b.phase===2){const favs=[...S.favs].filter(k=>k.startsWith(b.champ+'|')).map(k=>k.split('|')[1]);
+    const pool=skinsOf(b.champ).map(x=>x[0]).filter(x=>eligible(b.champ,x));
+    if(favs.length&&S.cfg.bravPref.startsWith('Favoritas')){b.skin=favs[0];b.how='favorita'}else{b.skin=pool[b.n%pool.length];b.how='aleatória, exclusões respeitadas'}}
+  say('Bravura: '+BPH[b.phase].split(':')[0]);render()};
 /* seleção */
-A.champ=d=>{S.champ=d.a;S.collChamp=d.a;S.locked=false;S.trioQ='';say('Campeão: '+d.a);render()};
+A.champ=d=>{S.brav.confirmed=false;S.champ=d.a;S.collChamp=d.a;S.locked=false;S.trioQ='';say('Campeão: '+d.a);render()};
 A.lock=()=>{S.locked=!S.locked;if(S.locked){const src=S.srcPref==='Onetricks'&&!S.oneSim?null:S.srcPref;logImp('Ao confirmar '+S.champ,(src?'runas da fonte '+src:'runas: fonte indisponível, nada importado')+' · itens: '+(S.trio[S.champ]?'trio escolhido':'padrão'));if(src)S.rimp={st:'success',msg:'página recomendada (importação automática)',id:'rec'};say('Campeão confirmado; importação automática simulada')}else say('Confirmação desfeita');render()};
-A.dock=()=>{S.panel=!S.panel;render();if(S.panel){const t=el('#qp .tabs button[aria-current=true]');if(t)t.focus()}};
-A.panelClose=()=>{S.panel=false;render();const b=el('#dockbtn');if(b)b.focus()};
+A.dock=()=>{S.win=S.win==='qp'?null:'qp';render();if(S.win==='qp'){const t=el('#qp .tabs button[aria-current=true]');if(t)t.focus()}};
+A.panelClose=()=>A.winClose();
 A.ptab=d=>{S.ptab=d.a;render()};
 A.role=(d,t)=>{S.role=t.value;say('Rota: '+t.value);render()};
 A.vs=(d,t)=>{S.vs=t.value;say('Confronto: '+t.value);render()};
@@ -684,7 +746,7 @@ A.favApply=d=>{S.choice[d.a]=d.b;say('Favorita aplicada: '+d.a+' · '+d.b);S.set
 A.favAll=()=>{[...S.favs].forEach(k=>{const [c,s]=k.split('|');S.choice[c]=s});S.setNote='Todas as favoritas aplicadas ('+S.favs.size+').';say(S.setNote);render()};
 A.favDel=d=>{S.favs.delete(ckey(d.a,d.b));say('Favorita removida');render()};
 A.modToggle=(d,t)=>{const m=S.mods.find(x=>x.id===d.a);
-  if(t.checked){if(!m.compat){m.failed=true;m.on=false;if(!S.errors.some(e=>e.modId===m.id&&!e.done))S.errors.push({id:'e'+(S.errors.length+1),modId:m.id,t:'Mod incompatível: '+m.n,d:'A versão simulada do cliente recusou "'+m.n+'".',from:LOC()+(S.view==='prep'?' › Mods':''),done:false});say('Falha ao aplicar '+m.n+': versão incompatível')}
+  if(t.checked){if(!m.compat){m.failed=true;m.on=false;if(!S.errors.some(e=>e.modId===m.id&&!e.done))S.errors.push({id:'e'+(S.errors.length+1),modId:m.id,t:'Mod incompatível: '+m.n,d:'A versão simulada do cliente recusou "'+m.n+'".',from:S.win==='qp'?'Preparar partida › Na seleção › Mods':LOC(),done:false});say('Falha ao aplicar '+m.n+': versão incompatível')}
     else{m.on=true;m.failed=false;say(m.n+': aplicado'+(m.cat==='Skins'&&S.step<2?' (aguarda o fim da seleção)':''))}}
   else{m.on=false;m.failed=false;say(m.n+': desativado')}
   render()};
@@ -725,7 +787,7 @@ A.enhOffer=()=>{S.enh={st:'offer',cards:['Oferta ilustrativa A','Oferta ilustrat
 A.enhUnrec=()=>{S.enh={st:'offer',cards:[],unrec:true};say('Carta não reconhecida');render()};
 A.enhClear=()=>{S.enh={st:'none',cards:[],unrec:false};say('Sem dados de aprimoramentos');render()};
 A.enhFix=(d,t)=>{if(!t.value)return;S.enh={st:'offer',cards:[t.value],unrec:false};say('Corrigido manualmente: '+t.value);render()};
-A.endMatch=()=>{S.step=0;S.locked=false;S.enh={st:'none',cards:[],unrec:false};S.panel=true;say('Partida encerrada (simulado). De volta a Antes da fila.');render()};
+A.endMatch=()=>{S.step=0;S.locked=false;S.brav={confirmed:false,phase:0,champ:null,skin:null,how:'',n:S.brav.n};S.enh={st:'none',cards:[],unrec:false};say('Partida encerrada (simulado). De volta a Antes da fila.');render()};
 /* configurações */
 A.cfgTab=d=>{S.cfgTab=d.a;mrefresh(settingsBody())};
 A.cfgSave=()=>{S.cfg={...S.draft};S.draft=null;S.srcPref=S.cfg.fonte;say('Configurações salvas, sem reiniciar. Nenhuma importação foi feita.');closeModal()};
@@ -754,10 +816,8 @@ document.addEventListener('input',e=>{
   if(t.dataset.live==='rkey'){S.room.input=t.value}
 });
 document.addEventListener('keydown',e=>{
-  if(e.key!=='Escape')return;
-  const qp=el('#qp');
-  if(el('#md').open||qp.hidden)return;
-  if(qp.contains(document.activeElement)||document.activeElement===el('#dockbtn')){e.preventDefault();A.panelClose()}
+  if(e.key!=='Escape'||el('#md').open||!S.win)return;
+  e.preventDefault();A.winClose();
 });
 window.addEventListener('resize',()=>placePanel());
 S.queue='Ranqueada Solo/Duo';
