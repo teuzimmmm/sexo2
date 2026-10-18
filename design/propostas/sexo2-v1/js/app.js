@@ -625,7 +625,7 @@
       <h3>Leitura</h3>
       <div class="row"><button data-sim="augunknown">Carta não reconhecida</button><button data-sim="augwrong">Reconhecimento errado</button></div>
       <label><input type="checkbox" data-sim="augnodata" ${S.aug.noData ? "checked" : ""}> Sem dados da fonte</label>
-      <p style="margin-top:10px;line-height:1.5">Mayhem: WR, PR e partidas (${AUG.mayhem.source}). Arena: PR e partidas (${AUG.arena.source}). Clique numa carta para escolhê-la; o SEXO2 nunca escolhe.</p>`;
+      <p style="margin-top:10px;line-height:1.5">Mayhem: WR, PR e partidas (${AUG.mayhem.source}). Arena: WR, PR e partidas (${AUG.arena.source}). Clique numa carta para escolhê-la; o SEXO2 nunca escolhe.</p>`;
     el.innerHTML = S.view === "champ" ? champSim : S.view === "game" ? gameSim : S.view === "aug" ? augSim : homeSim;
   }
 

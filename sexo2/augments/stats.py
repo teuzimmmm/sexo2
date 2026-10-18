@@ -10,10 +10,8 @@ else.
 
 Arena comes from the LoLalytics Arena page already decoded by ``lolalytics``:
 ``augment.augment0..4`` hold, for each of the five augment choices of a game,
-the most picked augments as ``[id, win_rate, pick_rate, games]``. The library
-redacts the Arena win rate (docs/lolalytics/FONTES.md), so Arena shows pick
-rate and games only. Only those top rows exist, so most Arena offers have no
-data for some cards.
+the most picked augments as ``[id, win_rate, pick_rate, games]``. Only those
+top rows exist, so most Arena offers have no data for some cards.
 
 A statistic is never derived from another one, and Arena and Mayhem figures
 are never mixed.

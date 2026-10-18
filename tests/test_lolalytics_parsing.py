@@ -52,7 +52,7 @@ class ParsingFixtureTests(unittest.TestCase):
         self.assertTrue(any("do not establish a joint sample" in warning for warning in snapshot.warnings))
         self.assertTrue(any(r.category == "rune_statistics" for r in snapshot.records))
 
-    def test_arena_rates_are_suppressed_and_pick_rate_kept(self):
+    def test_arena_rates_are_kept_as_upstream_gives_them(self):
         for name in ("ahri-arena.json", "jinx-arena.json"):
             entry = next(x for x in MANIFEST if x["fixture"] == name)
             nav, payload = decode_page(fixture_bytes(entry))
@@ -71,19 +71,14 @@ class ParsingFixtureTests(unittest.TestCase):
                 "startItem",
                 "prismatic",
             ):
-                for row in sanitized.get(key, []):
-                    self.assertIsNone(row[1], (name, key, row))
-            for rows in sanitized.get("augment", {}).values():
-                for row in rows:
-                    self.assertIsNone(row[1], (name, row))
+                self.assertEqual(sanitized.get(key), payload.get(key), (name, key))
+            self.assertEqual(sanitized.get("augment"), payload.get("augment"), name)
             snapshot = parse_payload(nav, payload, fixture_query(entry), "test", "now")
             augment_records = [r for r in snapshot.records if r.category == "augment_statistics"]
             self.assertTrue(augment_records)
-            self.assertTrue(all(r.metrics["win_rate"] is None for r in augment_records))
+            self.assertTrue(all(r.metrics["win_rate"] == r.raw[1] for r in augment_records))
             self.assertTrue(all(r.metrics["pick_rate"] is not None for r in augment_records))
             self.assertTrue(all(r.metrics["games"] is not None for r in augment_records))
-            self.assertTrue(all(r.raw[1] is None for r in augment_records))
-            self.assertTrue(any("win rates are suppressed" in warning for warning in snapshot.warnings))
             self.assertNotIn("sidebar", snapshot.raw)
             self.assertEqual(snapshot.availability["rune_statistics"], "not_applicable")
             self.assertEqual(snapshot.availability["rune_suggestion"], "not_applicable")
@@ -208,7 +203,7 @@ class ParsingValidationTests(unittest.TestCase):
         self.assertIn("unconfirmed", snapshot.raw)
         self.assertFalse(any("unconfirmed" in r.source_path for r in snapshot.records))
 
-    def test_arena_sanitizer_removes_unknown_fields_and_redacts_in_new_copy(self):
+    def test_arena_sanitizer_removes_unknown_fields_and_keeps_win_rates_in_new_copy(self):
         payload = {
             "header": {"cid": 103, "n": 2, "wr": 61},
             "graph": {"wr": {"all": [61]}},
@@ -219,8 +214,8 @@ class ParsingValidationTests(unittest.TestCase):
         }
         result = sanitize_payload(payload, "arena")
         self.assertIsNot(result, payload)
-        self.assertIsNone(result["augment"]["augment0"][0][1])
-        self.assertIsNone(result["item"][0][1])
+        self.assertEqual(result["augment"]["augment0"][0][1], 71.2)
+        self.assertEqual(result["item"][0][1], 70)
         self.assertEqual(result["header"]["wr"], 61)
         self.assertEqual(result["avgWr"], 52.1)
         self.assertEqual(result["graph"]["wr"]["all"], [61])

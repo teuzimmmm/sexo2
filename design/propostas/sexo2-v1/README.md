@@ -22,8 +22,8 @@ caber na tela.
   - **Mods**: escolha do mod do campeão e acesso à biblioteca.
 - **Partida**: placar (Tab) com o valor dos itens por linha e por equipe. Segure Tab ou use a gaveta.
 - **Aprimoramentos**: oferta de três cartas em ARAM Mayhem ou Arena (alternância na gaveta). Abaixo de cada
-  carta, o que o SEXO2 leu e os números da fonte do modo: WR, PR e partidas no Mayhem; PR e partidas na
-  Arena. A carta com a melhor WR (com amostra suficiente) fica em destaque. Pela gaveta: nova oferta,
+  carta, o que o SEXO2 leu e os números da fonte do modo: WR, PR e partidas, cada modo com a sua
+  fonte. A carta com a melhor WR (com amostra suficiente) fica em destaque. Pela gaveta: nova oferta,
   fechar oferta, carta não reconhecida, reconhecimento errado e sem dados. **Corrigir** abre a lista para
   dizer qual é a carta; o botão ↻ simula a troca do jogo; clicar numa carta é a escolha do jogador.
 - **Cliente e painel SEXO2**: painel aberto pelo botão SEXO2 da barra do cliente. Seções Skins, Mods,

@@ -6,8 +6,7 @@ no statistics. A known card without statistics shows no numbers.
 
 The highlight marks the card with the highest win rate, only when at least
 two known cards have a win rate with at least ``min_games`` games: a single
-figure or a pick rate alone says nothing about which choice is better, so
-Arena (pick rate only) is never highlighted.
+figure or a pick rate alone says nothing about which choice is better.
 """
 
 from __future__ import annotations

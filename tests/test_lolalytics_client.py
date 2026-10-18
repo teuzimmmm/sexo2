@@ -306,7 +306,7 @@ class ClientBatchTests(unittest.TestCase):
         self.assertEqual(transport.calls.count(bad.url), 1)
         client.close()
 
-    def test_disk_cache_arena_payload_has_no_item_or_augment_win_rates(self):
+    def test_disk_cache_arena_payload_keeps_only_allowlisted_tables(self):
         q = query_for("ahri-arena.json")
         transport = FixtureTransport(("ahri-arena.json",))
         with tempfile.TemporaryDirectory() as tmp:
@@ -318,24 +318,7 @@ class ClientBatchTests(unittest.TestCase):
             envelope = json.loads(cache_files[0].read_text())
             stored = json.loads(base64.b64decode(envelope["value"]))
             payload = stored["payload"]
-            for key in (
-                "builtItemSet3",
-                "startSet",
-                "item",
-                "item1",
-                "item2",
-                "item3",
-                "item4",
-                "item5",
-                "item6",
-                "startItem",
-                "prismatic",
-            ):
-                for row in payload.get(key, []):
-                    self.assertIsNone(row[1], key)
-            for rows in payload.get("augment", {}).values():
-                for row in rows:
-                    self.assertIsNone(row[1])
+            self.assertEqual(payload["augment"], snapshot.raw["augment"])
             self.assertNotIn("sidebar", payload)
             client.close()
 

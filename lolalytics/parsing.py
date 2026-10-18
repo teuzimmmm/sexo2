@@ -91,8 +91,8 @@ def _validate_raw_extra(value: Any, path: str) -> None:
         raise _schema(f"{path} must be finite when numeric")
 
 
-def _safe_metric_row(row: list, path: str, *, arena: bool, combination: bool) -> list:
-    """Copy a confirmed row format and redact its win-rate cell for Arena."""
+def _safe_metric_row(row: list, path: str, *, combination: bool) -> list:
+    """Copy a confirmed row format."""
     if not isinstance(row, list):
         raise _schema(f"{path} row must be an array")
     allowed = (4,) if combination else (4, 5)
@@ -107,8 +107,6 @@ def _safe_metric_row(row: list, path: str, *, arena: bool, combination: bool) ->
         # The final upstream value is preserved raw; its timing semantics are
         # intentionally not assigned a normalized name.
         _validate_raw_extra(row[4], f"{path}[4]")
-    if arena:
-        result[1] = None
     return result
 
 
@@ -116,9 +114,8 @@ def sanitize_payload(payload: dict, mode: str) -> dict:
     """Return an independent cache-safe payload copy.
 
     Arena is allowlisted to its champion header/graph and confirmed aggregate
-    tables. Win-rate cells in item, combination, and augment rows are replaced
-    by null. Unknown Arena fields are dropped because they may contain such
-    rates. Other modes retain a deep copy of the decoded payload.
+    tables; unknown Arena fields are dropped. Win rates are kept (decision
+    D-116). Other modes retain a deep copy of the decoded payload.
     """
     if not isinstance(payload, dict):
         raise _schema("payload must be an object")
@@ -144,17 +141,13 @@ def sanitize_payload(payload: dict, mode: str) -> dict:
         if key not in payload:
             continue
         table = _array(payload[key], f"payload.{key}")
-        safe[key] = [
-            _safe_metric_row(row, f"payload.{key}[{i}]", arena=True, combination=True) for i, row in enumerate(table)
-        ]
+        safe[key] = [_safe_metric_row(row, f"payload.{key}[{i}]", combination=True) for i, row in enumerate(table)]
 
     for key in _ARENA_ITEM_TABLES:
         if key not in payload:
             continue
         table = _array(payload[key], f"payload.{key}")
-        safe[key] = [
-            _safe_metric_row(row, f"payload.{key}[{i}]", arena=True, combination=False) for i, row in enumerate(table)
-        ]
+        safe[key] = [_safe_metric_row(row, f"payload.{key}[{i}]", combination=False) for i, row in enumerate(table)]
 
     if "augment" in payload:
         augments = payload["augment"]
@@ -164,8 +157,7 @@ def sanitize_payload(payload: dict, mode: str) -> dict:
         for key, table in augments.items():
             rows = _array(table, f"payload.augment.{key}")
             safe_augment[key] = [
-                _safe_metric_row(row, f"payload.augment.{key}[{i}]", arena=True, combination=True)
-                for i, row in enumerate(rows)
+                _safe_metric_row(row, f"payload.augment.{key}[{i}]", combination=True) for i, row in enumerate(rows)
             ]
         safe["augment"] = safe_augment
 
@@ -312,9 +304,6 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
     availability: dict[str, str] = {}
     warnings: list[str] = []
     if arena:
-        warnings.append(
-            "Arena item, combination, and augment win rates are suppressed by policy; pick rates and game counts remain available."
-        )
         safe_keys = {
             "header",
             "graph",
@@ -344,7 +333,7 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
             if not isinstance(raw_ids, str):
                 raise _schema(f"{path}[0] must be an underscore-separated ID string")
             identifiers = [] if raw_ids == "" else [_id(part, path) for part in raw_ids.split("_")]
-            metrics = _metrics(None if arena else row[1], row[2], row[3], path)
+            metrics = _metrics(row[1], row[2], row[3], path)
             safe_row = safe_payload.get(key, rows)[index]
             records.append(
                 Record("item_combination", identifiers, metrics, path, deepcopy(safe_row), "joint_build_sample")
@@ -363,7 +352,7 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
             if len(row) == 5:
                 _validate_raw_extra(row[4], f"{path}[4]")
             identifier = _id(row[0], path)
-            metrics = _metrics(None if arena else row[1], row[2], row[3], path)
+            metrics = _metrics(row[1], row[2], row[3], path)
             safe_row = safe_payload.get(key, rows)[index]
             records.append(
                 Record("item_statistics", [identifier], metrics, path, deepcopy(safe_row), "item_observation")
@@ -482,7 +471,7 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
                     if not isinstance(row, list) or len(row) != 4:
                         raise _schema(f"{path} must be [id, win_rate, pick_rate, games]")
                     identifier = _id(row[0], path)
-                    metrics = _metrics(None, row[2], row[3], path)
+                    metrics = _metrics(row[1], row[2], row[3], path)
                     safe_row = safe_payload["augment"][table_name][index]
                     records.append(
                         Record(

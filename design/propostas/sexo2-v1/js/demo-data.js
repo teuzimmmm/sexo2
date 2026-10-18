@@ -105,10 +105,9 @@ window.S2_DEMO = {
       source: "LoLalytics", patch: "16.20",
       offers: [["scopier-weapons", "blade-waltz", "ultimate-revolution"], ["infernal-soul", "juiced", "firefox"]],
       rerolls: ["vulnerability", "upgrade-sheen", "overflow"],
-      // Arena: só PR e partidas (a WR de Arena fica oculta, ver docs/lolalytics/FONTES.md).
       stats: {
-        "scopier-weapons": { pr: 17.7, n: 9777 }, "blade-waltz": { pr: 12.1, n: 6690 },
-        "infernal-soul": { pr: 8.4, n: 4630 }, firefox: { pr: 5.2, n: 2871 }, vulnerability: { pr: 6.0, n: 3305 },
+        "scopier-weapons": { wr: 54.2, pr: 17.7, n: 9777 }, "blade-waltz": { wr: 51.8, pr: 12.1, n: 6690 },
+        "infernal-soul": { wr: 49.6, pr: 8.4, n: 4630 }, firefox: { wr: 47.9, pr: 5.2, n: 2871 }, vulnerability: { wr: 52.5, pr: 6.0, n: 3305 },
       },
     },
   },
