@@ -12,14 +12,15 @@ atualiza sozinha para a 1.6.4.
 
 ## Roteiro
 
-1. **Abertura:** o painel abre no cliente, e a bandeja e o painel mostram a versão 1.6.4 e o nome
+1. **Abertura:** o painel SEXO2 (Skins, Mods, Sala, Configurações, Diagnóstico) abre no cliente, e a bandeja e o painel mostram a versão 1.6.4 e o nome
    SEXO2 (nada de "Rose" visível).
 2. **Injeção:** uma partida normal com skin escolhida; a skin aparece no jogo.
 3. **Sala:** criar, entrar por link e reconectar, com um amigo.
 4. **Mods:** listar, aplicar, renomear e excluir; exportar a biblioteca.
-5. **Runas:** a interface ainda é o protótipo. O serviço já responde às mensagens `assistant-*` da
-   ponte, mas só pode ser testado no cliente depois que a interface for aprovada e integrada.
-   Contratos a confirmar nessa hora:
+5. **Assistente e runas:** na seleção, o botão SEXO2 abre o assistente acima dele (Runas, Itens, Mods).
+   Clique num card de runas: a página "SEXO2" é criada ou atualizada no cliente, e o rodapé mostra
+   "Aplicada". Edite runas na árvore e confira que a página do cliente acompanha. A aba Mods abre o
+   painel de mods de sempre. Contratos a confirmar nessa hora:
    - formato de `/lol-perks/v1/pages`, `currentpage`, `inventory` e `styles`;
    - que "página livre" significa páginas editáveis menores que `ownedPageCount`;
    - que a página criada com `current: true` fica ativa e é lida de volta igual;
