@@ -83,6 +83,29 @@ def page_json(page: PageSpec | None) -> dict | None:
     return {"primary": page.primary_style_id, "sub": page.sub_style_id, "perks": list(page.perk_ids)}
 
 
+def builds_json(pages) -> list[dict]:
+    """Display model of the build pages: kind and item ids with their own block statistics."""
+    return [
+        {
+            "selection": page.selection,
+            "label": page.label,
+            "blocks": [
+                {
+                    "kind": block.kind,
+                    "winRate": block.metrics.get("win_rate"),
+                    "games": block.metrics.get("games"),
+                    "items": [
+                        {"id": choice.identifier, "count": choice.count, "winRate": choice.metrics.get("win_rate")}
+                        for choice in block.choices
+                    ],
+                }
+                for block in page.blocks
+            ],
+        }
+        for page in pages
+    ]
+
+
 def page_from_json(payload: Any) -> PageSpec:
     if not isinstance(payload, dict):
         raise ValueError("page must be an object")
@@ -120,6 +143,7 @@ class AssistantService:
         self._opponent: int | None = None
         self._runes: dict = {}
         self._items: dict = {}
+        self._builds: list | None = None
         self._error: str | None = None
         self._last_rune_sequence = -1
 
@@ -132,6 +156,7 @@ class AssistantService:
         elif kind == "assistant-opponent":
             opponent = payload.get("championId")
             self._opponent = opponent if isinstance(opponent, int) and opponent > 0 else None
+            self._builds = None
             self._submit(self._refresh)
         elif kind == "assistant-runes-choose":
             self._choose(str(payload.get("selection") or ""), bool(payload.get("matchup")))
@@ -141,6 +166,8 @@ class AssistantService:
             self._controller.confirm()
         elif kind == "assistant-runes-back":
             self._controller.back()
+        elif kind == "assistant-items-request":
+            self._submit(self._fetch_builds)
         elif kind == "assistant-items-import":
             selections = [s for s in payload.get("selections") or [] if isinstance(s, str)]
             self._submit(lambda: self._import_items(selections))
@@ -166,7 +193,7 @@ class AssistantService:
         self._context = context
         if context is None:
             self._controller.set_session(None)
-            self._runes, self._items, self._error = {}, {}, None
+            self._runes, self._items, self._builds, self._error = {}, {}, None, None
             self._publish_state()
             return
         if self._catalog is None:
@@ -214,6 +241,22 @@ class AssistantService:
             self._publish_state()
             return
         self._controller.choose(page)
+
+    def _fetch_builds(self) -> None:
+        context = self._context
+        if context is None or context.mode is None or self._stats is None:
+            self._builds = []
+            self._publish_state()
+            return
+        try:
+            builds = self._stats.builds(context.champion_id, context.mode, context.lane, opponent_id=self._opponent)
+            self._builds = builds_json(builds.pages)
+        except StatsError as error:
+            self._builds, self._error = [], f"stats_{error.code}"
+        except Exception:
+            log.exception("[ASSISTANT] builds unavailable")
+            self._builds, self._error = [], "stats_unavailable"
+        self._publish_state()
 
     def _import_items(self, selections: list[str]) -> None:
         context = self._context
@@ -275,4 +318,5 @@ class AssistantService:
                 "error": snapshot.error,
             },
             "items": dict(self._items),
+            "builds": self._builds,
         }

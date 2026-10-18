@@ -94,21 +94,7 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  assert.ok(await page.evaluate(()=>window.sent.some(p=>p.type==='sexo2-update-open')));
  await page.locator('#rose-hub-content').evaluate(e=>e.scrollTop=0);
  await page.screenshot({path:'preview-r6/settings-adapted.png'});
- await page.evaluate(()=>{
-  const previous=window.__roseBridge.send;
-  window.__roseBridge.send=data=>{
-   if(data.type==='sexo2-library-request'){
-    const library={type:'sexo2-library-state',message:'Cole os arquivos na pasta aberta. Originais preservados.',champions:[{id:11,name:'Master Yi'},{id:22,name:'Ashe'}],mods:[{id:'aa11',name:'BORK Master Yi',category:'skins',championId:11,targets:[11000]},{id:'bb22',name:'Ashe Elegante',category:'skins',championId:22,targets:[22000]}],incoming:[{id:'cc33',file:'skins/Outfit.fantome',displayName:'Outfit',category:'skins',status:'revisar'}]};
-    setTimeout(()=>window.emit('sexo2-library-state',library),0);return;
-   }
-   previous(data);
-  };
- });
- await page.getByRole('button',{name:'Biblioteca de mods',exact:true}).click();
- await page.locator('#rose-hub #sexo2-mod-library').waitFor();
- assert.equal(await page.locator('lol-uikit-dialog-frame').count(),0);
- await page.waitForTimeout(50);await page.screenshot({path:'preview-r6/mod-library-in-hud.png'});
- await page.getByRole('button',{name:'← Configurações',exact:true}).click();
+ // A biblioteca de mods agora vive na aba Mods do assistente da seleção (SEXO2-Assistant).
 
  await page.locator('#rose-hub>nav').getByRole('button',{name:'Suporte',exact:true}).click();
  await page.getByText('Aceitar partidas automaticamente',{exact:true}).waitFor();

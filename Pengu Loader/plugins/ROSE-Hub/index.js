@@ -65,7 +65,7 @@
    position();
   }
   function showSettings(target){const friends=document.getElementById('rose-amigos-panel');if(friends&&target.contains(friends))friends.hidden=true;dispatch('rose-hub-settings',{target,anchor});}
-  window.__roseHub={open(navItem){anchor=navItem;if(phase==='InProgress')return;panel.hidden=!panel.hidden;if(!panel.hidden){current='Sala';mount();}},close:hide,refreshSettings(){if(current==='Configurações'&&containers[current])showSettings(containers[current]);}};
+  window.__roseHub={open(navItem){anchor=navItem;if(phase==='InProgress')return;panel.hidden=!panel.hidden;if(!panel.hidden){current='Sala';mount();}},close:hide,show(label){anchor=anchor||document.querySelector('lol-uikit-navigation-item.menu_item_Golden.Rose');if(phase==='InProgress')return;current=label;panel.hidden=false;mount();},refreshSettings(){if(current==='Configurações'&&containers[current])showSettings(containers[current]);}};
   window.addEventListener('rose-open-settings',e=>{e.stopImmediatePropagation();window.__roseHub.open(e.detail?.navItem||document.querySelector('lol-uikit-navigation-item.menu_item_Golden.Rose'));},true);
   window.addEventListener('rose-swiftplay-state',e=>{const active=e.detail?.active===true;if(active===swift)return;swift=active;if(!swift&&current==='Swiftplay')current='Sala';if(!panel.hidden)mount();});
   window.addEventListener('resize',position);

@@ -53,7 +53,7 @@ function build(){
  let configHidden=[];
  function openLibrary(){root.dataset.libraryOpen='true';const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;configHidden=[...root.children].filter(node=>node!==libraryHost&&node.tagName!=='STYLE').map(node=>[node,node.hidden]);for(const[node]of configHidden)node.hidden=true;libraryHost.hidden=false;window.dispatchEvent(new CustomEvent('sexo2-mod-library-open',{detail:{target:libraryHost,category:'all',add:false}}));}
  window.addEventListener('sexo2-mod-library-close',()=>{for(const[node,hidden]of configHidden)node.hidden=hidden;configHidden=[];delete root.dataset.libraryOpen;const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=false;libraryHost.hidden=true;});
- tools.append(button('Biblioteca de mods',openLibrary),button('Diagnóstico detalhado',()=>window.dispatchEvent(new CustomEvent('sexo2-settings-tool',{detail:{action:'diagnostics',category:'skins'}}))));root.append(tools,libraryHost);
+ tools.append(button('Diagnóstico detalhado',()=>window.dispatchEvent(new CustomEvent('sexo2-settings-tool',{detail:{action:'diagnostics',category:'skins'}}))));root.append(tools,libraryHost);
  root.append(el('h3','Atualizações'));updateStatus=el('p','Verificando atualizações…');updateStatus.setAttribute('role','status');root.append(updateStatus);
  const updates=el('div');updates.className='s2-actions';updates.append(button('Verificar atualização',()=>checkUpdate()));
  updateButton=button('Atualizar',()=>bridge?.send({type:'sexo2-update-open'}));updateButton.disabled=true;updates.append(updateButton);
