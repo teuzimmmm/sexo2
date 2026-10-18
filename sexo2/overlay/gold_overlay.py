@@ -139,8 +139,14 @@ def _tab_down() -> bool:
     return bool(hwnd and user32.GetClassNameW(hwnd, name, len(name)) and name.value == "RiotWindowClass")
 
 
-SUPERSAMPLE = 4  # drawn at 4x and reduced: smooth digits and arrows on any background
-OUTLINE = (0, 0, 0, 170)  # thin dark edge so the numbers read over the scoreboard
+SUPERSAMPLE = 4  # drawn at 4x and reduced: smooth digits, edges and arrows
+SURFACE = (21, 23, 26, 235)  # --s2-surface, nearly opaque so the numbers read over the map
+LINE = (42, 45, 50, 255)  # --s2-line
+OUTLINE = (0, 0, 0, 150)  # thin dark edge on the totals' digits
+
+
+def _rgba(color: str, alpha: int = 255) -> tuple[int, int, int, int]:
+    return int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16), alpha
 
 
 @lru_cache(maxsize=8)
@@ -154,34 +160,62 @@ def _font(size: int):
 
 
 def render(comparison: Comparison, width: int, height: int, geometry: Geometry):
-    """The overlay bitmap with true alpha: antialiased text and arrows, no colour-key fringes."""
+    """The overlay bitmap with true alpha, in the SEXO2 style (dark surfaces, ally blue, enemy red).
+
+    Each scoreboard row gets a small chip on the seam between the two players: the arrow
+    points to the side ahead and the difference sits under it. The totals sit in a bar
+    above the scoreboard with the same chip in the middle.
+    """
     from PIL import Image, ImageDraw
 
     left, top, right, bottom = overlay_bounds(width, height, geometry)
     k = SUPERSAMPLE
+    s = height / 1080 * k  # one 1080p pixel, supersampled
     image = Image.new("RGBA", ((right - left) * k, (bottom - top) * k))
     draw = ImageDraw.Draw(image)
-    scale = height / 1080
-    offset = round(78 * scale) * k
-    stroke = max(1, round(scale)) * k
 
-    def text(x, y, value, color, size):
-        draw.text((x, y), value, fill=color, font=_font(size), anchor="mm", stroke_width=stroke, stroke_fill=OUTLINE)
+    def chip(x: float, y: float, mark: Mark) -> None:
+        font = _font(max(10, round(12 * height / 1080)))
+        text_width = draw.textlength(mark.text, font=font)
+        half_w, half_h = max(text_width / 2 + 7 * s, 19 * s), 15 * s
+        border = _rgba(mark.color, 200)
+        draw.rounded_rectangle(
+            (x - half_w, y - half_h, x + half_w, y + half_h), radius=3 * s, fill=SURFACE, outline=border, width=round(s)
+        )
+        number_y = y + 6 * s
+        if mark.arrow:
+            tip = -4.5 * s if mark.arrow == "left" else 4.5 * s
+            arrow_y = y - 6.5 * s
+            draw.polygon(
+                [(x + tip, arrow_y), (x - tip, arrow_y - 4.5 * s), (x - tip, arrow_y + 4.5 * s)], fill=mark.color
+            )
+        else:
+            number_y = y
+        draw.text((x, number_y), mark.text, fill=mark.color, font=font, anchor="mm")
 
     for mark in layout(comparison, width, height, geometry):
-        size = max(11, round((17 if mark.kind == "total" else 15) * scale))
-        # The arrow and the number below it stay centred on the measured row.
-        x, y = (mark.x - left) * k, (mark.y - top + 0.45 * size) * k
+        x, y = (mark.x - left) * k, (mark.y - top) * k
         if mark.kind == "total":
-            text(x - offset, y, mark.left, ALLY, size)
-            text(x + offset, y, mark.right, ENEMY, size)
-        if mark.arrow:
-            # Points toward the side ahead: left for my team, right for theirs.
-            half, depth, lift = 6.5 * scale * k, 11 * scale * k, size * 1.05 * k
-            tip = -depth / 2 if mark.arrow == "left" else depth / 2
-            points = [(x + tip, y - lift), (x - tip, y - lift - half), (x - tip, y - lift + half)]
-            draw.polygon(points, fill=mark.color, outline=OUTLINE, width=stroke)
-        text(x, y, mark.text, mark.color, size)
+            half_w, half_h = 116 * s, 16 * s
+            draw.rounded_rectangle(
+                (x - half_w, y - half_h, x + half_w, y + half_h),
+                radius=3 * s,
+                fill=SURFACE,
+                outline=LINE,
+                width=round(s),
+            )
+            font = _font(max(11, round(15 * height / 1080)))
+            for text, color, side in ((mark.left, ALLY, -1), (mark.right, ENEMY, 1)):
+                draw.text(
+                    (x + side * 70 * s, y),
+                    text,
+                    fill=color,
+                    font=font,
+                    anchor="mm",
+                    stroke_width=round(s),
+                    stroke_fill=OUTLINE,
+                )
+        chip(x, y, mark)
     return image.resize((right - left, bottom - top), Image.Resampling.LANCZOS)
 
 
