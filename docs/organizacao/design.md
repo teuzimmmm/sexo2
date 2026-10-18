@@ -6,8 +6,9 @@ Proposta. Nada aqui é decisão: os itens novos entram como **PENDENTE** até o 
 
 Referência do que já vale: D-007 (Oswald + Inter), D-014/D-101 (escala B compactada), D-017 (visual do
 protótipo `design/propostas/sexo2-v1` aprovado). Pendentes que esta proposta toca: D-102 (cores), D-103
-(componentes), D-112 (Galo/BORK). As decisões D-119 (overlay de ouro, visual Blitz), D-120 e D-121 (ícone)
-foram citadas na tarefa, mas **não constam** deste `decisoes.md`; esta proposta não as assume.
+(componentes), D-112 (Galo/BORK). Decididas depois e que esta proposta respeita: D-117 (seção "Overlays" em Configurações), D-119 (ouro no placar com o
+visual do Blitz, **fora do estilo do app** por pedido do usuário), D-120 (Outras builds/runas, no estilo do painel) e
+D-121 (ícone, tratado em `design/propostas/icone/`). Base do inventário: branch `sexoatividade` (3d45cea).
 
 ## 1. Fonte de verdade hoje
 
@@ -18,7 +19,7 @@ foram citadas na tarefa, mas **não constam** deste `decisoes.md`; esta proposta
 |---|---|
 | Protótipo | `design/propostas/sexo2-v1/css/styles.css:8-33` |
 | Plugin compartilhado | `Pengu Loader/plugins/SEXO2-Style/index.js:19-27` |
-| Overlay de ouro | `sexo2/overlay/gold_overlay.py:27-30` |
+| Overlay de ouro | `sexo2/overlay/gold_overlay.py:29-31` (aliado/inimigo já **diferentes** dos tokens) e `145-153` |
 | Overlay de aprimoramentos | `sexo2/overlay/augment_overlay.py:30-33` |
 
 Só três plugins usam `var(--s2-*)`: `ROSE-Hub` (25 usos), `SEXO2-Assistant` (18) e `SEXO2-Style` (23). Os
@@ -31,7 +32,7 @@ primeira ocorrência.)
 
 | Superfície | Arquivo | Cores | Fontes | Tamanhos | Raio / borda |
 |---|---|---|---|---|---|
-| Assistente | `SEXO2-Assistant/index.js:162-217` | tokens; fixas: `#3a3e44` (174), `#202327` (183, 211), `#22252a` e `#1b1d21` (217) | Oswald/Inter via tokens | 12; 10 (contador, 215); 22 (nome, 166) | 2px (165), 50% (196-203); borda 1px `--s2-line`; sombra `0 8px 30px` (162) |
+| Assistente | `SEXO2-Assistant/index.js:200-257` (734 linhas, com "Outras builds" e "Outras runas", D-120) | tokens; fixas: `#3a3e44` (207), `#202327` (216, 251), `#22252a` e `#1b1d21` (257) | Oswald/Inter via tokens | 12; 10 (contador, 215); 22 (nome, 166) | 2px (165), 50% (196-203); borda 1px `--s2-line`; sombra `0 8px 30px` (162) |
 | Hub | `ROSE-Hub/index.js:9-50` | tokens | Oswald 20/18/13, Inter 13-14 | 13 base, 14 menu, 11 detalhes | `border-radius:0` (21, 44); borda 1px `--s2-line`; sombra igual à do assistente (9) |
 | Base e tooltip | `SEXO2-Style/index.js:19-57` | tokens; fixas `#111` (41), `#fff`, `#0b0c0d`/`#2a2d32`/`#ddd` (57) | tokens | 13, 12 | 2px, 50% |
 
@@ -74,14 +75,15 @@ aparecem repintados por cima.
 
 | Superfície | Arquivo | Cores | Fonte | Tamanho |
 |---|---|---|---|---|
-| Ouro (placar) | `sexo2/overlay/gold_overlay.py:27-30,156-165` | aliado `#4f8cff`, inimigo `#e5484d`, neutro `#a4a9b0` (iguais aos do protótipo); chave de transparência `#010203` | `Segoe UI` bold | 15 (totais), 12 (linhas) |
-| Aprimoramentos | `sexo2/overlay/augment_overlay.py:30-33,108-116` | texto `#ececec`, apagado `#a4a9b0`, destaque `#f2d27a` (não existe nos tokens) | `Segoe UI` (bold no texto principal) | `max(10, 1,3% da altura)`; nome, 3 a menos |
+| Ouro (placar, visual Blitz, D-119) | `sexo2/overlay/gold_overlay.py:29-31,142-163`; superfície `sexo2/overlay/alpha_surface.py` | texto aliado `#4db0fc`, inimigo `#e8404f` (**diferentes** de `--s2-ally` `#4f8cff` e `--s2-enemy` `#e5484d`), neutro `#a4a9b0`; RGBA fixos: moldura `(58,56,47)`, `(96,88,62)`, fundos aliado/inimigo/neutro/barra, moeda bronze `(201,164,92)` e `(120,92,44)`, sombra | Inter Bold (`assets/fonts/inter-bold.ttf`), desenhada com PIL em 4x | tamanho por altura da tela |
+| Aprimoramentos | `sexo2/overlay/augment_overlay.py:30-33,142-143` | texto `#ececec`, apagado `#a4a9b0`, destaque `#f2d27a` (não existe nos tokens) | `Segoe UI` (bold no texto principal) | `max(10, 1,3% da altura)`; nome, 3 a menos |
 | Atualizador | `updater_main.py:122` | padrão do Tk | `Segoe UI` 18 bold | 18 |
 | Aviso (toast) | não há toast próprio no código. O protótipo define `.s2-toast` (`styles.css:141`), que não foi levado ao `SEXO2-Style`. `ROSE-HistoricMode` usa o toast nativo do cliente (439-548) | — | — | — |
 
-D-007 só autoriza Segoe UI em componentes nativos do Windows. Os textos dos overlays são desenhados em canvas
-Tk, não são componentes nativos: **PENDENTE** decidir se ficam em Segoe UI (Tk não carrega WOFF2) ou passam a
-Inter. O visual do overlay de ouro (D-119) não é tocado aqui.
+O overlay de ouro já usa Inter Bold (D-007). O de aprimoramentos ainda desenha em canvas Tk com Segoe UI, que a
+D-007 só autoriza em componentes nativos: **PENDENTE** alinhar à Inter (como o de ouro). O visual do ouro (D-119)
+é deliberadamente fora do estilo do app; esta proposta **não o altera** e só pede que as cores de time do
+overlay tenham um nome (token de overlay) em vez de divergirem em silêncio dos tokens do app.
 
 ## 3. Divergências (as principais)
 
@@ -94,8 +96,8 @@ Inter. O visual do overlay de ouro (D-119) não é tocado aqui.
    `ROSE-SwiftplayPins:47`, `ROSE-SettingsPanel`).
 4. **O Hub repinta com `!important`** (69 ocorrências) em vez de os painéis adotarem o padrão; qualquer mudança
    de DOM num plugin legado quebra o visual do Hub sem erro.
-5. **Cores soltas e sem papel.** Linha interna `#202327` (`SEXO2-Assistant:183,211`; tabela do protótipo,
-   `styles.css:135`), borda de hover `#3a3e44` (Assistant:174), fundos `#0b0c0d`, `#111`, `#fff`, `#1a1c20`;
+5. **Cores soltas e sem papel.** Linha interna `#202327` (`SEXO2-Assistant:216,251`; tabela do protótipo,
+   `styles.css:135`), borda de hover `#3a3e44` (Assistant:207), fundos `#0b0c0d`, `#111`, `#fff`, `#1a1c20`;
    estados com verdes e vermelhos todos diferentes: ok `#7bd5a7`, `#4ade80`; erro `#f3a090`, `#ff6b6b`,
    `#d9a796`, `#f4a58a`, `#e5484d`.
 6. **`SEXO2-Style` incompleto.** O protótipo tem foco visível (`.s2-input:focus`, `styles.css:123`), `danger`
@@ -136,7 +138,7 @@ Estado: **A** = aprovado; **P** = presente no protótipo aprovado (D-017) mas co
 | Linha suave interna | `--s2-line-soft` | `#202327` | NOVO (hoje fixo em 2 lugares) |
 | Texto | `--s2-fg`, `-2`, `-3` | `#ececec`, `#a4a9b0`, `#6e747b` | P (D-102) |
 | Sobreposição (tooltip) | `--s2-overlay` | `#0b0c0d` | NOVO (fixo em Style:57 e no protótipo) |
-| Time aliado | `--s2-ally` | `#4f8cff` | P (D-009, D-102) |
+| Time aliado | `--s2-ally` | `#4f8cff` (o overlay de ouro usa `#4db0fc`, D-119: tokens `--s2-overlay-ally` e `-enemy` PENDENTES) | P (D-009, D-102) |
 | Time inimigo | `--s2-enemy` | `#e5484d` | P (D-009, D-102) |
 | Foco | `--s2-focus` | `#ececec` | P |
 | Texto sobre fundo claro | `--s2-on-fg` | `#111111` | NOVO (hoje `#111` fixo) |
@@ -197,7 +199,7 @@ para os overlays; `python design/build_tokens.py --check` no CI (`tests/test_des
 | 3 | `ROSE-Amigos` e `ROSE-SwiftplayPins` | médio | `tests/test_friends_ui.cjs`, `browser_friends.cjs`, `test_swiftplay_pins_ui.cjs`, `browser_swiftplay_scroll.cjs`, `browser_hub.cjs` | depois disso dá para apagar as sobreposições do Hub (34-41) |
 | 4 | `ROSE-PartyMode` e `ROSE-SettingsPanel` | alto (5233 linhas; Beaufort 33×; hospedados no Hub) | `tests/test_party_ui.cjs`, `browser_hub.cjs` | aprovação do usuário por painel; mudanças em pedaços |
 | 5 | Rodas e seletor de skins (`ChromaWheel`, `FormsWheel`, `CustomWheel`, `CustomSkinSelector`, `HistoricMode`) | alto | validação no cliente real | desenhadas sobre a seleção nativa; PENDENTE decidir se mantêm o visual do cliente de propósito |
-| 6 | Overlays Tk (ouro, aprimoramentos) | médio | `tests/test_gold_overlay.py` | trocar constantes por módulo gerado, com os mesmos valores; fonte e destaque dependem de decisão; D-119 fica à parte |
+| 6 | Overlays Tk (ouro, aprimoramentos) | médio | `tests/test_gold_overlay.py` | trocar constantes por módulo gerado, com os mesmos valores (inclusive `#4db0fc`/`#e8404f` do ouro); aprimoramentos passam de Segoe UI a Inter; o visual D-119 não muda |
 
 Em cada passo: uma superfície por commit, formatação separada do comportamento (`scripts/ast_equal.py`) e
 conferência no cliente real (teste simulado não substitui).
@@ -209,5 +211,5 @@ conferência no cliente real (teste simulado não substitui).
    LoL de propósito? As rodas sobre a seleção entram nessa pergunta (D-103/D-104).
 3. Itens novos do padrão: `--s2-line-soft`, `--s2-overlay`, `--s2-shadow`, chip/selo, foco visível no Style,
    tamanhos 22/13/11 como tokens (D-101/D-103).
-4. Fonte dos overlays Tk (Segoe UI ou Inter) e `--s2-highlight` (`#f2d27a`).
+4. Aprimoramentos: Segoe UI para Inter (como o ouro) e `--s2-highlight` (`#f2d27a`); e se as cores de time do overlay de ouro (D-119) ganham tokens próprios.
 5. Aprovar a ordem e o formato (tokens gerados para JS e Python) do plano da seção 6.

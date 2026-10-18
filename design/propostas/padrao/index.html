@@ -360,15 +360,17 @@
   </section>
 
   <section class="item" id="p12">
-    <header><span class="id">P-12</span><h2>Overlay sobre o jogo (Tk)</h2><span class="tag pend">PENDENTE: fonte e destaque; D-119 não é tocado</span></header>
-    <p class="why">As cores de time já coincidem com os tokens, mas estão duplicadas em Python. Segoe UI só está autorizada para componentes nativos (D-007); Tk não carrega WOFF2. Nenhuma mudança de posição ou de aparência é proposta.</p>
+    <header><span class="id">P-12</span><h2>Overlays sobre o jogo</h2><span class="tag pend">PENDENTE: fonte dos aprimoramentos e cores de time</span></header>
+    <p class="why">O ouro (D-119, visual Blitz) é deliberadamente fora do estilo do app e já usa Inter Bold; esta proposta não o altera. Dois pontos: os aprimoramentos ainda usam Segoe UI (D-007 só a permite em componentes nativos) e as cores de time do ouro (#4db0fc, #e8404f) diferem dos tokens do app (#4f8cff, #e5484d) sem nome próprio.</p>
     <div class="cmp">
       <div class="col"><h3>Hoje</h3>
-        <div class="stage block"><div class="ov"><span class="ov-t tk a">12.480</span><span class="ov-t tk" style="color:#a4a9b0">+1.240</span><span class="ov-t tk e">11.240</span></div></div>
-        <p class="src">gold_overlay.py:27-30,156-165 (Segoe UI bold, 15 e 12). Aproximação em navegador.</p></div>
+        <div class="stage block"><div class="ov"><span class="inter" style="color:#4db0fc">12480</span><span class="inter" style="color:#a4a9b0">+1240</span><span class="inter" style="color:#e8404f">11240</span></div>
+          <p class="src" style="padding:6px 0 0">Ouro: gold_overlay.py:29-31,163 (Inter Bold, cores só de texto; o losango e a moldura bronze não são reproduzidos aqui)</p>
+          <div class="ov" style="margin-top:8px"><span class="tk" style="color:#ececec;font-weight:700">Dica 54,3%</span><span class="tk" style="color:#f2d27a;font-weight:700">Melhor 61,0%</span><span class="tk" style="color:#a4a9b0;font-size:12px">Nome lido</span></div>
+          <p class="src" style="padding:6px 0 0">Aprimoramentos: augment_overlay.py:30-33,142-143 (Segoe UI; aproximação em navegador)</p></div></div>
       <div class="col new"><h3>Proposto (a decidir)</h3>
-        <div class="stage block"><div class="ov"><span class="inter a">12.480</span><span class="inter" style="color:#a4a9b0">+1.240</span><span class="inter e">11.240</span></div></div>
-        <p class="src">Opção: valores gerados de tokens.json para Python e fonte Inter. A alternativa é manter Segoe UI. Escolha do usuário.</p></div>
+        <div class="stage block"><div class="ov"><span class="inter" style="color:#ececec">Dica 54,3%</span><span class="inter" style="color:#f2d27a">Melhor 61,0%</span><span class="inter" style="color:#a4a9b0;font-size:12px">Nome lido</span></div>
+          <p class="src" style="padding:6px 0 0">Aprimoramentos em Inter, como o ouro. Cores de time do ouro viram tokens de overlay com os valores atuais (nenhuma mudança visual).</p></div></div>
     </div>
   </section>
 </main>
