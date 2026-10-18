@@ -55,6 +55,7 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-119 | Remover Conjuntos (perfis) e Sorteio como funções: apenas retirados da UI. O código e os testes ficam (o sorteio serve à Bravura). Remoção de código só com testes que provem equivalência. Nota para a equipe. | proposta A |
 | D-120 | Swiftplay: o campeão sem escolha (nem pin do SEXO2 nem skin no cliente) recebe sorteio ponderado, favoritas primeiro; o sorteado nunca é gravado como escolha. Implementado; proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
 | D-121 | Renomear "Hub" e "Atividades": aguardando os nomes do usuário. Sem imagens de skins de mods, algoritmo ponderado nem rede nova. | proposta A |
+| D-122 | M5b: identificadores `Rose` renomeados para `SEXO2` com leitura do formato antigo; pasta de dados, formato de código/link de sala e metadados dos mods mantidos. Aguarda confirmação formal do usuário e validação no Windows. | `docs/PROGRESSO-M5B.md` |
 
 ## Rejeitadas
 

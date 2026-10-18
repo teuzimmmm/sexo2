@@ -224,5 +224,40 @@ class RoomCodeFormatTests(unittest.TestCase):
             self.assertNotIn("AAAA", sanitize(f"link #{name}=AAAAAAAA"))
 
 
+class PenguSessionFileTests(unittest.TestCase):
+    """The session file a version before the rename left behind after a crash."""
+
+    def test_old_keys_still_say_the_app_activated_pengu(self):
+        from utils.integration.pengu_loader import _session_requires_deactivation
+
+        self.assertTrue(_session_requires_deactivation({"rose_activated_pengu": True}))
+        self.assertFalse(
+            _session_requires_deactivation({"rose_activated_pengu": True, "pengu_was_active_before_rose": True})
+        )
+        self.assertFalse(_session_requires_deactivation({"rose_activated_pengu": False}))
+
+    def test_new_keys_are_read_and_win_over_old_ones(self):
+        from utils.integration.pengu_loader import _session_requires_deactivation
+
+        self.assertTrue(_session_requires_deactivation({"app_activated_pengu": True}))
+        self.assertFalse(
+            _session_requires_deactivation({"app_activated_pengu": True, "pengu_was_active_before_app": True})
+        )
+        self.assertFalse(_session_requires_deactivation({"app_activated_pengu": False, "rose_activated_pengu": True}))
+
+
+class ImportLeftoverTests(unittest.TestCase):
+    def test_import_leftovers_of_both_names_are_not_listed_as_mods(self):
+        from injection.mods.storage import ModStorageService
+
+        with tempfile.TemporaryDirectory() as temp:
+            folder = Path(temp) / "mods"
+            for name in (".rose-import-abc", ".sexo2-import-abc", "Real Mod"):
+                (folder / name).mkdir(parents=True)
+            service = ModStorageService(Path(temp) / "store")
+            entries = service._list_mods_in_directory(folder, 1, 1000)
+            self.assertEqual([e.mod_name for e in entries], ["Real Mod"])
+
+
 if __name__ == "__main__":
     unittest.main()

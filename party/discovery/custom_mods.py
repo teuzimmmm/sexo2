@@ -19,7 +19,7 @@ from utils.core.safe_extract import MOD_ARCHIVE_SUFFIXES
 
 log = get_logger()
 
-# Rose metadata stored next to mods, never part of a mod
+# SEXO2 metadata stored next to mods, never part of a mod
 _METADATA_FILES = {"rose_mod_targets.json"}
 
 # path -> ((mtime_ns, size), content_hash, legacy_hash)

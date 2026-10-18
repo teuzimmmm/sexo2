@@ -11,7 +11,7 @@ controle do monitor. Antes, buscava cada uma com `getattr(..., None)` no meio
 do fluxo. Isso tem dois problemas:
 
 1. Se um nome mudar do outro lado, `getattr` devolve `None` em silêncio e o
-   Rose passa a agir como se o recurso não existisse — sem erro, sem log.
+   SEXO2 passa a agir como se o recurso não existisse — sem erro, sem log.
    Uma proteção que some sozinha é pior do que proteção nenhuma, porque você
    continua confiando nela.
 2. A dependência real entre os dois módulos fica invisível: não dá para ler o

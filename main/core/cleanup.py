@@ -29,7 +29,7 @@ def perform_cleanup(
     if service:
         service.room.shutdown()
 
-    # A suspension outlives Rose: resume first, or closing during mkoverlay freezes the game for good
+    # A suspension outlives SEXO2: resume first, or closing during mkoverlay freezes the game for good
     if injection_manager:
         try:
             injection_manager.resume_if_suspended()

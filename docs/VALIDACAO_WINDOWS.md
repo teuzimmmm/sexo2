@@ -37,3 +37,5 @@ atualiza sozinha para a 1.6.4.
    - se a ordem das linhas corresponde à do placar;
    - se o modo tela cheia também mostra o overlay.
 8. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.
+
+9. **Upgrade a partir de uma instalação com nomes antigos (M5b):** `%LOCALAPPDATA%\Rose` preservada; plugins habilitados/desabilitados continuam como estavam (pastas `SEXO2-*`); tarefa agendada e instância única funcionam; sala com amigo em versão anterior (código `ROSE:`, link `#rose=`). Ver `docs/PROGRESSO-M5B.md`.

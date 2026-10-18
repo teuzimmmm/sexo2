@@ -1,4 +1,4 @@
-"""Outbound tunnel controller, independent of the GUI and Rose preferences."""
+"""Outbound tunnel controller, independent of the GUI and SEXO2 preferences."""
 
 import asyncio
 import queue

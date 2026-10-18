@@ -83,7 +83,7 @@ class PhaseThread(threading.Thread):
             except Exception:
                 log.exception("[Arena] Bravura monitoring failed")
 
-            # A client restart Rose's loader deferred (the client wasn't ready,
+            # A client restart SEXO2's loader deferred (the client wasn't ready,
             # or a champ select was on) happens once the client is readable in
             # a safe phase: home ("None"), lobby or end of game
             if ph != self._last_raw_phase:

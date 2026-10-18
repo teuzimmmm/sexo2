@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Global constants for Rose
+Global constants for SEXO2
 All arbitrary values are centralized here for easy tracking and modification
 """
 

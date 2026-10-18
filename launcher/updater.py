@@ -1,4 +1,4 @@
-"""Launcher auto-update logic for Rose.
+"""Launcher auto-update logic for SEXO2.
 
 Downloads the latest release ZIP from GitHub, stages it under the
 user data directory, and replaces the current installation when running

@@ -20,7 +20,7 @@ conferir no cliente LoL ou na instalação do usuário. As decisões citadas (D-
 | M10 | Inferência de rotas e matchup | M9 | — |
 | M11 | Overlay de valor dos itens | M0 | janela pronta, desligada por padrão; calibração das linhas e teste em partida pendentes |
 | M12 | Aprimoramentos (Arena e Mayhem) | M11 | — |
-| M5b (antigo M13) | Identificadores e caminhos (`Rose` → `SEXO2`) com migração | M5, validação no Windows | pendente; arriscado |
+| M5b (antigo M13) | Identificadores e caminhos (`Rose` → `SEXO2`) com migração | M5, validação no Windows | implementado com migração e testes do formato antigo (`docs/PROGRESSO-M5B.md`); pasta de dados e formato de sala mantidos; validação real pendente |
 
 ## M5: nacionalização dos textos
 
@@ -40,25 +40,14 @@ linguagem continua em D-107).
 - **Ativos:** `assets/rose_without_bg.png` removido (sem referência). `golden_rose.png` fica: é a
   máscara do ícone do Hub.
 
-Mantidos de propósito (compatibilidade ou crédito; lista viva em `tests/test_no_visible_rose.py`):
+Mantidos de propósito (compatibilidade ou crédito; motivos em `docs/PROGRESSO-M5B.md`, lista viva em `tests/test_no_visible_rose.py`):
 
-- pasta de dados `%LOCALAPPDATA%\Rose` e os nomes de arquivo dentro dela (`rose_*.log`,
-  `sexo2_runoverlay_*.log`, `rose_diagnostics.txt`, `rose.lock`, metadados `rose_*.json` dos mods);
-- mutex `Local\RoseSingleInstance` e `AppMutex` do instalador; tarefa agendada `Rose`; chave de
-  desinstalação `Uninstall\Rose`;
-- `Rose.exe` e `Rose Sala.exe` nas listas do atualizador e do instalador;
-- pastas `ROSE-*` dos plugins e os nomes nos cabeçalhos (`@name`, `@author Rose Team`);
-- globais e eventos entre plugins (`__roseBridge`, `__roseHub`, `RoseI18n`, `rose-open-settings`,
-  `rose-hub-*`, ids e classes CSS `rose-*`, classe `menu_item_Golden Rose`);
-- fragmento `#rose=` dos links de sala, prefixo `ROSE:` dos códigos de grupo, valores do protocolo
-  do relay (`rose-host-readiness`, `rose-friends-relay`), `ROSE_RELAY_URL`;
-- `Rose.spec` (usado por `scripts/build_pyinstaller.py` e por teste) e os scripts de build;
-- `AppPublisher` do instalador ("baseado em Rose") e o texto de créditos;
-- plugin desativado `SEXO2-Jade` (`index.js_`, não carrega).
+- pasta de dados `%LOCALAPPDATA%\Rose` e os metadados `rose_*.json` dos mods;
+- escrita de `ROSE:` nos códigos e `#rose=` nos links de sala, relay público e `v=` do protocolo;
+- `Rose.exe` e `Rose Sala.exe` nas listas do atualizador e do instalador (instalações antigas);
+- `AppPublisher` do instalador ("baseado em Rose") e o texto de créditos; `LICENSE` (MIT) com a atribuição.
 
-**Migrações arriscadas** (M13, exigem validação real no Windows e teste do formato antigo):
-renomear a pasta de dados, o mutex (instalador e app juntos), a tarefa agendada, as pastas `ROSE-*`
-(o Pengu guarda o estado ativado pelo nome da pasta) e os globais compartilhados entre plugins.
+**M5b feito** (lê o formato antigo e escreve o novo): mutex (os dois são tomados), tarefa agendada, arquivos de log e diagnóstico, pastas de plugin (`SEXO2-*`, estado habilitado migrado), globais/eventos/CSS dos plugins, `SEXO2_RELAY_URL`, leitura de `SEXO2:` e `#sexo2=`. Falta a validação em instalação real (ver `entrega-rename/LEIA-ME.md`).
 
 ## Pendências técnicas registradas
 
@@ -66,7 +55,6 @@ renomear a pasta de dados, o mutex (instalador e app juntos), a tarefa agendada,
   - `launcher/update/*` (no bundle, desativado por `FORK_BUILD`);
   - `party` STUN/UDP (exportado em `__init__`);
   - plugin `SEXO2-PartyMode` (tem teste e rotas no backend);
-  - `Rose.spec` (usado por `scripts/build_pyinstaller.py` e por um teste);
   - ramo `mayhem` em `lolalytics/item_pages.py`.
 - **Respostas da ponte direcionadas ao solicitante:** depende de teste de contrato por mensagem (M6a).
 - **Executável de teste no CI:** `SEXO2.spec` empacota binários que não estão no repositório (Pengu Loader, mod-tools, cloudflared, hashes). Eles são recuperados de uma instalação anterior por `scripts/prepare_release.py`, o que exige infraestrutura nova no CI.

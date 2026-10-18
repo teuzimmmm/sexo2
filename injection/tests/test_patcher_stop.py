@@ -14,7 +14,7 @@ from injection.tools.patcher import LTK_PATCHER_HOST
 
 
 class StoppedPatcherTests(unittest.TestCase):
-    """Rose's cleanup kills the patcher with exit code 1 (Popen) or 15 (psutil)"""
+    """SEXO2's cleanup kills the patcher with exit code 1 (Popen) or 15 (psutil)"""
 
     def setUp(self):
         temp_dir = tempfile.TemporaryDirectory()

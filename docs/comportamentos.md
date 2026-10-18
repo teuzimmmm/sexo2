@@ -26,7 +26,8 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Inicialização rápida e verificação de hashes | `launcher/core/startup_policy.py`, `launcher/sequences/` | `test_startup_policy`, `test_startup_hash_checks` |
 | Configurações e início com o Windows | `sexo2/services/settings.py`, `utils/integration/tray_settings.py` | `test_settings_service`, `test_config_consistency` |
 | Bandeja | `utils/integration/tray_manager.py` | `test_tray_lifecycle` |
-| Instância única | `main/core/lockfile.py` (mutex `RoseSingleInstance`) | **sem teste** |
+| Instância única (mutex novo e o antigo, tomados juntos) | `main/core/lockfile.py` | `tests/test_legacy_names.py` (núcleo com kernel simulado); **sem teste** no Windows real |
+| Migração de nomes antigos: arquivos, tarefa agendada, plugins `ROSE-*`, sessão do Pengu, códigos e links | `utils/core/legacy_names.py`, `utils/system/admin_utils.py`, `utils/integration/pengu_loader.py`, `party/` | `test_legacy_names`, `test_plugin_rename`; **sem teste** em upgrade real |
 | Dados do usuário em `%LOCALAPPDATA%\Rose` | `utils/core/paths.py` | **sem teste** de caminho; só de conteúdo |
 | Diagnóstico sem segredos | `friends/diagnostics.py` | `test_friends_features` (sanitização) |
 | Biblioteca LoLalytics | `lolalytics/` | `tests/test_lolalytics_*` (fixtures reais) |
@@ -35,4 +36,4 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Estatísticas do assistente (slug do campeão, runas por runa-chave) | `sexo2/services/stats.py` | `test_stats_service` (fixtures LoLalytics) |
 
 Lacunas que os marcos devem cobrir antes de mexer na área: precisão do disparo
-da injeção (M6b), mensagens `mod-*` (M7), instância única e caminhos de dados (M13).
+da injeção (M6b), mensagens `mod-*` (M7), caminhos de dados (pasta `Rose` mantida; ver `docs/PROGRESSO-M5B.md`).

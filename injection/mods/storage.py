@@ -59,7 +59,8 @@ class ModStorageService:
     # display name is retained for the final directory, but including it in
     # the temporary directory name can push deeply nested WAD paths over the
     # legacy MAX_PATH limit before the import is renamed into place.
-    IMPORT_TEMP_PREFIX = ".rose-import-"
+    IMPORT_TEMP_PREFIX = ".sexo2-import-"
+    LEGACY_IMPORT_TEMP_PREFIX = ".rose-import-"  # a leftover of a crashed import in an older version
     TARGET_METADATA = "rose_mod_targets.json"
     LEGACY_TARGET_METADATA = "rose_wad_targets.json"
     CATEGORY_METADATA = "rose_category_mods.json"
@@ -883,7 +884,9 @@ class ModStorageService:
         entries: List[SkinModEntry] = []
         mod_targets = mod_targets or {}
         for candidate in sorted(mod_directory.iterdir(), key=lambda p: p.name.lower()):
-            if candidate.name.startswith(self.IMPORT_TEMP_PREFIX) or candidate.name in {
+            if candidate.name.startswith(
+                (self.IMPORT_TEMP_PREFIX, self.LEGACY_IMPORT_TEMP_PREFIX)
+            ) or candidate.name in {
                 self.TARGET_METADATA,
                 self.LEGACY_TARGET_METADATA,
             }:

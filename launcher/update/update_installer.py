@@ -23,7 +23,7 @@ PERSISTENT_ROOT_FILES = ("icon.ico", "unins000.exe", "unins000.dat")
 # User-provided files that should survive updates (relative to install dir)
 # In frozen builds, files are under _internal/
 PERSISTENT_USER_FILES = (
-    # User-provided LTK patcher, not redistributed with Rose
+    # User-provided LTK patcher, not redistributed with SEXO2
     "_internal/injection/tools/ltk_patcher_host.exe",
     "_internal/injection/tools/ltk_patcher_dll.dll",
 )

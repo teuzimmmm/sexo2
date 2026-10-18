@@ -66,9 +66,9 @@ def make_game_ended_callback(state) -> Callable[[], bool]:
 
 
 def resume_orphaned_game() -> int:
-    """Resume a game left suspended by a Rose that died mid-injection.
+    """Resume a game left suspended by a SEXO2 that died mid-injection.
 
-    Only one Rose runs at a time and nothing else suspends the game, so a
+    Only one SEXO2 runs at a time and nothing else suspends the game, so a
     suspended game at startup would otherwise stay frozen until the user
     killed it. Returns how many game processes were resumed.
     """
@@ -377,7 +377,7 @@ class GameMonitor:
         # deactivates itself when runoverlay starts (see the top of the while)
         # without clearing the reference, so by the time cleanup calls stop()
         # the flag is already False while the game is still suspended. Gating
-        # on the flag left the game frozen until the user closed Rose.
+        # on the flag left the game frozen until the user closed SEXO2.
         self._release_suspended_process("cleanup")
 
     def get_suspended_game_process(self):

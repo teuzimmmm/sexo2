@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Path utilities for Rose
+Path utilities for SEXO2
 Handles user data directories and permissions
 """
 
@@ -19,7 +19,7 @@ def _get_desktop_user_info() -> Tuple[Optional[str], Optional[str]]:
     """
     Get the actual desktop user's username and profile path.
     This finds the user who is logged into the desktop session,
-    even if Rose is running elevated as a different admin account.
+    even if SEXO2 is running elevated as a different admin account.
 
     Returns:
         Tuple of (username, profile_path) or (None, None) if detection fails
@@ -148,12 +148,12 @@ def get_user_data_dir() -> Path:
     Get the user data directory where the application can write files.
 
     IMPORTANT: This function detects the actual desktop user, not the elevated
-    admin account. This ensures that Rose's data directory matches what Pengu
+    admin account. This ensures that SEXO2's data directory matches what Pengu
     Loader (running in League's process) will use.
 
     This handles the case where:
     - User "daish" is logged into Windows
-    - User runs Rose as "Admin" (different admin account)
+    - User runs SEXO2 as "Admin" (different admin account)
     - Rose needs to use daish's AppData, not Admin's AppData
     """
     global _cached_user_data_dir
@@ -163,7 +163,7 @@ def get_user_data_dir() -> Path:
 
     if os.name == "nt":  # Windows
         # First, try to detect the actual desktop user
-        # This handles the case where Rose runs as a different admin account
+        # This handles the case where SEXO2 runs as a different admin account
         desktop_username, desktop_profile = _get_desktop_user_info()
 
         current_username = os.environ.get("USERNAME", "").lower()

@@ -313,7 +313,7 @@ class Broadcaster:
         self._send_message(json.dumps(payload))
 
     def broadcast_language_changed(self) -> None:
-        """Tell the plugins to load the texts of Rose's new menu language (SEXO2-I18n)"""
+        """Tell the plugins to load the texts of SEXO2's new menu language (SEXO2-I18n)"""
         self._send_message(json.dumps({"type": "language-changed"}))
 
     def broadcast_raw(self, message: str) -> None:
