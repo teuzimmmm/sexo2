@@ -1,10 +1,10 @@
-import json, shutil, tempfile, unittest, zipfile
+import json, tempfile, unittest, zipfile
 from pathlib import Path
 from unittest.mock import patch, Mock
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, PrivateFormat, NoEncryption
 from scripts.build_patch import build
-from sexo2.update.engine import apply_patch, digest
+from sexo2.update.engine import apply_patch
 
 
 class PatchTests(unittest.TestCase):

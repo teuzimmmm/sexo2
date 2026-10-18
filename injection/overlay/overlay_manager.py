@@ -27,7 +27,7 @@ except ImportError:
     PSUTIL_AVAILABLE = False
     psutil = None
 
-from utils.core.logging import get_logger, log_action, log_success, log_event
+from utils.core.logging import get_logger, log_success, log_event
 from utils.core.issue_reporter import report_issue
 from .. import result_codes
 from .match_context import MatchContext
@@ -719,11 +719,19 @@ class OverlayManager:
     @staticmethod
     def _ltk_failure_hint(reason: str) -> str:
         """What the user can do about a patcher failure, by the cause it reported."""
-        logs = "Details are in rose_runoverlay_*.log."
+        logs = "Details are in sexo2_runoverlay_*.log."
         if "SetWindowsHookEx" in reason:
             return (
                 "The patcher could not attach to the game this time. Retry the next game; "
-                f"if it fails every game, report it with rose_*.log and rose_runoverlay_*.log. {logs}"
+                f"if it fails every game, report it with sexo2_*.log and sexo2_runoverlay_*.log. {logs}"
+            )
+        if "never attached" in reason:
+            # The host waited for its DLL inside the game and it never arrived: the DLL is
+            # usually blocked by an antivirus, or the LTK files no longer match the game.
+            return (
+                "The patcher's DLL did not reach the game. Check that your antivirus did not block or "
+                "remove ltk_patcher_dll.dll (allow SEXO2's tools folder), then update the LTK files "
+                f"from LTK Manager if it keeps happening. {logs}"
             )
         if reason == LATE_JOIN_ERROR:
             return f"The game started before the patcher was ready. Retry the next game. {logs}"
@@ -800,7 +808,7 @@ class OverlayManager:
             logs_dir = get_user_data_dir() / "logs"
             logs_dir.mkdir(parents=True, exist_ok=True)
             timestamp = time.strftime("%d-%m-%Y_%H-%M-%S")
-            return open(logs_dir / f"rose_runoverlay_{timestamp}.log", "w+", encoding="utf-8", errors="replace")
+            return open(logs_dir / f"sexo2_runoverlay_{timestamp}.log", "w+", encoding="utf-8", errors="replace")
         except Exception as e:
             log.debug(f"[INJECT] Could not create runoverlay log: {e}")
             return None

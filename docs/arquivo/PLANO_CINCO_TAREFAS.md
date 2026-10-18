@@ -1,3 +1,5 @@
+> Arquivado em 18/10/2026: plano e avanços até a 1.6.4, superados por `docs/ROADMAP.md`. Mantido como histórico; caminhos e versões são os da época.
+
 # Plano das cinco tarefas — 13/10/2026
 
 Estado: investigação e planejamento. Não iniciar importação em lote nem AirDrop

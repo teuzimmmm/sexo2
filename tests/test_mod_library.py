@@ -1,6 +1,5 @@
 import tempfile, unittest, zipfile, json, shutil
 from pathlib import Path
-from unittest.mock import patch
 from injection.mods.storage import ModStorageService
 from sexo2.services.mod_library import ModLibrary, identify
 

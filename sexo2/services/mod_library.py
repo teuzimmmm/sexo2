@@ -5,8 +5,6 @@ from pathlib import Path
 from utils.core.atomic_file import write_text_atomic
 from utils.core.modpkg import ModPackage
 from utils.core.safe_extract import list_mod_archive, MOD_ARCHIVE_SUFFIXES
-from sexo2.update.engine import digest
-from party.discovery.custom_mods import mod_hashes
 
 
 def normalized(value):

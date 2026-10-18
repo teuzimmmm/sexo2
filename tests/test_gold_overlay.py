@@ -126,7 +126,7 @@ class GoldOverlayTests(unittest.TestCase):
         ):
             window._run()
         # Same readings and re-opening Tab reuse the existing native bitmap.
-        surface.update.assert_called_once_with("rgba", 832, 210)
+        surface.update.assert_called_once_with("rgba", 832, 194)
         surface.close.assert_called_once_with()
         self.assertEqual(root.state.call_args_list, [call("normal"), call("normal")])
         root.deiconify.assert_not_called()
@@ -135,17 +135,12 @@ class GoldOverlayTests(unittest.TestCase):
         root.destroy.assert_called_once()
 
     def test_text_edges_have_real_alpha_and_background_is_fully_transparent(self):
-        import os
-        from pathlib import Path
-
         from sexo2.overlay.gold_overlay import render
 
-        if not (Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts" / "segoeuib.ttf").exists():
-            self.skipTest("Windows Segoe UI font required")
         comparison = read_comparison(self.fetch("Eu#BR1"), PRICES)
         image = render(comparison, 1920, 1080, Geometry())
         self.assertEqual(image.mode, "RGBA")
-        self.assertEqual(image.size, (256, 466))
+        self.assertEqual(image.size, (256, 498))
         alpha = image.getchannel("A")
         self.assertEqual(alpha.getpixel((0, 0)), 0)
         self.assertTrue(any(0 < value < 255 for value in alpha.tobytes()))

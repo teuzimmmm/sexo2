@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from utils.core.logging import get_named_logger
-from utils.core.safe_extract import safe_extract, is_safe_path
+from utils.core.safe_extract import safe_extract
 
 updater_log = get_named_logger("updater", prefix="log_updater")
 

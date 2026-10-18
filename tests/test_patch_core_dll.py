@@ -81,5 +81,48 @@ class PatchCoreDllTests(unittest.TestCase):
             patcher.patch(bytes(data))
 
 
+# The pieces of Rose's Pengu UI that rebrand() changes, as core.dll embeds them.
+ROSE_UI = (
+    b'{name:I.bind(null,"act_visit_home"),legend:"Rose",perform:()=>window.open("https://github.com/Alban1911/Rose","_blank")},'
+    b'<h3 class="text-base mt-0 font-semibold leading-6 text-gray-900">Rose</h3><div class=mt-2>'
+    b'<div class="text-sm text-black"></div><div class="flex mt-5 space-x-1"><a href=https://discord.gg/roseskins '
+    b'target=_blank><img src="https://img.shields.io/discord/1"alt=""></a><a href=https://ko-fi.com/roseapp>'
+    b"<img></a></div></div>"
+    b' to="data:image/jpeg;base64,' + b"A" * 400 + b'";var no={}'
+    b'div[id^=index_loading_div]:after{margin-top:32px;content:"Rose";color:#e2e1e1;'
+    b"font-family:Inter,sans-serif;font-size:1rem;text-transform:uppercase}')})();"
+)
+PICTURE = b"\x89PNG fake picture"
+
+
+class RebrandTests(unittest.TestCase):
+    def test_sexo2_name_and_picture_without_rose_links_and_nothing_moves(self):
+        data = b"\0" * 64 + ROSE_UI + b"\0" * 64
+        out = patcher.rebrand(data, PICTURE)
+        self.assertEqual(len(out), len(data))
+        self.assertEqual(out[:64], data[:64])
+        self.assertEqual(out[-64:], data[-64:])
+        for gone in (b"Rose", b"discord", b"ko-fi", b"Alban1911", b"image/jpeg"):
+            self.assertNotIn(gone, out)
+        self.assertIn(b">SEXO2</h3>", out)
+        self.assertIn(b'content:"SEXO2"', out)
+        self.assertIn(b'legend:"SEXO2",perform:()=>{}', out)
+        import base64
+
+        self.assertIn(b' to="data:image/png;base64,' + base64.b64encode(PICTURE), out)
+        # The welcome text node the dialog fills in is still the first child of its block.
+        self.assertIn(
+            b'<div class=mt-2><div class="text-sm text-black"></div><div class="flex mt-5 space-x-1"></div>', out
+        )
+
+    def test_rebranding_twice_changes_nothing_and_a_different_build_is_refused(self):
+        once = patcher.rebrand(ROSE_UI, PICTURE)
+        self.assertEqual(patcher.rebrand(once, PICTURE), once)
+        with self.assertRaises(patcher.PatchError):
+            patcher.rebrand(ROSE_UI.replace(b"text-gray-900", b"text-gray-800"), PICTURE)
+        with self.assertRaises(patcher.PatchError):
+            patcher.rebrand(ROSE_UI, b"P" * 1000)  # a picture that does not fit
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ícone do SEXO2</title>
+<style>
+@font-face{font-family:Oswald;src:url(../../fonts/oswald-latin-wght-normal.woff2) format("woff2");font-weight:200 700}
+@font-face{font-family:Inter;src:url(../../fonts/inter-latin-wght-normal.woff2) format("woff2");font-weight:100 900}
+:root{--bg:#0d0e10;--surface:#15171a;--line:#2a2d32;--fg:#ececec;--fg2:#a4a9b0;--fg3:#6e747b}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 Inter,sans-serif;padding:28px 32px 48px;max-width:1400px;margin:auto}
+h1{font:600 28px/1 Oswald;text-transform:uppercase;letter-spacing:.02em}
+h2{font:600 18px/1 Oswald;text-transform:uppercase;letter-spacing:.02em}
+h3{font:500 12px/1 Oswald;text-transform:uppercase;letter-spacing:.06em;color:var(--fg3);margin:18px 0 8px}
+.lead{color:var(--fg2);margin:10px 0 18px;max-width:860px}
+.why{background:var(--surface);border:1px solid var(--line);padding:16px 18px;margin-bottom:18px}
+.why ul{margin:10px 0 0 18px;color:var(--fg2);font-size:13px;display:grid;gap:4px}
+.why b{color:var(--fg)}.why a{color:var(--fg2)}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.opt{background:var(--surface);border:1px solid var(--line);padding:18px 16px}
+.opt h2 span{color:var(--fg3);margin-right:8px}
+.opt p{color:var(--fg2);font-size:13px;margin:8px 0 6px;min-height:60px}
+.hero{display:flex;justify-content:center;margin:6px 0 4px}
+.real,.zoom{display:flex;align-items:flex-end;justify-content:center;gap:12px}
+.real span,.zoom span{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--fg3)}
+.zoom img{image-rendering:pixelated}
+.blur img{filter:blur(3px)}
+.task{display:flex;align-items:center;justify-content:center;gap:6px;height:48px;border-radius:6px}
+.task.dark{background:#1c1c1c}.task.light{background:#f3f3f3;margin-top:6px}
+.task i{width:24px;height:24px;border-radius:5px;opacity:.55}
+.task.dark i{background:#5d5d5d}.task.light i{background:#c4c4c4}
+.task b{display:flex;flex-direction:column;align-items:center;gap:3px}
+.task b:after{content:"";width:6px;height:3px;border-radius:2px;background:#8a8a8a}
+.desk{height:110px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.desk.dark{background:radial-gradient(circle at 30% 20%,#3a3f4a,#16181c)}.desk.light{background:radial-gradient(circle at 70% 30%,#f2e9da,#b9c2c9);margin-top:6px}
+.desk span{display:flex;flex-direction:column;align-items:center;gap:6px;font:12px "Segoe UI",Inter,sans-serif;color:#fff;text-shadow:0 1px 2px #000}
+.tray{display:flex;align-items:center;justify-content:flex-end;gap:10px;height:40px;padding:0 12px;border-radius:6px;background:#1c1c1c;font:12px "Segoe UI",Inter,sans-serif;color:#fff}
+.tray i{width:16px;height:16px;border-radius:3px;background:#5d5d5d;opacity:.6}
+.tray.light{background:#f3f3f3;color:#111;margin-top:6px}.tray.light i{background:#bdbdbd}
+.now{margin-top:18px;background:var(--surface);border:1px solid var(--line);padding:18px;display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.now p{color:var(--fg2);font-size:13px;max-width:560px}
+.files{margin-top:16px;color:var(--fg3);font-size:12px}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--fg2)}
+@media(max-width:1100px){.opts{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){body{padding:20px 16px}.opts{grid-template-columns:1fr}}
+</style>
+<h1>Ícone do SEXO2</h1>
+<p class="lead">Galo vermelho e branco, minimalista: só formas básicas e o mesmo desenho do tamanho grande ao de 16 px, sem versão simplificada. As imagens são os pixels reais que o Windows vai mostrar.</p>
+<section class="why">
+  <h2>O que guiou o desenho</h2>
+  <ul>
+    <li><b>Uma ideia, uma forma.</b> O ícone gira em torno de um único elemento, porque ícones simples se reconhecem mais rápido (<a href="https://developer-rno.apple.com/design/human-interface-guidelines/foundations/app-icons">Apple, App icons</a>).</li>
+    <li><b>Abaixo de 48 px, menos detalhe.</b> A Microsoft corta detalhe nos tamanhos pequenos para manter a leitura (<a href="https://fluent2.microsoft.design/iconography">Fluent 2, Iconography</a>). Aqui o desenho já nasce no mínimo.</li>
+    <li><b>Projetar para 16 px primeiro</b> e conferir de 16 a 256 px (<a href="https://madegooddesigns.com/icon-design-principles/">Made Good Designs</a>).</li>
+    <li><b>Silhueta que sobrevive borrada.</b> Paul Rand testava se a marca continuava reconhecível desfocada; cada opção tem o teste do borrão (<a href="https://blog.designcrowd.com/article/2169/-graphic-designer-spotlight-paul-rand">DesignCrowd sobre Paul Rand</a>).</li>
+    <li><b>Formas básicas e pouca cor</b>, como o ícone do Claude: uma marca de uma cor sobre um fundo de cor.</li>
+  </ul>
+</section>
+<div class="opts" id="opts"></div>
+<section class="now">
+  <img src="png/atual-256.png" width="110" height="110" alt="Ícone atual">
+  <div><h2>Ícone atual</h2><p>Espada do BORK em relevo sobre quadrado prateado e brilhante. Destoa do aplicativo, que é escuro e chapado, e se perde em barra de tarefas clara.</p></div>
+  <img src="png/atual-48.png" width="48" height="48" alt=""><img src="png/atual-32.png" width="32" height="32" alt=""><img src="png/atual-16.png" width="16" height="16" alt="">
+</section>
+<p class="files">Arquivos prontos para trocar quando aprovado: <code>design/propostas/icone/ico/&lt;letra&gt;.ico</code> (16 a 256 px). Desenho em <code>svg/</code>; para regenerar: <code>gerar.py</code>, <code>render.cjs</code> e <code>gerar.py --ico</code>.</p>
+<script>
+const options=[
+ ["a","Galo","Três círculos, um círculo e um triângulo. Cabeça branca, crista e bico vermelhos, fundo grafite."],
+ ["b","Galo com barbela","O mesmo, com a barbela: uma forma a mais que tira o ar de pintinho. Minha recomendação."],
+ ["c","Galo no vermelho","Marca branca sobre fundo vermelho, como o ícone do Claude: a cor inteira é o fundo."],
+ ["d","Vermelho com barbela","O galo no vermelho, com a barbela."],
+ ["e","Galo preto","Cabeça preta, crista vermelha, fundo claro: preto, branco e vermelho."],
+ ["f","Cabeça","Crista em uma peça só; um pouco mais desenhado que o geométrico."],
+ ["g","Traço","O galo numa linha contínua, olho vermelho. O mais leve, mas perde força em 16 px."],
+];
+const img=(k,s,w)=>`<img src="png/${k}-${s}.png" width="${w||s}" height="${w||s}" alt="">`;
+document.getElementById('opts').innerHTML=options.map(([k,name,text])=>`
+<section class="opt">
+ <h2><span>${k.toUpperCase()}</span>${name}</h2><p>${text}</p>
+ <div class="hero">${img(k,256,160)}</div>
+ <h3>Tamanho real</h3>
+ <div class="real">${[48,32,24,16].map(s=>`<span>${img(k,s)}${s}</span>`).join('')}</div>
+ <h3>Ampliado 4× e borrado</h3>
+ <div class="zoom">${[32,16].map(s=>`<span>${img(k,s,s*4)}${s} px</span>`).join('')}<span class="blur">${img(k,64)}borrado</span></div>
+ <h3>Barra de tarefas</h3>
+ <div class="task dark"><i></i><i></i><b>${img(k,24)}</b><i></i></div>
+ <div class="task light"><i></i><i></i><b>${img(k,24)}</b><i></i></div>
+ <h3>Área de trabalho</h3>
+ <div class="desk dark"><span>${img(k,48)}SEXO2</span></div>
+ <div class="desk light"><span>${img(k,48)}SEXO2</span></div>
+ <h3>Bandeja</h3>
+ <div class="tray"><i></i><i></i>${img(k,16)}<span>22:41</span></div>
+ <div class="tray light"><i></i><i></i>${img(k,16)}<span>22:41</span></div>
+</section>`).join('');
+</script>
+</html>

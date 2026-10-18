@@ -1,6 +1,6 @@
 import json, tempfile, unittest
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 from launcher.core import startup_policy as policy
 
 

@@ -21,7 +21,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Swiftplay e fixados | `threads/handlers/swiftplay_handler.py`, `pengu/processing/swiftplay_pins.py` | `test_quickplay`, `test_swiftplay_historic`, `test_swiftplay_pins`, `test_swiftplay_pins_ui.cjs` |
 | Arena Bravura | `friends/arena_bravery.py` | `test_arena_bravery` |
 | Ponte Pengu ↔ backend e reconexão | `pengu/core/`, `pengu/communication/` | `pengu/tests` (porta, watchdog, isolamento de mensagens) |
-| Fechar/reabrir o SEXO2 com o LoL aberto preserva a ativação do Pengu e seu registro de recuperação; fechar o SEXO2 sem LoL ou encerrar o Windows com o SEXO2 aberto remove a ativação própria; outro Pengu não é desativado | `utils/integration/pengu_loader.py`, `main/core/signals.py` | `utils/tests/test_pengu_lifecycle` (ciclo simulado; **sem teste** no cliente real) |
+| Fechar o SEXO2 com o LoL aberto deixa o Pengu ativo e anota o cliente que tem os plugins; reabrir com o mesmo cliente não o reinicia; com outro cliente, reinicia; sem LoL, ou com o Windows desligando, desativa. Pengu de outro dono nunca é desativado | `utils/integration/pengu_loader.py`, `main/core/signals.py` | `utils/tests/test_pengu_lifecycle` (ciclo simulado; **sem teste** no cliente real) |
 | Conexão e eventos do LCU | `lcu/`, `threads/websocket/` | `lcu/tests`, `test_ws_event_errors`, `test_ws_retry_logging`, `test_champ_lock_errors`, `test_late_lock_replay` |
 | Atualização assinada e restauração em falha | `sexo2/update/` | `test_patch_update`, `test_update_client`, `test_update_lifecycle`, `test_updater_transition`, `test_compatibility_packages` |
 | Inicialização rápida e verificação de hashes | `launcher/core/startup_policy.py`, `launcher/sequences/` | `test_startup_policy`, `test_startup_hash_checks` |
@@ -38,8 +38,9 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Fachada do LCU com as chamadas do assistente (`get` sem cache, `put`, `post`) | `lcu/core/client.py` | `lcu/tests/test_lcu_facade` |
 | Painel acima do botão SEXO2 | `ROSE-CustomWheel` (`computeAnchor`), protótipo `js/anchor.js` | `test_anchor.cjs`; **sem teste** do DOM real |
 | Aprimoramentos: catálogo por modo, estatísticas, ofertas, reconhecimento | `sexo2/augments/`, `sexo2/overlay/augment_overlay.py` | `test_augments` (capturas reais MIT); **sem teste** em partida real |
-| Ouro no placar: coordenadas reais em 1080p, Segoe UI em pixels com bordas suavizadas e alpha por pixel; bitmap reutilizado e preparação antes do Tab; conexão e identidade por partida com descarte em falha/saída; só mostra com Tab e jogo em primeiro plano, descartando leituras atrasadas | `sexo2/overlay/gold_overlay.py`, `alpha_surface.py` | `test_gold_overlay`, `test_gold_comparison`, `test_alpha_surface` (coordenadas, conexão, pixels premultiplicados e liberação de GDI; janela real conferida em desktop separado; FPS estáveis relatados pelo usuário em `36ec753`, nova renderização ainda requer conferência no jogo) |
+| Ouro no placar (visual D-119): janela só da coluna central com alpha por pixel, desenho em 4x reduzido; bitmap refeito só quando os valores mudam; conexão e nome do jogador reaproveitados na partida; só aparece com Tab e o jogo em primeiro plano | `sexo2/overlay/gold_overlay.py`, `alpha_surface.py` | `test_gold_overlay`, `test_gold_comparison`, `test_alpha_surface`; **sem teste** de FPS no jogo |
 | Estatísticas do assistente (slug do campeão, runas por runa-chave) | `sexo2/services/stats.py` | `test_stats_service` (fixtures LoLalytics) |
+| Outras builds e outras runas (D-120): listas do LoLalytics, build escolhida no topo do conjunto SEXO2 e volta ao padrão, página da runa-chave escolhida no editor | `sexo2/services/stats.py`, `sexo2/services/assistant.py`, `SEXO2-Assistant` | `test_stats_service`, `test_assistant_service` (`AlternativeChoicesTests`), `test_assistant_plugin.cjs`; **sem teste** no cliente real |
 
 Lacunas que os marcos devem cobrir antes de mexer na área: precisão do disparo
-da injeção (M6b), mensagens `mod-*` (M7), instância única e caminhos de dados (M13).
+da injeção (M13), mensagens `mod-*` (M7) e instância única (M5b).

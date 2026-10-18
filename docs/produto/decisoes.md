@@ -8,7 +8,7 @@ implementar interface, nomes ou comportamento. Status possíveis: **aprovada**, 
 - Uma decisão nova entra como pendente e não é implementada.
 - Exemplos em propostas não são decisões.
 
-O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre.
+O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plano-mestre.
 
 ## Aprovadas
 
@@ -37,6 +37,8 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-116 | A Arena mostra WR quando a fonte a fornece, além de PR e partidas (a supressão em `lolalytics/` foi removida). | usuário, sessão 1.0b |
 | D-020 | Aprimoramentos de Arena e ARAM Mayhem: só as cartas realmente oferecidas, com correção manual; nada é escolhido pelo SEXO2; números de Arena e Mayhem nunca se misturam; sem WR inventada; com só PR e partidas, mostram-se só esses. Destaque discreto das estatisticamente melhores. | usuário, sessão 1.0b |
 | D-117 | Seção “Overlays” em Configurações: caixas “Ouro no placar (Tab)” e “Aprimoramentos na Arena e no Mayhem”, que gravam `[Overlay] gold_enabled`/`augments_enabled` e ligam ou desligam ao salvar, sem reiniciar; abaixo, “O jogo precisa estar em tela sem bordas.” | usuário, sessão 1.0b |
+| D-119 | Ouro no placar com o visual do Blitz, desenhado pelo SEXO2 (sem arquivos do Blitz): losango escuro com borda bronze na divisa das linhas, seta azul ou vermelha dentro e a diferença embaixo; barra dos totais com moeda antes de cada total e o losango da diferença no meio; números sem separador de milhar, como o placar. Fica fora do estilo do app por pedido do usuário (“mais natural in-game”). | usuário, sessão 1.0b |
+| D-120 | Escolhas além das recomendações, no estilo do painel (D-017), definidas pelo agente por delegação do usuário (“faça do seu jeito”). Itens: botão “Outras builds” abre a lista dos trios observados (mais jogados primeiro; ícones, WR e partidas; campo “Buscar item”); clicar põe o trio como primeira seção do conjunto SEXO2, acima das seções padrão, e “Voltar ao padrão” desfaz. Runas: seção “Outras runas” com cada runa-chave (WR e partidas); clicar abre a página mais jogada com ela no editor, como as recomendações (ranked e ARAM). Substitui a proposta D-118. | usuário, sessão 1.0b |
 
 ## Pendentes
 
@@ -56,7 +58,13 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-112 | Papel do Galo e do BORK na nova identidade | com D-102 |
 | D-113 | Nome da página de runas gerenciada (provisório: “SEXO2”). O conjunto de itens foi decidido em D-018 | antes do M8 |
 | D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
-| D-118 | Escolha opcional de outras builds na aba Itens: fluxo, textos, filtros, agrupamento e importação manual, preservando o padrão atual. Proposta somente; não implementar antes da revisão do usuário. | [Projeto para revisão](../PROPOSTA_OUTRAS_BUILDS.md) |
+| D-121 | Ícone do aplicativo: galo vermelho e branco minimalista, sem azul; sete opções (A a G) com o mesmo desenho em todos os tamanhos e `.ico` prontos. Recomendação: B (galo com barbela, fundo grafite) | `design/propostas/icone/index.html` |
+
+## Obsoletas
+
+| ID | Decisão | Motivo |
+|---|---|---|
+| D-118 | Proposta histórica de outras builds, preservada em [PROPOSTA_OUTRAS_BUILDS.md](../PROPOSTA_OUTRAS_BUILDS.md). | Substituída pela D-120 em sexoatividade; preservada na sincronização de galinacio. |
 
 ## Rejeitadas
 

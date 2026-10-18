@@ -1,7 +1,7 @@
 import tempfile, unittest
 from pathlib import Path
 from unittest.mock import patch, Mock
-from updater_main import plan_update, local_package, ensure_closed
+from updater_main import plan_update, ensure_closed
 
 
 class TransitionTests(unittest.TestCase):

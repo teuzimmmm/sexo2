@@ -116,9 +116,7 @@ def _start_shutdown_watcher() -> None:
                 if not app_state.shutting_down:
                     app_state.shutting_down = True
                     try:
-                        # Windows is ending the session: do not retain the hook
-                        # for a League process that is also shutting down.
-                        pengu_loader.restore_after_rose()
+                        pengu_loader.end_of_windows_session()
                     except Exception:
                         log.warning("Failed to deactivate Pengu Loader on session end", exc_info=True)
             return 0

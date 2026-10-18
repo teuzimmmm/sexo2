@@ -1,4 +1,4 @@
-import io, json, queue, tempfile, unittest, zipfile
+import io, queue, tempfile, unittest, zipfile
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -61,7 +61,7 @@ class SelectionTests(unittest.TestCase):
         self.phase = "None"
         self.ids = []
         self.lcu.get.side_effect = lambda path: (
-            [{"id": 11, "name": "Master Yi"}, {"id": 22, "name": "Ashe"}]
+            [{"id": 11, "name": "Master Yi"}, {"id": 22, "name": "Ashe"}, {"id": 60022, "name": "Ashe"}]
             if path.endswith("champion-summary.json")
             else self.get(path)
         )

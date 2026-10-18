@@ -7,7 +7,6 @@ Logging configuration and utilities
 # Standard library imports
 import os
 import queue
-import re
 import sys
 import threading
 import time
@@ -23,6 +22,7 @@ from urllib3.exceptions import InsecureRequestWarning
 # Local imports
 from config import (
     LOG_MAX_FILE_SIZE_MB_DEFAULT,
+    LEGACY_LOG_FILE_PATTERN,
     LOG_FILE_PATTERN,
     LOG_TIMESTAMP_FORMAT,
     LOG_SEPARATOR_WIDTH,
@@ -317,7 +317,7 @@ def setup_logging(log_mode: str = "customer", *, write_logs: bool = True):
             timestamp = datetime.now().strftime(LOG_TIMESTAMP_FORMAT)
 
             max_bytes = int(LOG_MAX_FILE_SIZE_MB_DEFAULT * 1024 * 1024)
-            log_file = logs_dir / f"rose_{timestamp}.log"
+            log_file = logs_dir / f"sexo2_{timestamp}.log"
 
             def _factory_plain(p: Path):
                 return logging.FileHandler(p, encoding="utf-8")
@@ -544,7 +544,7 @@ def cleanup_logs():
             return
 
         log_files = []
-        for pattern in (LOG_FILE_PATTERN, UPDATER_LOG_FILE_PATTERN):
+        for pattern in (LOG_FILE_PATTERN, LEGACY_LOG_FILE_PATTERN, UPDATER_LOG_FILE_PATTERN):
             log_files.extend(logs_dir.glob(pattern))
         now = time.time()
         max_age_seconds = 24 * 60 * 60  # 1 day

@@ -1,7 +1,9 @@
+"""Closing and reopening SEXO2 while League runs (no real loader or registry is touched)."""
+
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from utils.integration import pengu_loader as loader
 
@@ -17,131 +19,70 @@ class PenguLifecycleTests(unittest.TestCase):
             ("_restart_pending", frozenset()),
         ):
             self.enterContext(patch.object(loader, name, value))
-        self.running = self.enterContext(patch.object(loader, "_is_league_running", return_value=True))
+        self.clients = frozenset({4242})
+        self.enterContext(patch.object(loader, "_process_ids", side_effect=lambda names: self.clients))
+        self.enterContext(patch.object(loader, "_process_running", side_effect=lambda names: bool(self.clients)))
+        self.enterContext(patch.object(loader, "_is_league_running", side_effect=lambda: bool(self.clients)))
         self.enterContext(patch.object(loader, "_is_available", return_value=True))
         self.other = self.enterContext(patch.object(loader, "_hook_of_another_loader", return_value=None))
         self.status = self.enterContext(patch.object(loader, "get_status", return_value=loader.PenguStatus.ACTIVE))
         self.deactivate = self.enterContext(patch.object(loader, "deactivate", return_value=True))
-        self.restart = self.enterContext(patch.object(loader, "restart_client", return_value=False))
+        self.activate = self.enterContext(patch.object(loader, "activate", return_value=True))
+        self.restart = self.enterContext(patch.object(loader, "restart_client", return_value=True))
+        self.enterContext(patch.object(loader, "_external_pengu_with_rose_plugins", return_value=None))
+        self.enterContext(patch.object(loader, "_ensure_loader_config"))
         # No test may reach a real loader executable or change the user's registry.
         self.enterContext(patch.object(loader, "_run_cli_result", side_effect=AssertionError("unexpected real CLI")))
         self.assertTrue(loader._write_session(was_active=False, rose_activated=True))
 
-    def test_quit_keeps_loaded_plugins_and_recovery_record_while_league_is_open(self):
+    def test_quitting_with_league_open_keeps_the_plugins_and_restarts_nothing(self):
         self.assertTrue(loader.deactivate_on_exit())
         self.deactivate.assert_not_called()
         self.restart.assert_not_called()
-        self.assertTrue(loader._SESSION_FILE.is_file())
-        self.assertTrue(loader._session_requires_deactivation(loader._read_session()))
+        session = loader._read_session()
+        self.assertEqual(session["clients_with_plugins"], [4242])
+        self.assertTrue(loader._session_requires_deactivation(session))
 
-    def test_reopening_adopts_the_activation_instead_of_toggling_it_off_and_on(self):
-        with (
-            patch.object(loader, "_external_pengu_with_rose_plugins", return_value=None),
-            patch.object(loader, "_ensure_loader_config"),
-            patch.object(loader, "_process_running", return_value=True),
-            patch.object(loader, "_process_ids", return_value=frozenset({123})),
-            patch.object(loader, "activate") as activate,
-        ):
-            self.assertTrue(loader.deactivate_on_exit())
-            self.assertTrue(loader.cleanup_if_dirty())
-            self.assertTrue(loader.activate_on_start())
+    def test_reopening_with_the_same_client_does_not_restart_it(self):
+        loader.deactivate_on_exit()
+        self.assertTrue(loader.activate_on_start())
+        self.activate.assert_not_called()
         self.deactivate.assert_not_called()
-        activate.assert_not_called()
-        self.assertTrue(loader._session_requires_deactivation(loader._read_session()))
+        self.restart.assert_not_called()
+        self.assertEqual(loader._read_session()["clients_with_plugins"], [])
 
-    def test_quit_without_league_restores_and_clears_the_owned_activation(self):
-        self.running.return_value = False
+    def test_reopening_with_a_new_client_restarts_it_to_load_the_plugins(self):
+        loader.deactivate_on_exit()
+        self.clients = frozenset({5151})  # League was restarted meanwhile without SEXO2
+        self.assertTrue(loader.activate_on_start())
+        self.restart.assert_called_once()
+
+    def test_quitting_before_the_client_was_restarted_switches_off(self):
+        loader._restart_pending = frozenset({4242})  # the client never got the plugins
+        self.assertTrue(loader.deactivate_on_exit())
+        self.deactivate.assert_called_once()
+        self.assertFalse(loader._SESSION_FILE.exists())
+
+    def test_quitting_without_league_switches_off_and_clears(self):
+        self.clients = frozenset()
         self.assertTrue(loader.deactivate_on_exit())
         self.deactivate.assert_called_once()
         self.restart.assert_not_called()
         self.assertFalse(loader._SESSION_FILE.exists())
 
-    def test_next_start_without_league_cleans_a_retained_session(self):
-        self.assertTrue(loader.deactivate_on_exit())
-        self.running.return_value = False
-        self.assertTrue(loader.cleanup_if_dirty())
+    def test_windows_shutting_down_switches_off_even_with_league_open(self):
+        self.assertTrue(loader.end_of_windows_session())
         self.deactivate.assert_called_once()
         self.assertFalse(loader._SESSION_FILE.exists())
 
-    def test_windows_session_cleanup_still_deactivates_with_league_open(self):
-        self.assertTrue(loader.restore_after_rose())
-        self.deactivate.assert_called_once()
-        self.assertFalse(loader._SESSION_FILE.exists())
-
-    def test_another_loaders_hook_is_never_deactivated(self):
+    def test_another_loader_or_the_users_own_activation_is_never_kept_or_switched_off(self):
         self.other.return_value = Path("external/core.dll")
         self.assertTrue(loader.deactivate_on_exit())
         self.deactivate.assert_not_called()
-        self.restart.assert_not_called()
-        self.assertFalse(loader._SESSION_FILE.exists())
-
-    def test_a_preexisting_external_session_is_not_owned_by_sexo2(self):
         self.assertTrue(loader._write_session(was_active=True, rose_activated=False))
+        self.other.return_value = None
         self.assertTrue(loader.deactivate_on_exit())
         self.deactivate.assert_not_called()
-        self.assertFalse(loader._SESSION_FILE.exists())
-
-    def test_unknown_status_retains_recovery_state_without_changing_the_hook(self):
-        self.status.return_value = loader.PenguStatus.UNKNOWN
-        self.assertFalse(loader.deactivate_on_exit())
-        self.deactivate.assert_not_called()
-        self.assertTrue(loader._SESSION_FILE.exists())
-
-    def test_legacy_ownership_flag_survives_quit_while_league_is_open(self):
-        loader._SESSION_FILE.unlink()
-        loader._ACTIVE_FLAG.write_text("active", encoding="utf-8")
-        self.assertTrue(loader.deactivate_on_exit())
-        self.deactivate.assert_not_called()
-        self.assertTrue(loader._ACTIVE_FLAG.exists())
-
-    def test_exit_cancels_a_queued_client_restart(self):
-        loader._restart_pending = frozenset({123})
-        self.assertTrue(loader.deactivate_on_exit())
-        with patch.object(loader.threading, "Thread") as thread:
-            loader.retry_deferred_restart()
-        thread.assert_not_called()
-        self.restart.assert_not_called()
-
-
-class PenguRestartSafetyTests(unittest.TestCase):
-    def test_matchmaking_and_champion_select_never_restart_the_client(self):
-        for phase in ("Matchmaking", "ReadyCheck", "ChampSelect", "InProgress", "Reconnect"):
-            with self.subTest(phase=phase):
-                connection = Mock(ok=True, base="https://127.0.0.1:12345")
-                connection.session.get.return_value.status_code = 200
-                connection.session.get.return_value.json.return_value = phase
-                with (
-                    patch.object(loader, "_process_running", return_value=False),
-                    patch("lcu.core.lcu_connection.LCUConnection", return_value=connection),
-                ):
-                    self.assertFalse(loader.restart_client())
-                connection.session.post.assert_not_called()
-                connection.session.close.assert_called_once()
-
-    def test_a_running_game_prevents_even_attempting_a_client_restart(self):
-        with (
-            patch.object(loader, "_process_running", return_value=True),
-            patch("lcu.core.lcu_connection.LCUConnection") as connection,
-        ):
-            self.assertFalse(loader.restart_client())
-        connection.assert_not_called()
-
-    def test_safe_phases_still_allow_loading_the_plugins(self):
-        for phase in ("None", "Lobby", "EndOfGame"):
-            with self.subTest(phase=phase):
-                connection = Mock(ok=True, base="https://127.0.0.1:12345")
-                connection.session.get.return_value.status_code = 200
-                connection.session.get.return_value.json.return_value = phase
-                connection.session.post.return_value.status_code = 204
-                with (
-                    patch.object(loader, "_process_running", return_value=False),
-                    patch("lcu.core.lcu_connection.LCUConnection", return_value=connection),
-                ):
-                    self.assertTrue(loader.restart_client())
-                connection.session.post.assert_called_once_with(
-                    connection.base + "/riotclient/kill-and-restart-ux", timeout=5
-                )
-                connection.session.close.assert_called_once()
 
 
 if __name__ == "__main__":

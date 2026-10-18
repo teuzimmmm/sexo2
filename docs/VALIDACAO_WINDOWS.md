@@ -86,3 +86,4 @@ a limpa se o LoL já estiver fechado.
    A [prévia para aprovação visual](../design/propostas/ouro-placar.html) usa o bitmap
    real do renderizador com valores demonstrativos, em tamanho natural e ampliado 3×.
 10. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.
+

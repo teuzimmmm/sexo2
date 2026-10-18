@@ -51,12 +51,15 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  await page.getByRole('button',{name:'Favoritas',exact:true}).click();
  await page.getByRole('searchbox',{name:'Buscar campeão',exact:true}).fill('Ashe');
  await page.getByRole('button',{name:'Ashe',exact:true}).click();
- await page.getByRole('checkbox',{name:'Favorita Ashe Freljord',exact:true}).check();
- await page.getByRole('checkbox',{name:'Favorita Ashe PROJETO',exact:true}).check();
+ // The champion's screen: one card per skin; a click marks or unmarks it as a favourite.
+ await page.getByRole('button',{name:'Favorita Ashe Freljord',exact:true}).click();
+ await page.getByRole('button',{name:'Favorita Ashe PROJETO',exact:true}).click();
  await page.waitForTimeout(100);
- assert.equal(await page.getByRole('checkbox',{name:'Favorita Ashe Freljord',exact:true}).isChecked(),true);
- assert.equal(await page.getByRole('checkbox',{name:'Favorita Ashe PROJETO',exact:true}).isChecked(),true);
+ assert.equal(await page.getByRole('button',{name:'Favorita Ashe Freljord',exact:true}).getAttribute('aria-pressed'),'true');
+ assert.equal(await page.getByRole('button',{name:'Favorita Ashe PROJETO',exact:true}).getAttribute('aria-pressed'),'true');
  fs.mkdirSync('preview-r6',{recursive:true});await page.screenshot({path:'preview-r6/favorites-editor.png'});
+ await page.getByRole('button',{name:'← Voltar',exact:true}).click();
+ await page.getByRole('searchbox',{name:'Buscar campeão',exact:true}).waitFor();
  await page.locator('#rose-hub>nav').getByRole('button',{name:'Skins',exact:true}).click();
  await page.locator('#rose-hub .hub-subnav').getByRole('button',{name:'Perfis',exact:true}).click();
  await page.getByRole('button',{name:'Usar perfil'}).waitFor();

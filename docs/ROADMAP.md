@@ -20,7 +20,7 @@ conferir no cliente LoL ou na instalação do usuário. As decisões citadas (D-
 | M10 | Inferência de rotas e matchup | M9 | — |
 | M11 | Overlay de valor dos itens | M0 | janela pronta, desligada por padrão; calibração das linhas e teste em partida pendentes |
 | M12 | Aprimoramentos (Arena e Mayhem) | M11 | — |
-| M5b (antigo M13) | Identificadores e caminhos (`Rose` → `SEXO2`) com migração | M5, validação no Windows | pendente; arriscado |
+| M5b (antigo M13) | Identificadores e caminhos (`Rose` → `SEXO2`) com migração | M5, validação no Windows | pasta de dados migrada para `%LOCALAPPDATA%\SEXO2` (`test_data_folder_migration`); demais pendentes; arriscado |
 
 ## M5: nacionalização dos textos
 
@@ -42,8 +42,8 @@ linguagem continua em D-107).
 
 Mantidos de propósito (compatibilidade ou crédito; lista viva em `tests/test_no_visible_rose.py`):
 
-- pasta de dados `%LOCALAPPDATA%\Rose` e os nomes de arquivo dentro dela (`rose_*.log`,
-  `rose_runoverlay_*.log`, `rose_diagnostics.txt`, `rose.lock`, metadados `rose_*.json` dos mods);
+- `rose.lock` e os metadados `rose_*.json` dos mods, dentro da pasta de dados `%LOCALAPPDATA%\SEXO2` (movida de
+  `%LOCALAPPDATA%\Rose`); os logs já viraram `sexo2_*.log` e `sexo2_diagnostics.txt`;
 - mutex `Local\RoseSingleInstance` e `AppMutex` do instalador; tarefa agendada `Rose`; chave de
   desinstalação `Uninstall\Rose`;
 - `Rose.exe` e `Rose Sala.exe` nas listas do atualizador e do instalador;
@@ -56,9 +56,10 @@ Mantidos de propósito (compatibilidade ou crédito; lista viva em `tests/test_n
 - `AppPublisher` do instalador ("baseado em Rose") e o texto de créditos;
 - plugin desativado `ROSE-Jade` (`index.js_`, não carrega).
 
-**Migrações arriscadas** (M13, exigem validação real no Windows e teste do formato antigo):
-renomear a pasta de dados, o mutex (instalador e app juntos), a tarefa agendada, as pastas `ROSE-*`
+**Migrações arriscadas** (M5b, exigem validação real no Windows e teste do formato antigo):
+o mutex (instalador e app juntos), a tarefa agendada, as pastas `ROSE-*`
 (o Pengu guarda o estado ativado pelo nome da pasta) e os globais compartilhados entre plugins.
+A pasta de dados já foi migrada (`test_data_folder_migration`); falta validar no Windows real.
 
 ## Pendências técnicas registradas
 
@@ -68,7 +69,7 @@ renomear a pasta de dados, o mutex (instalador e app juntos), a tarefa agendada,
   - plugin `ROSE-PartyMode` (tem teste e rotas no backend);
   - `Rose.spec` (usado por `scripts/build_pyinstaller.py` e por um teste);
   - ramo `mayhem` em `lolalytics/item_pages.py`.
-- **Respostas da ponte direcionadas ao solicitante:** depende de teste de contrato por mensagem (M6a).
+- **Respostas da ponte direcionadas ao solicitante:** depende de teste de contrato por mensagem (M6, antigo M6a).
 - **Executável de teste no CI:** `SEXO2.spec` empacota binários que não estão no repositório (Pengu Loader, mod-tools, cloudflared, hashes). Eles são recuperados de uma instalação anterior por `scripts/prepare_release.py`, o que exige infraestrutura nova no CI.
 - **User-Agent do `lolalytics/`:** hoje usa o padrão do `requests`. Trocar exige validação ao vivo, porque o site pode tratar outro User-Agent de forma diferente.
 - **Lint ampliado:** 247 avisos (`F401`, `F541`, `F841`) seguem como relatório informativo.

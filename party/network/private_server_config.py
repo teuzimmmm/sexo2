@@ -3,7 +3,7 @@
 import os
 import re
 from urllib.parse import urlsplit, urlunsplit, parse_qs
-from config import get_config_option, set_config_option
+from config import get_config_option
 from .relay_config import RELAY_URL
 
 TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,128}$")

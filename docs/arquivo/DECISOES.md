@@ -1,3 +1,5 @@
+> Arquivado em 18/10/2026: histórico da entrega r6, anterior ao registro de decisões; vale `docs/produto/decisoes.md`. Caminhos de dados e versões abaixo são os da época.
+
 # Decisões e entrega r6
 
 Nome aprovado: SEXO2. BORK é o símbolo, com máscara que herda cor e dimensões do

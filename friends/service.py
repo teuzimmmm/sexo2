@@ -122,7 +122,8 @@ class FriendsService:
             self.library = [
                 {"championId": c["id"], "name": str(c.get("name") or c["id"]), "portrait": c.get("squarePortraitPath")}
                 for c in raw
-                if isinstance(c, dict) and type(c.get("id")) is int and c["id"] > 0
+                # Ids from 10000 up (60266 = Aatrox again) are copies the client lists for special modes.
+                if isinstance(c, dict) and type(c.get("id")) is int and 0 < c["id"] < 10000
             ][:700]
             self.library.sort(key=lambda c: c["name"].casefold())
         return self.library

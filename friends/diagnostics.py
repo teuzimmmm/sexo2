@@ -48,7 +48,8 @@ def export_report(directory, snapshot, log_dir, secrets=()):
         }
         for i, p in enumerate(snapshot.get("members", []))
     ]
-    files = sorted(Path(log_dir).glob("rose_*.log"), key=lambda p: p.stat().st_mtime, reverse=True)[:1]
+    logs = [*Path(log_dir).glob("sexo2_*.log"), *Path(log_dir).glob("rose_*.log")]  # rose_: earlier versions
+    files = sorted(logs, key=lambda p: p.stat().st_mtime, reverse=True)[:1]
     recent = "Nenhum log disponível."
     if files:
         with files[0].open("rb") as f:

@@ -5,7 +5,6 @@ Injection Trigger
 Handles triggering skin injection based on countdown timer
 """
 
-import logging
 import threading
 import time
 from typing import Optional

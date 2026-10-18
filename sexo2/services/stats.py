@@ -8,7 +8,7 @@ its field names (``keystone_win_rate``, ``games``, ``metric_scope``).
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -124,6 +124,62 @@ class BuildStats:
     warnings: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class ItemCombo:
+    """Three items bought together, in order (LoLalytics joint sample: the numbers are the trio's)."""
+
+    items: tuple[int, ...]
+    win_rate: float | None
+    pick_rate: float | None
+    games: int
+
+
+@dataclass(frozen=True)
+class KeystoneStat:
+    keystone: int
+    win_rate: float | None
+    pick_rate: float | None
+    games: int
+
+
+@dataclass(frozen=True)
+class Alternatives:
+    """What the player can pick instead of the two recommendations, most played first."""
+
+    builds: tuple[ItemCombo, ...]
+    keystones: tuple[KeystoneStat, ...]
+
+
+# Tables of ordered three-item builds (boots count as an item); startSet is the starting items.
+_BUILD_TABLES = ("payload.builtBootSet3[", "payload.builtItemSet3[")
+
+
+def alternatives_from(snapshot: Any, keystones: frozenset[int], limit: int = 300) -> Alternatives:
+    builds = []
+    stats = []
+    for record in snapshot.records:
+        games = record.metrics.get("games")
+        if not isinstance(games, int) or games <= 0:
+            continue
+        if record.category == "item_combination" and record.source_path.startswith(_BUILD_TABLES):
+            if len(record.identifiers) == 3:
+                builds.append(
+                    ItemCombo(
+                        tuple(int(i) for i in record.identifiers),
+                        record.metrics.get("win_rate"),
+                        record.metrics.get("pick_rate"),
+                        games,
+                    )
+                )
+        elif record.category == "rune_statistics" and record.identifiers[1] == "0":
+            rune = int(record.identifiers[0])
+            if rune in keystones:
+                stats.append(KeystoneStat(rune, record.metrics.get("win_rate"), record.metrics.get("pick_rate"), games))
+    builds.sort(key=lambda combo: (-combo.games, combo.items))
+    stats.sort(key=lambda stat: (-stat.games, stat.keystone))
+    return Alternatives(tuple(builds[:limit]), tuple(stats))
+
+
 def _layouts(snapshot: Any) -> tuple[RuneLayout, ...]:
     result = []
     for candidate in rune_candidates(snapshot):
@@ -226,3 +282,24 @@ class StatsService:
                 except DataUnavailable:
                     warnings.append("matchup_unavailable")
         return BuildStats(pages=tuple(pages), warnings=tuple(warnings))
+
+    def alternatives(self, champion_id: int, mode: str, lane: str, keystones: frozenset[int]) -> Alternatives:
+        """Other observed builds and keystones, from the same (cached) page as the recommendations."""
+        if mode not in ("ranked", "aram", "swift"):
+            raise StatsError("unsupported_mode", f"statistics are not available for {mode}")
+        snapshot = self._client.collect(self._query(champion_id, mode, lane))
+        found = alternatives_from(snapshot, keystones)
+        if mode == "swift":  # LoLalytics filters by keystone only in ranked and ARAM
+            found = Alternatives(found.builds, ())
+        return found
+
+    def keystone_layout(self, champion_id: int, mode: str, lane: str, keystone: int) -> RuneLayout:
+        """The most played complete page with this keystone (falls back to its highest win rate)."""
+        if mode not in ("ranked", "aram"):
+            raise StatsError("unsupported_mode", f"keystone pages are not available for {mode}")
+        snapshot = self._client.collect(self._query(champion_id, mode, lane, keystone=keystone))
+        layouts = {layout.selection: layout for layout in _layouts(snapshot)}
+        layout = layouts.get("pick") or layouts.get("win")
+        if layout is None or layout.keystone != keystone:
+            raise StatsError("no_layout", f"no complete page with keystone {keystone}")
+        return replace(layout, selection="keystone")

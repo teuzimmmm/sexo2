@@ -5,7 +5,6 @@ Swiftplay Handler
 Handles Swiftplay mode detection and injection
 """
 
-import logging
 import threading
 import time
 from typing import Optional
@@ -17,7 +16,7 @@ from sexo2.services import assistant_runtime
 from state import SharedState
 from pengu.processing.swiftplay_pins import get_pins, read_lobby, base_slots_ready
 from utils.core.historic import clear_historic_entry, get_historic_skin_for_champion, write_historic_entry
-from utils.core.logging import get_logger, log_action
+from utils.core.logging import get_logger
 
 log = get_logger()
 
@@ -586,9 +585,6 @@ class SwiftplayHandler:
                 log.info(f"[phase] Will inject {total_skins} skin(s) from tracking dictionary")
 
                 from utils.core.utilities import is_base_skin
-                from pathlib import Path
-                import zipfile
-                import shutil
 
                 chroma_id_map = (
                     self.skin_scraper.cache.chroma_id_map if self.skin_scraper and self.skin_scraper.cache else None

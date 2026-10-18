@@ -6,7 +6,7 @@ Issue Reporter
 Writes a small, human-friendly diagnostics file that summarizes important
 errors and "non-error failure reasons" (e.g., timeouts, settings mismatches).
 
-File: %LOCALAPPDATA%\\SEXO2\\rose_diagnostics.txt
+File: %LOCALAPPDATA%\\SEXO2\\sexo2_diagnostics.txt
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ log = get_logger()
 _LOCK = threading.Lock()
 _LAST: Dict[str, float] = {}  # naive dedupe: key -> last timestamp
 
-# Keep rose_diagnostics.txt focused on actionable tuning problems and critical
+# Keep sexo2_diagnostics.txt focused on actionable tuning problems and critical
 # resource failures that commonly confuse users. Everything else should go to
 # the normal logs.
 _ALLOWED_CODES = {
@@ -38,10 +38,26 @@ _ALLOWED_CODES = {
 }
 
 
+DIAGNOSTICS_FILE = "sexo2_diagnostics.txt"
+_LEGACY_DIAGNOSTICS_FILE = "rose_diagnostics.txt"  # earlier versions
+
+
 def _issues_path():
     base_dir = get_user_data_dir()
     base_dir.mkdir(parents=True, exist_ok=True)
-    return base_dir / "rose_diagnostics.txt"
+    path = base_dir / DIAGNOSTICS_FILE
+    legacy = base_dir / _LEGACY_DIAGNOSTICS_FILE
+    if legacy.exists() and not path.exists():
+        try:
+            legacy.rename(path)  # keep the history written by earlier versions
+        except OSError:
+            pass
+    return path
+
+
+def issues_path():
+    """Where the diagnostics summary is written."""
+    return _issues_path()
 
 
 def report_issue(
@@ -101,7 +117,7 @@ def report_issue(
 
 
 def read_issues_tail(*, max_lines: int = 60) -> list[str]:
-    """Read the last N lines from rose_diagnostics.txt (safe, never raises)."""
+    """Read the last N lines from sexo2_diagnostics.txt (safe, never raises)."""
     try:
         p = _issues_path()
         if not p.exists():
@@ -146,7 +162,7 @@ def remove_issues(should_remove: Callable[[str, str], bool]) -> bool:
 
 
 def clear_issues() -> bool:
-    """Clear rose_diagnostics.txt (safe, never raises). Returns True if cleared."""
+    """Clear sexo2_diagnostics.txt (safe, never raises). Returns True if cleared."""
     try:
         with _LOCK:
             p = _issues_path()

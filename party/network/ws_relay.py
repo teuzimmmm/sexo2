@@ -14,7 +14,6 @@ import ssl
 import time
 from typing import Callable, List, Optional
 
-import websockets
 from websockets.exceptions import ConnectionClosed
 
 from config import APP_VERSION

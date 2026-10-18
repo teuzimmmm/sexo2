@@ -91,6 +91,21 @@ class FakeStats:
         pages = tuple(ahri_pages()) + ((annie_matchup(),) if opponent_id else ())
         return BuildStats(pages=pages)
 
+    def alternatives(self, champion_id, mode, lane, keystones):
+        from sexo2.services.stats import Alternatives, ItemCombo, KeystoneStat
+
+        self.keystone_ids = keystones
+        return Alternatives(
+            (ItemCombo((3118, 3020, 4645), 53.64, 17.45, 29091), ItemCombo((2503, 3158, 3100), 56.8, 4.5, 7505)),
+            (KeystoneStat(8112, 52.8, 60.0, 143965), KeystoneStat(8128, 54.0, 3.0, 4000)),
+        )
+
+    def keystone_layout(self, champion_id, mode, lane, keystone):
+        self.calls.append(("keystone", champion_id, mode, lane, keystone))
+        from dataclasses import replace
+
+        return replace(layout("pick", keystone, 54.0, 4000), selection="keystone")
+
 
 class InlineWorker:
     def submit(self, work, on_error):
@@ -219,6 +234,71 @@ class AssistantServiceTests(unittest.TestCase):
         self.service.handle({"type": "assistant-request"})
         self.service.handle({"type": "assistant-items-import"})
         self.assertEqual(self.published[-1]["items"], {"error": "no_builds"})
+
+
+class AlternativeChoicesTests(unittest.TestCase):
+    def setUp(self):
+        FakeStats.with_builds = True
+        self.addCleanup(setattr, FakeStats, "with_builds", False)
+        self.lcu = FakeLCU()
+        self.published = []
+        self.controller = FakeController()
+        self.service = AssistantService(
+            self.lcu,
+            self.published.append,
+            queue_id=lambda: 420,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=self.controller,
+        )
+        self.service.handle({"type": "assistant-request"})
+
+    def managed(self):
+        return next(s for s in self.lcu.item_sets["itemSets"] if s["uid"] == "sexo2-managed")
+
+    def test_state_lists_other_builds_and_keystones(self):
+        options = self.published[-1]["options"]
+        self.assertEqual(
+            options["builds"][0], {"items": [3118, 3020, 4645], "winRate": 53.64, "pickRate": 17.45, "games": 29091}
+        )
+        self.assertEqual([k["id"] for k in options["keystones"]], [8112, 8128])
+        self.assertIn(8112, self.service._stats.keystone_ids)  # keystones are the first slot of each tree
+        self.assertNotIn(5008, self.service._stats.keystone_ids)
+
+    def test_a_chosen_build_heads_the_set_and_the_default_comes_back(self):
+        default_blocks = None
+        self.service.handle({"type": "assistant-items-import"})
+        default_blocks = self.managed()["blocks"]
+        self.service.handle({"type": "assistant-items-choose", "items": [2503, 3158, 3100]})
+        blocks = self.managed()["blocks"]
+        self.assertEqual(blocks[0]["type"], "56,8% — 7.505 partidas")
+        self.assertEqual([i["id"] for i in blocks[0]["items"]], ["2503", "3158", "3100"])
+        self.assertEqual(blocks[1:], default_blocks)
+        self.assertEqual(self.published[-1]["items"]["chosen"], [2503, 3158, 3100])
+        self.assertTrue(self.published[-1]["items"]["confirmed"])
+        self.service.handle({"type": "assistant-items-default"})
+        self.assertEqual(self.managed()["blocks"], default_blocks)
+        self.assertIsNone(self.published[-1]["items"]["chosen"])
+
+    def test_unknown_or_malformed_builds_are_refused(self):
+        self.service.handle({"type": "assistant-items-choose", "items": [1, 2, 3]})
+        self.assertEqual(self.published[-1]["items"]["error"], "unknown_build")
+        for bad in ([], [True], ["3118"], list(range(1, 9))):
+            with self.assertRaises(ValueError):
+                self.service.handle({"type": "assistant-items-choose", "items": bad})
+
+    def test_a_keystone_page_is_loaded_then_chosen_like_the_others(self):
+        self.service.handle({"type": "assistant-runes-keystone", "keystone": 8128})
+        runes = self.published[-1]["runes"]
+        self.assertIsNone(runes["keystonePending"])
+        self.assertEqual(runes["keystone"][0]["selection"], "keystone")
+        self.assertEqual(runes["keystone"][0]["page"]["perks"][0], 8128)
+        self.service.handle({"type": "assistant-runes-choose", "selection": "keystone"})
+        self.assertEqual(self.controller.calls[-1][0], "choose")
+        self.assertEqual(self.controller.calls[-1][1].perk_ids[0], 8128)
+        with self.assertRaises(ValueError):
+            self.service.handle({"type": "assistant-runes-keystone", "keystone": "8128"})
 
 
 class AutomaticItemImportTests(unittest.TestCase):

@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from config import INJECTION_LOCK_TIMEOUT_S, get_config_file_path
+from config import INJECTION_LOCK_TIMEOUT_S
 from utils.core.logging import get_logger, log_action, log_success
 from utils.core.issue_reporter import report_issue
 

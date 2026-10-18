@@ -5,7 +5,6 @@ Cleanup logic for application shutdown
 """
 
 import os
-import sys
 
 import utils.integration.pengu_loader as pengu_loader
 from utils.core.logging import get_logger, log_section, log_success
@@ -14,7 +13,6 @@ from utils.integration.tray_manager import TrayManager
 from state import SharedState
 from config import THREAD_JOIN_TIMEOUT_S, THREAD_FORCE_EXIT_TIMEOUT_S
 from .lockfile import cleanup_lock_file
-from .state import get_app_state
 from main.setup.console import cleanup_console
 
 log = get_logger()

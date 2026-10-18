@@ -19,7 +19,6 @@ import threading
 import time
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
 from typing import Any, Callable
 
 from sexo2.services.gold import CHAOS, ORDER, Comparison, Unsupported, compare, for_player_team, item_prices
@@ -27,8 +26,8 @@ from sexo2.services.gold import CHAOS, ORDER, Comparison, Unsupported, compare, 
 log = logging.getLogger(__name__)
 
 LIVE_CLIENT = "https://127.0.0.1:2999/liveclientdata"
-ALLY = "#4f8cff"
-ENEMY = "#e5484d"
+ALLY = "#4db0fc"
+ENEMY = "#e8404f"
 NEUTRAL = "#a4a9b0"
 
 
@@ -97,7 +96,7 @@ def overlay_bounds(width: int, height: int, geometry: Geometry) -> tuple[int, in
     """Only the central gold column needs a transparent window, not the whole screen."""
     scale = height / 1080
     half_width = max(96, round(128 * scale))
-    padding = max(18, round(24 * scale))
+    padding = max(30, round(40 * scale))
     center = round(width * geometry.center_x)
     ys = (geometry.total_y, geometry.rows_top, geometry.rows_top + 4 * geometry.row_step)
     return (
@@ -140,53 +139,89 @@ def _tab_down() -> bool:
     return bool(hwnd and user32.GetClassNameW(hwnd, name, len(name)) and name.value == "RiotWindowClass")
 
 
+SUPERSAMPLE = 4  # drawn at 4x and reduced: smooth digits, edges and arrows
+# Look of the scoreboard comparison made popular by Blitz, drawn here: dark diamonds with
+# a bronze edge on the seam between the players, the arrow inside, the number below.
+FRAME = (58, 56, 47, 255)
+FRAME_LIGHT = (96, 88, 62, 255)
+ALLY_FILL = (13, 30, 43, 240)
+ENEMY_FILL = (42, 14, 18, 240)
+NEUTRAL_FILL = (24, 26, 29, 240)
+BAR_FILL = (14, 30, 38, 235)
+COIN = (201, 164, 92, 255)
+COIN_DARK = (120, 92, 44, 255)
+SHADOW = (0, 0, 0, 160)
+
+
 @lru_cache(maxsize=8)
 def _font(size: int):
-    import os
-
+    """Inter Bold (D-007), at the supersampled size."""
     from PIL import ImageFont
 
-    return ImageFont.truetype(str(Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts" / "segoeuib.ttf"), size * 3)
+    from utils.core.paths import get_asset_path
 
-
-@lru_cache(maxsize=128)
-def _label(text: str, color: str, size: int):
-    from PIL import Image, ImageDraw
-
-    font = _font(size)
-    x0, y0, x1, y1 = font.getbbox(text)
-    image = Image.new("RGBA", (x1 - x0 + 6, y1 - y0 + 6))
-    ImageDraw.Draw(image).text((3 - x0, 3 - y0), text, fill=color, font=font)
-    return image.resize((max(1, round(image.width / 3)), max(1, round(image.height / 3))), Image.Resampling.LANCZOS)
+    return ImageFont.truetype(str(get_asset_path("fonts/inter-bold.ttf")), size * SUPERSAMPLE)
 
 
 def render(comparison: Comparison, width: int, height: int, geometry: Geometry):
-    """Grayscale antialiasing with true alpha; no color-key fringes around text."""
+    """The overlay bitmap with true alpha: diamonds on the scoreboard seam and a totals bar."""
     from PIL import Image, ImageDraw
 
     left, top, right, bottom = overlay_bounds(width, height, geometry)
-    image = Image.new("RGBA", (right - left, bottom - top))
-    scale = height / 1080
-    offset, gap = round(70 * scale), max(4, round(6 * scale))
-    arrow_width, arrow_height = max(3, round(4 * scale)), max(3, round(4 * scale))
+    k = SUPERSAMPLE
+    s = height / 1080 * k  # one 1080p pixel, supersampled
+    image = Image.new("RGBA", ((right - left) * k, (bottom - top) * k))
+    draw = ImageDraw.Draw(image)
 
-    def text(x, y, value, color, size):
-        label = _label(value, color, size)
-        image.alpha_composite(label, (x - label.width // 2, y - label.height // 2))
+    def font(size: int):
+        return _font(max(9, round(size * height / 1080)))
+
+    def text(x: float, y: float, value: str, color: str, size: int) -> None:
+        value = value.replace(".", "")  # 1928, as the scoreboard writes numbers
+        draw.text((x, y), value, fill=color, font=font(size), anchor="mm", stroke_width=round(s), stroke_fill=SHADOW)
+
+    def diamond(x: float, y: float, radius: float, mark: Mark) -> None:
+        def shape(r: float) -> list[tuple[float, float]]:
+            return [(x, y - r), (x + r, y), (x, y + r), (x - r, y)]
+
+        fill = {"left": ALLY_FILL, "right": ENEMY_FILL}.get(mark.arrow, NEUTRAL_FILL)
+        draw.polygon(shape(radius), fill=FRAME)
+        draw.polygon(shape(radius - 1.2 * s), fill=FRAME_LIGHT)
+        draw.polygon(shape(radius - 2.4 * s), fill=FRAME)
+        draw.polygon(shape(radius - 3.6 * s), fill=fill)
+        if mark.arrow:
+            tip = -5 * s if mark.arrow == "left" else 5 * s
+            # Centred on the diamond's centre, tip to base.
+            draw.polygon([(x + tip, y), (x - tip, y - 6 * s), (x - tip, y + 6 * s)], fill=mark.color)
+
+    def coin(x: float, y: float) -> None:
+        for dx, dy in ((-1.5, 2), (1.5, -1.5)):
+            box = (x + (dx - 6) * s, y + (dy - 4) * s, x + (dx + 6) * s, y + (dy + 4) * s)
+            draw.ellipse(box, fill=COIN, outline=COIN_DARK, width=round(s))
 
     for mark in layout(comparison, width, height, geometry):
-        x, y = mark.x - left, mark.y - top
-        size = max(10, round((14 if mark.kind == "total" else 12) * scale))
+        x, y = (mark.x - left) * k, (mark.y - top) * k
         if mark.kind == "total":
-            text(x - offset, y, mark.left, ALLY, size)
-            text(x + offset, y, mark.right, ENEMY, size)
-        if mark.arrow:
-            w = arrow_width if mark.arrow == "left" else -arrow_width
-            ImageDraw.Draw(image).polygon(
-                [(x - w, y - gap), (x + w, y - gap - arrow_height), (x + w, y - gap + arrow_height)], fill=mark.color
+            half_w, half_h = 111 * s, 12 * s
+            draw.rectangle(
+                (x - half_w, y - half_h, x + half_w, y + half_h), fill=BAR_FILL, outline=FRAME_LIGHT, width=round(s)
             )
-        text(x, y + gap, mark.text, mark.color, size)
-    return image
+            draw.rectangle(
+                (x - half_w + 2 * s, y - half_h + 2 * s, x + half_w - 2 * s, y + half_h - 2 * s),
+                outline=FRAME,
+                width=round(s),
+            )
+            # Coin before each total, as the scoreboard shows gold.
+            coin(x - 95 * s, y)
+            text(x - 57 * s, y, mark.left, ALLY, 16)
+            coin(x + 42 * s, y)
+            text(x + 81 * s, y, mark.right, ENEMY, 16)
+            diamond(x, y, 20 * s, mark)
+            text(x, y + 17 * s, mark.text, mark.color, 13)
+        else:
+            diamond(x, y, 17.5 * s, mark)
+            text(x, y + 25 * s, mark.text, mark.color, 12)
+    return image.resize((right - left, bottom - top), Image.Resampling.LANCZOS)
 
 
 class _Window:

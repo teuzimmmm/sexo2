@@ -50,6 +50,11 @@ class FailureHintTests(unittest.TestCase):
     def test_disabled_overlay_points_at_the_skin_or_mods(self):
         self.assertIn("custom mods", self.hint("overlay verification failed, disabling overlay"))
 
+    def test_a_dll_that_never_attached_points_at_the_antivirus(self):
+        hint = self.hint("DLL never attached after 60s -- check the DLL signature / antivirus")
+        self.assertIn("antivirus", hint)
+        self.assertIn("ltk_patcher_dll.dll", hint)
+
     def test_unknown_failures_keep_the_update_hint(self):
         self.assertIn("up to date", self.hint("exited with code 3"))
 
