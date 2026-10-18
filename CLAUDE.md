@@ -27,3 +27,47 @@ O CI Windows (`.github/workflows/release.yml`) roda tudo isso e é o critério d
 ## Referências
 - Arquitetura: `docs/adr/README.md`
 - Plano de marcos: `docs/ROADMAP.md`
+
+## Diretrizes de comportamento
+Diretrizes para reduzir erros comuns de LLMs em código. Somam-se às regras acima; em conflito, valem as do projeto.
+Compromisso: priorizam cautela em vez de velocidade. Em tarefas triviais, use o bom senso.
+
+### 1. Pensar antes de codificar
+Não presuma. Não esconda a confusão. Exponha as compensações.
+- Declare as suposições. Na dúvida, pergunte.
+- Se houver várias interpretações, apresente-as; não escolha em silêncio.
+- Se existir um caminho mais simples, diga. Discorde quando fizer sentido.
+- Se algo estiver confuso, pare, diga o que é e pergunte.
+
+### 2. Simplicidade primeiro
+O mínimo de código que resolve o problema, nada especulativo.
+- Nenhuma funcionalidade além do pedido.
+- Nenhuma abstração para código de uso único.
+- Nenhuma "flexibilidade" ou configuração que não foi pedida.
+- Nenhum tratamento de erro para cenários impossíveis.
+- Se escreveu 200 linhas e cabia em 50, reescreva.
+
+Teste: um engenheiro sênior diria que está complicado demais? Se sim, simplifique.
+
+### 3. Mudanças cirúrgicas
+Mexa só no necessário. Limpe só a sua própria bagunça.
+- Não "melhore" código, comentários ou formatação vizinhos.
+- Não refatore o que não está quebrado.
+- Siga o estilo existente, mesmo que você fizesse diferente.
+- Código morto não relacionado: mencione, não apague.
+- Remova imports, variáveis e funções que as SUAS mudanças deixaram sem uso; não remova código morto antigo sem pedido.
+
+Teste: cada linha alterada deve se ligar diretamente ao pedido do usuário.
+
+### 4. Execução guiada por objetivos
+Defina critérios de sucesso e repita até verificar.
+- "Adicionar validação" → escreva testes para entradas inválidas e faça-os passar.
+- "Corrigir o bug" → escreva um teste que o reproduz e faça-o passar.
+- "Refatorar X" → garanta que os testes passam antes e depois.
+
+Em tarefas de várias etapas, apresente um plano breve:
+```
+1. [Etapa] → verificar: [checagem]
+2. [Etapa] → verificar: [checagem]
+```
+Sinais de que funciona: diffs sem mudanças desnecessárias, menos reescritas por complicação e perguntas feitas antes da implementação, não depois dos erros.
