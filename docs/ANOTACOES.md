@@ -12,3 +12,7 @@ for corrigido e verificado.
    `/lol-game-data/assets/v1/champions/{id}.json`, servidos pelo próprio cliente); clicar no
    cartão marca ou desmarca a favorita; cromas como bolinhas de cor sob a skin.
 3. **Campeões duplicados** na lista de Favoritas (Aatrox, Ahri, Akali, Alistar… aparecem duas vezes).
+4. **Botão SEXO2 na seleção da Arena:** ao clicar, nada aconteceu (a confirmar se o painel
+   abriu e fechou ou ficou atrás do cliente). Na Arena o assistente não tem runas nem itens
+   (fila sem estatísticas no assistente), então só mostraria "Sem dados"; decidir se, fora das
+   filas com estatísticas, o botão abre direto o painel de mods, como antes.
