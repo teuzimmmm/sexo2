@@ -267,6 +267,7 @@ class HTTPHandler:
             ".jpeg": "image/jpeg",
             ".webp": "image/webp",
             ".ttf": "font/ttf",
+            ".woff2": "font/woff2",
             ".ogg": "audio/ogg",
             ".js": "application/javascript",
             ".css": "text/css",
