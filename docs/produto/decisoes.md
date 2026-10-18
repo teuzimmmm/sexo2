@@ -36,6 +36,7 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-115 | Aprimoramentos: o título de cada carta é lido com OCR (o do próprio Windows) e comparado com os nomes do modo; o ícone fica como reserva. Os textos sob as cartas seguem o protótipo (nome lido; “WR · PR · partidas”; “Sem dados”; “Não reconhecida”). | usuário, sessão 1.0b |
 | D-116 | A Arena mostra WR quando a fonte a fornece, além de PR e partidas (a supressão em `lolalytics/` foi removida). | usuário, sessão 1.0b |
 | D-020 | Aprimoramentos de Arena e ARAM Mayhem: só as cartas realmente oferecidas, com correção manual; nada é escolhido pelo SEXO2; números de Arena e Mayhem nunca se misturam; sem WR inventada; com só PR e partidas, mostram-se só esses. Destaque discreto das estatisticamente melhores. | usuário, sessão 1.0b |
+| D-117 | Seção “Overlays” em Configurações: caixas “Ouro no placar (Tab)” e “Aprimoramentos na Arena e no Mayhem”, que gravam `[Overlay] gold_enabled`/`augments_enabled` e ligam ou desligam ao salvar, sem reiniciar; abaixo, “O jogo precisa estar em tela sem bordas.” | usuário, sessão 1.0b |
 
 ## Pendentes
 
@@ -55,7 +56,6 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-112 | Papel do Galo e do BORK na nova identidade | com D-102 |
 | D-113 | Nome da página de runas gerenciada (provisório: “SEXO2”). O conjunto de itens foi decidido em D-018 | antes do M8 |
 | D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
-| D-117 | Seção “Overlays” em Configurações: duas caixas (“Ouro no placar (Tab)”, “Aprimoramentos na Arena e no Mayhem”) que gravam `[Overlay] gold_enabled`/`augments_enabled` e ligam ou desligam na hora, mais a linha “O jogo precisa estar em tela sem bordas.” | aprovação do usuário |
 
 ## Rejeitadas
 

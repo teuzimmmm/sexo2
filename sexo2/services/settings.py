@@ -4,6 +4,10 @@ import math
 
 from sexo2.version import RELEASE_VERSION
 from config import get_config_float, get_config_option, set_config_options
+from sexo2.overlay import runtime as overlay_runtime
+from sexo2.overlay.runtime import enabled as overlay_enabled
+
+OVERLAY_KEYS = {"gold": "goldOverlay", "augments": "augmentsOverlay"}
 
 
 class SettingsService:
@@ -23,6 +27,8 @@ class SettingsService:
             == "true",
             "gamePath": path,
             "gamePathValid": bool(path and self.validate_path(path)),
+            "goldOverlay": overlay_enabled("gold"),
+            "augmentsOverlay": overlay_enabled("augments"),
             "version": RELEASE_VERSION,
         }
 
@@ -39,6 +45,10 @@ class SettingsService:
         for key in ("autostart", "hideEmptyCategories"):
             if type(payload.get(key)) is not bool:
                 raise ValueError("Confira as opções das configurações.")
+        # Overlay switches (D-117); a panel from an older build does not send them.
+        overlays = {kind: payload.get(key, overlay_enabled(kind)) for kind, key in OVERLAY_KEYS.items()}
+        if any(type(value) is not bool for value in overlays.values()):
+            raise ValueError("Confira as opções das configurações.")
         path = payload.get("gamePath")
         if not isinstance(path, str):
             raise ValueError("Confira a pasta do League of Legends.")
@@ -55,7 +65,8 @@ class SettingsService:
                 "hide_empty_categories": "true" if payload["hideEmptyCategories"] else "false",
                 "leaguePath": path,
                 "clientPath": client_path,
-            }
+            },
+            "Overlay": {f"{kind}_enabled": "true" if value else "false" for kind, value in overlays.items()},
         }
         if changed_autostart:
             self.set_autostart(payload["autostart"])
@@ -70,6 +81,7 @@ class SettingsService:
                         "A gravação falhou e a inicialização com Windows pode ter mudado. Confira essa opção ao reconectar."
                     ) from error
             raise
+        overlay_runtime.apply()
         return {
             "threshold": threshold,
             "monitorAutoResumeTimeout": int(timeout),
@@ -77,5 +89,7 @@ class SettingsService:
             "hideEmptyCategories": payload["hideEmptyCategories"],
             "gamePath": path,
             "gamePathValid": bool(path),
+            "goldOverlay": overlays["gold"],
+            "augmentsOverlay": overlays["augments"],
             "version": RELEASE_VERSION,
         }

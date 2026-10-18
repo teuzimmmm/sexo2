@@ -40,6 +40,26 @@ class SettingsTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.service.save(self.payload)
 
+    def test_overlay_switches_are_saved_and_applied(self):
+        self.payload.update(goldOverlay=True, augmentsOverlay=False)
+        with (
+            patch("sexo2.services.settings.set_config_options") as write,
+            patch("sexo2.services.settings.overlay_runtime.apply") as apply,
+        ):
+            saved = self.service.save(self.payload)
+        self.assertEqual(write.call_args.args[0]["Overlay"], {"gold_enabled": "true", "augments_enabled": "false"})
+        apply.assert_called_once()
+        self.assertEqual((saved["goldOverlay"], saved["augmentsOverlay"]), (True, False))
+
+    def test_a_panel_without_overlay_switches_keeps_them_as_they_are(self):
+        with (
+            patch("sexo2.services.settings.set_config_options") as write,
+            patch("sexo2.services.settings.overlay_runtime.apply"),
+            patch("sexo2.services.settings.overlay_enabled", side_effect=lambda kind: kind == "augments"),
+        ):
+            self.service.save(self.payload)
+        self.assertEqual(write.call_args.args[0]["Overlay"], {"gold_enabled": "false", "augments_enabled": "true"})
+
     def test_batch_preserves_other_sections(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "config.ini"

@@ -39,6 +39,8 @@ function build(){
  field('monitorAutoResumeTimeout','Limite de pausa do jogo (s)','number',20,180,1);
  form.append(el('p','s2'));form.lastChild.className='s2-help';form.lastChild.textContent='A pausa dá tempo para preparar as skins. Ao atingir o limite, o aplicativo tenta liberar o jogo.';
  field('autostart','Iniciar com Windows','checkbox');field('hideEmptyCategories','Ocultar categorias de mods vazias','checkbox');
+ form.append(el('h3','Overlays'));field('goldOverlay','Ouro no placar (Tab)','checkbox');field('augmentsOverlay','Aprimoramentos na Arena e no Mayhem','checkbox');
+ const overlayHelp=el('p','O jogo precisa estar em tela sem bordas.');overlayHelp.className='s2-help';form.append(overlayHelp);
  const path=field('gamePath','Pasta do LoL (Game)','text');path.placeholder='Automática';path.parentElement.classList.add('s2-path');
  const help=el('p','Deixe em branco para usar a detecção automática.');help.className='s2-help';form.append(help);
  const language=el('label');language.className='s2-setting';language.append(el('span','Idioma dos menus'));
@@ -67,7 +69,7 @@ function saveSettings(){
  if(!bridge?.ready){message('O aplicativo está desconectado. Suas alterações foram mantidas.',true);return;}
  if(pending){message('Aguarde a confirmação anterior.');return;}
  if(!form.reportValidity())return;
- const values={threshold:Number(fields.threshold.value),monitorAutoResumeTimeout:Number(fields.monitorAutoResumeTimeout.value),autostart:fields.autostart.checked,hideEmptyCategories:fields.hideEmptyCategories.checked,gamePath:fields.gamePath.value.trim()};
+ const values={threshold:Number(fields.threshold.value),monitorAutoResumeTimeout:Number(fields.monitorAutoResumeTimeout.value),autostart:fields.autostart.checked,hideEmptyCategories:fields.hideEmptyCategories.checked,goldOverlay:fields.goldOverlay.checked,augmentsOverlay:fields.augmentsOverlay.checked,gamePath:fields.gamePath.value.trim()};
  pending={id:'s2-settings-'+(++sequence),saving:true,at:Date.now()};lock(true);message('Salvando…');bridge.send({type:'settings-save',requestId:pending.id,...values});
 }
 function checkUpdate(){if(bridge?.ready){updateStatus.textContent='Verificando atualizações…';bridge.send({type:'sexo2-update-request',requestId:'s2-update-'+(++sequence)});}}
