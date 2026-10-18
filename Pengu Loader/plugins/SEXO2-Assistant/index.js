@@ -473,8 +473,21 @@
       panel.style.height = Math.min(PANEL_HEIGHT, pos.maxHeight) + "px";
     }
 
+    // The client can rebuild the page after plugins load, leaving this panel (and its
+    // style) out of the document while an empty copy stays: put them back before showing.
+    function reattach() {
+      const other = document.getElementById("sexo2-assistant");
+      if (other && other !== panel) other.remove();
+      if (!style.isConnected) document.head.appendChild(style);
+      if (!panel.isConnected) {
+        document.body.appendChild(panel);
+        console.log("[SEXO2-Assistant] panel reattached");
+      }
+    }
+
     function open(anchor) {
       button = anchor;
+      reattach();
       panel.hidden = false;
       loadClientData();
       send({ type: "assistant-request" });
