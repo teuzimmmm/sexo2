@@ -11,6 +11,14 @@ seção Artifacts). Feche o SEXO2 instalado, extraia a pasta e rode `SEXO2.exe`.
 preferências e mods. Ela não se
 atualiza sozinha para a 1.6.4.
 
+Na branch `galinacio`, o mesmo executável fica em Actions > run da branch > Artifacts,
+sem publicar uma release. Para validar a correção dos menus, feche o LoL e o SEXO2 antigo,
+abra a nova build e depois o LoL. Confira o menu; feche/reabra só o SEXO2 e confira de novo,
+inclusive durante a seleção de uma partida personalizada. O cliente não deve ser reiniciado
+durante a seleção nem durante a partida. Fechar o SEXO2 com o LoL aberto conserva a ativação
+do Pengu e o registro de recuperação; na próxima abertura, o SEXO2 adota essa ativação ou
+a limpa se o LoL já estiver fechado.
+
 ## Roteiro
 
 1. **Abertura:** o painel SEXO2 (Skins, Mods, Sala, Configurações, Diagnóstico) abre no cliente, e a bandeja e o painel mostram a versão 1.6.4 e o nome

@@ -911,7 +911,7 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
         return True
 
 
-def restore_after_rose() -> bool:
+def restore_after_rose(*, keep_for_running_client: bool = False) -> bool:
     with _operation_lock:
         session = _read_session()
         legacy = _ACTIVE_FLAG.exists()
@@ -929,6 +929,18 @@ def restore_after_rose() -> bool:
             if not _is_available():
                 log.error("Cannot restore Pengu state; executable is unavailable: %s", PENGU_EXE)
                 return False
+            if keep_for_running_client and restart_needed:
+                status = get_status()
+                if status is PenguStatus.UNKNOWN:
+                    log.error("Cannot confirm Pengu state on exit; keeping recovery state.")
+                    return False
+                if status is PenguStatus.ACTIVE:
+                    # Closing Rose must not restart the UX without its plugins:
+                    # reopening during matchmaking/champ select cannot reload them.
+                    # Keep ownership so startup can adopt this activation while
+                    # League runs, or clean it up after League has closed.
+                    log.info("Keeping Pengu active for the running League client; recovery state retained.")
+                    return True
             log.info("Deactivating Pengu through official CLI.")
             if not deactivate():
                 log.error("Pengu deactivation failed; keeping recovery state.")
@@ -945,4 +957,8 @@ def restore_after_rose() -> bool:
 
 
 def deactivate_on_exit() -> bool:
-    return restore_after_rose()
+    global _restart_pending
+    with _operation_lock:
+        # A queued phase callback must not restart the client after Rose exits.
+        _restart_pending = frozenset()
+        return restore_after_rose(keep_for_running_client=True)
