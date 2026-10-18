@@ -191,8 +191,8 @@ def render(comparison: Comparison, width: int, height: int, geometry: Geometry):
         draw.polygon(shape(radius - 3.6 * s), fill=fill)
         if mark.arrow:
             tip = -5 * s if mark.arrow == "left" else 5 * s
-            x0 = x - tip * 0.25
-            draw.polygon([(x0 + tip, y), (x0 - tip, y - 6 * s), (x0 - tip, y + 6 * s)], fill=mark.color)
+            # Centred on the diamond's centre, tip to base.
+            draw.polygon([(x + tip, y), (x - tip, y - 6 * s), (x - tip, y + 6 * s)], fill=mark.color)
 
     def coin(x: float, y: float) -> None:
         for dx, dy in ((-1.5, 2), (1.5, -1.5)):
