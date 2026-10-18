@@ -1,3 +1,5 @@
+> Arquivado em 18/10/2026: plano inicial de 13/10/2026, superado por `docs/ROADMAP.md` e pelas notas de entrega em `docs/`. Mantido como histórico.
+
 # SEXO2 — evolução dos processos e estabilidade
 
 Plano registrado antes de iniciar novas alterações de código, em 13/10/2026.

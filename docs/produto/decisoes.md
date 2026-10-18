@@ -8,7 +8,7 @@ implementar interface, nomes ou comportamento. Status possíveis: **aprovada**, 
 - Uma decisão nova entra como pendente e não é implementada.
 - Exemplos em propostas não são decisões.
 
-O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre.
+O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plano-mestre.
 
 ## Aprovadas
 
