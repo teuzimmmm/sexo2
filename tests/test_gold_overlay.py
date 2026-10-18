@@ -28,8 +28,8 @@ class GoldOverlayTests(unittest.TestCase):
         comparison = read_comparison(self.fetch("Eu#BR1"), PRICES)
         marks = layout(comparison, 1920, 1080, Geometry())
         total = marks[0]
-        self.assertEqual((total.kind, total.text, total.color, total.arrow), ("total", "-2.150", ENEMY, "right"))
-        self.assertEqual((total.left, total.right), ("", ""))
+        self.assertEqual((total.kind, total.text, total.color, total.arrow), ("total", "2.150", ENEMY, "right"))
+        self.assertEqual((total.left, total.right), ("4.950", "7.100"))
         rows = [m for m in marks if m.kind == "row"]
         self.assertEqual([(m.text, m.arrow) for m in rows], [("850", "left"), ("3.000", "right")])
         self.assertEqual(rows[0].color, ALLY)

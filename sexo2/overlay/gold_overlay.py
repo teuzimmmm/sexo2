@@ -56,11 +56,6 @@ def _number(value: int) -> str:
     return f"{value:,}".replace(",", ".")
 
 
-def _signed(diff: int) -> str:
-    """The top of the board shows only the total difference, with its sign (for example -210)."""
-    return ("+" if diff > 0 else "-" if diff < 0 else "") + _number(abs(diff))
-
-
 def _side(diff: int) -> tuple[str, str | None]:
     if diff > 0:
         return ALLY, "left"
@@ -80,9 +75,11 @@ def layout(comparison: Comparison, width: int, height: int, geometry: Geometry =
                 "total",
                 x,
                 round(height * geometry.total_y),
-                _signed(comparison.difference),
+                _number(abs(comparison.difference)),
                 color,
                 arrow,
+                _number(comparison.order_total),
+                _number(comparison.chaos_total),
             )
         )
     for index, row in enumerate(comparison.rows):
@@ -155,6 +152,11 @@ class _Window:
             canvas.delete("all")
             for mark in layout(comparison, width, height, self._geometry):
                 size = 15 if mark.kind == "total" else 12
+                if mark.kind == "total":
+                    canvas.create_text(mark.x - 70, mark.y, text=mark.left, fill=ALLY, font=("Segoe UI", size, "bold"))
+                    canvas.create_text(
+                        mark.x + 70, mark.y, text=mark.right, fill=ENEMY, font=("Segoe UI", size, "bold")
+                    )
                 if mark.arrow:
                     w = 7 if mark.arrow == "left" else -7
                     canvas.create_polygon(
