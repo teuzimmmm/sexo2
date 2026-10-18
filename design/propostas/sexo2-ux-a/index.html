@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SEXO2 · Proposta A · Hub por recurso</title>
+<title>SEXO2 · Proposta A</title>
 <style>
 @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("../sexo2-shared/inter.woff2") format("woff2")}
 @font-face{font-family:"Oswald";font-style:normal;font-weight:200 700;font-display:swap;src:url("../sexo2-shared/oswald.woff2") format("woff2")}
@@ -28,76 +28,84 @@ body{overflow:auto;min-width:1282px}
 #sim b{font:500 11px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--fg);margin-right:6px}
 #simlog{width:1280px;margin:0 auto;padding:6px 12px;border:1px dashed var(--fg3);border-top:0;font-size:11px;color:var(--fg2);display:flex;gap:12px;align-items:center}
 #simlog #status{color:var(--fg);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#stage{position:relative;width:1280px;height:720px;margin:0 auto;overflow:hidden;border:1px solid var(--line);background:radial-gradient(ellipse at 28% 18%,#181b20 0,transparent 62%),radial-gradient(ellipse at 80% 90%,#14171b 0,transparent 55%),#0a0b0d}
-#cnav{height:78px;display:flex;align-items:center;gap:30px;padding:0 28px;border-bottom:1px solid #24272c;background:#0b0c0e99}
-#cnav .ci{font:500 14px var(--display);letter-spacing:.14em;color:var(--fg3)}#cnav .ci.on{color:var(--fg)}
-#hub-launch{margin-left:auto;font:600 13px var(--display);letter-spacing:.14em;height:38px;padding:0 20px;background:transparent;border-color:var(--fg2)}
-#hub-launch[aria-expanded=true]{background:var(--line);border-color:var(--fg)}
-.scene{display:contents}.launcher{position:absolute;right:16px;bottom:16px;height:36px;padding:0 18px;font:600 14px var(--display);letter-spacing:.14em}
-.pnl{position:absolute;right:16px;bottom:60px;width:452px;height:492px;z-index:10}h1:focus,main:focus{outline:none}
-.scene .lbl{position:absolute;left:100px;top:138px;color:var(--fg2)}
-.cs-grid{position:absolute;left:100px;top:200px;display:grid;grid-template-columns:repeat(3,160px);gap:14px}
-.cs-grid button{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 6px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--fg2);font-size:12px}
-.cs-grid button:hover{background:var(--hover)}.cs-grid button[aria-pressed=true]{border-color:var(--fg);color:var(--fg);background:var(--line)}
-.cs-grid img{width:96px;height:96px;border-radius:4px}
-.cs-bar{position:absolute;left:0;right:0;bottom:0;height:68px;border-top:1px solid #24272c;background:#0b0c0ecc;display:flex;align-items:center;gap:14px;padding:0 100px 0 100px}
+#stage{position:relative;width:1280px;height:720px;margin:0 auto;overflow:hidden;border:1px solid var(--line);background:#0b0d0e}
+#cnav{position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;gap:26px;padding:0 24px;border-bottom:1px solid #4a4233;background:rgba(8,10,10,.85);z-index:5}
+#cnav .ci{font:500 14px var(--display);letter-spacing:.1em;color:#a09b8c}#cnav .ci.on{color:#c8aa6e;box-shadow:inset 0 -2px 0 #c8aa6e;padding-bottom:4px}
+#hub-launch{margin-left:auto;min-height:32px;height:32px;padding:0 18px;background:transparent;color:var(--fg);border:1px solid var(--fg);font:500 14px var(--display);letter-spacing:.12em}
+#hub-launch:hover{background:var(--hover)}#hub-launch[aria-expanded=true]{background:var(--fg);color:#111}
+.scene{display:contents}
+#stage.lobby{background:radial-gradient(ellipse at 50% 30%,#1c2420 0%,#0e1211 60%,#0a0c0c 100%)}
+#stage.csel{background:linear-gradient(#151a18,#0b0d0d)}
+#stage.game{background:radial-gradient(ellipse at 50% 40%,#1d2a1d 0%,#101510 55%,#090b09 100%)}
+.scene .lbl{position:absolute;left:0;right:0;top:300px;text-align:center;color:#a09b8c}
+.ct{position:absolute;left:0;right:0;top:80px;text-align:center;color:#d8c595}.ct span{display:block;font:500 15px var(--display);letter-spacing:.14em}.ct b{display:block;font:600 42px/1.1 var(--display);letter-spacing:.06em}
+.sl,.sr{position:absolute;top:150px;display:flex;flex-direction:column;gap:22px;color:#a09b8c;font-size:14px}.sl{left:28px}.sr{right:28px;text-align:right}
+.cs-grid{position:absolute;left:264px;top:222px;display:grid;grid-template-columns:repeat(8,80px);gap:18px 16px}
+.cs-grid button{padding:0;background:rgba(0,0,0,.4);border:1px solid #3c3526;color:#cfc6ad;font-size:11px;cursor:pointer;display:flex;flex-direction:column}
+.cs-grid button:hover{background:rgba(200,170,110,.08)}.cs-grid button[aria-pressed=true]{border-color:#c8aa6e;background:rgba(200,170,110,.14)}
+.cs-grid img,.cs-grid .phd{width:78px;height:78px;display:block}.cs-grid span:not(.phd){padding:3px 2px;text-align:center}
+.cs-bar{position:absolute;left:0;right:0;bottom:0;height:70px;display:block}
+.cbn{position:absolute;left:221px;top:26px;color:#a09b8c;font-size:14px}.cbr{position:absolute;left:955px;top:26px;color:#a09b8c;font-size:14px}
+.confirm{position:absolute;left:552px;top:18px;background:#1e2328;color:#c8aa6e;border:1px solid #c8aa6e;padding:10px 30px;font:500 15px var(--display);letter-spacing:.12em;cursor:pointer}
+.confirm:hover{background:#2b2f35;color:#f0e6d2}.confirm[aria-pressed=true]{color:#a09b8c;border-color:#4a4233}
+.launcher{position:absolute;right:16px;bottom:16px;height:36px;padding:0 18px;font:500 14px var(--display);letter-spacing:.12em;background:var(--fg);color:#111;border-color:var(--fg)}.launcher:hover{background:#fff}
 .pnl{position:absolute;right:16px;bottom:60px;width:452px;height:492px;z-index:10}
-#hub{position:absolute;right:16px;bottom:16px;width:820px;height:560px;background:var(--surface);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;box-shadow:0 12px 32px #000b;z-index:20}
+#hub{position:absolute;right:16px;bottom:16px;width:820px;height:560px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;box-shadow:0 12px 32px #000b;z-index:20}
 #hub>.hh{height:44px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px 0 16px;border-bottom:1px solid var(--line)}
 .brand{font:600 20px var(--display);letter-spacing:.14em}
 #hub .shell{display:grid;grid-template-columns:148px 1fr;flex:1;min-height:0}
 nav{border-right:1px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow:auto}
-nav button{display:flex;justify-content:space-between;align-items:center;text-align:left;background:transparent;border:1px solid transparent;border-left:3px solid transparent;border-radius:4px;padding:8px 10px;cursor:pointer;color:var(--fg2);font:500 13px var(--text)}
+nav button{display:flex;justify-content:space-between;align-items:center;text-align:left;background:transparent;border:1px solid transparent;border-left:3px solid transparent;padding:8px 10px;cursor:pointer;color:var(--fg2);font:500 13px var(--text)}
 nav button:hover{background:var(--hover);color:var(--fg)}
 nav button[aria-current=page]{background:var(--surface2);color:var(--fg);border-left-color:var(--fg)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--warn)}.dot.e{background:var(--err)}
+.dot{width:8px;height:8px;background:var(--warn)}.dot.e{background:var(--err)}
 main{overflow:auto;padding:16px 20px 24px;min-width:0;display:flex;flex-direction:column}main>*{flex:none}
 /* componentes */
 .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}.ph p{color:var(--fg2);margin-top:4px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:32px;padding:0 12px;background:var(--surface2);border:1px solid var(--line);border-radius:5px;cursor:pointer;font:500 13px var(--text);color:var(--fg);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:28px;padding:2px 12px;background:var(--surface2);border:1px solid var(--line);cursor:pointer;font:500 13px var(--text);color:var(--fg);white-space:nowrap}
 .btn:hover{background:var(--hover)}
 .btn[aria-pressed=true]{background:var(--line);border-color:var(--fg2)}
 .btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:600}.btn.pri:hover{background:#d4d4d4}
-.btn.dng{border-color:#6b2b2d}.btn.sm{min-height:26px;padding:0 8px;font-size:12px}
+.btn.dng{border-color:#6b2b2d}.btn.sm{min-height:24px;padding:1px 8px;font-size:12px}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:14px}
-.tabs button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--fg2);padding:8px 14px;cursor:pointer;font:500 12px var(--display);letter-spacing:.1em;text-transform:uppercase}
-.tabs button:hover{color:var(--fg);background:var(--hover)}.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--fg)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tabs button{background:transparent;border:0;color:var(--fg2);padding:8px 12px 7px;cursor:pointer;font:500 13px var(--display);letter-spacing:.05em;text-transform:uppercase}
+.tabs button:hover{color:var(--fg);background:var(--hover)}.tabs button[aria-selected=true]{color:var(--fg);box-shadow:inset 0 -2px 0 var(--fg)}
+.card{background:var(--surface);border:1px solid var(--line);padding:14px}
 .card.on{border-color:var(--fg2);background:var(--surface2)}
 .grid{display:grid;gap:12px}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.row.nw{flex-wrap:nowrap}
 .stack>*+*{margin-top:10px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--fg2)}.chip b{color:var(--fg);font-weight:600}.chip.warn{border-color:#6b5832;color:var(--warn)}
-.tag{display:inline-block;font:500 10px var(--display);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);padding:2px 6px;border-radius:3px;color:var(--fg2)}
+.chip{border:1px solid var(--line);background:var(--surface);padding:3px 10px;font-size:12px;color:var(--fg2)}.chip b{color:var(--fg);font-weight:600}.chip.warn{border-color:#6b5832;color:var(--warn)}
+.tag{display:inline-block;font:500 10px var(--display);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);padding:2px 6px;color:var(--fg2)}
 .tag.ok{color:var(--ok);border-color:#2f5a45}.tag.warn{color:var(--warn);border-color:#6b5832}.tag.err{color:var(--err);border-color:#6b2b2d}
-.alert{border:1px solid var(--line);border-left-width:3px;border-radius:5px;padding:10px 12px;margin-bottom:12px;background:var(--surface)}
+.alert{border:1px solid var(--line);border-left-width:3px;padding:10px 12px;margin-bottom:12px;background:var(--surface)}
 .alert.err{border-color:#6b2b2d;border-left-color:var(--err)}.alert.warn{border-color:#6b5832;border-left-color:var(--warn)}.alert.ok{border-color:#2f5a45;border-left-color:var(--ok)}.alert.info{border-left-color:var(--fg2)}
-.por{width:44px;height:44px;border-radius:6px;border:1px solid var(--line);flex:none;background:var(--bg)}.por.sm{width:32px;height:32px}
+.por{width:44px;height:44px;border:1px solid var(--line);flex:none;background:var(--bg)}.por.sm{width:32px;height:32px}
 .champs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.champs button{padding:2px;background:var(--surface);border:1px solid var(--line);border-radius:7px;cursor:pointer}.champs button:hover{background:var(--hover)}.champs button[aria-pressed=true]{border-color:var(--fg);background:var(--line)}
-.champs img{display:block;width:40px;height:40px;border-radius:5px}
+.champs button{padding:2px;background:var(--surface);border:1px solid var(--line);cursor:pointer}.champs button:hover{background:var(--hover)}.champs button[aria-pressed=true]{border-color:var(--fg);background:var(--line)}
+.champs img{display:block;width:40px;height:40px;}
 .swr{display:flex;gap:8px;margin:10px 0}
-.swatch{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);cursor:pointer;font:700 12px var(--text);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
+.swatch{width:26px;height:26px;border:2px solid var(--line);cursor:pointer;font:700 12px var(--text);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
 .swatch[aria-pressed=true]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
 .bar{position:sticky;bottom:-24px;margin:14px -20px -24px;padding:10px 20px;background:var(--surface);border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap;z-index:2}
 .bar .sp{min-width:8px}main>.bar{margin-top:auto}
 label.f{display:block;font-size:12px;color:var(--fg2)}
-label.f select,label.f input[type=text]{display:block;width:100%;margin-top:4px;min-height:32px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:0 8px;color:var(--fg)}
-select{background:var(--bg);border:1px solid var(--line);border-radius:5px;min-height:32px;padding:0 6px}
+label.f select,label.f input[type=text]{display:block;width:100%;margin-top:4px;min-height:32px;background:var(--bg);border:1px solid var(--line);padding:0 8px;color:var(--fg)}
+select{background:var(--bg);border:1px solid var(--line);min-height:32px;padding:0 6px}
 label.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
 label.sw input{width:16px;height:16px;accent-color:#ececec}
 .list>*{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
 .list>*:last-child{border-bottom:0}.list .btn.sm{min-width:64px}.list .tag{min-width:64px;text-align:center}
 .k{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-.ico{width:34px;height:34px;border-radius:5px;border:1px solid var(--line);background:var(--bg)}
+.ico{width:34px;height:34px;border:1px solid var(--line);background:var(--bg)}
 .big{font:600 26px var(--display);font-variant-numeric:tabular-nums}
 table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);font-size:12px}th{font:500 11px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--fg2)}
 .ine td{color:var(--fg3)}
 code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
 /* palco do assistente */
-.asst{width:452px;height:492px;max-width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 8px 24px #0009}
+.asst{width:452px;height:492px;max-width:100%;background:var(--bg);border:1px solid var(--line);display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 8px 24px #0009}
 .asst>.ah{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
 .asst .ctx{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
 .asst .ctx label{font-size:10px;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em}.asst .ctx select{width:100%;margin-top:2px;min-height:28px;font-size:12px}
@@ -107,57 +115,85 @@ code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
 .drawer{position:absolute;left:0;right:0;bottom:0;top:36px;background:var(--bg);border-top:1px solid var(--fg2);z-index:5;display:flex;flex-direction:column}
 .drawer .db{flex:1;overflow:auto;padding:10px 12px}
 .runes{display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap}
-.runes img{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--bg)}
+.runes img{width:34px;height:34px;border:1px solid var(--line);background:var(--bg)}
 .runes img.key{width:42px;height:42px;border-color:var(--fg2)}
 .trio{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.trio .ico{width:30px;height:30px}
 .trio .st{margin-left:auto;text-align:right}
-dialog{background:var(--surface);color:var(--fg);border:1px solid var(--fg3);border-radius:8px;padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 32px)}
+dialog{background:var(--surface);color:var(--fg);border:1px solid var(--fg3);padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 32px)}
 dialog::backdrop{background:#000a}
 dialog .mh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
 dialog .mb{padding:14px 16px;overflow:auto;max-height:calc(100vh - 160px)}
 dialog .mf{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+*{border-radius:0}.swatch{border-radius:50%}
+.dot{border-radius:0}
+.phd{display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--line);color:var(--fg3);font:500 14px var(--display);letter-spacing:.06em}
+.cgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.ctile{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 6px;background:var(--surface);border:1px solid var(--line);color:var(--fg);font-size:12px;cursor:pointer;min-width:0}
+.ctile:hover{background:var(--hover)}.ctile .cp{width:56px;height:56px;display:block}.ctile .cn{text-align:center;line-height:1.15;overflow-wrap:anywhere}.ctile .cb{position:absolute;top:2px;right:3px;font-size:10px;color:var(--fg);background:var(--bg);border:1px solid var(--fg3);padding:0 3px}
+.card.skin{padding:0}.skinsel{display:flex;flex-direction:column;gap:8px;width:100%;padding:8px;background:transparent;border:0;text-align:left;cursor:pointer;color:var(--fg)}.skinsel:hover{background:var(--hover)}
+.skin.on{border-color:var(--fg)}.skin .snip{display:flex;align-items:center;justify-content:center;height:84px;border:1px dashed var(--fg3);background:var(--bg);color:var(--fg3);font-size:11px;text-align:center}
+.skin .sn{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.chl{display:flex;flex-wrap:wrap;gap:6px 12px;padding:4px 8px 10px;border-top:1px solid var(--line)}.chr{display:flex;align-items:center;gap:6px}
+.card.row .cp{width:44px;height:44px}
+.asst{box-shadow:0 14px 44px rgba(0,0,0,.65)}
+.asst .ah{display:flex;gap:8px;align-items:flex-end;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
+.asst .ah label{flex:1;min-width:0;font:500 10px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--fg3)}.asst .ah select{display:block;width:100%;min-height:26px;margin-top:2px;font:12px var(--text);color:var(--fg)}
+.asst .tabs{padding:0;overflow:hidden;flex:none}.asst .tabs button{padding:8px 7px 7px;font-size:11px;letter-spacing:.03em;white-space:nowrap}
+.asst .body{padding:10px 12px}
+.rcards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rcard{display:grid;grid-template-columns:1fr auto;grid-template-areas:"l k" "b k" "s n";gap:2px 8px;padding:10px 12px;background:var(--surface);border:1px solid var(--line);text-align:left;cursor:pointer;color:var(--fg)}
+.rcard:hover:not(:disabled){background:var(--hover)}.rcard:disabled{opacity:.5;cursor:not-allowed}
+.rcard .rl{grid-area:l;color:var(--fg2);font-size:12px}.rcard .rbig{grid-area:b;font:600 28px/1.1 var(--display)}.rcard .rk{grid-area:k;align-self:center}.rcard .rk img{width:36px;height:36px}.rcard .rs{grid-area:s;display:flex;gap:4px}.rcard .rs img{width:18px;height:18px}.rcard .rn{grid-area:n;text-align:right;font-size:11px;color:var(--fg2);align-self:end}
+.sec{margin:14px 0 4px;display:flex;justify-content:space-between}.sec h2{font-size:15px;letter-spacing:.05em}
+.rrow{display:flex;align-items:center;gap:10px;width:100%;padding:7px 4px;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--fg);cursor:pointer;text-align:left}.rrow:hover:not(:disabled){background:var(--hover)}.rrow:disabled{opacity:.5}
+.rrow img{width:26px;height:26px}.rrow .k{flex:1}.rrow b{font-variant-numeric:tabular-nums}
+.astat{position:sticky;bottom:-10px;margin:10px -12px -10px;padding:6px 12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--surface);border-top:1px solid var(--line);font-size:11px;color:var(--fg2)}
+.asst .list>*{padding:6px 0}.asst .list .btn.sm{min-width:0;padding:1px 6px;font-size:11px}.asst .list .tag{min-width:0}
 </style>
 </head>
 <body>
 <div id="sim" role="group" aria-label="Controles de simulação (fora do produto)"></div>
 <div id="stage" aria-label="Client do LoL (simulado)"></div>
-<div id="simlog"><span class="cat">Evento</span><span id="status" role="status" aria-live="polite">Pronto. Nada foi enviado ao cliente.</span><span>Fundo do client aproximado · dados ilustrativos</span><a href="../sexo2-ux-b/index.html">Proposta B</a><a href="../sexo2-overlays/index.html#b">Overlays (modo B)</a></div>
+<div id="simlog"><span class="cat">Evento</span><span id="status" role="status" aria-live="polite">Pronto. Nada foi enviado ao cliente.</span><span>Fundo do client aproximado · dados ilustrativos</span><a href="../sexo2-overlays/index.html#b">Overlays (modo B)</a></div>
 <dialog id="dlg" aria-labelledby="dlgT"><div class="mh"><h2 id="dlgT"></h2><button type="button" class="btn sm" id="dlgX" aria-label="Fechar janela">Fechar</button></div><div class="mb" id="dlgB"></div><div class="mf" id="dlgF"></div></dialog>
 <script>
 'use strict';
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const IMG=(k,n)=>`../sexo2-shared/${k}/${n}.png`;
 /* ---------- dados ilustrativos ---------- */
-const CH={Ahri:['Florescer Espiritual','Rainha Exaltada'],Lux:['Guardiã das Estrelas','Elementalista Exaltada'],Jinx:['Mafiosa','Arcana Exaltada'],Yasuo:['Lua Sangrenta','Espadachim Exaltado'],LeeSin:['Punho de Deus','Dragão Exaltado'],Zed:['Eclipse','Sombra Exaltada']};
-const CHN=Object.keys(CH);
-const skinsOf=c=>[{id:0,name:'Clássica',tier:'Padrão',chromas:[]},{id:1,name:CH[c][0],tier:'Épica',chromas:[{n:'Rosa',color:'#e58fb0',ctrl5:true},{n:'Âmbar',color:'#e0a43a',ctrl5:true},{n:'Jade',color:'#4fbf9a',ctrl5:true}]},{id:2,name:CH[c][1],tier:'Exalted',chromas:[{n:'Aurora',color:'#d8c27a',ctrl5:true},{n:'Obsidiana',color:'#3a3d44',ctrl5:false}]}];
+const CHAMPS=["Aatrox","Ahri","Akali","Akshan","Alistar","Ambessa","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Aurora","Azir","Bard","Bel'Veth","Blitzcrank","Brand","Braum","Briar","Caitlyn","Camille","Cassiopeia","Cho'Gath","Corki","Darius","Diana","Dr. Mundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks","Fiora","Fizz","Galio","Gangplank","Garen","Gnar","Gragas","Graves","Gwen","Hecarim","Heimerdinger","Hwei","Illaoi","Irelia","Ivern","Janna","Jarvan IV","Jax","Jayce","Jhin","Jinx","K'Sante","Kai'Sa","Kalista","Karma","Karthus","Kassadin","Katarina","Kayle","Kayn","Kennen","Kha'Zix","Kindred","Kled","Kog'Maw","LeBlanc","Lee Sin","Leona","Lillia","Lissandra","Lucian","Lulu","Lux","Malphite","Malzahar","Maokai","Master Yi","Mel","Milio","Miss Fortune","Mordekaiser","Morgana","Naafiri","Nami","Nasus","Nautilus","Neeko","Nidalee","Nilah","Nocturne","Nunu e Willump","Olaf","Orianna","Ornn","Pantheon","Poppy","Pyke","Qiyana","Quinn","Rakan","Rammus","Rek'Sai","Rell","Renata Glasc","Renekton","Rengar","Riven","Rumble","Ryze","Samira","Sejuani","Senna","Seraphine","Sett","Shaco","Shen","Shyvana","Singed","Sion","Sivir","Skarner","Smolder","Sona","Soraka","Swain","Sylas","Syndra","Tahm Kench","Taliyah","Talon","Taric","Teemo","Thresh","Tristana","Trundle","Tryndamere","Twisted Fate","Twitch","Udyr","Urgot","Varus","Vayne","Veigar","Vel'Koz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Wukong","Xayah","Xerath","Xin Zhao","Yasuo","Yone","Yorick","Yunara","Yuumi","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra"];
+const norm=t=>String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');
+const LOCAL={};['Ahri','Akali','Annie','Aurora','Darius','Garen','Hwei','Jinx','Kaisa','Katarina','Leblanc','LeeSin','Lulu','Lux','Orianna','Syndra','Taliyah','Thresh','Veigar','Vex','Vi','Viktor','Yasuo','Zed'].forEach(f=>LOCAL[norm(f)]=f);
+const hasImg=c=>!!LOCAL[norm(c)];
+const chImg=(c,cls='')=>hasImg(c)?`<img class="${cls}" src="${IMG('champions',LOCAL[norm(c)])}" alt="">`:`<span class="phd ${cls}" title="Sem retrato local (placeholder)">${esc(c.replace(/[^A-Za-zÀ-ú ]/g,'').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase())}</span>`;
+const SK={Ahri:['Florescer Espiritual','Rainha Exaltada'],Lux:['Guardiã das Estrelas','Elementalista Exaltada'],Jinx:['Mafiosa','Arcana Exaltada'],Yasuo:['Lua Sangrenta','Espadachim Exaltado'],'Lee Sin':['Punho de Deus','Dragão Exaltado'],Zed:['Eclipse','Sombra Exaltada']};
+const skinsOf=c=>{const n=SK[c]||[c+' Ilustrativa',c+' Exaltada'];return [{id:0,name:'Clássica',tier:'Padrão',chromas:[]},{id:1,name:n[0],tier:'Épica',chromas:[{n:'Rosa',color:'#e58fb0',ctrl5:true},{n:'Âmbar',color:'#e0a43a',ctrl5:true},{n:'Jade',color:'#4fbf9a',ctrl5:true}]},{id:2,name:n[1],tier:'Exalted',chromas:[{n:'Aurora',color:'#d8c27a',ctrl5:true},{n:'Obsidiana',color:'#3a3d44',ctrl5:false}]}]};
 const lab=(c,s,ch)=>{const k=skinsOf(c)[s];return `${c} · ${k.name}${ch>=0?' · croma '+k.chromas[ch].n:''}`};
 const elig=(c,s,ch)=>{const k=skinsOf(c)[s];if(k.tier==='Exalted'&&ch>=0&&!k.chromas[ch].ctrl5)return{ok:false,why:`Exalted + croma ${k.chromas[ch].n} desativa CTRL5`};return{ok:true}};
+function pickSkin(c){const ok=[];skinsOf(c).forEach(sk=>(sk.chromas.length?sk.chromas.map((_,j)=>j):[-1]).forEach(j=>{if(elig(c,sk.id,j).ok)ok.push([sk.id,j])}));const fv=[...S.fav].filter(k=>k.startsWith(c+'|')).map(k=>k.split('|').map(Number).slice(1)).filter(a=>elig(c,a[0],a[1]).ok);const pool=fv.length?fv:ok,x=pool[Math.floor(Math.random()*pool.length)];return{label:lab(c,x[0],x[1]),src:fv.length?'favorita':'aleatória'}}
 const CATS=['Skins','Mapas','Fontes','Anunciadores','Interface','Voz','Carregamento','VFX','SFX','Outros'];
 const ITEM={1056:'Anel de Doran',2003:'Poção de Vida',6655:'Eco de Luden',3020:'Sapatos do Feiticeiro',3089:'Chapéu Mortal de Rabadon',6653:'Tormento de Liandry',3158:'Botas Jônicas da Lucidez',3157:'Ampulheta de Zhonya',3135:'Cajado do Vazio',3165:'Morellonomicon',3102:'Véu da Banshee',3115:'Presa de Nashor',3116:'Canção de Rylai',4645:'Chama Sombria'};
 const TRIOS=[{id:'t1',ids:[6655,3020,3089],wr:54.2,n:1240},{id:'t2',ids:[6653,3158,3157],wr:52.7,n:930},{id:'t3',ids:[6655,3157,3135],wr:53.1,n:610},{id:'t4',ids:[3115,3165,3102],wr:50.9,n:305},{id:'t5',ids:[6653,3116,3157],wr:51.6,n:214},{id:'t6',ids:[4645,3020,3089],wr:55.0,n:96}].sort((a,b)=>b.n-a.n);
 const RUNE={8112:'Eletrocutar',8229:'Cometa Arcano',8230:'Ímpeto Fásico',8126:'Golpe Cruel',8139:'Colheita Sombria',8106:'Caçador Supremo',8226:'Fluxo de Mana',8210:'Transcendência',8237:'Queimadura',8010:'Conquistador',9111:'Triunfo',9104:'Lenda: Ritmo',8014:'Golpe de Misericórdia',8429:'Condicionamento',8453:'Revitalizar',8135:'Caçador de Tesouros',5008:'Fragmento: adaptativo',5001:'Fragmento: vida',5005:'Fragmento: velocidade'};
 const RPAGES=[{id:'r1',name:'Eletrocutar · Dominação',ids:[8112,8126,8139,8106],sec:[8226,8210],sh:[5008,5008,5001]},{id:'r2',name:'Cometa Arcano · Feitiçaria',ids:[8229,8226,8210,8237],sec:[8139,8135],sh:[5008,5005,5001]},{id:'r3',name:'Conquistador · Precisão',ids:[8010,9111,9104,8014],sec:[8429,8453],sh:[5008,5008,5001]}];
 const S={
- page:'Skins',sim:'cliente',hub:false,brav:{step:0,champ:null,res:null},confirmed:false,back:null,focusNext:null,status:'Pronto. Nada foi enviado ao cliente.',
- tab:{skins:'Coleção',cfg:'Geral',asst:'Runas',mods:'Biblioteca'},
- sel:{champ:'Ahri',skin:1,chroma:-1},fav:new Set(['Ahri|1|-1']),applied:null,applyN:0,fail:false,
- sets:[{id:1,name:'Competitivo',items:[{champ:'Ahri',skin:1,chroma:0},{champ:'Jinx',skin:1,chroma:-1},{champ:'Zed',skin:2,chroma:0}]},{id:2,name:'Noite',items:[{champ:'Lux',skin:2,chroma:1},{champ:'Yasuo',skin:1,chroma:2}]}],
- activeSet:1,setN:1,setApplyN:1,setDraft:null,coord:false,deactivated:null,drawn:null,bravura:{state:'oculto',champ:null,n:0},
+ page:'Sala',sim:'cliente',mode:'normal',hub:false,brav:{step:0,champ:null,res:null},confirmed:false,back:null,focusNext:null,status:'Pronto. Nada foi enviado ao cliente.',
+ tab:{cfg:'Geral',asst:'Runas'},
+ sel:{champ:'Ahri'},fav:new Set(['Ahri|1|-1']),favQ:'',favChamp:null,fsel:{skin:1,chroma:-1},sw:{skin:null,chroma:-1,res:null},fail:false,
  errors:[],errN:0,alert:null,
  mods:[{id:1,name:'Rift Noturno',cat:'Mapas',on:true,st:'Pronto'},{id:2,name:'Inter Legível',cat:'Fontes',on:false,st:'Pronto'},{id:3,name:'Voz Clássica',cat:'Anunciadores',on:false,st:'Pronto'},{id:4,name:'HUD Compacto',cat:'Interface',on:false,st:'Pronto'},{id:5,name:'Ahri Recolorida',cat:'Skins',champ:'Ahri',base:1,on:true,st:'Pronto'},{id:6,name:'Carregamento Neon',cat:'Carregamento',on:false,st:'Pronto'},{id:7,name:'VFX Suave',cat:'VFX',on:false,st:'Pronto'},{id:8,name:'SFX Cristal',cat:'SFX',on:false,st:'Pronto'},{id:9,name:'Narração PT',cat:'Voz',on:false,st:'Pronto'},{id:10,name:'Extras diversos',cat:'Outros',on:false,st:'Pronto'}],
  modQ:'',modCat:'Todas',modN:10,lastExport:null,imp:null,
- room:{on:false,key:null,last:null,copied:false,parts:[],input:'',err:'',n:0},roomResult:null,
+ room:{on:false,key:null,last:null,copied:false,parts:[],input:'',err:'',n:0},
  prefs:{iniciar:false,bandeja:true,idioma:'pt-BR',atualizar:'Automática',autoaceite:true,fonte:'Lolalytics',rota:'Meio',trios:true,skinSel:true,ctrl5:true,ouro:true,ouroFmt:'B',aprim:true,aprimManual:true,bravura:true,tempo:'1 s',pasta:'SEXO2/dados'},draft:null,saved:null,
- route:'Meio',enemy:'Zed',qp:false,panelOpen:true,compare:false,otMode:'indisponivel',
+ route:'Meio',enemy:'Zed',src:'Lolalytics',panelOpen:true,compare:false,otMode:'indisponivel',
  run:{status:'idle',msg:'',tok:0,editing:false,key:8112,edits:0,page:null},simRes:'success',
  itemQ:'',trio:null,itemMsg:null,modal:null,opener:''
 };
-
-function applyHash(){const h=location.hash;if(h==='#assistente'||h==='#selecao'){S.sim='selecao';S.hub=false;S.panelOpen=true}else if(h==='#cliente'){S.sim='cliente';S.hub=false}else if(hmap[h]){S.sim='cliente';S.page=hmap[h];S.hub=true}}
+function applyHash(){const h=location.hash;if(h==='#assistente'||h==='#selecao'){S.sim='selecao';S.hub=false;S.panelOpen=true}else if(h==='#cliente'){S.sim='cliente';S.hub=false}else if(hmap[h]){S.sim='cliente';S.page=hmap[h];S.hub=true;if(h==='#swiftplay')S.mode='swiftplay'}}
 const ctxPage=()=>S.hub?S.page:'Seleção';
-const hmap={'#skins':'Skins','#mods':'Mods','#sala':'Sala','#config':'Configurações','#suporte':'Suporte',};applyHash();
+const hmap={'#favoritas':'Favoritas','#sala':'Sala','#config':'Configurações','#suporte':'Suporte','#swiftplay':'Swiftplay'};applyHash();
 const P=k=>(S.draft||S.prefs)[k];
 const dirty=()=>S.draft?Object.keys(S.prefs).filter(k=>S.prefs[k]!==S.draft[k]).length:0;
 const say=m=>{S.status=m;$('#status').textContent=m};
@@ -170,108 +206,91 @@ const SEL=(id,label,cur,vals,attr)=>`<label class="f">${label}<select id="${id}"
 const alertBox=(page)=>{if(!S.alert||S.alert.page!==page)return'';const e=S.errors.find(x=>x.id===S.alert.id);return `<div class="alert err" role="alert"><div class="row"><div class="k"><b>${esc(e.msg)}</b><span class="small muted">Código ${e.code}. Sua escolha atual foi mantida.</span></div>${B('Abrir Suporte','toSupport','','pri')}${B('Dispensar','dismiss','','sm')}</div></div>`};
 function raise(ctx,msg,code){S.errN++;S.errors.unshift({id:S.errN,ctx,page:ctxPage(),msg,code,resolved:false});S.alert={page:ctxPage(),id:S.errN};say('Erro em '+ctx+': '+msg)}
 /* ---------- páginas ---------- */
-function chipsBar(){const a=S.sets.find(x=>x.id===S.activeSet);return `<div class="chips"><span class="chip">Conjunto ativo: <b>${a?esc(a.name):'nenhum'}</b></span>${S.coord?`<span class="chip warn">Desativado pelo sorteio coordenado${S.deactivated?' ('+esc(S.deactivated)+')':''}</span>`:''}<span class="chip">Skin aplicada: <b>${S.applied?esc(S.applied.label):'nenhuma'}</b></span></div>`}
-function pSkins(){const t=S.tab.skins;let b='';
- if(t==='Coleção'){const c=S.sel.champ,list=skinsOf(c),key=`${c}|${S.sel.skin}|${S.sel.chroma}`;
-  b=`<div class="champs" role="group" aria-label="Campeão">${CHN.map(n=>`<button type="button" data-act="champ" data-arg="${n}" data-k="champ|${n}" aria-pressed="${n===c}" aria-label="${n}" title="${n}"><img src="${IMG('champions',n)}" alt=""></button>`).join('')}</div>
-  <div class="grid g3">${list.map(s=>{const on=S.sel.skin===s.id;return `<article class="card ${on?'on':''}"><div class="row nw"><img class="por" src="${IMG('champions',c)}" alt=""><div class="k"><h3>${esc(s.name)}</h3><span><span class="tag">${s.tier}</span></span></div></div>
-  ${s.chromas.length?`<div class="swr" role="group" aria-label="Cromas de ${esc(s.name)}">${s.chromas.map((k,j)=>`<button type="button" class="swatch" style="background:${k.color}" data-act="chroma" data-arg="${s.id}:${j}" data-k="chroma|${s.id}:${j}" aria-pressed="${on&&S.sel.chroma===j}" aria-label="Croma ${k.n}${k.ctrl5?'':' (desativa CTRL5)'}" title="${k.n}${k.ctrl5?'':' · desativa CTRL5'}">${k.ctrl5?'':'!'}</button>`).join('')}</div>`:'<div class="swr"><span class="tiny">Sem cromas</span></div>'}
-  ${s.tier==='Exalted'?'<p class="tiny" style="margin-bottom:8px">«!» = croma que desativa CTRL5.</p>':''}${B(on?'Selecionada':'Selecionar','skin',s.id,on?'pri':'',`aria-pressed="${on}"`)}</article>`}).join('')}</div>
-  ${S.fav.size?`<h2 style="margin:16px 0 8px">Favoritas (${S.fav.size})</h2><div class="row">${[...S.fav].map(k=>{const [fc,fs,fh]=k.split('|');return B(lab(fc,+fs,+fh),'favGo',k,'sm')}).join('')}</div>`:'<p class="muted" style="margin-top:14px">Nenhuma favorita ainda.</p>'}
-  <div class="bar"><div class="k"><h3>${esc(lab(c,S.sel.skin,S.sel.chroma))}</h3><span class="tiny">${S.fav.has(key)?'Favorita':'Não favorita'} · ${elig(c,S.sel.skin,S.sel.chroma).ok?'elegível ao sorteio':'inelegível: '+elig(c,S.sel.skin,S.sel.chroma).why}</span></div>
-  <label class="row small"><input type="checkbox" id="simFail" data-st="fail" ${S.fail?'checked':''}> Simular falha do cliente</label>${B('Favoritar','fav','',' ',`aria-pressed="${S.fav.has(key)}"`)}${B('Aplicar skin','apply','','pri')}</div>`}
- if(t==='Conjuntos'){const a=S.activeSet;b=`<div class="row" style="margin-bottom:12px"><p class="muted">Um conjunto reúne escolhas de skin/croma por campeão. Aplicar mostra o estado resultante.</p><span class="sp"></span>${B('Novo conjunto','setNew')}</div>
-  ${S.coord?'<div class="alert warn">Sorteio coordenado ativo: conjuntos não podem ser aplicados até sair do sorteio na Sala. O conjunto desativado não volta sozinho.</div>':''}
-  <div class="grid g2">${S.sets.map(s=>`<article class="card ${a===s.id?'on':''}"><div class="row"><h3>${esc(s.name)}</h3><span class="tag ${a===s.id?'ok':''}">${a===s.id?'Ativo':'Inativo'}</span><span class="tiny">${s.items.length} skin(s)</span></div>
-  <div class="list" style="margin:8px 0">${s.items.map(i=>`<div><img class="por sm" src="${IMG('champions',i.champ)}" alt=""><span>${esc(lab(i.champ,i.skin,i.chroma))}</span></div>`).join('')||'<div class="muted">Conjunto vazio.</div>'}</div>
-  <div class="row">${B(a===s.id?'Reaplicar':'Aplicar conjunto','setApply',s.id,'pri',S.coord?'disabled':'')}${B('Editar','setEdit',s.id)}</div>${a===s.id?`<p class="tiny" style="margin-top:8px">Aplicado (simulado) · aplicação nº ${S.setApplyN}</p>`:''}</article>`).join('')}</div>`}
- if(t==='Sorteio'){const c=S.sel.champ,cand=[];skinsOf(c).forEach(s=>{if(s.chromas.length)s.chromas.forEach((k,j)=>cand.push([s.id,j]));else cand.push([s.id,-1]);if(s.tier==='Exalted')cand.push([s.id,-1])});
-  const rows=cand.map(([s,j])=>({s,j,e:elig(c,s,j)}));const ok=rows.filter(r=>r.e.ok);
-  b=`<div class="grid g2"><section class="card"><h2>Sorteio pessoal · ${c}</h2><p class="muted small" style="margin:6px 0 10px">Primeiro a elegibilidade, depois a ordem. Sem fórmula ponderada nesta proposta; a ordem abaixo é só de coleção.</p>
-  <table><thead><tr><th>Skin / croma</th><th>Estado</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.e.ok?'':'ine'}"><td>${esc(skinsOf(c)[r.s].name)}${r.j>=0?' · '+skinsOf(c)[r.s].chromas[r.j].n:''}</td><td>${r.e.ok?'<span class="tag ok">Elegível</span>':`<span class="tag err">Inelegível</span><br><span class="tiny">${r.e.why}</span>`}</td></tr>`).join('')}</tbody></table>
-  <div class="row" style="margin-top:10px">${B(S.drawn?'Sortear novamente':'Sortear entre elegíveis','draw','','pri')}${S.drawn?B('Usar resultado','drawUse'):''}</div>
-  <p class="small" style="margin-top:8px" aria-live="polite">${S.drawn?`Resultado: <b>${esc(lab(c,S.drawn.s,S.drawn.j))}</b> (${ok.length} elegíveis)`:'Nenhum sorteio feito.'}</p></section>
-  <div class="stack"><section class="card"><h2>Sorteio coordenado</h2><p class="muted small" style="margin:6px 0 10px">${S.coord?'Você está no sorteio coordenado. Seu conjunto foi desativado ao entrar.':'Acontece na Sala e desativa o conjunto ativo ao entrar.'}</p><div class="row"><span class="tag ${S.coord?'warn':''}">${S.coord?'Participando':'Fora'}</span>${B('Ir para a Sala','nav','Sala')}</div></section>
-  ${bravCard()}</div></div>`}
- return head('Skins','Escolha campeão, skin e croma; monte conjuntos; sorteie com elegibilidade primeiro.')+alertBox('Skins')+(S.back&&S.back.to==='Skins'?`<div class="alert info"><div class="row"><span class="k">Você veio da ${esc(S.back.label)}.</span>${B('Voltar à '+esc(S.back.label),'back','','pri')}</div></div>`:'')+chipsBar()+TABS('skins',['Coleção','Conjuntos','Sorteio'],'Skins')+b}
-function pMods(){const q=S.modQ.toLowerCase(),cats=['Todas',...CATS];
- const list=S.mods.filter(m=>(S.modCat==='Todas'||m.cat===S.modCat)&&(!q||(m.name+' '+m.cat+' '+(m.champ||'')).toLowerCase().includes(q)));
- const queued=S.mods.filter(m=>m.st.startsWith('Na fila')).length;
- return head('Mods','Biblioteca local. Nenhum arquivo real é lido ou alterado.',B('Importar exemplo','impOpen','','pri'))+alertBox('Mods')
- +(queued?`<div class="alert info" role="status"><div class="row"><span class="k">${queued} importação(ões) aguardando o fim da seleção de campeões.</span>${B('Simular fim da seleção','endSel','','pri')}</div></div>`:'')
- +`<div class="row" style="margin-bottom:10px;align-items:flex-end"><label class="f" style="flex:1;min-width:180px">Buscar mod<input type="text" id="modQ" value="${esc(S.modQ)}" placeholder="Nome, categoria ou campeão" autocomplete="off"></label>${B('Simular importação com erro','impErr','','sm')}</div>
- <div class="row" role="group" aria-label="Categorias" style="margin-bottom:10px">${cats.map(c=>B(c+(c==='Todas'?` (${S.mods.length})`:` (${S.mods.filter(m=>m.cat===c).length})`),'modCat',c,'sm',`aria-pressed="${S.modCat===c}"`)).join('')}</div>
- <div class="card"><div class="list" id="modList">${modRows(list)}</div></div>${S.lastExport?`<p class="small" style="margin-top:10px" role="status">Última exportação (simulada): <b>${esc(S.lastExport)}</b></p>`:''}`}
-function modRows(list){return list.map(m=>`<div><div class="k"><b>${esc(m.name)}</b><span class="tiny">${m.cat}${m.cat==='Skins'?` · ${m.champ||'sem campeão'} / skin-base: ${m.champ?esc(skinsOf(m.champ)[m.base||0].name):'não definida'}`:''}${m.exp?' · exportado':''}</span></div><span class="tag ${m.st==='Pronto'?'ok':'warn'}">${esc(m.st)}</span>${B(m.on?'Ativo':'Inativo','modOn',m.id,'sm',`aria-pressed="${m.on}" aria-label="${esc(m.name)}: ${m.on?'ativo':'inativo'}"`)}${B('Editar','modEdit',m.id,'sm',`aria-label="Editar ${esc(m.name)}"`)}${B('Exportar','modExp',m.id,'sm',`aria-label="Exportar ${esc(m.name)}"`)}${B('Remover','modRm',m.id,'sm dng',`aria-label="Remover ${esc(m.name)}"`)}</div>`).join('')||'<p class="muted" style="padding:10px 0">Nenhum mod encontrado.</p>'}
+const champTiles=list=>list.map(n=>{const k=[...S.fav].filter(x=>x.startsWith(n+'|')).length;return `<button type="button" class="ctile" data-act="favOpen" data-arg="${esc(n)}" data-k="favOpen|${esc(n)}" aria-label="${esc(n)}${k?' ('+k+' favorita(s))':''}">${chImg(n,'cp')}<span class="cn">${esc(n)}</span>${k?`<span class="cb">★ ${k}</span>`:''}</button>`}).join('')||'<p class="muted" style="grid-column:1/-1">Nenhum campeão encontrado.</p>';
+const favKey=(c,s,h)=>`${c}|${s}|${h}`;
+function skinCards(c,selSkin,selChroma,act,chAct){return `<div class="grid g3">${skinsOf(c).map(k=>{const on=selSkin===k.id,fk=S.fav.has(favKey(c,k.id,-1));return `<article class="card skin ${on?'on':''}"><button type="button" class="skinsel" data-act="${act}" data-arg="${k.id}" data-k="${act}|${k.id}" aria-pressed="${on}"><span class="snip" role="img" aria-label="Imagem da skin ${esc(k.name)}: indisponível (placeholder)"><span>Imagem da skin<br>indisponível</span></span><span class="sn"><b>${esc(k.name)}</b><span class="tag">${k.tier}</span>${fk?'<span class="tag ok">★ favorita</span>':''}</span></button>${on&&k.chromas.length?`<div class="chl" role="group" aria-label="Cromas de ${esc(k.name)}">${k.chromas.map((x,j)=>`<div class="chr"><button type="button" class="swatch" style="background:${x.color}" data-act="${chAct}" data-arg="${k.id}:${j}" data-k="${chAct}|${k.id}:${j}" aria-pressed="${selChroma===j}" aria-label="Croma ${x.n}${x.ctrl5?'':' (desativa CTRL5)'}">${x.ctrl5?'':'!'}</button><span class="small">${x.n}${S.fav.has(favKey(c,k.id,j))?' <b>★</b>':''}</span></div>`).join('')}</div>`:on?'<p class="tiny" style="margin-top:8px">Sem cromas.</p>':''}</article>`}).join('')}</div>`}
+function pFav(){const c=S.favChamp;
+ if(!c){const q=norm(S.favQ),list=CHAMPS.filter(n=>!q||norm(n).includes(q));
+  return head('Favoritas','Escolha um campeão para ver as skins e marcar favoritas.')+`<label class="f" style="margin-bottom:12px">Buscar campeão<input type="text" id="favQ" value="${esc(S.favQ)}" placeholder="Nome do campeão" autocomplete="off"></label><div class="cgrid" id="champGrid">${champTiles(list)}</div><p class="tiny" style="margin-top:10px" id="champCount">${list.length} de ${CHAMPS.length} campeões · ${CHAMPS.filter(hasImg).length} com retrato local; os demais mostram um placeholder.</p>`}
+ const f=S.fsel,k=skinsOf(c)[f.skin],key=favKey(c,f.skin,f.chroma),isF=S.fav.has(key);
+ return head(c,'Escolha uma skin; selecione um croma para favoritar só ele.',B('Todos os campeões','favBack'))+skinCards(c,f.skin,f.chroma,'fskin','fchroma')+`<p class="tiny" style="margin-top:10px">As imagens das skins são placeholders (sem arte local). Skins de mods ainda não aparecem aqui.</p><div class="bar"><div class="k"><h3>${esc(k.name)}${f.chroma>=0?' · croma '+k.chromas[f.chroma].n:''}</h3><span class="tiny">${f.chroma>=0?'Croma selecionado':'Skin selecionada'}</span></div>${B('Favoritar','ffav','','pri',`aria-pressed="${isF}"`)}</div>`}
+function pSwift(){const c=S.sel.champ,w=S.sw,manual=w.skin!==null;
+ return head('Swiftplay','Campeão travado: escolha a skin ou deixe o sorteio decidir.')+alertBox('Swiftplay')+`<div class="card row nw" style="margin-bottom:12px">${chImg(c,'cp')}<div class="k"><b>${esc(c)}</b><span class="tiny">Campeão travado (troque na seleção de campeões)</span></div><span class="tag ${manual?'ok':'warn'}">${manual?'Escolha manual':'Nada tocado'}</span></div>`+skinCards(c,w.skin,w.chroma,'swSkin','swChroma')
+ +`<div class="card" style="margin-top:12px"><p class="small">${manual?`Será usada a skin escolhida: <b>${esc(lab(c,w.skin,w.chroma))}</b>.`:'Sem escolha: ao iniciar, usa o sorteio estilo Bravura, com prioridade às suas skins favoritas (sem favorita, aleatória; exclusões respeitadas).'}</p><div class="row" style="margin-top:10px">${B('Simular início da partida','swStart','','pri')}${B('Limpar escolha','swClear','','',manual?'':'disabled')}</div>${w.res?`<div class="alert ok" role="status" style="margin:10px 0 0"><b>${esc(w.res.label)}</b> · ${w.res.src}</div>`:''}<p class="tiny" style="margin-top:8px">Simulação; fluxo não validado em partida real.</p></div>`}
 function pSala(){const r=S.room;let a;
  if(!r.on)a=`<section class="card"><h2>Sem sala</h2><p class="muted small" style="margin:6px 0 12px">${r.last?`Você saiu da sala ${esc(r.last)}.`:'Crie uma sala simulada ou entre com uma chave.'} Nada trafega pela rede.</p><div class="row">${B('Criar sala','roomCreate','','pri')}${r.last?B('Reconectar a '+esc(r.last),'roomRejoin'):''}</div>
  <label class="f" style="margin-top:14px">Conectar com chave (formato SX2-XXXX-XXXX)<input type="text" id="roomKey" value="${esc(r.input)}" placeholder="SX2-7F3K-92QD" autocomplete="off"></label>${r.err?`<p class="small" style="color:var(--err);margin-top:6px" role="alert">${esc(r.err)}</p>`:''}<div style="margin-top:8px">${B('Conectar','roomJoin')}</div></section>`;
  else a=`<section class="card"><div class="row"><h2>Sala conectada</h2><span class="tag ok">Conectada</span></div><div class="row" style="margin:10px 0"><code class="mono" id="keyShow">${esc(r.key)}</code>${B(r.copied?'Chave copiada':'Copiar chave','roomCopy','','sm')}</div>
  <div class="list">${r.parts.map(p=>`<div><span class="k">${esc(p)}</span><span class="tag ok">Pronto · simulado</span></div>`).join('')}</div>
  <div class="row" style="margin-top:10px">${B('Adicionar participante demo','roomAdd')}${B('Sair da sala','roomLeave','','dng')}</div></section>`;
- const c=`<section class="card"><h2>Sorteio coordenado</h2><p class="muted small" style="margin:6px 0 10px">Cada jogador revê o resultado. Entrar <b>desativa o conjunto ativo</b>; sair não o reativa sozinho.</p>
- <div class="row"><span class="tag ${S.coord?'warn':''}">${S.coord?'Participando':'Fora do sorteio'}</span><span class="small">Conjunto ativo: <b>${S.activeSet?esc(S.sets.find(x=>x.id===S.activeSet).name):'nenhum'}</b></span></div>
- <div class="row" style="margin-top:10px">${S.coord?B('Sair do sorteio','coordLeave'):B('Entrar no sorteio coordenado','coordAsk','','pri',r.on?'':'disabled')}${S.coord?B('Sortear para a sala','roomDraw','','pri'):''}</div>${r.on?'':'<p class="tiny" style="margin-top:6px">Conecte uma sala primeiro.</p>'}
- ${S.roomResult?`<table style="margin-top:10px"><thead><tr><th>Jogador</th><th>Resultado</th></tr></thead><tbody>${S.roomResult.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])}</td></tr>`).join('')}</tbody></table>`:''}</section>`;
- return head('Sala','Criar, conectar, compartilhar chave e sorteio coordenado (tudo simulado).')+alertBox('Sala')+`<div class="grid g2">${a}${c}</div>`}
+ return head('Sala','Criar, conectar, compartilhar a chave e sair (tudo simulado).')+alertBox('Sala')+`<div style="max-width:560px">${a}</div>`}
 const CFGDEF={Geral:[['sw','iniciar','Iniciar com o sistema'],['sw','bandeja','Minimizar na bandeja'],['sel','idioma','Idioma (aplica ao salvar)',['pt-BR','en-US','es-ES']],['sel','atualizar','Atualizações',['Automática','Perguntar','Manual']]],
- Seleção:[['sw','autoaceite','Autoaceite da partida'],['sel','fonte','Fonte preferida',[['Lolalytics','Lolalytics'],['Onetricks','Onetricks (futuro · simulação)']]],['sel','rota','Rota padrão',['Topo','Selva','Meio','Atirador','Suporte']],['sw','trios','Mostrar trios de itens'],['sw','skinSel','Mostrar skin selecionada'],['sw','ctrl5','Filtro CTRL5 no sorteio']],
+ Seleção:[['sw','autoaceite','Autoaceite da partida'],['sel','fonte','Fonte preferida',[['Lolalytics','Lolalytics'],['Onetricks','Onetricks (futuro · simulação)']]],['sel','rota','Rota padrão',['Topo','Selva','Meio','Atirador','Suporte']],['sw','trios','Mostrar trios de itens'],['sw','skinSel','Mostrar skin selecionada'],['sw','ctrl5','Filtro CTRL5 (exclui skins incompatíveis)']],
  Avançado:[['sel','tempo','Espera do autoaceite',['0,5 s','1 s','2 s']],['txt','pasta','Pasta de dados']]};
 const ctl=d=>{const[t,k,l,v]=d;if(t==='sw')return `<label class="sw"><span>${l}</span><input type="checkbox" id="pref-${k}" data-pref="${k}" ${P(k)?'checked':''}></label>`;if(t==='sel')return `<div style="padding:8px 0;border-bottom:1px solid var(--line)">${SEL('pref-'+k,l,P(k),v,`data-pref="${k}"`)}</div>`;return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><label class="f">${l}<input type="text" id="pref-${k}" data-pref="${k}" data-live="1" value="${esc(P(k))}"></label></div>`};
 const dbar=()=>{const n=dirty();return `<span class="small" style="flex:1" role="status">${n?`<b>${n}</b> alteração(ões) não salva(s)`:(S.saved||'Sem alterações pendentes')}</span>${B('Cancelar','cfgCancel','','',n?'':'disabled')}${B('Salvar','cfgSave','','pri',n?'':'disabled')}`};
 function pCfg(){const t=S.tab.cfg;let b;
  if(t==='Overlays')b=`<div class="grid g2"><section class="card"><h2>Ouro no placar</h2><p class="small muted" style="margin:6px 0">Modo de referência: diferenças assinadas com barras por linha e total no topo.</p>${ctl(['sw','ouro','Mostrar ouro no placar'])}<div style="padding:8px 0">${SEL('pref-ouroFmt','Formato',P('ouroFmt'),[['B','Diferença assinada (modo B · referência)'],['Blitz','Blitz (comparação)'],['A','Original A (comparação)']],'data-pref="ouroFmt"')}</div><a href="../sexo2-overlays/index.html#b">Visualizar prévia do modo B</a></section>
  <div class="stack"><section class="card"><h2>Aprimoramentos · Arena e Mayhem</h2><p class="small muted" style="margin:6px 0">Mostram só as opções realmente oferecidas. A carta nunca é escolhida pelo app.</p>${ctl(['sw','aprim','Mostrar cartas de aprimoramento'])}${ctl(['sw','aprimManual','Permitir correção manual'])}</section>
- <section class="card"><h2>Arena · Bravura</h2>${ctl(['sw','bravura','Preparar skin do campeão revelado (Arena · Bravura)'])}</section></div></div>`;
+ </div></div>`;
+ else if(t==='Bravura')b=`<div class="stack" style="max-width:640px"><section class="card"><h2>Arena · Bravura</h2>${ctl(['sw','bravura','Preparar skin do campeão revelado (Arena · Bravura)'])}</section>${bravCard()}</div>`;
  else b=`<section class="card" style="max-width:640px"><h2>${t}</h2>${CFGDEF[t].map(ctl).join('')}${t==='Avançado'?`<p class="small" style="margin-top:12px">Falhas e diagnóstico ficam no Suporte. ${B('Abrir Suporte','toSupport','','sm')}</p>`:''}</section>`;
  const bk=S.back&&S.back.to==='Configurações'?`<div class="alert info"><div class="row"><span class="k">Você veio da ${esc(S.back.label)}. Rascunho e escolhas foram preservados.</span>${B('Voltar à '+esc(S.back.label),'back','','pri')}</div></div>`:'';
- return head('Configurações','Alterações ficam em rascunho até Salvar.')+bk+TABS('cfg',['Geral','Seleção','Overlays','Avançado'],'Configurações')+b+`<div class="bar dbar">${dbar()}</div>`}
+ return head('Configurações','Alterações ficam em rascunho até Salvar.')+bk+TABS('cfg',['Geral','Seleção','Overlays','Bravura','Avançado'],'Configurações')+b+`<div class="bar dbar">${dbar()}</div>`}
 function pSup(){const f=S.fail,un=S.errors.filter(e=>!e.resolved);
- const bk=S.back&&S.back.to==='Suporte'?`<div class="alert info"><div class="row"><div class="k"><b>Origem: ${esc(S.back.label)}</b><span class="small muted">Sua seleção (${esc(lab(S.sel.champ,S.sel.skin,S.sel.chroma))}) continua guardada.</span></div>${B('Voltar para '+esc(S.back.label),'back','','pri')}</div></div>`:'';
+ const bk=S.back&&S.back.to==='Suporte'?`<div class="alert info"><div class="row"><div class="k"><b>Origem: ${esc(S.back.label)}</b><span class="small muted">Sua escolha atual continua guardada.</span></div>${B('Voltar para '+esc(S.back.label),'back','','pri')}</div></div>`:'';
  return head('Suporte','Prontidão, erros, diagnóstico e pastas em um único destino.',B('Repetir verificação','recheck','','pri'))+bk
  +`<div class="grid g2"><section class="card"><h2>Prontidão</h2><div class="list">${[['Recursos locais','Disponíveis',1],['Cliente do jogo',f?'Sem resposta (falha simulada)':'Desconectado · modo demonstração',!f],['Fonte Lolalytics','Não consultada ao vivo',1],['Fonte Onetricks','Futuro · indisponível',1]].map(r=>`<div><span class="k">${r[0]}</span><span class="tag ${r[2]?'ok':'err'}">${r[1]}</span></div>`).join('')}</div>${S.checked?`<p class="small" style="margin-top:8px" role="status">${esc(S.checked)}</p>`:''}</section>
  <section class="card"><h2>Erros recentes (${un.length})</h2><div class="list">${S.errors.map(e=>`<div><span class="k"><b>${esc(e.msg)}</b><span class="tiny">${e.ctx} · ${e.code}</span></span><span class="tag ${e.resolved?'ok':'err'}">${e.resolved?'Resolvido':'Aberto'}</span></div>`).join('')||'<div class="muted">Sem erros nesta sessão.</div>'}</div></section>
  <section class="card"><h2>Diagnóstico (sem chave)</h2><p class="small muted" style="margin:6px 0 10px">Relatório sem chave de sala nem dados pessoais.</p><div class="row">${B('Gerar relatório','report')}${S.report?B(S.reportCopied?'Relatório copiado':'Copiar relatório','reportCopy','','sm'):''}</div>${S.report?`<pre class="mono card" style="margin-top:8px;white-space:pre-wrap;background:var(--bg)">${esc(S.report)}</pre>`:''}</section>
  <section class="card"><h2>Pastas</h2><div class="list">${['Skins','Mods','Logs'].map(n=>`<div><span class="k"><b>${n}</b><span class="tiny">SEXO2/${n.toLowerCase()} (exemplo)</span></span>${B(S['f'+n]?'Aberta (simulado)':'Abrir pasta','folder',n,'sm',S['f'+n]?'aria-pressed="true"':'')}</div>`).join('')}</div><p class="tiny" style="margin-top:8px">Esta página não acessa o seu sistema.</p></section></div>`}
 function bravCard(){const v=S.brav,st=v.step;const li=(n,t,btn)=>`<li class="row nw" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="tag ${st>=n?'ok':''}">${st>=n?'Feito':'Etapa '+n}</span><span class="k small">${t}</span>${btn}</li>`;
- return `<section class="card"><h2>Arena · Bravura</h2><p class="muted small" style="margin:6px 0 8px">Só no Arena, quando <b>você</b> confirma Bravura na seleção (campeão -3). O campeão é sorteado e revelado pelo jogo já em partida; o app detecta o revelado, escolhe a skin (favoritas; sem favorita, aleatória; exclusões respeitadas), encerra o executável da partida uma vez e reconecta. O cliente segue aberto e há uma interrupção de carregamento, não é instantâneo.</p>
+ return `<section class="card"><h2>Como funciona</h2><p class="muted small" style="margin:6px 0 8px">Só no Arena, quando <b>você</b> confirma Bravura na seleção (campeão -3). O campeão é sorteado e revelado pelo jogo já em partida; o app detecta o revelado, escolhe a skin (favoritas; sem favorita, aleatória; exclusões respeitadas), encerra o executável da partida uma vez e reconecta. O cliente segue aberto e há uma interrupção de carregamento, não é instantâneo.</p>
  <ol style="list-style:none;margin:0;padding:0">${li(1,'Seleção do Arena: você confirma Bravura (campeão -3)',B('Simular','bravStep','1','sm',st===0?'':'disabled'))}${li(2,'Em partida: o jogo revela o campeão'+(v.champ?` · <b>${v.champ}</b>`:''),B('Simular','bravStep','2','sm',st===1?'':'disabled'))}${li(3,'App escolhe a skin e reconecta'+(v.res?` · <b>${esc(v.res.label)}</b> (${v.res.src})`:''),B('Simular','bravStep','3','sm',st===2?'':'disabled'))}</ol>
  ${st===3?'<div class="alert ok" role="status" style="margin:8px 0 0">Executável da partida encerrado uma vez; reconectando com a skin escolhida (interrupção de carregamento). Não repete nesta partida.</div>':''}
  <div class="row" style="margin-top:8px">${B('Reiniciar simulação','bravReset','','sm')}</div><p class="tiny" style="margin-top:6px">Sem estatísticas ou desafios. Aprimoramentos: Configurações › Overlays.</p></section>`}
-const KT=['Ahri','Lux','Jinx','Yasuo','LeeSin','Zed'];
-function simBar(){const b=(v,l)=>B(l,'sim',v,'sm',`aria-pressed="${S.sim===v}"`);return `<b>Simulação · fora do produto</b><span>Estado do jogo:</span>${b('cliente','Cliente')}${b('selecao','Seleção de campeões')}${b('partida','Partida')}<span class="sp"></span>${B('Reiniciar simulação','simReset','','sm')}`}
+function simBar(){const b=(k,v,l)=>B(l,k,v,'sm',`aria-pressed="${(k==='sim'?S.sim:S.mode)===v}"`);const o=(id,st,vals)=>`<label class="row small">${vals[0]}<select id="${id}" data-st="${st}" aria-label="${vals[0]}">${vals[1].map(v=>OPT(v[0],S[st],v[1])).join('')}</select></label>`;
+ return `<b>Simulação · fora do produto</b><span>Estado:</span>${b('sim','cliente','Cliente')}${b('sim','selecao','Seleção de campeões')}${b('sim','partida','Partida')}<span>Modo:</span>${b('mode','normal','Normal')}${b('mode','swiftplay','Swiftplay')}${o('simRes','simRes',['Importação de runas',[['success','sucesso'],['failed','falha'],['no_free_page','sem página livre']]])}${o('otMode','otMode',['Onetricks',[['indisponivel','indisponível'],['simulado','simulado']]])}<label class="row small"><input type="checkbox" id="simFail" data-st="fail" ${S.fail?'checked':''}> Falha do cliente</label>${B('Fim da seleção (mods na fila)','endSel','','sm')}${B('Reiniciar','simReset','','sm')}`}
+const SCN=['Yasuo','Aurora','Jinx','Kai\'Sa','Darius','Thresh','Hwei','Ahri','LeBlanc','Viktor','Lulu','Syndra','Vex','Lee Sin','Taliyah','Garen','Vi','Akali','Annie','Veigar','Katarina','Zed','Lux','Orianna'];
 function stageHTML(){const hubBtn=`<button type="button" class="btn" id="hub-launch" data-act="hubToggle" data-k="hubToggle|" aria-expanded="${S.hub}" aria-haspopup="dialog">SEXO2</button>`;
  const nav=`<div id="cnav" role="navigation" aria-label="Client (simulado)"><span class="ci on">JOGAR</span><span class="ci">INÍCIO</span><span class="ci">TFT</span><span class="ci">COLEÇÃO</span>${hubBtn}</div>`;
  let sc='';
- if(S.sim==='cliente')sc=nav+`<div class="scene"><p class="lbl"><b>Client do League of Legends</b> · lobby (simulado)<br><span class="small">Abra SEXO2 no cabeçalho para ver o Hub.</span></p></div>`;
- if(S.sim==='selecao')sc=nav+`<div class="scene"><p class="lbl cat" style="color:var(--fg)">Escolha seu campeão · 27</p><div class="cs-grid" role="group" aria-label="Campeões">${KT.map(n=>`<button type="button" data-act="pick" data-arg="${n}" data-k="pick|${n}" aria-pressed="${S.sel.champ===n}"><img src="${IMG('champions',n)}" alt="">${n}</button>`).join('')}</div>
- <div class="cs-bar"><b style="font:600 18px var(--display);letter-spacing:.06em">${S.sel.champ.toUpperCase()}</b>${B(S.confirmed?'Confirmado':'Confirmar','confirmChamp','','pri',`id="confirm-champ" aria-pressed="${S.confirmed}"`)}<span class="small muted">${S.confirmed?'Campeão confirmado (simulado).':''}</span></div>
- ${S.panelOpen&&!S.hub?`<div class="pnl" id="pnl">${panel()}</div>`:''}<button type="button" class="btn launcher pri" id="launcher" data-act="panelToggle" data-k="panelToggle|" aria-expanded="${S.panelOpen&&!S.hub}" aria-controls="pnl">SEXO2</button></div>`;
- if(S.sim==='partida')sc=`<div class="scene game"><p class="lbl" style="top:60px"><b>Partida em andamento (simulada)</b><br><span class="small">O client não está visível; overlays de ouro e aprimoramentos aparecem sobre o jogo.<br>Veja <a href="../sexo2-overlays/index.html#b">o modo B dos overlays</a>${S.brav.step===3?`<br>Bravura: skin preparada para ${esc(S.brav.champ)} (reconexão simulada).`:''}</span></p></div>`;
+ if(S.sim==='cliente')sc=nav+`<div class="scene"><p class="lbl"><b>Client do League of Legends</b> · lobby (simulado)<br><span class="small">Abra SEXO2 no cabeçalho do client.</span></p></div>`;
+ if(S.sim==='selecao'){const L=[['Garen','Topo'],['Vi','Selva'],['Ahri','Meio'],['Jinx','Atirador'],['Thresh','Suporte']],Rr=['Darius','Lee Sin','Zed','Kai\'Sa','Lulu'];
+  sc=nav+`<div class="scene"><div class="ct"><span>ESCOLHA SEU CAMPEÃO</span><b>27</b></div><div class="sl">${L.map(x=>`<span>${x[0]} · ${x[1]}</span>`).join('')}</div><div class="sr">${Rr.map(x=>`<span>${x}</span>`).join('')}</div>
+  <div class="cs-grid" role="group" aria-label="Campeões">${SCN.map(n=>`<button type="button" data-act="pick" data-arg="${esc(n)}" data-k="pick|${esc(n)}" aria-pressed="${S.sel.champ===n}">${chImg(n)}<span>${esc(n)}</span></button>`).join('')}</div>
+  <div class="cs-bar"><span class="cbn">${esc(S.sel.champ)}</span><button type="button" class="confirm" id="confirm-champ" data-act="confirmChamp" data-k="confirmChamp|" aria-pressed="${S.confirmed}">${S.confirmed?'CONFIRMADO':'CONFIRMAR'}</button><span class="cbr">Runas · Feitiços</span></div>
+  ${S.panelOpen&&!S.hub?`<div class="pnl" id="pnl">${panel()}</div>`:''}<button type="button" class="btn launcher" id="launcher" data-act="panelToggle" data-k="panelToggle|" aria-expanded="${S.panelOpen&&!S.hub}" aria-controls="pnl">SEXO2</button></div>`}
+ if(S.sim==='partida')sc=`<div class="scene game"><p class="lbl" style="top:60px"><b>Partida em andamento (simulada)</b><br><span class="small">O client não está visível; overlays de ouro e aprimoramentos aparecem sobre o jogo.<br>Veja <a href="../sexo2-overlays/index.html#b">o modo B dos overlays</a>${S.brav.step===3?`<br>Bravura: skin preparada para ${esc(S.brav.champ)} (reconexão simulada).`:''}${S.sw.res?`<br>Swiftplay: ${esc(S.sw.res.label)} (${S.sw.res.src}).`:''}</span></p></div>`;
  return sc+(S.hub&&S.sim!=='partida'?hubHTML():'')}
-function hubHTML(){const open=S.errors.filter(e=>!e.resolved).length;return `<div id="hub" role="dialog" aria-modal="false" aria-labelledby="hubT"><div class="hh"><span class="brand" id="hubT">SEXO2</span><span class="tiny">Hub</span><span class="sp"></span>${B('Fechar','hubClose','','sm','aria-label="Fechar Hub (Escape)"')}</div><div class="shell"><nav id="nav" aria-label="Recursos do Hub">${NAV.map(n=>`<button type="button" data-act="nav" data-arg="${n}" data-k="nav|${n}" ${S.page===n?'aria-current="page"':''}>${n}${n==='Suporte'&&open?'<span class="dot e" title="Erros abertos" aria-label="erros abertos"></span>':''}${n==='Configurações'&&dirty()?'<span class="dot" title="Rascunho não salvo" aria-label="rascunho não salvo"></span>':''}</button>`).join('')}</nav><main id="main" tabindex="-1">${{Skins:pSkins,Mods:pMods,Sala:pSala,'Configurações':pCfg,Suporte:pSup}[S.page]()}</main></div></div>`}
+const NAVF=()=>['Sala','Favoritas','Configurações','Suporte',...(S.mode==='swiftplay'?['Swiftplay']:[])];
+function hubHTML(){const open=S.errors.filter(e=>!e.resolved).length;return `<div id="hub" role="dialog" aria-modal="false" aria-labelledby="hubT"><div class="hh"><span class="brand" id="hubT">SEXO2</span><span class="sp"></span>${B('Fechar','hubClose','','sm','aria-label="Fechar (Escape)"')}</div><div class="shell"><nav id="nav" aria-label="Menus do SEXO2">${NAVF().map(n=>`<button type="button" data-act="nav" data-arg="${n}" data-k="nav|${n}" ${S.page===n?'aria-current="page"':''}>${n}${n==='Suporte'&&open?'<span class="dot e" title="Erros abertos" aria-label="erros abertos"></span>':''}${n==='Configurações'&&dirty()?'<span class="dot" title="Rascunho não salvo" aria-label="rascunho não salvo"></span>':''}</button>`).join('')}</nav><main id="main" tabindex="-1">${{Sala:pSala,Favoritas:pFav,'Configurações':pCfg,Suporte:pSup,Swiftplay:pSwift}[S.page]()}</main></div></div>`}
 /* ---------- assistente ---------- */
-function panel(){const c=S.sel.champ,t=S.tab.asst;let b='';
- if(t==='Runas')b=runesTab();if(t==='Itens')b=itemsTab();if(t==='Skins e mods')b=skinTab();
- const qp=S.qp?`<div class="drawer" role="region" aria-label="Preferências rápidas"><div class="ah" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line)"><h2 style="flex:1">Preferências rápidas</h2>${B('Fechar','qpToggle','','sm')}</div><div class="db">${[['sw','autoaceite','Autoaceite da partida'],['sel','fonte','Fonte preferida',[['Lolalytics','Lolalytics'],['Onetricks','Onetricks (futuro · simulação)']]],['sel','rota','Rota padrão',['Topo','Selva','Meio','Atirador','Suporte']],['sw','trios','Mostrar trios de itens']].map(ctl).join('')}<p class="tiny" style="margin-top:8px">Mudar a fonte não importa runas.</p></div><div class="af dbar">${dbar()}</div><div class="af" style="border-top:0">${B('Todas as configurações','toCfg','','sm')}</div></div>`:'';
- return `<section class="asst" aria-label="Assistente de seleção"><div class="ah"><img class="por sm" src="${IMG('champions',c)}" alt=""><h2 style="flex:1">${c}</h2><span class="tag">${S.compare?'Comparando':esc(P('fonte'))}</span></div>
- <div class="ctx"><label>Campeão${SEL('a-champ','',c,CHN,'data-st="champ" aria-label="Campeão"')}</label><label>Rota${SEL('a-route','',S.route,['Topo','Selva','Meio','Atirador','Suporte'],'data-st="route" aria-label="Rota"')}</label><label>Confronto${SEL('a-enemy','',S.enemy,['Zed','Lux','Syndra','Viktor'],'data-st="enemy" aria-label="Confronto"')}</label></div>
- ${TABS('asst',['Runas','Itens','Skins e mods'],'Assistente')}<div class="body" id="abody">${b}</div>
- <div class="af">${B('Preferências rápidas','qpToggle','','sm',`aria-expanded="${S.qp}"`)}<span class="sp"></span>${dirty()?'<span class="tag warn">Rascunho</span>':''}${B('Todas as configurações','toCfg','','sm')}</div>${qp}</section>`}
+function modRowsA(list){return list.map(m=>`<div><div class="k"><b>${esc(m.name)}</b><span class="tiny">${m.cat}${m.cat==='Skins'?` · ${esc(m.champ||'sem campeão')} / ${m.champ?esc(skinsOf(m.champ)[m.base||0].name):'sem skin-base'}`:''}${m.exp?' · exportado':''}${m.st.startsWith('Na fila')?' · aguarda fim da seleção':''}</span></div>${B(m.on?'Ativo':'Inativo','modOn',m.id,'sm',`aria-pressed="${m.on}" aria-label="${esc(m.name)}: ${m.on?'ativo':'inativo'}"`)}${B('Editar','modEdit',m.id,'sm',`aria-label="Editar ${esc(m.name)}"`)}${B('Exportar','modExp',m.id,'sm',`aria-label="Exportar ${esc(m.name)}"`)}${B('Remover','modRm',m.id,'sm dng',`aria-label="Remover ${esc(m.name)}"`)}</div>`).join('')||'<p class="muted small" style="padding:10px 0">Nenhum mod encontrado.</p>'}
+const modFilter=()=>{const q=S.modQ.toLowerCase();return S.mods.filter(m=>(S.modCat==='Todas'||m.cat===S.modCat)&&(!q||(m.name+' '+m.cat+' '+(m.champ||'')).toLowerCase().includes(q)))};
+function modsTab(){const queued=S.mods.filter(m=>m.st.startsWith('Na fila')).length;
+ return `${alertBox('Seleção')}<div class="row nw" style="margin-bottom:8px"><label class="f" style="flex:1">Buscar<input type="text" id="modQ" value="${esc(S.modQ)}" placeholder="Nome ou campeão" autocomplete="off"></label><label class="f" style="width:130px">Categoria<select id="modCat" data-st="modCat">${['Todas',...CATS].map(c=>OPT(c,S.modCat,c==='Todas'?`Todas (${S.mods.length})`:`${c} (${S.mods.filter(m=>m.cat===c).length})`)).join('')}</select></label></div>
+ <div class="row" style="margin-bottom:6px">${B('Importar exemplo','impOpen','','sm pri')}${B('Simular importação com erro','impErr','','sm')}</div>${queued?`<div class="alert info" role="status" style="padding:6px 10px;margin-bottom:6px">${queued} importação(ões) aguardando o fim da seleção.</div>`:''}
+ <div class="list" id="modList">${modRowsA(modFilter())}</div>${S.lastExport?`<p class="small" style="margin-top:8px" role="status">Exportado (simulado): <b>${esc(S.lastExport)}</b></p>`:''}`}
+function prefsTab(){return `<p class="tiny" style="margin-bottom:4px">Salvar grava; Cancelar descarta. Mudar a fonte aqui não importa runas.</p>${[['sw','autoaceite','Autoaceite da partida'],['sel','fonte','Fonte preferida',[['Lolalytics','Lolalytics'],['Onetricks','Onetricks (futuro · simulação)']]],['sel','rota','Rota padrão',['Topo','Selva','Meio','Atirador','Suporte']],['sw','trios','Mostrar trios de itens']].map(ctl).join('')}<div class="row" style="margin-top:10px"><div class="dbar row" style="width:100%">${dbar()}</div></div>`}
+const ASTABS=['Runas','Itens','Mods','Preferências rápidas'];
+function panel(){const t=S.tab.asst;let b='';
+ if(t==='Runas')b=runesTab();if(t==='Itens')b=itemsTab();if(t==='Mods')b=modsTab();if(t==='Preferências rápidas')b=prefsTab();
+ return `<section class="asst" aria-label="Assistente de seleção"><div class="ah"><label>Rota<select id="a-route" data-st="route" aria-label="Rota">${['Topo','Selva','Meio','Atirador','Suporte'].map(v=>OPT(v,S.route)).join('')}</select></label><label>Confronto<select id="a-enemy" data-st="enemy" aria-label="Confronto">${['Zed','Lux','Syndra','Viktor'].map(v=>OPT(v,S.enemy)).join('')}</select></label><label>Fonte<select id="a-src" data-st="src" aria-label="Fonte dos dados">${[['Lolalytics','Lolalytics'],['Onetricks','Onetricks (futuro)']].map(v=>OPT(v[0],S.src,v[1])).join('')}</select></label>${B('✕','panelToggle','','sm','aria-label="Fechar assistente (Escape)"')}</div>
+ <div class="tabs" role="tablist" aria-label="Assistente">${ASTABS.map(n=>`<button type="button" role="tab" aria-selected="${t===n}" data-act="tab" data-arg="asst:${n}" data-k="tab|asst:${n}">${n}${n==='Preferências rápidas'&&dirty()?' •':''}</button>`).join('')}<button type="button" role="tab" aria-selected="false" data-act="toCfg" data-k="toCfg|" aria-label="Todas as configurações (abre as configurações)">Todas as configurações</button></div>
+ <div class="body" id="abody">${b}</div></section>`}
 const runeRow=ids=>ids.map((i,n)=>`<img ${n===0?'class="key"':''} src="${IMG('runes',i)}" alt="${RUNE[i]||'Runa '+i}" title="${RUNE[i]||i}">`).join('');
-function runesTab(){const R=S.run,rec=RPAGES[0],showEd=R.editing;
- const st={idle:'',importing:`<div class="alert info" role="status"><b>Importando…</b> ${esc(R.msg)}</div>`,success:`<div class="alert ok" role="status"><b>Sucesso.</b> ${esc(R.msg)}</div>`,failed:`<div class="alert err" role="alert"><b>Falha.</b> ${esc(R.msg)}<div style="margin-top:6px">${B('Tentar novamente','runeImport',R.page,'sm')}</div></div>`,no_free_page:`<div class="alert warn" role="alert"><b>no_free_page.</b> ${esc(R.msg)}</div>`}[R.status];
- const card=(src,pg,future)=>{const dis=future&&S.otMode==='indisponivel';
-  return `<div class="card" style="margin-bottom:8px"><div class="row"><h3 style="flex:1">${src}</h3>${future?'<span class="tag warn">Futuro · simulação</span>':''}</div>
-  ${dis?`<p class="small muted" style="margin:8px 0">Sem dados. Não substituímos por números de outra fonte.</p>`:`<div class="runes">${runeRow([...pg.ids,...pg.sec])}</div><p class="small"><b>${future?'52,1':'51,8'}%</b> WR · <b>${future?'740':'12.480'}</b> partidas · patch ${future?'15.19':'15.20'}${future?' (simulados)':' (demonstração)'}</p>`}
-  <div style="margin-top:8px">${B(dis?'Indisponível':'Importar página original','runeImport',pg.id+(future?'-ot':''),'pri sm',dis?'disabled':'')}</div></div>`};
- const edit=showEd?`<div class="card" style="margin-bottom:8px"><h3>Editar página recomendada</h3><p class="tiny" style="margin:4px 0 8px">Edições válidas são agrupadas; a mais recente vence.</p><div class="row" role="group" aria-label="Runa-chave">${[8112,8229,8230].map(k=>`<button type="button" class="btn sm" aria-pressed="${R.key===k}" data-act="runeKey" data-arg="${k}" data-k="runeKey|${k}"><img src="${IMG('runes',k)}" alt="" width="22" height="22"> ${RUNE[k]}</button>`).join('')}</div><p class="small" style="margin-top:8px">${R.edits} edição(ões) agrupada(s) em 1 importação · chave atual: <b>${RUNE[R.key]}</b></p><div class="row" style="margin-top:8px">${B('Importar editada','runeImport','edit','pri sm')}${B('Fechar editor','runeEdit','','sm')}</div></div>`:'';
- return `${st}<p class="tiny" style="margin-bottom:8px">Ver a recomendação não altera o cliente. O clique importa a página original na hora; páginas pessoais nunca são apagadas.</p>
- ${S.compare?`<div class="grid g2" style="gap:8px">${card('Lolalytics',rec,false)}${card('Onetricks',RPAGES[1],true)}</div><div class="row small" style="margin-bottom:8px"><label>Simular Onetricks ${SEL('otMode','',S.otMode,[['indisponivel','indisponível'],['simulado','disponível (simulação)']],'data-st="otMode" aria-label="Simular Onetricks"')}</label></div><p class="tiny">WR, amostras e patch de cada fonte são separados; não há valor agregado.</p>`:card(P('fonte')==='Onetricks'?'Onetricks':'Lolalytics',P('fonte')==='Onetricks'?RPAGES[1]:rec,P('fonte')==='Onetricks')}
- <div class="row" style="margin:8px 0">${B(S.compare?'Voltar à fonte preferida':'Comparar fontes','compare','','sm',`aria-pressed="${S.compare}"`)}${B('Editar','runeEdit','','sm',`aria-pressed="${showEd}"`)}</div>${edit}
- <h3 style="margin:10px 0 6px">Outras runas</h3>${RPAGES.slice(1).map(p=>`<div class="trio"><div class="runes" style="margin:0">${runeRow(p.ids.slice(0,2))}</div><span class="small k">${p.name}</span>${B('Importar','runeImport',p.id,'sm')}</div>`).join('')}
- <div class="row small" style="margin-top:10px"><label>Resultado simulado da importação ${SEL('simRes','',S.simRes,[['success','Sucesso'],['failed','Falha'],['no_free_page','Sem página livre (no_free_page)']],'data-st="simRes" aria-label="Resultado simulado da importação"')}</label></div>
- <p class="tiny" style="margin-top:6px">Páginas pessoais: 3 de 3 preservadas.</p>`}
+const rIcons=p=>[...p.ids.slice(1),...p.sec].slice(0,3).map(i=>`<img src="${IMG('runes',i)}" alt="${RUNE[i]||i}">`).join('');
+function runesTab(){const R=S.run,showEd=R.editing,ot=S.src==='Onetricks',dis=ot&&S.otMode==='indisponivel';
+ const D=ot?{a:[52.1,740],b:[51.0,610],patch:'15.19'}:{a:[53.4,12480],b:[52.1,28100],patch:'15.20'};
+ const rc=(lbl,pg,v,fut)=>`<button type="button" class="rcard" data-act="runeImport" data-arg="${pg.id}${fut?'-ot':''}" data-k="runeImport|${pg.id}${fut?'-ot':''}" ${dis?'disabled':''}><span class="rl">${lbl}</span><span class="rbig">${dis?'—':fmtP(v[0])}</span><span class="rk"><img class="key" src="${IMG('runes',pg.ids[0])}" alt="${RUNE[pg.ids[0]]}"></span><span class="rs">${rIcons(pg)}</span><span class="rn">${dis?'Indisponível':fmtN(v[1])+' partidas'}</span></button>`;
+ const row=(pg,v,lbl,id)=>`<button type="button" class="rrow" data-act="runeImport" data-arg="${id||pg.id}" data-k="runeImport|${id||pg.id}" ${dis?'disabled':''}><img class="key" src="${IMG('runes',pg.ids[0])}" alt=""><span class="k">${lbl}</span><b>${dis?'—':fmtP(v[0])}</b><span class="tiny">${dis?'':fmtN(v[1])}</span></button>`;
+ const top=S.compare?`<div class="grid g2" style="gap:8px;margin-bottom:8px">${[['Lolalytics',[53.4,12480],'15.20',false],['Onetricks',[52.1,740],'15.19',true]].map(c=>{const nd=c[3]&&S.otMode==='indisponivel';return `<div class="card"><div class="row"><h3 style="flex:1">${c[0]}</h3>${c[3]?'<span class="tag warn">Futuro · simulação</span>':''}</div>${nd?'<p class="small muted" style="margin:8px 0">Sem dados. Não substituímos por números de outra fonte.</p>':`<p class="small" style="margin:6px 0"><b>${fmtP(c[1][0])}</b> WR · <b>${fmtN(c[1][1])}</b> partidas · patch ${c[2]}${c[3]?' (simulados)':''}</p>`}<div style="margin-top:6px">${B(nd?'Indisponível':'Importar página original','runeImport',RPAGES[0].id+(c[3]?'-ot':''),'sm pri',nd?'disabled':'')}</div></div>`}).join('')}</div><p class="tiny" style="margin-bottom:8px">WR, amostras e patch de cada fonte são separados; não há valor agregado.</p>`
+  :`<div class="rcards">${rc('Maior WR',RPAGES[0],D.a,ot)}${rc('Mais comum',RPAGES[1],D.b,ot)}</div>${ot?`<p class="tiny" style="margin-top:6px">Onetricks: integração futura${dis?', sem dados':', números simulados'}.</p>`:''}`;
+ const edit=showEd?`<div class="card" style="margin:8px 0"><h3>Editar página</h3><div class="row" role="group" aria-label="Runa-chave" style="margin-top:6px">${[8112,8229,8230].map(k=>`<button type="button" class="btn sm" aria-pressed="${R.key===k}" data-act="runeKey" data-arg="${k}" data-k="runeKey|${k}"><img src="${IMG('runes',k)}" alt="" width="18" height="18"> ${RUNE[k]}</button>`).join('')}</div><p class="tiny" style="margin-top:6px">${R.edits} edição(ões) agrupada(s) em 1 importação · chave: <b>${RUNE[R.key]}</b></p><div class="row" style="margin-top:6px">${B('Importar editada','runeImport','edit','pri sm')}${B('Fechar','runeEdit','','sm')}</div></div>`:'';
+ const st={idle:'Nenhuma página aplicada',importing:'Importando… '+R.msg,success:'Sucesso. '+R.msg,failed:'Falha. '+R.msg,no_free_page:'no_free_page. '+R.msg}[R.status];
+ return `${top}${edit}<div class="sec"><h2>Contra ${esc(S.enemy)}</h2></div>${row(RPAGES[0],[52.7,1240],'Maior WR','vs1')}${row(RPAGES[1],[51.6,2300],'Mais comum','vs2')}<div class="sec"><h2>Outras runas</h2></div>${RPAGES.map(p=>row(p,[p.id==='r1'?53.4:p.id==='r2'?52.8:52.2,p.id==='r1'?12480:p.id==='r2'?10980:9480],p.name.split(' · ')[0])).join('')}
+ <div class="astat" role="${R.status==='failed'||R.status==='no_free_page'?'alert':'status'}" data-st-run="${R.status}"><span class="k">${esc(st)}</span>${R.status==='failed'?B('Tentar novamente','runeImport',R.page,'sm')+B('Abrir Suporte','toSupport','','sm'):''}<span class="sp"></span>${B('Comparar fontes','compare','','sm',`aria-pressed="${S.compare}"`)}${B('Editar','runeEdit','','sm',`aria-pressed="${showEd}"`)}</div>`}
 const fmtN=n=>n.toLocaleString('pt-BR'),fmtP=n=>n.toFixed(1).replace('.',',')+'%';
 const tName=t=>t.ids.map(i=>ITEM[i]).join(' + ');
 function trioRows(){const q=S.itemQ.trim().toLowerCase();
@@ -281,17 +300,11 @@ function itemsTab(){const sec=(n,ids)=>`<div class="row" style="margin:4px 0"><s
  const tr=TRIOS.find(t=>t.id===S.trio);
  return `${S.itemMsg?`<div class="alert ok" role="status">${esc(S.itemMsg)}</div>`:''}<h3>Build padrão</h3>${tr?`<div class="card on" style="margin:6px 0"><div class="row"><span class="cat">Trio escolhido (antes do padrão)</span><span class="sp"></span>${B('Voltar ao padrão','trioReset','','sm')}</div><div class="row" style="margin-top:6px">${tr.ids.map(i=>`<img class="ico" src="${IMG('items',i)}" alt="${ITEM[i]}">`).join('')}<span class="small">${fmtP(tr.wr)} · ${fmtN(tr.n)} partidas</span></div></div>`:''}
  ${sec('Inicial',[1056,2003])}${sec('Essenciais',[6655,3089,3157])}${sec('Situacionais',[3135,3165,3102])}
- <div class="row" style="margin:8px 0">${B('Confirmar campeão (simular importação)','itemConfirm','','sm')}</div>
+ 
  <div class="row" style="margin-top:8px"><h3 style="flex:1">Outras builds · trios observados</h3><span class="tag">Não é build completa</span></div><p class="tiny">Ordenados por partidas. Nenhum slot é inventado.</p>
  <label class="f" style="margin:8px 0">Buscar por item<input type="text" id="itemQ" value="${esc(S.itemQ)}" placeholder="Ex.: Luden, Rabadon ou 3089" autocomplete="off"></label><div id="trioList">${trioRows()}</div>`}
-function skinTab(){const c=S.sel.champ,m=S.mods.filter(x=>x.cat==='Skins'&&x.champ===c);
- return `${alertBox('Seleção')}<h3>Skins de ${c}</h3><div class="list" role="group" aria-label="Skins de ${c}">${skinsOf(c).map(s=>`<div><div class="k"><b>${esc(s.name)}</b><span class="tiny">${s.tier}</span></div>${B(S.sel.skin===s.id&&S.sel.chroma===-1?'Selecionada':'Selecionar','skin',s.id,'sm',`aria-pressed="${S.sel.skin===s.id&&S.sel.chroma===-1}"`)}</div>`).join('')}</div>
- <div class="row" style="margin:8px 0"><span class="small">Atual: <b>${esc(lab(c,S.sel.skin,S.sel.chroma))}</b></span></div><div class="row">${B('Aplicar skin','apply','','pri sm')}${B('Abrir coleção completa','toColl','','sm')}</div>
- <p class="small" style="margin-top:8px" role="status">Aplicada: <b>${S.applied?esc(S.applied.label):'nenhuma'}</b></p>
- <h3 style="margin-top:12px">Mods compatíveis</h3>${m.length?`<div class="list">${m.map(x=>`<div><span class="k">${esc(x.name)}</span>${B(x.on?'Ativo':'Inativo','modOn',x.id,'sm',`aria-pressed="${x.on}"`)}</div>`).join('')}</div>`:'<p class="muted small">Nenhum mod de skin importado para este campeão.</p>'}`}
 /* ---------- render ---------- */
-const NAV=['Skins','Mods','Sala','Configurações','Suporte'];
-function render(){$('#sim').innerHTML=simBar();$('#stage').innerHTML=stageHTML();$('#status').textContent=S.status}
+function render(){$('#sim').innerHTML=simBar();const st=$('#stage');st.className={cliente:'lobby',selecao:'csel',partida:'game'}[S.sim];st.innerHTML=stageHTML();$('#status').textContent=S.status}
 const keyOf=el=>el?(el.dataset&&el.dataset.k)||el.id||'':'';
 function rerender(){const ae=document.activeElement,k=S.focusNext||keyOf(ae),inDlg=ae&&ae.closest&&ae.closest('#dlg');S.focusNext=null;
  const sc=$('#main')?$('#main').scrollTop:0,ab=$('#abody')?$('#abody').scrollTop:0;
@@ -305,47 +318,43 @@ $('#dlg').addEventListener('close',()=>{S.modal=null;const k=S.opener;$('#dlgB')
 $('#dlgX').addEventListener('click',closeModal);
 $('#dlg').addEventListener('keydown',e=>{if(e.key!=='Tab')return;const f=[...$('#dlg').querySelectorAll('button,input,select,a[href]')].filter(n=>!n.disabled&&n.offsetParent!==null);if(!f.length)return;const a=document.activeElement;if(e.shiftKey&&a===f[0]){e.preventDefault();f.at(-1).focus()}else if(!e.shiftKey&&a===f.at(-1)){e.preventDefault();f[0].focus()}});
 function drawModal(){const m=S.modal;if(!m)return;let t='',b='',f='';
- if(m.type==='set'){const d=S.setDraft;t=d.isNew?'Novo conjunto':'Editar conjunto';b=`<label class="f">Nome<input type="text" id="setName" value="${esc(d.name)}" autocomplete="off"></label><h3 style="margin:12px 0 4px">Skins (${d.items.length})</h3><div class="list">${d.items.map((i,n)=>`<div><img class="por sm" src="${IMG('champions',i.champ)}" alt=""><span class="k">${esc(lab(i.champ,i.skin,i.chroma))}</span>${B('Remover','setRm',n,'sm',`aria-label="Remover ${esc(lab(i.champ,i.skin,i.chroma))}"`)}</div>`).join('')||'<div class="muted">Vazio.</div>'}</div><div style="margin-top:8px">${B('Adicionar seleção atual ('+esc(lab(S.sel.champ,S.sel.skin,S.sel.chroma))+')','setAdd','','sm')}</div>`;f=B('Cancelar','mclose')+B('Salvar conjunto','setSave','','pri')}
- if(m.type==='coord'){const a=S.sets.find(x=>x.id===S.activeSet);t='Entrar no sorteio coordenado';b=a?`<div class="alert warn">Entrar vai <b>desativar o conjunto ativo «${esc(a.name)}»</b>. Ele não volta sozinho ao sair: será preciso aplicá-lo de novo.</div>`:'<div class="alert info">Nenhum conjunto está ativo; nada será desativado.</div>';b+='<p class="small muted">Cada participante poderá rever o resultado.</p>';f=B('Cancelar','mclose')+B('Entrar e desativar conjunto','coordGo','','pri')}
  if(m.type==='rm'){const x=S.mods.find(z=>z.id===m.id);t='Remover mod';b=`<p>Remover <b>${esc(x.name)}</b> da biblioteca? (simulado; nenhum arquivo real é apagado)</p>`;f=B('Cancelar','mclose')+B('Remover','modRmGo',m.id,'pri dng')}
  if(m.type==='modEdit'){const d=S.imp;t=d.isNew?'Importar pacote de exemplo':'Editar mod';b=`<label class="f">Nome<input type="text" id="impName" value="${esc(d.name)}" autocomplete="off"></label><div class="grid g2" style="margin-top:8px">${SEL('impCat','Categoria',d.cat,CATS,'data-imp="cat"')}${SEL('impState','Estado do jogo (simulado)',d.game,[['fora','Fora da seleção'],['selecao','Em seleção de campeões']],'data-imp="game"')}</div>
- ${d.cat==='Skins'?`<div class="grid g2" style="margin-top:8px">${SEL('impChamp','Campeão',d.champ,[['','— escolha —'],...CHN],'data-imp="champ"')}${SEL('impBase','Skin-base',String(d.base),d.champ?skinsOf(d.champ).map(s=>[String(s.id),s.name]):[['0','— escolha o campeão —']],'data-imp="base"')}</div><p class="tiny" style="margin-top:6px">Pacotes de skin precisam de campeão e skin-base para saber o que substituir.</p>`:''}
+ ${d.cat==='Skins'?`<div class="grid g2" style="margin-top:8px">${SEL('impChamp','Campeão',d.champ,[['','— escolha —'],...CHAMPS],'data-imp="champ"')}${SEL('impBase','Skin-base',String(d.base),d.champ?skinsOf(d.champ).map(s=>[String(s.id),s.name]):[['0','— escolha o campeão —']],'data-imp="base"')}</div><p class="tiny" style="margin-top:6px">Pacotes de skin precisam de campeão e skin-base para saber o que substituir.</p>`:''}
  ${d.isNew&&d.game==='selecao'?'<div class="alert info" style="margin-top:8px">Em seleção de campeões, a importação espera o fim da seleção.</div>':''}`;
  const bad=d.cat==='Skins'&&!d.champ||!d.name.trim();f=B('Cancelar','mclose')+B(d.isNew?'Importar':'Salvar','impGo','','pri',bad?'disabled':'')+(bad?`<span class="tiny" style="align-self:center">${!d.name.trim()?'Informe um nome.':'Escolha o campeão.'}</span>`:'')}
  $('#dlgT').textContent=t;$('#dlgB').innerHTML=b;$('#dlgF').innerHTML=f}
 /* ---------- ações ---------- */
 const A={
  nav:p=>go(p,true),tab:v=>{const[k,n]=v.split(':');S.tab[k]=n;S.focusNext='tab|'+v},
- champ:c=>{S.sel={champ:c,skin:1,chroma:-1};S.drawn=null;say('Campeão: '+c)},
- skin:i=>{S.sel.skin=+i;S.sel.chroma=-1;say('Selecionada: '+lab(S.sel.champ,S.sel.skin,-1))},
- chroma:v=>{const[s,j]=v.split(':').map(Number);if(S.sel.skin===s&&S.sel.chroma===j)S.sel.chroma=-1;else{S.sel.skin=s;S.sel.chroma=j}say('Selecionada: '+lab(S.sel.champ,S.sel.skin,S.sel.chroma))},
- fav:()=>{const k=`${S.sel.champ}|${S.sel.skin}|${S.sel.chroma}`;S.fav.has(k)?S.fav.delete(k):S.fav.add(k);say(S.fav.has(k)?'Favoritada: '+lab(S.sel.champ,S.sel.skin,S.sel.chroma):'Favorita removida')},
- favGo:k=>{const[c,s,h]=k.split('|');S.sel={champ:c,skin:+s,chroma:+h};say('Selecionada (favorita): '+lab(c,+s,+h))},
- apply:()=>{const l=lab(S.sel.champ,S.sel.skin,S.sel.chroma);if(S.fail){raise('Skins','Não foi possível aplicar «'+l+'»: o cliente não respondeu','SKN-APPLY-504');return}S.applyN++;S.applied={label:l,n:S.applyN};S.alert=null;say('Skin aplicada (simulado): '+l)},
  dismiss:()=>{S.alert=null},
  toSupport:()=>{const f=ctxPage();S.back={to:'Suporte',page:f,label:f==='Seleção'?'seleção de campeões':f};S.page='Suporte';S.hub=true;S.alert=null;S.focusNext='h1'},
  back:()=>{const b=S.back;S.back=null;S.alert=null;if(b.page==='Seleção'){S.hub=false;S.sim='selecao';S.panelOpen=true;S.focusNext='launcher'}else{S.page=b.page;S.hub=true;S.focusNext='h1'}say('De volta: '+b.label)},
- hubToggle:()=>{S.hub=!S.hub;S.focusNext=S.hub?'h1':'hubToggle|';say(S.hub?'Hub aberto':'Hub fechado')},
- hubClose:()=>{S.hub=false;S.focusNext=S.sim==='selecao'&&S.back&&S.back.page==='Seleção'?'launcher':'hubToggle|';say('Hub fechado')},
+ hubToggle:()=>{S.hub=!S.hub;if(S.hub)S.page='Sala';S.focusNext=S.hub?'h1':'hubToggle|';say(S.hub?'Painel aberto':'Painel fechado')},
+ hubClose:()=>{S.hub=false;S.focusNext=S.sim==='selecao'&&S.back&&S.back.page==='Seleção'?'launcher':'hubToggle|';say('Painel fechado')},
  sim:v=>{S.sim=v;S.hub=false;if(v==='selecao')S.panelOpen=true;say('Simulação: '+({cliente:'Client (lobby)',selecao:'Seleção de campeões',partida:'Partida'})[v])},
  simReset:()=>{location.reload();return false},
- pick:c=>A.champ(c),
+ pick:c=>{S.sel.champ=c;S.confirmed=false;S.sw={skin:null,chroma:-1,res:null};say('Campeão: '+c)},
+ mode:v=>{S.mode=v;if(v!=='swiftplay'&&S.page==='Swiftplay')S.page='Sala';say('Modo: '+(v==='swiftplay'?'Swiftplay':'Normal'))},
+ favOpen:c=>{S.favChamp=c;S.fsel={skin:1,chroma:-1};S.focusNext='h1';say('Campeão: '+c)},
+ favBack:()=>{S.focusNext='h1';S.favChamp=null},
+ fskin:i=>{S.fsel={skin:+i,chroma:-1};say('Skin selecionada')},
+ fchroma:v=>{const[a,b]=v.split(':').map(Number);S.fsel=(S.fsel.skin===a&&S.fsel.chroma===b)?{skin:a,chroma:-1}:{skin:a,chroma:b};say('Croma selecionado')},
+ ffav:()=>{const k=favKey(S.favChamp,S.fsel.skin,S.fsel.chroma);S.fav.has(k)?S.fav.delete(k):S.fav.add(k);say((S.fav.has(k)?'Favoritada: ':'Favorita removida: ')+lab(S.favChamp,S.fsel.skin,S.fsel.chroma))},
+ swSkin:i=>{S.sw={skin:+i,chroma:-1,res:null};say('Skin escolhida manualmente')},
+ swChroma:v=>{const[a,b]=v.split(':').map(Number);S.sw={skin:a,chroma:(S.sw.skin===a&&S.sw.chroma===b)?-1:b,res:null};say('Croma escolhido')},
+ swClear:()=>{S.sw={skin:null,chroma:-1,res:null};say('Escolha limpa: valerá o sorteio estilo Bravura')},
+ swStart:()=>{const c=S.sel.champ;if(S.fail){raise('Swiftplay','Não foi possível preparar a skin: o cliente não respondeu','SWF-PREP-504');return}S.sw.res=S.sw.skin!==null?{label:lab(c,S.sw.skin,S.sw.chroma),src:'escolhida manualmente'}:(r=>({label:r.label,src:'sorteio estilo Bravura · '+r.src}))(pickSkin(c));S.alert=null;say('Swiftplay (simulado): '+S.sw.res.label+' · '+S.sw.res.src)},
+
  confirmChamp:()=>{S.confirmed=true;A.itemConfirm();say('Campeão confirmado (simulado); '+S.itemMsg)},
- bravStep:n=>{const v=S.brav;if(n==='1'){v.step=1;say('Bravura confirmada na seleção (campeão -3)')}else if(n==='2'){v.champ=CHN[Math.floor(Math.random()*CHN.length)];v.step=2;say('Jogo revelou o campeão: '+v.champ)}else{const c=v.champ,fv=[...S.fav].filter(k=>k.startsWith(c+'|')&&elig(c,+k.split('|')[1],+k.split('|')[2]).ok);let pick,src;if(fv.length){const k=fv[Math.floor(Math.random()*fv.length)].split('|');pick=[+k[1],+k[2]];src='favorita'}else{const ok=[];skinsOf(c).forEach(sk=>(sk.chromas.length?sk.chromas.map((_,j)=>j):[-1]).forEach(j=>{if(elig(c,sk.id,j).ok)ok.push([sk.id,j])}));pick=ok[Math.floor(Math.random()*ok.length)];src='aleatória'}v.res={label:lab(c,pick[0],pick[1]),src};v.step=3;say('Bravura: skin '+src+' escolhida; reconectando')}},
+ bravStep:n=>{const v=S.brav;if(n==='1'){v.step=1;say('Bravura confirmada na seleção (campeão -3)')}else if(n==='2'){v.champ=CHAMPS[Math.floor(Math.random()*CHAMPS.length)];v.step=2;say('Jogo revelou o campeão: '+v.champ)}else{const r=pickSkin(v.champ);v.res=r;v.step=3;say('Bravura: skin '+r.src+' escolhida; reconectando')}},
  bravReset:()=>{S.brav={step:0,champ:null,res:null};say('Simulação de Bravura reiniciada')},
  recheck:()=>{S.fail=false;S.errors.forEach(e=>e.resolved=true);S.alert=null;S.checked='Verificação repetida: cliente respondeu; erros marcados como resolvidos.';say(S.checked)},
  report:()=>{S.report='SEXO2 demo | recursos locais OK | cliente: '+(S.fail?'sem resposta':'desconectado')+' | erros abertos: '+S.errors.filter(e=>!e.resolved).length+' | sem chave de sala';S.reportCopied=false;say('Relatório gerado')},
  reportCopy:()=>{try{navigator.clipboard&&navigator.clipboard.writeText(S.report).catch(()=>{})}catch(e){}S.reportCopied=true;say('Relatório copiado (simulado)')},
  folder:n=>{S['f'+n]=true;say('Pasta '+n+' aberta (simulado)')},
  /* conjuntos */
- setApply:id=>{S.activeSet=+id;S.setApplyN++;say('Conjunto aplicado: '+S.sets.find(s=>s.id==id).name)},
- setEdit:id=>{const s=S.sets.find(x=>x.id==id);S.setDraft={id:s.id,name:s.name,items:s.items.map(i=>({...i}))};openModal({type:'set'})},
- setNew:()=>{S.setDraft={id:0,isNew:true,name:'Novo conjunto',items:[{...S.sel}]};openModal({type:'set'})},
- setRm:n=>{S.setDraft.items.splice(+n,1)},setAdd:()=>{S.setDraft.items.push({...S.sel})},
- setSave:()=>{const d=S.setDraft;if(d.isNew){S.setN++;S.sets.push({id:S.setN+10,name:d.name||'Conjunto',items:d.items})}else{const s=S.sets.find(x=>x.id===d.id);s.name=d.name||s.name;s.items=d.items}say('Conjunto salvo: '+d.name);S.setDraft=null;closeModal();return false},
- mclose:()=>{S.setDraft=null;S.imp=null;closeModal();return false},
- draw:()=>{const c=S.sel.champ,ok=[];skinsOf(c).forEach(s=>{(s.chromas.length?s.chromas.map((k,j)=>j):[-1]).forEach(j=>{if(elig(c,s.id,j).ok)ok.push({s:s.id,j})});if(s.tier==='Exalted'&&elig(c,s.id,-1).ok)ok.push({s:s.id,j:-1})});S.drawn=ok[Math.floor(Math.random()*ok.length)];say('Sorteado: '+lab(c,S.drawn.s,S.drawn.j))},
- drawUse:()=>{S.sel={champ:S.sel.champ,skin:S.drawn.s,chroma:S.drawn.j};say('Selecionado o resultado do sorteio')},
+ mclose:()=>{S.imp=null;closeModal();return false},
  /* mods */
  modCat:c=>{S.modCat=c;say('Categoria: '+c)},
  modOn:id=>{const m=S.mods.find(x=>x.id==id);m.on=!m.on;say(m.name+(m.on?' ativado':' desativado'))},
@@ -363,15 +372,10 @@ const A={
  roomLeave:()=>{const r=S.room;r.last=r.key;r.on=false;r.key=null;r.parts=[];S.coord=false;S.roomResult=null;say('Você saiu da sala '+r.last)},
  roomRejoin:()=>{const r=S.room;r.on=true;r.key=r.last;r.copied=false;r.parts=['Você','Anfitrião demo'];say('Reconectado à sala '+r.key)},
  roomAdd:()=>{S.room.parts.push('Jogador '+S.room.parts.length);say('Participante demo adicionado')},
- coordAsk:()=>openModal({type:'coord'}),
- coordGo:()=>{const a=S.sets.find(x=>x.id===S.activeSet);S.deactivated=a?a.name:null;S.activeSet=null;S.coord=true;say(a?'Sorteio coordenado ativo; conjunto «'+a.name+'» desativado':'Sorteio coordenado ativo');closeModal();return false},
- coordLeave:()=>{S.coord=false;S.roomResult=null;say('Saiu do sorteio. O conjunto continua desativado: aplique de novo se quiser.')},
- roomDraw:()=>{const pool=[];CHN.forEach(c=>skinsOf(c).forEach(s=>(s.chromas.length?s.chromas.map((k,j)=>j):[-1]).forEach(j=>{if(elig(c,s.id,j).ok)pool.push(lab(c,s.id,j))})));S.roomResult=S.room.parts.map((p,i)=>[p,pool[(i*7+S.room.n+Math.floor(Math.random()*pool.length))%pool.length]]);say('Sorteio coordenado concluído (simulado)')},
  /* config */
  cfgSave:()=>{const n=dirty();S.prefs={...S.draft};S.draft=null;S.saved='Salvo (simulado): '+n+' alteração(ões)';say(S.saved)},
  cfgCancel:()=>{S.draft=null;S.saved=null;say('Alterações descartadas')},
  toCfg:()=>{S.back={to:'Configurações',page:'Seleção',label:'seleção de campeões'};S.page='Configurações';S.hub=true;S.qp=false;S.tab.cfg='Seleção';S.focusNext='h1';say('Configurações completas; rascunho preservado')},
- toColl:()=>{S.back={to:'Skins',page:'Seleção',label:'seleção de campeões'};S.page='Skins';S.hub=true;S.tab.skins='Coleção';S.focusNext='h1'},
  /* assistente */
  panelToggle:()=>{S.panelOpen=!S.panelOpen;say(S.panelOpen?'Painel aberto':'Painel fechado')},
  qpToggle:()=>{S.qp=!S.qp;S.focusNext=S.qp?'pref-autoaceite':'qpToggle|'},
@@ -391,11 +395,11 @@ document.addEventListener('change',e=>{const t=e.target;
  if(t.dataset.st){const k=t.dataset.st;if(k==='champ')A.champ(t.value);else if(k==='fail'){S.fail=t.checked;say('Falha do cliente '+(S.fail?'ligada':'desligada')+' (simulação)')}else{S[k]=t.value;say('Ajuste: '+t.value)}rerender()}});
 document.addEventListener('input',e=>{const t=e.target;
  if(t.dataset.pref){S.draft=S.draft||{...S.prefs};S.draft[t.dataset.pref]=t.value;S.saved=null;document.querySelectorAll('.dbar').forEach(d=>d.innerHTML=dbar());return}
- if(t.id==='modQ'){S.modQ=t.value;const q=t.value.toLowerCase();$('#modList').innerHTML=modRows(S.mods.filter(m=>(S.modCat==='Todas'||m.cat===S.modCat)&&(!q||(m.name+' '+m.cat+' '+(m.champ||'')).toLowerCase().includes(q))))}
+ if(t.id==='modQ'){S.modQ=t.value;$('#modList').innerHTML=modRowsA(modFilter())}
+ if(t.id==='favQ'){S.favQ=t.value;const q=norm(t.value),l=CHAMPS.filter(n=>!q||norm(n).includes(q));$('#champGrid').innerHTML=champTiles(l);$('#champCount').textContent=l.length+' de '+CHAMPS.length+' campeões · '+CHAMPS.filter(hasImg).length+' com retrato local; os demais mostram um placeholder.'}
  if(t.id==='itemQ'){S.itemQ=t.value;$('#trioList').innerHTML=trioRows()}
  if(t.id==='roomKey')S.room.input=t.value;
- if(t.id==='setName')S.setDraft.name=t.value;
- if(t.id==='impName'){S.imp.name=t.value;const ok=S.imp.name.trim()&&!(S.imp.cat==='Skins'&&!S.imp.champ);const g=$('[data-act=impGo]');if(g)g.disabled=!ok}});
+  if(t.id==='impName'){S.imp.name=t.value;const ok=S.imp.name.trim()&&!(S.imp.cat==='Skins'&&!S.imp.champ);const g=$('[data-act=impGo]');if(g)g.disabled=!ok}});
 document.addEventListener('keydown',e=>{const dlgOpen=$('#dlg').open;
  if(e.key==='Escape'&&!dlgOpen){if(S.qp){S.qp=false;S.focusNext='qpToggle|';rerender()}else if(S.hub){A.hubClose();rerender()}else if(S.sim==='selecao'&&S.panelOpen){S.panelOpen=false;S.focusNext='launcher';rerender()}}
  if(e.key==='Tab'&&!dlgOpen&&S.hub){const f=[...document.querySelectorAll('#hub button,#hub input,#hub select,#hub a[href]')].filter(n=>!n.disabled&&n.offsetParent!==null),a=document.activeElement;if(!f.length)return;if(!a.closest('#hub')){e.preventDefault();f[0].focus()}else if(e.shiftKey&&a===f[0]){e.preventDefault();f.at(-1).focus()}else if(!e.shiftKey&&a===f.at(-1)){e.preventDefault();f[0].focus()}}

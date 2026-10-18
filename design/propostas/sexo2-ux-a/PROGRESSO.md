@@ -1,19 +1,19 @@
-# PROGRESSO — Frente A (Hub por recurso, dentro do client)
+# PROGRESSO — Frente A (rodada 3)
 
-Estado: CONCLUÍDO (rodada 2). 8/8 critérios + enquadramento verificados (109 checagens, 0 falhas).
+Estado: CONCLUÍDO. 115 verificações CDP, 0 falhas (evidencias/log-t15.txt). A02 reinterpretado (ver QA.md).
 
-## Rodada 2
-- Reenquadrado: palco 1280×720 simulando o client; faixa de simulação (Cliente / Seleção / Partida) fora do produto; sem cabeçalho/rodapé de app.
-- Hub 820×560 abre sobre o client pelo botão SEXO2 do cabeçalho; fecha com Escape/Fechar.
-- Seleção: cena com campeões, Confirmar e botão SEXO2 inferior; assistente 452×492 ancorado (D-017 medido). Hub e assistente compartilham estado.
-- Bravura reescrita conforme docs/ARENA_BRAVURA.md (Arena, campeão -3, revelado em partida, skin favorita/aleatória, executável encerrado uma vez, reconexão com interrupção).
-- Identidade mantida: neutros, Oswald/Inter locais, sem azul/serifa.
+## Mudou na rodada 3
+- UI antiga resgatada (assistente, cena de seleção) + visual da B (só look); cantos retos em tudo.
+- Painel SEXO2 (820×560) abre em Sala: Sala, Favoritas, Configurações, Suporte, Swiftplay (só no modo).
+- Favoritas: ~170 campeões, busca, skins com snippet placeholder, cromas, só Favoritar, estados separados.
+- Swiftplay simulado: manual vs sorteio estilo Bravura (favoritas primeiro).
+- Sem sorteio/conjuntos no painel; sem rótulos "Hub"/"Demonstração" junto à marca.
+- Assistente: header Rota/Confronto/Fonte; abas Runas, Itens, Mods, Preferências rápidas, Todas as configurações.
+- NOTAS-PARA-CODIGO.md criado (retirar conjuntos/sorteio; snippet de skin; skins de mods; Swiftplay).
 
 ## Verificação
-- Chromium headless (CDP stdlib) 1280×800; fontes loaded; Tab/Shift+Tab/Enter/Escape reais; geometria do palco/Hub/assistente medida.
-- Logs: evidencias/log-t12.txt; capturas: evidencias/r2-*.png (23).
+Chromium headless 1280×820, teclas reais, fontes loaded, computed style sem border-radius, D-017 medido.
 
-## Pendências / limitações
-- Fundo do client aproximado; modais <dialog> cobrem a janela do navegador.
-- harness-referencia.png não é do client (diagrama alheio); composição seguiu a réplica renderizada.
-- Usado chromium completo (não havia headless-shell); sem Safari/Windows.
+## Pendências
+- Só 24 retratos locais; skins sem imagem; lista de campeões manual.
+- Modais nativos cobrem a janela do navegador; sem Safari/Windows.

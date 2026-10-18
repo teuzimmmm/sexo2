@@ -1,32 +1,35 @@
-# QA — Proposta A (rodada 2: SEXO2 dentro do client)
+# QA — Proposta A (rodada 3)
 
-`index.html` por file://. Estrutura: faixa de simulação (fora do produto: Cliente / Seleção de campeões / Partida) + palco 1280×720 que simula o client (fundo neutro aproximado, barra de navegação, botão SEXO2 no cabeçalho). Hub 820×560 abre sobre o client pelo botão do cabeçalho; assistente 452×492 abre pelo botão SEXO2 inferior da seleção. Hash: `#cliente`, `#selecao`, `#skins`, `#mods`, `#sala`, `#config`, `#suporte`.
-Método: Chromium headless (cache Playwright; só havia chromium completo `chromium-1228`, não o headless-shell) via CDP stdlib, viewport 1280×800 (palco 1280×720 + faixas). Teclas reais para Tab/Shift+Tab/Enter/Escape. `evidencias/log-t12.txt`: 109 verificações, 0 falhas. Script em `evidencias/harness/`.
-Nota: `referencias/harness-referencia.png` é um diagrama de outro assunto (loop do Claude Code), sem relação com o client; a composição foi tirada de `sexo2-replica` renderizada (ids #stage/#clientnav/#hub-launch/bottom/confirm-champ).
+`index.html` por file://. Estrutura: faixa de simulação fora do produto (Estado: Cliente / Seleção de campeões / Partida; Modo: Normal / Swiftplay; resultado da importação de runas; Onetricks; falha do cliente; fim da seleção) + palco 1280×720 que simula o client. Painel do SEXO2 820×560 abre pelo botão SEXO2 do cabeçalho (em Sala); assistente 452×492 abre pelo botão SEXO2 inferior da seleção.
+Método: Chromium headless (cache Playwright, `chromium-1228`, não o headless-shell) via CDP stdlib, viewport 1280×820. Teclas reais (Tab/Shift+Tab/Enter/Escape). `evidencias/log-t15.txt`: 115 verificações, 0 falhas. Script em `evidencias/harness/`. Capturas `evidencias/r3-*.png` (21).
 
-## Enquadramento (rodada 2)
-- Palco 1280×720; sem cabeçalho/rodapé de app; faixa de simulação fora do palco. PASSOU.
-- Estado Cliente: botão SEXO2 abre Hub 820×560 (dentro do palco, abaixo da barra do client); Escape e Fechar fecham e devolvem o foco ao botão. PASSOU. `r2-01`, `r2-02`.
-- Estado Seleção: cena com campeões clicáveis, Confirmar, botão SEXO2 inferior; assistente ancorado. Do assistente se chega ao Hub (Todas as configurações, abrir coleção, Suporte) e o retorno devolve à seleção com rascunho e escolhas. PASSOU. `r2-15`…`r2-21`.
-- Estado Partida: sem client/Hub; aponta para overlays. `r2-23`.
-- D-017 medido: 452×492, borda direita = a do botão (0 px), 8 px acima, dentro do palco, sem sobrepor o botão. PASSOU.
+## Rodada 3: decisões do usuário
+- UI antiga resgatada: layout do assistente (Maior WR / Mais comum / Contra X / Outras runas, rodapé de estado), cena de seleção (título + contagem, listas laterais, grade 8×3, CONFIRMAR, "Runas · Feitiços"). Ver também "Trazido da B".
+- Painel abre em Sala; menus Sala, Favoritas, Configurações, Suporte (+ Swiftplay só no modo Swiftplay). Mods saiu do painel (vive na aba Mods da seleção). PASSOU.
+- Sorteio/conjuntos removidos; "elegível ao sorteio", "Conjunto ativo", "Skin aplicada" ausentes (verificado por texto). PASSOU.
+- Favoritas: 171 campeões na grade (24 retratos locais, 147 placeholders), busca por nome; página do campeão com 3 skins e snippet placeholder explícito; skin selecionada expande cromas; só "Favoritar"; favoritar a skin não favorita croma (estados separados, testado em ambas as direções). PASSOU.
+- Swiftplay: campeão travado; manual vence; nada tocado → sorteio estilo Bravura com favoritas primeiro, aleatória sem favorita; erro simulado → Suporte → retorno. PASSOU (simulação, não validado em partida real).
+- Assistente: texto "Ver a recomendação…" removido; header Rota/Confronto/Fonte sem nome do campeão; abas Runas, Itens, Mods, Preferências rápidas, Todas as configurações (cabem em 452 px); sem aba Skins; Build padrão Inicial/Essenciais/Situacionais e trios mantidos. PASSOU.
+- Cantos: nenhum border-radius > 0 em #stage, faixa de simulação e diálogos (computed style), exceto círculos de croma. PASSOU.
+- Marca: cabeçalho do painel só "SEXO2" + Fechar; nenhum "Hub"/"Demonstração" em texto, aria-label, title ou alt do palco. PASSOU.
 
-## Critérios
+## Critérios A01–A08
 | ID | Resultado | Observação |
 |---|---|---|
-| A01 | PASSOU | 5 destinos no Hub; erro em Skins/Mods/assistente → Suporte com origem → Repetir verificação → Voltar preserva escolha (`r2-03/04`) |
-| A02 | PASSOU | campeão/skin/croma/favorita/aplicar; conjunto editar/aplicar; coordenado avisa e efetiva desativação (`r2-05…r2-09`) |
-| A03 | PASSOU | 10 categorias, busca, importar (campeão+skin-base, fila até fim da seleção), editar/exportar/remover; Sala criar/copiar/sair/reconectar/chave (`r2-10…r2-12`) |
-| A04 | PASSOU | fonte preferida não importa; comparar com amostras/WR/patch separados, Onetricks futuro/indisponível; importar original; importando/sucesso/falha/no_free_page (`r2-16/17/19`) |
-| A05 | PASSOU | trios por partidas, busca por nome/ID, usar/restaurar, confirmar campeão simula importação (`r2-20`) |
-| A06 | PASSOU | prefs rápidas+completas com rascunho único; Exalted+croma inelegível antes do ranking (60 sorteios); ouro × aprimoramentos separados; Bravura (abaixo) |
-| A07 | PASSOU | Oswald/Inter loaded; sem serifa/azul computados; Hub sem estouro horizontal; foco #ececec 2 px |
-| A08 | PASSOU | file://, 0 imagens quebradas; Tab/Shift+Tab ciclam no Hub e no modal; Escape fecha modal→gaveta→Hub→assistente com foco devolvido |
+| A01 | PASSOU | erro em Mods (assistente), runas (falha) e Swiftplay → Suporte com origem → Repetir verificação → Voltar preserva contexto (aba/campeão) |
+| A02 | REINTERPRETADO | conjuntos e sorteio coordenado removidos a pedido; cobertos por Favoritas (campeão/skin/croma/favorita separados) e Swiftplay |
+| A03 | PASSOU | mods na aba Mods: 10 categorias, busca, filtro, importar (campeão+skin-base, fila até fim da seleção), editar, exportar, remover; Sala criar/copiar/sair/reconectar/chave |
+| A04 | PASSOU | fonte no header (não importa); comparar fontes; Onetricks indisponível/simulado; importar com um clique; importando/sucesso/falha/no_free_page; editor agrupa |
+| A05 | PASSOU | trios por partidas, busca por nome/ID, usar/restaurar, confirmar campeão (cena) simula importação |
+| A06 | PASSOU | Preferências rápidas (aba) e completas (Configurações) com rascunho único; ouro × aprimoramentos separados; Bravura |
+| A07 | PASSOU | Oswald/Inter loaded; sem serifa/azul; D-017 medido (452×492, direita alinhada, 8 px acima, dentro, sem cobrir); painel sem estouro |
+| A08 | PASSOU | file://, 0 imagens quebradas; Tab/Shift+Tab ciclam no painel e no modal; Escape fecha modal → painel → assistente com foco devolvido |
 
-## Bravura (conforme ARENA_BRAVURA.md)
-Texto corrigido: só no Arena, quando o jogador confirma Bravura na seleção (campeão -3); o jogo sorteia/revela já em partida; o app detecta, escolhe skin (favoritas, senão aleatória, exclusões respeitadas), encerra o executável da partida uma vez e reconecta (interrupção de carregamento). Fluxo simulado em 3 etapas; verificado favorita usada, aleatória sem favorita, exclusão Obsidiana respeitada; nada de "revela antes da seleção", estatísticas ou desafios. Aprimoramentos ficam em Configurações › Overlays.
+## Trazido da B (somente visual; nenhuma UX da B)
+Tokens e tratamento do client: barra com marca JOGAR em dourado sublinhado e borda #4a4233, fundo da cena em gradiente esverdeado escuro, título dourado da seleção, tiles de campeão com borda #3c3526 e destaque dourado, botão CONFIRMAR dourado, botão SEXO2 do cabeçalho vazado (cheio quando aberto) e SEXO2 inferior cheio; botões 28/24 px, abas Oswald com sublinhado interno, tags de contorno, cabeçalhos Oswald em caixa alta; sombra do painel. Os 2 px de raio da B NÃO foram trazidos (tudo 0). Não herdado: atividades, preparo em etapas, breadcrumbs, resumo de sessão.
 
 ## Limitações
-- Fundo do client e navegação são aproximações; nada é enviado ao LoL. Futuro = simulação explícita (Onetricks, sala, importações, Bravura).
-- Modais nativos (`<dialog>`) cobrem a janela do navegador, não só o palco.
-- Sem Safari/Windows, sem auditoria de leitor de tela/contraste por ferramenta.
+- Retratos: só 24 de ~170 campeões; placeholder neutro com iniciais nos demais. Imagens de skin: todas placeholder.
+- Nomes de skins/cromas dos campeões sem dado são ilustrativos; lista de campeões escrita à mão (pode divergir do catálogo oficial).
+- Fundo do client aproximado; modais `<dialog>` cobrem a janela do navegador, não só o palco. O texto "Hub" ainda existe só em arquivos de documentação/código, não na UI.
+- Chromium completo (sem headless-shell); sem Safari/Windows; sem auditoria de leitor de tela.

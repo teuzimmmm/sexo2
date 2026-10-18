@@ -71,3 +71,4 @@ Tudo abaixo é proposta pendente, sem alterar decisões oficiais ou produção.
 - Verificação: Chromium headless por file:// com CDP (A 95 checagens, B 130, overlays 47 em Firefox headless/Marionette). Sem Windows, cliente LoL, partida real, FPS, Safari ou leitor de tela.
 - Limitações abertas: overlays a 452×492 rola dentro do palco; A a 820×560 exige rolar para ver o botão SEXO2; seletor de fonte do overlay ainda lista Arial; recorte da comparação com a imagem aprovada estimado a olho.
 - Visual anterior rejeitado; referência aprovada: `sexo2-operacao/overlay-aprovado.png`. Nenhuma recomendação é aprovação de produto.
+- v2.2: B descartada pelo usuário. A rodada 3: 115 checagens (Chromium, file://), 24 de 171 retratos locais, imagens de skin como placeholder, Swiftplay simulado.

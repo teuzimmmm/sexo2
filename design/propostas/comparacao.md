@@ -34,3 +34,6 @@ Base consultada: `teuzimmmm/sexo2@galinacio` — CLAUDE.md; docs/produto/decisoe
 - Exceção aprovada: `sexo2-operacao/overlay-aprovado.png` = modo B de `sexo2-overlays/index.html#b` (padrão inicial). Blitz e Original A seguem como estudos secundários, não aprovados.
 - A organiza por recurso (Skins, Mods, Sala, Configurações, Suporte); B por atividade (Preparar partida, Personalizar coleção, Resolver problema). Evidências: `QA.md` e `evidencias/` de cada pasta.
 - Nada aqui é aprovação de produto; dados, Onetricks, Bravura, sala e importações são simulações.
+
+## Atualização: proposta B descartada
+O usuário descartou a B (workspace por atividade): reconstruía o client em vez de ser um complemento dentro dele. Os arquivos ficam em `sexo2-ux-b/` só como histórico; seu visual serviu de referência de design para a A. A A (rodada 3) mantém UX própria sobre o design antigo do client: cantos retos, painel só "SEXO2", menus Sala/Favoritas/Configurações/Suporte e Swiftplay (só nesse modo); seleção com abas Runas/Itens/Mods/Preferências. Conjuntos e sorteio saíram (ver `sexo2-ux-a/NOTAS-PARA-CODIGO.md`). Nada é aprovação de produto.
