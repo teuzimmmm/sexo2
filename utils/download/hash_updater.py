@@ -35,9 +35,9 @@ def load_state() -> Dict:
     state_file = get_state_file()
     if not state_file.exists():
         return {}
-    
+
     try:
-        with open(state_file, 'r') as f:
+        with open(state_file, "r") as f:
             return json.load(f)
     except (json.JSONDecodeError, IOError) as e:
         log.warning(f"Failed to load hash updater state: {e}")
@@ -49,7 +49,7 @@ def save_state(state: Dict):
     state_file = get_state_file()
     try:
         state_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(state_file, 'w') as f:
+        with open(state_file, "w") as f:
             json.dump(state, f, indent=2)
     except IOError as e:
         log.warning(f"Failed to save hash updater state: {e}")
@@ -57,40 +57,33 @@ def save_state(state: Dict):
 
 def check_file_commits(file_path: str, session: requests.Session) -> Optional[Dict]:
     """Check the latest commit for a specific file
-    
+
     Returns:
         Dict with 'sha' and 'date' keys, or None on error
     """
     try:
         # Get commits for the specific file
         url = f"{GITHUB_API_BASE}/commits"
-        params = {
-            'path': file_path,
-            'sha': 'master',
-            'per_page': 1
-        }
+        params = {"path": file_path, "sha": "master", "per_page": 1}
         response = session.get(url, params=params, timeout=10)
-        
+
         if response.status_code == 404:
             log.debug(f"File {file_path} not found in repository")
             return None
-        
+
         response.raise_for_status()
         commits = response.json()
-        
+
         if not commits:
             log.debug(f"No commits found for {file_path}")
             return None
-        
+
         latest_commit = commits[0]
-        return {
-            'sha': latest_commit['sha'],
-            'date': latest_commit['commit']['committer']['date']
-        }
+        return {"sha": latest_commit["sha"], "date": latest_commit["commit"]["committer"]["date"]}
     except requests.HTTPError as e:
         if e.response is not None and e.response.status_code in (403, 429):
             log.warning(f"GitHub API rate limit exceeded while checking {file_path}")
-            return {'rate_limited': True}
+            return {"rate_limited": True}
         else:
             log.error(f"Failed to check commits for {file_path}: {e}")
             return None
@@ -99,19 +92,22 @@ def check_file_commits(file_path: str, session: requests.Session) -> Optional[Di
         return None
 
 
-def check_for_updates(parallel=True, cancelled=lambda:False) -> bool:
+def check_for_updates(parallel=True, cancelled=lambda: False) -> bool:
     """Check if hash files have been updated on GitHub
-    
+
     Returns:
         True if updates are available, False otherwise
     """
+
     # Sessions are not shared between workers. Keep network concurrency bounded.
     def check_one(hash_file):
         with requests.Session() as session:
-            session.headers.update({
-                'User-Agent': APP_USER_AGENT,
-                'Accept': 'application/vnd.github.v3+json',
-            })
+            session.headers.update(
+                {
+                    "User-Agent": APP_USER_AGENT,
+                    "Accept": "application/vnd.github.v3+json",
+                }
+            )
             return check_file_commits(f"{HASHES_DIR}/{hash_file}", session)
 
     if parallel:
@@ -120,96 +116,98 @@ def check_for_updates(parallel=True, cancelled=lambda:False) -> bool:
     else:
         # A daemon maintenance probe must not leave executor threads joining at
         # interpreter shutdown. Check one request at a time and stop between them.
-        results=[]
+        results = []
         for name in HASH_FILES:
-            if cancelled():return False
+            if cancelled():
+                return False
             results.append(check_one(name))
 
     local_state = load_state()
-    local_file_shas = local_state.get('files', {})
-    
+    local_file_shas = local_state.get("files", {})
+
     any_updated = False
     any_checked = False
     rate_limited = False
-    
+
     for hash_file, commits in zip(HASH_FILES, results):
-        
         if commits is None:
             continue
-        
-        if commits.get('rate_limited'):
+
+        if commits.get("rate_limited"):
             rate_limited = True
             continue
-        
+
         any_checked = True
-        local_sha = local_file_shas.get(hash_file, {}).get('sha')
+        local_sha = local_file_shas.get(hash_file, {}).get("sha")
         if not local_sha:
             log.info(f"No local state for {hash_file}, hash files will be downloaded")
             return True
-        
-        if commits['sha'] != local_sha:
+
+        if commits["sha"] != local_sha:
             log.info(f"{hash_file} updated: {local_sha[:8]} -> {commits['sha'][:8]}")
             any_updated = True
-    
+
     if rate_limited:
         log.warning("Rate limited on some files, cannot fully check for updates")
         return False
-    
+
     if not any_checked:
         log.warning("Failed to check commits for any hash files")
         return False
-    
+
     if any_updated:
         return True
-    
+
     log.debug("Hash files are up to date")
     return False
 
 
-def download_file(url: str, session: requests.Session, status_callback: Optional[Callable[[str], None]] = None) -> Optional[bytes]:
+def download_file(
+    url: str, session: requests.Session, status_callback: Optional[Callable[[str], None]] = None
+) -> Optional[bytes]:
     """Download a file from URL
-    
+
     Args:
         url: URL to download from
         session: Requests session to use
         status_callback: Optional callback for status updates
-    
+
     Returns:
         File contents as bytes, or None on error
     """
     try:
-        filename = url.split('/')[-1]
+        filename = url.split("/")[-1]
         if status_callback:
             status_callback(f"Downloading {filename}...")
-        
+
         response = session.get(url, timeout=30, stream=True)
         response.raise_for_status()
-        
+
         # Get total size if available
-        total_size = int(response.headers.get('content-length', 0))
+        total_size = int(response.headers.get("content-length", 0))
         downloaded = 0
         chunks = []
-        
+
         for chunk in response.iter_content(chunk_size=8192):
             if chunk:
                 chunks.append(chunk)
                 downloaded += len(chunk)
-                
+
                 # Update status with progress if callback provided
                 if status_callback:
                     size_mb = downloaded / (1024 * 1024)
                     status_callback(f"Downloading {filename}... ({size_mb:.1f} MB)")
-        
-        content = b''.join(chunks)
-        
+
+        content = b"".join(chunks)
+
         size_mb = len(content) / (1024 * 1024)
         updater_log.info(f"Downloaded {filename} ({size_mb:.1f} MB)")
         if status_callback:
             status_callback(f"Downloaded {filename} ({size_mb:.1f} MB)")
-        
+
         return content
     except requests.RequestException as e:
-        filename = url.split('/')[-1]
+        filename = url.split("/")[-1]
         log.error(f"Failed to download {url}: {e}")
         updater_log.error(f"Failed to download {filename}: {e}")
         if status_callback:
@@ -219,32 +217,32 @@ def download_file(url: str, session: requests.Session, status_callback: Optional
 
 def combine_hash_files(contents: list[bytes]) -> bytes:
     """Combine multiple hash files into one
-    
+
     Args:
         contents: List of hash file contents
-    
+
     Returns:
         Combined file content
     """
-    texts = [c.decode('utf-8') for c in contents]
-    combined = '\n'.join(t.rstrip('\n') for t in texts)
-    if combined and not combined.endswith('\n'):
-        combined += '\n'
-    return combined.encode('utf-8')
+    texts = [c.decode("utf-8") for c in contents]
+    combined = "\n".join(t.rstrip("\n") for t in texts)
+    if combined and not combined.endswith("\n"):
+        combined += "\n"
+    return combined.encode("utf-8")
 
 
 def update_hash_files(status_callback: Optional[Callable[[str], None]] = None, dev_mode: bool = False) -> bool:
     """Check for updates and download/combine hash files if needed
-    
+
     Args:
         status_callback: Optional callback function to report status messages
         dev_mode: If True, skip hash check (for development)
-    
+
     Returns:
         True if files were updated, False otherwise
     """
     import sys
-    
+
     # Skip hash download/verification in dev mode
     if dev_mode:
         log.info("Hash file update skipped (dev mode)")
@@ -252,14 +250,14 @@ def update_hash_files(status_callback: Optional[Callable[[str], None]] = None, d
         if status_callback:
             status_callback("Hash check skipped (dev mode)")
         return False
-    
+
     if status_callback:
         status_callback("Checking game hashes…")
     updater_log.info("Checking game hashes…")
 
     # Determine target path to check if file already exists on disk
-    if getattr(sys, 'frozen', False):
-        if hasattr(sys, '_MEIPASS'):
+    if getattr(sys, "frozen", False):
+        if hasattr(sys, "_MEIPASS"):
             _tools_dir = Path(sys._MEIPASS) / "injection" / "tools"
         else:
             base_dir = Path(sys.executable).parent
@@ -286,18 +284,15 @@ def update_hash_files(status_callback: Optional[Callable[[str], None]] = None, d
             # returned no updates (e.g. rate limited or network error)
             log.warning("Hash file missing on disk, forcing download despite update check result")
             updater_log.warning("Hash file missing on disk, forcing download")
-    
+
     log.info("Hash files have been updated, downloading...")
     updater_log.info("Hash files have been updated, downloading...")
     if status_callback:
         status_callback("Updating game hashes…")
-    
+
     session = requests.Session()
-    session.headers.update({
-        'User-Agent': APP_USER_AGENT,
-        'Accept': 'application/vnd.github.v3+json'
-    })
-    
+    session.headers.update({"User-Agent": APP_USER_AGENT, "Accept": "application/vnd.github.v3+json"})
+
     # Download all hash files
     contents = []
     for hash_file in HASH_FILES:
@@ -314,18 +309,18 @@ def update_hash_files(status_callback: Optional[Callable[[str], None]] = None, d
                 status_callback(f"Failed to download {hash_file}")
             return False
         contents.append(content)
-    
+
     # Combine files
     log.info("Merging hashes files...")
     updater_log.info("Merging hashes files...")
     if status_callback:
         status_callback("Merging hashes files...")
     combined_content = combine_hash_files(contents)
-    
+
     # Get target path (same logic as injection manager)
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Running as compiled executable
-        if hasattr(sys, '_MEIPASS'):
+        if hasattr(sys, "_MEIPASS"):
             # One-file mode: tools are in _MEIPASS
             base_path = Path(sys._MEIPASS)
             tools_dir = base_path / "injection" / "tools"
@@ -346,16 +341,16 @@ def update_hash_files(status_callback: Optional[Callable[[str], None]] = None, d
     else:
         # Running as Python script
         tools_dir = Path(__file__).parent.parent.parent / "injection" / "tools"
-    
+
     tools_dir.mkdir(parents=True, exist_ok=True)
     target_path = tools_dir / TARGET_FILE
-    
+
     # Write combined file
     try:
         updater_log.info(f"Writing {TARGET_FILE}...")
         if status_callback:
             status_callback(f"Writing {TARGET_FILE}...")
-        with __import__('utils.core.atomic_file',fromlist=['atomic_write']).atomic_write(target_path, 'wb') as f:
+        with __import__("utils.core.atomic_file", fromlist=["atomic_write"]).atomic_write(target_path, "wb") as f:
             f.write(combined_content)
         size_mb = len(combined_content) / (1024 * 1024)
         log_success(log, f"Successfully created {TARGET_FILE} ({size_mb:.1f} MB)", "")
@@ -368,30 +363,23 @@ def update_hash_files(status_callback: Optional[Callable[[str], None]] = None, d
         if status_callback:
             status_callback(f"Failed to write {TARGET_FILE}")
         return False
-    
+
     # Update state with new commit SHAs
     session_state = requests.Session()
-    session_state.headers.update({
-        'User-Agent': APP_USER_AGENT,
-        'Accept': 'application/vnd.github.v3+json'
-    })
-    
-    new_state = {'files': {}}
+    session_state.headers.update({"User-Agent": APP_USER_AGENT, "Accept": "application/vnd.github.v3+json"})
+
+    new_state = {"files": {}}
     for hash_file in HASH_FILES:
         file_path = f"{HASHES_DIR}/{hash_file}"
         commits = check_file_commits(file_path, session_state)
-        if commits and not commits.get('rate_limited'):
-            new_state['files'][hash_file] = {
-                'sha': commits['sha'],
-                'date': commits['date']
-            }
-    
-    if new_state['files']:
+        if commits and not commits.get("rate_limited"):
+            new_state["files"][hash_file] = {"sha": commits["sha"], "date": commits["date"]}
+
+    if new_state["files"]:
         save_state(new_state)
-    
+
     updater_log.info("Game hashes updated successfully")
     if status_callback:
         status_callback("Game hashes updated successfully")
-    
-    return True
 
+    return True

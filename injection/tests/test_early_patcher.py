@@ -18,14 +18,16 @@ class EarlyPatcherTests(unittest.TestCase):
         temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(temp_dir.cleanup)
         root = Path(temp_dir.name)
-        self.overlay = OverlayManager(root / 'tools', root / 'mods', root / 'game')
+        self.overlay = OverlayManager(root / "tools", root / "mods", root / "game")
 
-        self.host = root / 'tools' / 'ltk_patcher_host.exe'
+        self.host = root / "tools" / "ltk_patcher_host.exe"
         patches = [
-            patch.object(ToolsManager, 'detect_ltk_patcher', side_effect=lambda: self.host),
-            patch.object(overlay_manager, 'check_ltk_patcher', return_value=SimpleNamespace(expired_for=lambda game_dir: False)),
-            patch.object(OverlayManager, '_start_ltk_patcher', side_effect=self._fake_session),
-            patch.object(OverlayManager, '_abort_ltk_patcher'),
+            patch.object(ToolsManager, "detect_ltk_patcher", side_effect=lambda: self.host),
+            patch.object(
+                overlay_manager, "check_ltk_patcher", return_value=SimpleNamespace(expired_for=lambda game_dir: False)
+            ),
+            patch.object(OverlayManager, "_start_ltk_patcher", side_effect=self._fake_session),
+            patch.object(OverlayManager, "_abort_ltk_patcher"),
         ]
         self.detect, _, self.start, self.abort = (p.start() for p in patches)
         for p in patches:
@@ -35,16 +37,16 @@ class EarlyPatcherTests(unittest.TestCase):
     def _fake_session(self, host_exe, overlay_dir):
         proc = MagicMock()
         proc.poll.side_effect = lambda: None if self.running else 1
-        return {'proc': proc, 'session': {}, 'reader': None, 'log': None}
+        return {"proc": proc, "session": {}, "reader": None, "log": None}
 
     def test_the_overlay_takes_over_the_early_patcher(self):
         self.overlay.start_patcher_early()
         self.overlay.start_patcher_early()  # once per injection
         self.start.assert_called_once()
-        self.assertTrue((self.overlay.mods_dir.parent / 'overlay').is_dir())
+        self.assertTrue((self.overlay.mods_dir.parent / "overlay").is_dir())
 
         session = self.overlay._take_early_patcher()
-        self.assertIs(session['proc'].poll(), None)
+        self.assertIs(session["proc"].poll(), None)
         self.assertIsNone(self.overlay._take_early_patcher())
         self.abort.assert_not_called()
 
@@ -86,5 +88,5 @@ class MonitorStartsThePatcherTests(unittest.TestCase):
         manager.game_monitor.start.assert_called_once()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

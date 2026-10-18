@@ -39,6 +39,7 @@ def decode_page(body: bytes) -> tuple[dict[str, Any], dict[str, Any]]:
         raise SchemaError("Qwik page data must be bytes")
     if len(body) > 4 * 1024 * 1024:
         raise SchemaError("Qwik page data exceeds 4 MiB")
+
     def reject_constant(_):
         raise ValueError("non-finite JSON constant")
 

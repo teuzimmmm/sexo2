@@ -19,7 +19,7 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
   class FakeSocket{static OPEN=1;constructor(){this.readyState=1;setTimeout(()=>this.onopen?.(),0);}send(text){window.sent.push(JSON.parse(text));}close(){this.readyState=3;}}
   window.WebSocket=FakeSocket;
  });
- for(const name of ['ROSE-Amigos','ROSE-SwiftplayPins','ROSE-PartyMode','ROSE-SettingsPanel','SEXO2-ModLibrary','SEXO2-Settings','ROSE-Hub','ROSE-UI'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',name,'index.js')});
+ for(const name of ['SEXO2-Style','ROSE-Amigos','ROSE-SwiftplayPins','ROSE-PartyMode','ROSE-SettingsPanel','SEXO2-ModLibrary','SEXO2-Settings','ROSE-Hub','ROSE-UI'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',name,'index.js')});
  await page.waitForTimeout(200);
  await page.locator('.menu_item_Golden').last().click();
  await page.getByRole('combobox',{name:'Skin automática'}).waitFor();
@@ -57,7 +57,8 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  assert.equal(await page.getByRole('checkbox',{name:'Favorita Ashe Freljord',exact:true}).isChecked(),true);
  assert.equal(await page.getByRole('checkbox',{name:'Favorita Ashe PROJETO',exact:true}).isChecked(),true);
  fs.mkdirSync('preview-r6',{recursive:true});await page.screenshot({path:'preview-r6/favorites-editor.png'});
- await page.locator('#rose-hub>nav').getByRole('button',{name:'Perfis',exact:true}).click();
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Skins',exact:true}).click();
+ await page.locator('#rose-hub .hub-subnav').getByRole('button',{name:'Perfis',exact:true}).click();
  await page.getByRole('button',{name:'Usar perfil'}).waitFor();
  await page.getByRole('button',{name:'Sorteio temático'}).click();await page.getByRole('button',{name:'Sortear só para mim'}).waitFor();
  await page.locator('#rose-hub>nav').getByRole('button',{name:'Sala',exact:true}).click();
@@ -81,7 +82,7 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  await page.getByRole('button',{name:'Salvar alterações',exact:true}).click();
  await page.getByText('Pasta inválida',{exact:true}).waitFor();
  assert.equal(await page.getByRole('spinbutton',{name:'Limite de pausa do jogo (s)'}).inputValue(),'75');
- await page.locator('#rose-hub>nav').getByRole('button',{name:'Perfis',exact:true}).click();
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Sala',exact:true}).click();
  await page.locator('#rose-hub>nav').getByRole('button',{name:'Configurações',exact:true}).click();
  assert.equal(await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).inputValue(),'invalid');
  await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).fill('C:/Riot/Game');
@@ -109,7 +110,10 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  await page.waitForTimeout(50);await page.screenshot({path:'preview-r6/mod-library-in-hud.png'});
  await page.getByRole('button',{name:'← Configurações',exact:true}).click();
 
- await page.getByRole('button',{name:'Verificação e diagnóstico',exact:true}).click();
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Mods',exact:true}).click();
+ await page.locator('#rose-hub [data-hub-section="Mods"] #sexo2-mod-library').waitFor();
+ assert.equal(await page.getByRole('button',{name:'← Configurações',exact:true}).isVisible(),false);
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Diagnóstico',exact:true}).click();
  await page.getByText('Aceitar partidas automaticamente',{exact:true}).waitFor();
  assert.equal(await page.locator('#rose-hub #rose-settings-panel').count(),0);
  const box=await page.locator('#rose-hub').boundingBox();assert.ok(box.x>=0&&box.y>=0&&box.x+box.width<=1280&&box.y+box.height<=720);

@@ -150,9 +150,7 @@ def find_local_mod(
     try:
         for entry in _champion_mod_entries(int(champion_id)):
             entry_content, entry_legacy = mod_hashes(entry)
-            if (content_hash and entry_content == content_hash) or (
-                legacy_hash and entry_legacy == legacy_hash
-            ):
+            if (content_hash and entry_content == content_hash) or (legacy_hash and entry_legacy == legacy_hash):
                 return entry.relative_to(mods_root).as_posix()
     except OSError as e:
         log.debug(f"[PARTY] Error searching local mods: {e}")

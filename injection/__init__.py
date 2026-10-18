@@ -21,16 +21,15 @@ from .overlay.process_manager import ProcessManager
 from .tools.tools_manager import ToolsManager
 
 __all__ = [
-    'InjectionManager',
-    'SkinInjector',
-    'GameMonitor',
-    'GameDetector',
-    'ConfigManager',
-    'ThresholdManager',
-    'ModManager',
-    'ZipResolver',
-    'OverlayManager',
-    'ProcessManager',
-    'ToolsManager',
+    "InjectionManager",
+    "SkinInjector",
+    "GameMonitor",
+    "GameDetector",
+    "ConfigManager",
+    "ThresholdManager",
+    "ModManager",
+    "ZipResolver",
+    "OverlayManager",
+    "ProcessManager",
+    "ToolsManager",
 ]
-

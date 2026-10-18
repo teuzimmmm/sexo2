@@ -72,12 +72,12 @@ def _cmp_version(a: Optional[tuple[int, ...]], b: Optional[tuple[int, ...]]) -> 
 
 class UpdateSequence:
     """Handles the update checking and installation sequence"""
-    
+
     def __init__(self):
         self.github_client = GitHubClient()
         self.downloader = UpdateDownloader()
         self.installer = UpdateInstaller()
-    
+
     @staticmethod
     def _revert_installed_version(
         config: configparser.ConfigParser,
@@ -89,9 +89,7 @@ class UpdateSequence:
             config.set("General", "installed_version", old_version)
             write_config_file(config, config_path)
         except Exception as exc:
-            updater_log.warning(
-                f"Failed to revert installed_version in config: {exc}"
-            )
+            updater_log.warning(f"Failed to revert installed_version in config: {exc}")
 
     def perform_update(
         self,
@@ -102,7 +100,7 @@ class UpdateSequence:
         confirm_callback: Optional[Callable[[str, str], bool]] = None,
     ) -> bool:
         """Perform update check and installation
-        
+
         Args:
             status_callback: Callback for status updates
             progress_callback: Callback for progress updates
@@ -110,27 +108,27 @@ class UpdateSequence:
             confirm_callback: Optional callback invoked before downloading an
                 available update. It receives the remote and local versions
                 and should return True to continue.
-            
+
         Returns:
             True if update was installed, False otherwise
         """
         status_callback("Checking for updates...")
-        
+
         # Check for latest release
         release = self.github_client.get_latest_release()
         if not release:
             status_callback("Update check failed")
             return False
-        
+
         remote_version = self.github_client.get_release_version(release)
         asset = self.github_client.get_zip_asset(release)
         if not asset:
             status_callback("No release asset found")
             return False
-        
+
         download_url = asset.get("browser_download_url")
         total_size = asset.get("size", 0) or None
-        
+
         # Check installed version
         config_path = get_config_file_path()
         config = configparser.ConfigParser()
@@ -141,7 +139,7 @@ class UpdateSequence:
                 updater_log.warning(f"Could not read {config_path}; using defaults for update state: {e}")
         if not config.has_section("General"):
             config.add_section("General")
-        
+
         # Read installed version without overwriting it
         # We only update it after a successful update installation
         installed_version = config.get("General", "installed_version", fallback=APP_VERSION)
@@ -213,8 +211,10 @@ class UpdateSequence:
 
         # If local version is equal or newer, we are up to date.
         cmp_result = _cmp_version(effective_local, remote_parsed)
-        if cmp_result is not None and cmp_result >= 0 or (
-            remote_version and (installed_version == remote_version or APP_VERSION == remote_version)
+        if (
+            cmp_result is not None
+            and cmp_result >= 0
+            or (remote_version and (installed_version == remote_version or APP_VERSION == remote_version))
         ):
             # Successful update — clear retry counter if it was set.
             if config.getint("General", "update_retry_count", fallback=0) > 0:
@@ -225,7 +225,7 @@ class UpdateSequence:
                     updater_log.warning(f"Could not persist update state to {config_path}: {e}")
             status_callback("Launcher is already up to date")
             return False
-        
+
         if dev_mode:
             status_callback("Update skipped (dev mode)")
             return False
@@ -241,22 +241,20 @@ class UpdateSequence:
                 accepted = False
 
             if not accepted:
-                status_callback(
-                    f"Update skipped by user ({remote_version or 'new version'} available)"
-                )
+                status_callback(f"Update skipped by user ({remote_version or 'new version'} available)")
                 updater_log.info(
                     "User declined update from %s to %s.",
                     APP_VERSION,
                     remote_version or "unknown",
                 )
                 return False
-        
+
         # Download update
         updates_root = config_path.parent / "updates"
         updates_root.mkdir(parents=True, exist_ok=True)
         zip_name = asset.get("name") or "update.zip"
         zip_path = updates_root / zip_name
-        
+
         status_callback(f"Downloading update {remote_version or ''}")
         if not self.downloader.download_update(
             download_url,
@@ -266,7 +264,7 @@ class UpdateSequence:
             total_size,
         ):
             return False
-        
+
         # Extract update
         status_callback("Extracting update")
         staging_dir = updates_root / "staging"
@@ -278,7 +276,7 @@ class UpdateSequence:
         )
         if not extracted_root:
             return False
-        
+
         # Download hash file if available (skip in dev mode)
         if getattr(sys, "frozen", False):
             hash_asset = self.github_client.get_hash_asset(release)
@@ -291,7 +289,7 @@ class UpdateSequence:
                     hash_target_path,
                     status_callback,
                 )
-        
+
         # Install update
         status_callback("Installing update")
         install_dir = Path(sys.executable).resolve().parent
@@ -306,9 +304,7 @@ class UpdateSequence:
             try:
                 write_config_file(config, config_path)
             except Exception as exc:
-                updater_log.warning(
-                    f"Failed to persist installed_version to config before update: {exc}"
-                )
+                updater_log.warning(f"Failed to persist installed_version to config before update: {exc}")
 
         # Prepare and launch standalone updater (falls back to batch script if needed)
         updater_params = self.installer.prepare_updater_launch(
@@ -335,11 +331,10 @@ class UpdateSequence:
             # Revert installed_version so the next run retries the update
             self._revert_installed_version(config, config_path, old_installed_version)
             return False
-        
+
         progress_callback(100)
         if bytes_callback and total_size:
             bytes_callback(total_size, total_size)
         status_callback("Update installed")
         updater_log.info(f"Auto-update completed. Update installed: True")
         return True
-

@@ -36,9 +36,9 @@ class PartyToken:
     Only summoner_id + encryption_key are needed.
     """
 
-    summoner_id: int            # League summoner ID
-    encryption_key: bytes       # 32-byte encryption key
-    timestamp: int              # Token creation time (Unix timestamp)
+    summoner_id: int  # League summoner ID
+    encryption_key: bytes  # 32-byte encryption key
+    timestamp: int  # Token creation time (Unix timestamp)
     version: int = TOKEN_VERSION
 
     def encode(self) -> str:
@@ -91,7 +91,7 @@ class PartyToken:
         """
         try:
             if token_str.startswith(TOKEN_PREFIX):
-                token_str = token_str[len(TOKEN_PREFIX):]
+                token_str = token_str[len(TOKEN_PREFIX) :]
 
             padding = 4 - (len(token_str) % 4)
             if padding != 4:

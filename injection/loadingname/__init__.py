@@ -6,4 +6,4 @@ Loading screen name package
 
 from .loading_name import build, champion_aliases, MOD_FOLDER
 
-__all__ = ['build', 'champion_aliases', 'MOD_FOLDER']
+__all__ = ["build", "champion_aliases", "MOD_FOLDER"]

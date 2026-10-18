@@ -13,6 +13,7 @@ from typing import Optional
 from injection.game.game_monitor import make_game_ended_callback
 from lcu import LCU
 from lcu.core.lockfile import SWIFTPLAY_MODES, SWIFTPLAY_QUEUE_IDS
+from sexo2.services import assistant_runtime
 from state import SharedState
 from pengu.processing.swiftplay_pins import get_pins, read_lobby, base_slots_ready
 from utils.core.historic import clear_historic_entry, get_historic_skin_for_champion, write_historic_entry
@@ -23,7 +24,7 @@ log = get_logger()
 
 class SwiftplayHandler:
     """Handles Swiftplay mode detection and injection"""
-    
+
     def __init__(
         self,
         lcu: LCU,
@@ -32,7 +33,7 @@ class SwiftplayHandler:
         skin_scraper=None,
     ):
         """Initialize Swiftplay handler
-        
+
         Args:
             lcu: LCU client instance
             state: Shared application state
@@ -44,7 +45,7 @@ class SwiftplayHandler:
         self.injection_manager = injection_manager
         self.skin_scraper = skin_scraper
         self.pins = get_pins(state)
-        
+
         # Swiftplay injection tracking
         self._injection_triggered = False
         self._overlay_done = False  # Set True after overlay completes successfully
@@ -59,7 +60,7 @@ class SwiftplayHandler:
         # Champions the user set to a non-default skin this lobby session: their
         # choice wins over the saved (historic) skin, like in champ select
         self._historic_declined: set = set()
-    
+
     def detect_swiftplay_in_lobby(self) -> tuple[Optional[str], Optional[int]]:
         """Detect lobby game mode using multiple API endpoints."""
         try:
@@ -80,7 +81,7 @@ class SwiftplayHandler:
             lobby_endpoints = [
                 "/lol-lobby/v2/lobby",
                 "/lol-lobby/v2/lobby/matchmaking/search-state",
-                "/lol-lobby/v1/parties/me"
+                "/lol-lobby/v1/parties/me",
             ]
 
             for endpoint in lobby_endpoints:
@@ -128,7 +129,7 @@ class SwiftplayHandler:
         except Exception as e:
             log.debug(f"[phase] Error in Swiftplay detection: {e}")
             return None, None
-    
+
     def handle_swiftplay_lobby(self, detected_mode: Optional[str] = None, detected_queue: Optional[int] = None):
         """Handle Swiftplay lobby - trigger early skin detection and UI
 
@@ -170,31 +171,32 @@ class SwiftplayHandler:
                         ui_thread.stop_event.clear()
                     except Exception:
                         pass
-            
+
             log.info(f"[phase] Swiftplay lobby - Game mode: {game_mode}, Map ID: {map_id}")
-            
+
             # Check for champion selection in lobby
             self._check_swiftplay_champion_selection()
-            
+
             # Clean up any existing ClickCatchers for Swiftplay mode
             self._cleanup_click_catchers_for_swiftplay()
-            
+
             # Initialize UI for Swiftplay mode
             try:
                 from ui.core.user_interface import get_user_interface
+
                 user_interface = get_user_interface(self.state, self.skin_scraper)
                 if not user_interface.is_ui_initialized():
                     log.info("[phase] Initializing UI components for Swiftplay mode")
                     user_interface._pending_ui_initialization = True
             except Exception as e:
                 log.warning(f"[phase] Failed to initialize UI for Swiftplay: {e}")
-            
+
             # Start matchmaking monitoring
             self._start_swiftplay_matchmaking_monitoring()
-            
+
         except Exception as e:
             log.warning(f"[phase] Error handling Swiftplay lobby: {e}")
-    
+
     def _check_swiftplay_champion_selection(self):
         """Check for champion selection in Swiftplay lobby"""
         try:
@@ -206,59 +208,64 @@ class SwiftplayHandler:
                 log.debug("[phase] No champion selection found in Swiftplay lobby yet")
         except Exception as e:
             log.warning(f"[phase] Error checking Swiftplay champion selection: {e}")
-    
+
     def _process_swiftplay_champion_selection(self, champion_selection: dict):
         """Process champion selection data from Swiftplay lobby"""
         try:
             champion_id = champion_selection.get("championId")
             skin_id = champion_selection.get("skinId")
-            
+
             if champion_id:
                 log.info(f"[phase] Swiftplay champion selected: {champion_id}")
                 self.state.locked_champ_id = champion_id
                 self.state.locked_champ_timestamp = time.time()
                 self.state.own_champion_locked = True
-                
+                assistant_runtime.champion_confirmed(self.lcu, self.state, champion_id, swiftplay=True)
+
                 # Trigger skin scraping
                 if self.skin_scraper:
                     self.skin_scraper.scrape_champion_skins(champion_id)
-                
+
                 # If skin is also selected, update the state
                 if skin_id:
                     log.info(f"[phase] Swiftplay skin selected: {skin_id}")
                     self.state.selected_skin_id = skin_id
         except Exception as e:
             log.warning(f"[phase] Error processing Swiftplay champion selection: {e}")
-    
+
     def _cleanup_click_catchers_for_swiftplay(self):
         """Legacy method - no-op for compatibility."""
         pass
-    
+
     def _start_swiftplay_matchmaking_monitoring(self):
         """Start monitoring matchmaking state for injection triggering"""
         try:
-            log.info(f"[phase] Starting Swiftplay matchmaking monitoring (overlay_done={self._overlay_done}, injection_triggered={self._injection_triggered})")
+            log.info(
+                f"[phase] Starting Swiftplay matchmaking monitoring (overlay_done={self._overlay_done}, injection_triggered={self._injection_triggered})"
+            )
             self._last_matchmaking_state = None
             self._injection_triggered = False
         except Exception as e:
             log.warning(f"[phase] Error starting Swiftplay matchmaking monitoring: {e}")
-    
+
     def monitor_swiftplay_matchmaking(self):
         """Monitor matchmaking state and trigger injection when matchmaking starts"""
         try:
             if not self.lcu.ok or not self.injection_manager:
                 return
-            
+
             # Get current matchmaking state
             matchmaking_data = self.lcu.get("/lol-lobby/v2/lobby/matchmaking/search-state")
             if not matchmaking_data or not isinstance(matchmaking_data, dict):
                 return
-            
+
             current_state = matchmaking_data.get("searchState")
             if current_state != self._last_matchmaking_state:
-                log.debug(f"[phase] Swiftplay matchmaking state changed: {self._last_matchmaking_state} → {current_state}")
+                log.debug(
+                    f"[phase] Swiftplay matchmaking state changed: {self._last_matchmaking_state} → {current_state}"
+                )
                 self._last_matchmaking_state = current_state
-                
+
                 # Check if matchmaking has started
                 if current_state == "Searching" and not self._injection_triggered:
                     hover_at = getattr(self.state, "_find_match_hover_at", None)
@@ -274,7 +281,7 @@ class SwiftplayHandler:
                     self._injection_triggered = False
         except Exception as e:
             log.debug(f"[phase] Error monitoring Swiftplay matchmaking: {e}")
-    
+
     def poll_swiftplay_champion_selection(self):
         """Periodically poll Swiftplay champion selection and detect swaps."""
         now = time.time()
@@ -319,7 +326,7 @@ class SwiftplayHandler:
                             self.state.swiftplay_skin_tracking[cid] = pin["skinId"]
         except Exception as e:
             log.debug(f"[phase] Error syncing tracking with lobby: {e}")
-    
+
     def mark_champion_changed(self, champion_id: int, skin_id: Optional[int] = None):
         """Mark a champion as explicitly changed by the user since last injection."""
         self._user_changed_since_inject.add(champion_id)
@@ -378,14 +385,15 @@ class SwiftplayHandler:
         ids = read_lobby(self.lcu)
         pins = self.pins.snapshot()
         with self.state.swiftplay_lock:
-            self._apply_historic_skins(set(ids) if ids else (self._last_sync_active_ids or self._get_active_lobby_champion_ids()))
+            self._apply_historic_skins(
+                set(ids) if ids else (self._last_sync_active_ids or self._get_active_lobby_champion_ids())
+            )
         with self.state.swiftplay_lock:
             if ids:
                 for cid in ids:
                     if cid in pins:
                         self.state.swiftplay_skin_tracking[cid] = pins[cid]["skinId"]
-            tracking = {cid: sid for cid, sid in self.state.swiftplay_skin_tracking.items()
-                        if not ids or cid in ids}
+            tracking = {cid: sid for cid, sid in self.state.swiftplay_skin_tracking.items() if not ids or cid in ids}
         if not tracking:
             return
         try:
@@ -398,7 +406,9 @@ class SwiftplayHandler:
                 with self.state.swiftplay_lock:
                     self.state.swiftplay_pin_status = {
                         cid: {"state": "error", "message": "Não foi possível preparar o slot; volte ao lobby"}
-                        for cid in ids if cid in pins}
+                        for cid in ids
+                        if cid in pins
+                    }
         except Exception as e:
             log.warning(f"[phase] Error forcing base skins: {e}")
 
@@ -478,7 +488,7 @@ class SwiftplayHandler:
 
             except Exception as e:
                 log.warning(f"[phase] Error while cleaning up Swiftplay state: {e}")
-    
+
     def _get_active_lobby_champion_ids(self) -> Optional[set]:
         """Return the set of champion IDs currently in the player's lobby slots.
 
@@ -510,10 +520,19 @@ class SwiftplayHandler:
                 self.state.swiftplay_extracted_mods.clear()
                 if self.state.current_queue_id == 480 and pins and not confirmed_ids:
                     log.warning("[SwiftplayPins] Cannot confirm local slots; preparation skipped")
-                    self.state.swiftplay_pin_status = {cid: {"state": "error", "message": "Não foi possível confirmar os campeões"} for cid in pins}
+                    self.state.swiftplay_pin_status = {
+                        cid: {"state": "error", "message": "Não foi possível confirmar os campeões"} for cid in pins
+                    }
                     return
                 if confirmed_ids and not slots_ready:
-                    self.state.swiftplay_pin_status = {cid: {"state": "error", "message": "O cliente não confirmou o slot padrão. Cancele a busca e salve novamente"} for cid in confirmed_ids if cid in pins}
+                    self.state.swiftplay_pin_status = {
+                        cid: {
+                            "state": "error",
+                            "message": "O cliente não confirmou o slot padrão. Cancele a busca e salve novamente",
+                        }
+                        for cid in confirmed_ids
+                        if cid in pins
+                    }
                     log.warning("[SwiftplayPins] Base slots were not confirmed; skipping preparation")
                     return
                 if confirmed_ids:
@@ -571,7 +590,9 @@ class SwiftplayHandler:
                 import zipfile
                 import shutil
 
-                chroma_id_map = self.skin_scraper.cache.chroma_id_map if self.skin_scraper and self.skin_scraper.cache else None
+                chroma_id_map = (
+                    self.skin_scraper.cache.chroma_id_map if self.skin_scraper and self.skin_scraper.cache else None
+                )
 
                 if not self.injection_manager:
                     log.error("[phase] Injection manager not available")
@@ -592,7 +613,10 @@ class SwiftplayHandler:
                 for champion_id, skin_id in filtered_tracking.items():
                     try:
                         if confirmed_ids and champion_id in pins and skin_id == champion_id * 1000:
-                            self.state.swiftplay_pin_status[champion_id] = {"state": "ready", "message": "Skin padrão confirmada; nenhuma aplicação necessária"}
+                            self.state.swiftplay_pin_status[champion_id] = {
+                                "state": "ready",
+                                "message": "Skin padrão confirmada; nenhuma aplicação necessária",
+                            }
                             continue
                         is_base = is_base_skin(skin_id, chroma_id_map)
                         if is_base:
@@ -607,25 +631,38 @@ class SwiftplayHandler:
                             chroma_id=chroma_id_param,
                             skin_name=injection_name,
                             champion_name=None,
-                            champion_id=champion_id
+                            champion_id=champion_id,
                         )
 
                         if not zip_path or not zip_path.exists():
                             log.warning(f"[phase] Skin ZIP not found: {injection_name}")
-                            self.state.swiftplay_pin_status[champion_id] = {"state": "error", "message": "Arquivo da skin indisponível"}
+                            self.state.swiftplay_pin_status[champion_id] = {
+                                "state": "error",
+                                "message": "Arquivo da skin indisponível",
+                            }
                             continue
 
                         mod_folder = self.injection_manager.injector._extract_zip_to_mod(zip_path)
                         if mod_folder:
                             extracted_mods.append(mod_folder.name)
                             log.info(f"[phase] Extracted {injection_name} to mods directory")
-                            self.state.swiftplay_pin_status[champion_id] = {"state": "ready", "message": "Preparada para a partida"}
+                            self.state.swiftplay_pin_status[champion_id] = {
+                                "state": "ready",
+                                "message": "Preparada para a partida",
+                            }
                         else:
-                            self.state.swiftplay_pin_status[champion_id] = {"state": "error", "message": "Não foi possível preparar a skin"}
+                            self.state.swiftplay_pin_status[champion_id] = {
+                                "state": "error",
+                                "message": "Não foi possível preparar a skin",
+                            }
                     except Exception as e:
                         log.error(f"[phase] Error extracting skin {skin_id}: {e}")
-                        self.state.swiftplay_pin_status[champion_id] = {"state": "error", "message": "Erro ao preparar a skin; consulte os logs"}
+                        self.state.swiftplay_pin_status[champion_id] = {
+                            "state": "error",
+                            "message": "Erro ao preparar a skin; consulte os logs",
+                        }
                         import traceback
+
                         log.debug(f"[phase] Traceback: {traceback.format_exc()}")
 
                 if not extracted_mods:
@@ -638,13 +675,16 @@ class SwiftplayHandler:
                 self._overlay_done = False
                 self._last_injected_tracking = dict(filtered_tracking)
                 self._user_changed_since_inject.clear()
-                log.info(f"[phase] Extracted {len(extracted_mods)} skin(s) - will inject on GameStart: {', '.join(extracted_mods)}")
+                log.info(
+                    f"[phase] Extracted {len(extracted_mods)} skin(s) - will inject on GameStart: {', '.join(extracted_mods)}"
+                )
 
             except Exception as e:
                 log.warning(f"[phase] Error extracting Swiftplay skins: {e}")
                 import traceback
+
                 log.debug(f"[phase] Traceback: {traceback.format_exc()}")
-    
+
     def run_swiftplay_overlay(self):
         """Run overlay injection for Swiftplay mode with previously extracted mods"""
         with self._overlay_lock:
@@ -671,7 +711,9 @@ class SwiftplayHandler:
                     log.error("[phase] Injector not initialized")
                     return
 
-                log.info(f"[phase] Running overlay injection for {len(extracted_mods)} mod(s): {', '.join(extracted_mods)}")
+                log.info(
+                    f"[phase] Running overlay injection for {len(extracted_mods)} mod(s): {', '.join(extracted_mods)}"
+                )
 
                 # Start game monitor to prevent game from starting before overlay is ready
                 if not self.injection_manager._monitor_active:
@@ -683,7 +725,7 @@ class SwiftplayHandler:
                         extracted_mods,
                         timeout=60,
                         stop_callback=make_game_ended_callback(self.state),
-                        injection_manager=self.injection_manager
+                        injection_manager=self.injection_manager,
                     )
 
                     if result == 0:
@@ -695,6 +737,7 @@ class SwiftplayHandler:
                 except Exception as e:
                     log.error(f"[phase] Error during overlay injection: {e}")
                     import traceback
+
                     log.debug(f"[phase] Traceback: {traceback.format_exc()}")
                 finally:
                     # Only the success path releases the game on its own, from
@@ -706,5 +749,5 @@ class SwiftplayHandler:
             except Exception as e:
                 log.warning(f"[phase] Error running Swiftplay overlay: {e}")
                 import traceback
-                log.debug(f"[phase] Traceback: {traceback.format_exc()}")
 
+                log.debug(f"[phase] Traceback: {traceback.format_exc()}")

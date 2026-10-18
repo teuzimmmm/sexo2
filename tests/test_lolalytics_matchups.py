@@ -1,4 +1,5 @@
 """Offline matchup collection and page-shaping tests."""
+
 import contextlib
 import io
 import json
@@ -63,11 +64,17 @@ class MatchupPageTests(unittest.TestCase):
         self.assertIsNone(page.query["keystone"])
         self.assertIsNone(page.resolved["keystone"])
         self.assertEqual(page.core_metrics, {"win_rate": None, "games": None})
-        self.assertEqual(page.matchup_metrics, {
-            "scope": "champion_matchup", "win_rate": 49.57, "games": 1852,
-        })
-        self.assertEqual([block.kind for block in page.blocks],
-                         ["starting", "item1", "item2", "item3", "item4", "item5", "item6"])
+        self.assertEqual(
+            page.matchup_metrics,
+            {
+                "scope": "champion_matchup",
+                "win_rate": 49.57,
+                "games": 1852,
+            },
+        )
+        self.assertEqual(
+            [block.kind for block in page.blocks], ["starting", "item1", "item2", "item3", "item4", "item5", "item6"]
+        )
         self.assertEqual(len(page.blocks[1].choices), 1)
         self.assertEqual(page.blocks[1].choices[0].identifier, "6655")
         self.assertEqual(page.blocks[1].choices[0].metrics, {"win_rate": 52.19, "games": 228})
@@ -175,8 +182,12 @@ class MatchupClientTests(unittest.TestCase):
 class MatchupCliTests(unittest.TestCase):
     def test_matchup_requires_opponent_and_conflicts_fail_before_client(self):
         from lolalytics.__main__ import main
-        for args in (["ahri", "--matchup"], ["ahri", "--opponent", "annie", "--builds"],
-                     ["ahri", "--opponent", "annie", "--item-sets"]):
+
+        for args in (
+            ["ahri", "--matchup"],
+            ["ahri", "--opponent", "annie", "--builds"],
+            ["ahri", "--opponent", "annie", "--item-sets"],
+        ):
             with self.subTest(args=args), patch("lolalytics.__main__.Client") as client_class:
                 with self.assertRaises(SystemExit):
                     main(args)
@@ -184,12 +195,28 @@ class MatchupCliTests(unittest.TestCase):
 
     def test_matchup_cli_emits_page_with_source(self):
         from lolalytics.__main__ import main
+
         transport = FixtureTransport(("ahri-vs-annie.json",))
         output = io.StringIO()
         with patch("lolalytics.__main__.Client", lambda **_kwargs: Client(transport=transport, ttl=0)):
             with contextlib.redirect_stdout(output):
-                self.assertEqual(main(["ahri", "--lane", "middle", "--opponent", "annie", "--opponent-lane", "middle",
-                                       "--matchup", "--min-games", "0"]), 0)
+                self.assertEqual(
+                    main(
+                        [
+                            "ahri",
+                            "--lane",
+                            "middle",
+                            "--opponent",
+                            "annie",
+                            "--opponent-lane",
+                            "middle",
+                            "--matchup",
+                            "--min-games",
+                            "0",
+                        ]
+                    ),
+                    0,
+                )
         data = json.loads(output.getvalue())
         self.assertEqual(data["selection"], "vs")
         self.assertEqual(data["resolved"]["opponent"], "annie")

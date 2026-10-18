@@ -34,3 +34,5 @@ Pengu Loader/config
 Pengu Loader/datastore
 **/obj/
 **/bin/
+.ruff_cache/
+.claude/worktrees/

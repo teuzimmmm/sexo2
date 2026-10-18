@@ -51,6 +51,7 @@ from utils.core.logging import get_logger
 log = get_logger()
 
 from config import GAME_EXECUTABLE_NAMES
+
 GAME_PROCESS_NAMES = {name.lower() for name in GAME_EXECUTABLE_NAMES}
 ACTIVE_PHASES = {"GameStart", "InProgress", "Reconnect"}
 
@@ -83,9 +84,7 @@ class MatchRecovery:
 
     def note_phase(self, phase: str, previous_phase: str) -> None:
         """Libera a trava quando começa uma partida nova."""
-        if (
-            phase == "ChampSelect" and previous_phase not in ACTIVE_PHASES | {"ChampSelect"}
-        ) or (
+        if (phase == "ChampSelect" and previous_phase not in ACTIVE_PHASES | {"ChampSelect"}) or (
             phase == "Matchmaking" and previous_phase in (None, "Lobby", "EndOfGame")
         ):
             if self.cancelled.is_set():
@@ -113,4 +112,4 @@ class MatchRecovery:
                 injection_manager.game_monitor.stop()
             except Exception as exc:
                 log.warning("[RECOVERY] Could not release the game: %s", exc)
-        log.warning("[RECOVERY] Rose stopped for this match; game released")
+        log.warning("[RECOVERY] SEXO2 stopped for this match; game released")

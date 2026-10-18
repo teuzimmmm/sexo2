@@ -25,17 +25,16 @@ from utils.integration.pengu_loader import (
 )
 
 __all__ = [
-    'TrayManager',
-    'PenguStatus',
-    'activate',
-    'activate_on_start',
-    'deactivate',
-    'deactivate_on_exit',
-    'get_status',
-    'is_available',
-    'PENGU_DIR',
-    'PENGU_EXE',
-    'recover_stale_session',
-    'restart_client',
+    "TrayManager",
+    "PenguStatus",
+    "activate",
+    "activate_on_start",
+    "deactivate",
+    "deactivate_on_exit",
+    "get_status",
+    "is_available",
+    "PENGU_DIR",
+    "PENGU_EXE",
+    "recover_stale_session",
+    "restart_client",
 ]
-

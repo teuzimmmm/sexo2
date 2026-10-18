@@ -1,4 +1,5 @@
 """Persistent, champion-keyed Swiftplay preferences; independent of UI hover events."""
+
 import json
 import os
 import threading
@@ -120,24 +121,47 @@ class SwiftplayPanelService:
             for skin in data["skins"]:
                 sid = skin.get("id")
                 if type(sid) is int and sid // 1000 == cid:
-                    skins.append({"skinId": sid, "name": str(skin.get("name") or sid), "tilePath": skin.get("tilePath")})
+                    skins.append(
+                        {"skinId": sid, "name": str(skin.get("name") or sid), "tilePath": skin.get("tilePath")}
+                    )
                     for chroma in skin.get("chromas", []) or []:
-                        if not isinstance(chroma, dict) or chroma.get("disabled"): continue
+                        if not isinstance(chroma, dict) or chroma.get("disabled"):
+                            continue
                         chroma_id = chroma.get("id")
                         if type(chroma_id) is int and chroma_id // 1000 == cid:
-                            skins.append({"skinId": chroma_id, "name": str(skin.get("name") or sid) + " · " + str(chroma.get("name") or "Croma " + str(chroma_id)), "tilePath": chroma.get("chromaPath") or skin.get("tilePath"), "chroma": True, "baseSkinId": sid})
+                            skins.append(
+                                {
+                                    "skinId": chroma_id,
+                                    "name": str(skin.get("name") or sid)
+                                    + " · "
+                                    + str(chroma.get("name") or "Croma " + str(chroma_id)),
+                                    "tilePath": chroma.get("chromaPath") or skin.get("tilePath"),
+                                    "chroma": True,
+                                    "baseSkinId": sid,
+                                }
+                            )
             if not skins:
                 raise ValueError("Catálogo de skins vazio; tente novamente")
-            self.catalogs[cid] = {"championId": cid, "name": str(data.get("name") or cid),
-                                  "portrait": data.get("squarePortraitPath"), "skins": skins}
+            self.catalogs[cid] = {
+                "championId": cid,
+                "name": str(data.get("name") or cid),
+                "portrait": data.get("squarePortraitPath"),
+                "skins": skins,
+            }
         return self.catalogs[cid]
 
     def snapshot(self):
         ids = read_lobby(self.lcu)
         phase = self.lcu.get("/lol-gameflow/v1/gameflow-phase") if ids else None
         active = bool(ids and phase in ("Lobby", "Matchmaking", "ReadyCheck"))
-        result = {"type": "swiftplay-pins-state", "active": active, "editable": active and phase == "Lobby",
-                  "championIds": ids or [], "champions": [], "error": self.pins.error}
+        result = {
+            "type": "swiftplay-pins-state",
+            "active": active,
+            "editable": active and phase == "Lobby",
+            "championIds": ids or [],
+            "champions": [],
+            "error": self.pins.error,
+        }
         if active:
             pins = self.pins.snapshot()
             for cid in ids:

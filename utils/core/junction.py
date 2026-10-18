@@ -22,6 +22,7 @@ log = get_logger()
 # Detection
 # ---------------------------------------------------------------------------
 
+
 def is_junction(path: Union[str, Path]) -> bool:
     """Detect whether *path* is a Windows junction (reparse point).
 
@@ -44,6 +45,7 @@ def is_junction(path: Union[str, Path]) -> bool:
 # Creation
 # ---------------------------------------------------------------------------
 
+
 def create_junction(source: Path, link: Path) -> bool:
     """Create a Windows directory junction at *link* pointing to *source*.
 
@@ -56,6 +58,7 @@ def create_junction(source: Path, link: Path) -> bool:
 
     try:
         import _winapi  # type: ignore[import-not-found]
+
         _winapi.CreateJunction(str(source), str(link))
         log.info(f"[JUNCTION] Created junction: {link} -> {source}")
         return True
@@ -72,6 +75,7 @@ def create_junction(source: Path, link: Path) -> bool:
 # ---------------------------------------------------------------------------
 # Removal
 # ---------------------------------------------------------------------------
+
 
 def safe_remove_entry(path: Union[str, Path]) -> None:
     """Remove *path* safely, handling junctions and regular dirs/files.
@@ -105,6 +109,7 @@ def safe_remove_entry(path: Union[str, Path]) -> None:
 # ---------------------------------------------------------------------------
 # Cache helpers for mod archives (ZIP / fantome / modpkg)
 # ---------------------------------------------------------------------------
+
 
 def _get_or_extract_to_cache(
     zip_path: Path,
@@ -158,6 +163,7 @@ def _get_or_extract_to_cache(
 # ---------------------------------------------------------------------------
 # High-level entry point
 # ---------------------------------------------------------------------------
+
 
 def link_or_extract(
     source: Path,

@@ -6,46 +6,61 @@ Thread initialization and management
 
 from threads import PhaseThread, WSEventThread, LCUMonitorThread
 from pengu import PenguSkinMonitorThread
-from analytics import AnalyticsThread
 from utils.threading.thread_manager import ThreadManager
 from utils.core.logging import get_logger
-from config import PHASE_POLL_INTERVAL_DEFAULT, WS_PING_TIMEOUT_DEFAULT
+from config import PHASE_POLL_INTERVAL_DEFAULT, WS_PING_TIMEOUT_DEFAULT, get_config_float, get_config_option
 
 log = get_logger()
 
 
-def initialize_threads(lcu, state, args, injection_manager, skin_scraper, app_status, on_lcu_disconnected, on_lcu_reconnected=None):
+def initialize_threads(
+    lcu, state, args, injection_manager, skin_scraper, app_status, on_lcu_disconnected, on_lcu_reconnected=None
+):
     """
     Initialize and start all application threads
-    
+
     Returns:
         Tuple of (thread_manager, t_phase, t_ui, t_ws, t_lcu_monitor)
     """
     # Initialize thread manager for organized thread lifecycle
     thread_manager = ThreadManager()
-    
+
     # Create and register threads
-    t_phase = PhaseThread(lcu, state, interval=1.0/max(PHASE_POLL_INTERVAL_DEFAULT, args.phase_hz), 
-                         log_transitions=False, injection_manager=injection_manager, skin_scraper=skin_scraper, db=None)
+    t_phase = PhaseThread(
+        lcu,
+        state,
+        interval=1.0 / max(PHASE_POLL_INTERVAL_DEFAULT, args.phase_hz),
+        log_transitions=False,
+        injection_manager=injection_manager,
+        skin_scraper=skin_scraper,
+        db=None,
+    )
     thread_manager.register("Phase", t_phase)
-    
+
     t_ui = PenguSkinMonitorThread(state, lcu, skin_scraper=skin_scraper, injection_manager=injection_manager)
     state.ui_skin_thread = t_ui  # Store reference for access during champion exchange
     thread_manager.register("Pengu Skin Monitor", t_ui, stop_method=t_ui.stop)
-    
-    t_ws = WSEventThread(lcu, state, ping_interval=args.ws_ping,
-                        ping_timeout=WS_PING_TIMEOUT_DEFAULT, timer_hz=args.timer_hz,
-                        fallback_ms=args.fallback_loadout_ms, injection_manager=injection_manager,
-                        skin_scraper=skin_scraper, app_status=app_status,
-                        swiftplay_handler=t_phase.swiftplay_handler)
+
+    t_ws = WSEventThread(
+        lcu,
+        state,
+        ping_interval=args.ws_ping,
+        ping_timeout=WS_PING_TIMEOUT_DEFAULT,
+        timer_hz=args.timer_hz,
+        fallback_ms=args.fallback_loadout_ms,
+        injection_manager=injection_manager,
+        skin_scraper=skin_scraper,
+        app_status=app_status,
+        swiftplay_handler=t_phase.swiftplay_handler,
+    )
     thread_manager.register("WebSocket", t_ws, stop_method=t_ws.stop)
-    
+
     # Language callback to update shared state
     def on_language_detected(language: str):
         """Callback when language is detected from LCU"""
         if language:
             # Extract language code from locale (e.g., 'en_US' -> 'en')
-            language_code = language.split('_')[0] if '_' in language else language
+            language_code = language.split("_")[0] if "_" in language else language
             state.current_language = language_code
             locale_changed = getattr(state, "current_locale", None) != language
             state.current_locale = language
@@ -59,28 +74,53 @@ def initialize_threads(lcu, state, args, injection_manager, skin_scraper, app_st
                     log.debug(f"[Main] Could not announce the language change: {e}")
         else:
             log.warning("[Main] Language detection returned None")
-    
-    t_lcu_monitor = LCUMonitorThread(lcu, state, on_language_detected, t_ws,
-                                      db=None, skin_scraper=skin_scraper, injection_manager=injection_manager,
-                                      disconnect_callback=on_lcu_disconnected,
-                                      reconnect_callback=on_lcu_reconnected)
+
+    t_lcu_monitor = LCUMonitorThread(
+        lcu,
+        state,
+        on_language_detected,
+        t_ws,
+        db=None,
+        skin_scraper=skin_scraper,
+        injection_manager=injection_manager,
+        disconnect_callback=on_lcu_disconnected,
+        reconnect_callback=on_lcu_reconnected,
+    )
     thread_manager.register("LCU Monitor", t_lcu_monitor)
-    
-    # Initialize analytics thread
-    t_analytics = AnalyticsThread(state)
-    thread_manager.register("Analytics", t_analytics, stop_method=t_analytics.stop)
-    
+
+    # Item value over the scoreboard: off unless enabled in config.ini (row positions need calibration)
+    if (get_config_option("Overlay", "gold_enabled", "false") or "").lower() == "true":
+        from sexo2.overlay.gold_overlay import Geometry, GoldOverlayThread
+
+        geometry = Geometry(
+            rows_top=get_config_float("Overlay", "gold_rows_top", Geometry.rows_top),
+            row_step=get_config_float("Overlay", "gold_row_step", Geometry.row_step),
+        )
+        t_gold = GoldOverlayThread(state, lcu, geometry)
+        thread_manager.register("Gold overlay", t_gold, stop_method=t_gold.stop)
+
+    # Statistics under augment cards (Arena, ARAM Mayhem): off unless enabled in config.ini
+    if (get_config_option("Overlay", "augments_enabled", "false") or "").lower() == "true":
+        from sexo2.augments.vision import Layout
+        from sexo2.overlay.augment_overlay import AugmentOverlayThread
+
+        layout = Layout(
+            card_top=get_config_float("Overlay", "augments_card_top", Layout.card_top),
+            icon_top=get_config_float("Overlay", "augments_icon_top", Layout.icon_top),
+        )
+        t_augments = AugmentOverlayThread(state, lcu, layout)
+        thread_manager.register("Augment overlay", t_augments, stop_method=t_augments.stop)
+
     # Start all threads
     thread_manager.start_all()
-    
+
     log.info("System ready")
-    
+
     # Wait for PenguSkinMonitor thread to be ready (servers started)
-    if t_ui and hasattr(t_ui, 'ready_event'):
+    if t_ui and hasattr(t_ui, "ready_event"):
         t_ui.ready_event.wait(timeout=5.0)  # Wait up to 5 seconds for servers to start
-    
+
     # Mark app as fully ready after all threads and servers are initialized
     app_status.mark_download_process_complete()
-    
-    return thread_manager, t_phase, t_ui, t_ws, t_lcu_monitor
 
+    return thread_manager, t_phase, t_ui, t_ws, t_lcu_monitor

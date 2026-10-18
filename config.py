@@ -17,16 +17,20 @@ import configparser
 from utils.core.atomic_file import atomic_write
 from utils.core.paths import get_user_data_dir
 
+from sexo2.version import RELEASE_VERSION
+
 log = logging.getLogger(__name__)
 
 # =============================================================================
 # APPLICATION METADATA
 # =============================================================================
 
-APP_VERSION = "1.4.7"                           # Application version
+# Inherited Rose protocol version, not the release: the party relay (`v=`) and
+# the legacy launcher compare it. The version users see is RELEASE_VERSION.
+APP_VERSION = "1.4.7"
 FORK_LABEL = "SEXO2"
 FORK_BUILD = True
-APP_USER_AGENT = f"Rose/{APP_VERSION}"  # User-Agent header for HTTP requests
+APP_USER_AGENT = f"SEXO2/{RELEASE_VERSION}"  # User-Agent header for HTTP requests
 GAME_EXECUTABLE_NAMES = ("League of Legends.exe", "League of Legends (TM) Client.exe")
 
 # Values are raw text: a '%' in a path must not be read as interpolation
@@ -162,7 +166,7 @@ def set_config_options(changes: dict, *, strict: bool = False, atomic_only: bool
         except Exception as e:
             log.warning("Not saving: config file could not be read: %s", e)
             if strict:
-                raise ValueError('Não foi possível ler as configurações. O arquivo anterior foi preservado.') from e
+                raise ValueError("Não foi possível ler as configurações. O arquivo anterior foi preservado.") from e
             return False
         for section, options in changes.items():
             if section not in config:
@@ -177,7 +181,9 @@ def set_config_options(changes: dict, *, strict: bool = False, atomic_only: bool
         except Exception as e:
             log.warning("Failed to write config file: %s", e)
             if strict:
-                raise ValueError('Não foi possível salvar as configurações. As opções anteriores foram mantidas.') from e
+                raise ValueError(
+                    "Não foi possível salvar as configurações. As opções anteriores foram mantidas."
+                ) from e
             return False
     return True
 
@@ -196,18 +202,18 @@ LATE_LOCK_SKIN_CACHE_MAX_AGE_S = 5.0  # Do not replay skin text older than this 
 
 # Phase monitoring
 PHASE_POLL_INTERVAL_DEFAULT = 0.5  # Seconds between phase checks
-PHASE_POLL_INTERVAL_INGAME = 2.0   # Seconds between phase checks during InProgress (reduces in-game CPU)
-PHASE_HZ_DEFAULT = 2.0             # Phase check frequency (Hz)
+PHASE_POLL_INTERVAL_INGAME = 2.0  # Seconds between phase checks during InProgress (reduces in-game CPU)
+PHASE_HZ_DEFAULT = 2.0  # Phase check frequency (Hz)
 
 # Champion monitoring
 CHAMP_POLL_INTERVAL = 0.25  # Seconds between champion state checks
 
 # LCU connection monitoring
-LCU_MONITOR_INTERVAL = 1.0         # Seconds between LCU connection checks
+LCU_MONITOR_INTERVAL = 1.0  # Seconds between LCU connection checks
 LCU_MONITOR_INTERVAL_INGAME = 3.0  # Seconds between LCU connection checks during InProgress
 
 # Main loop sleep intervals
-MAIN_LOOP_SLEEP = 0.016     # Main loop iteration sleep time (16ms for 60 FPS responsive chroma UI)
+MAIN_LOOP_SLEEP = 0.016  # Main loop iteration sleep time (16ms for 60 FPS responsive chroma UI)
 MAIN_LOOP_IDLE_SLEEP = 0.05  # Idle main loop sleep time (50ms when no active UI/chroma work)
 
 
@@ -216,44 +222,44 @@ MAIN_LOOP_IDLE_SLEEP = 0.05  # Idle main loop sleep time (50ms when no active UI
 # =============================================================================
 
 WS_PING_INTERVAL_DEFAULT = 20  # Seconds between WebSocket pings
-WS_PING_TIMEOUT_DEFAULT = 10   # Seconds before WebSocket ping times out
-WS_RECONNECT_DELAY = 1.0       # Seconds to wait before WebSocket reconnect
+WS_PING_TIMEOUT_DEFAULT = 10  # Seconds before WebSocket ping times out
+WS_RECONNECT_DELAY = 1.0  # Seconds to wait before WebSocket reconnect
 WS_RECONNECT_MAX_DELAY = 15.0  # Maximum delay after repeated connection failures
-WS_RECONNECT_JITTER = 0.25     # Randomized delay fraction to avoid synchronized retries
+WS_RECONNECT_JITTER = 0.25  # Randomized delay fraction to avoid synchronized retries
 
 # Lock detection timing
 # Note: Loadout timer ONLY starts on FINALIZATION phase (final countdown before game start)
 # This prevents premature timer start in game modes where all champions lock before bans complete
-WS_PROBE_ITERATIONS = 8        # Number of LCU timer probe attempts
-WS_PROBE_SLEEP_MS = 60         # Milliseconds between probe attempts (0.06s)
-WS_PROBE_WINDOW_MS = 480       # Total probe window (8 * 60ms ~= 480ms)
+WS_PROBE_ITERATIONS = 8  # Number of LCU timer probe attempts
+WS_PROBE_SLEEP_MS = 60  # Milliseconds between probe attempts (0.06s)
+WS_PROBE_WINDOW_MS = 480  # Total probe window (8 * 60ms ~= 480ms)
 
 
 # =============================================================================
 # LOADOUT TIMER CONSTANTS
 # =============================================================================
 
-TIMER_HZ_DEFAULT = 1000                     # Countdown display frequency (Hz)
-TIMER_HZ_MIN = 10                           # Minimum timer frequency
-TIMER_HZ_MAX = 2000                         # Maximum timer frequency
-TIMER_POLL_PERIOD_S = 0.2                   # Seconds between LCU resync checks
-FALLBACK_LOADOUT_MS_DEFAULT = 0             # Fallback countdown duration (ms)
+TIMER_HZ_DEFAULT = 1000  # Countdown display frequency (Hz)
+TIMER_HZ_MIN = 10  # Minimum timer frequency
+TIMER_HZ_MAX = 2000  # Maximum timer frequency
+TIMER_POLL_PERIOD_S = 0.2  # Seconds between LCU resync checks
+FALLBACK_LOADOUT_MS_DEFAULT = 0  # Fallback countdown duration (ms)
 
 # Skin injection timing
-SKIN_THRESHOLD_MS_DEFAULT = 300             # Time before loadout ends to write skin (ms)
-BASE_SKIN_VERIFICATION_WAIT_S = 0.15        # Seconds to wait for LCU to process base skin change
-PERSISTENT_MONITOR_START_SECONDS = 1        # Seconds remaining when persistent game monitor starts
+SKIN_THRESHOLD_MS_DEFAULT = 300  # Time before loadout ends to write skin (ms)
+BASE_SKIN_VERIFICATION_WAIT_S = 0.15  # Seconds to wait for LCU to process base skin change
+PERSISTENT_MONITOR_START_SECONDS = 1  # Seconds remaining when persistent game monitor starts
 PERSISTENT_MONITOR_CHECK_INTERVAL_S = 0.05  # Seconds between game process checks
-PERSISTENT_MONITOR_IDLE_INTERVAL_S = 0.1    # Seconds to wait when game already suspended
-PERSISTENT_MONITOR_WAIT_TIMEOUT_S = 20.0    # Max seconds to wait for persistent monitor to suspend game
-PERSISTENT_MONITOR_WAIT_INTERVAL_S = 0.1    # Seconds between checks while waiting for suspension
-PERSISTENT_MONITOR_AUTO_RESUME_S = 20.0     # Auto-resume game after this many seconds if still suspended (safety)
-GAME_RESUME_VERIFICATION_WAIT_S = 0.1       # Seconds to wait after resume for status verification
-GAME_RESUME_MAX_ATTEMPTS = 3                # Max attempts to resume game (handles multiple suspensions)
+PERSISTENT_MONITOR_IDLE_INTERVAL_S = 0.1  # Seconds to wait when game already suspended
+PERSISTENT_MONITOR_WAIT_TIMEOUT_S = 20.0  # Max seconds to wait for persistent monitor to suspend game
+PERSISTENT_MONITOR_WAIT_INTERVAL_S = 0.1  # Seconds between checks while waiting for suspension
+PERSISTENT_MONITOR_AUTO_RESUME_S = 20.0  # Auto-resume game after this many seconds if still suspended (safety)
+GAME_RESUME_VERIFICATION_WAIT_S = 0.1  # Seconds to wait after resume for status verification
+GAME_RESUME_MAX_ATTEMPTS = 3  # Max attempts to resume game (handles multiple suspensions)
 
 # Game delay strategies
-ENABLE_MKOVERLAY_PRIORITY_BOOST = True   # Boost short-lived mkoverlay process priority during injection setup
-ENABLE_GAME_SUSPENSION = True            # Suspend game process during injection (RISKY - may trigger anti-cheat)
+ENABLE_MKOVERLAY_PRIORITY_BOOST = True  # Boost short-lived mkoverlay process priority during injection setup
+ENABLE_GAME_SUSPENSION = True  # Suspend game process during injection (RISKY - may trigger anti-cheat)
 
 
 # =============================================================================
@@ -261,20 +267,20 @@ ENABLE_GAME_SUSPENSION = True            # Suspend game process during injection
 # =============================================================================
 
 # Request timing
-RATE_LIMIT_MIN_INTERVAL = 1.0        # Minimum seconds between API requests
-RATE_LIMIT_REQUEST_TIMEOUT = 30      # Seconds before request times out
-RATE_LIMIT_STREAM_TIMEOUT = 60       # Seconds for streaming downloads
+RATE_LIMIT_MIN_INTERVAL = 1.0  # Minimum seconds between API requests
+RATE_LIMIT_REQUEST_TIMEOUT = 30  # Seconds before request times out
+RATE_LIMIT_STREAM_TIMEOUT = 60  # Seconds for streaming downloads
 
 # Rate limit thresholds
-RATE_LIMIT_LOW_THRESHOLD = 10        # Trigger warning when below this
-RATE_LIMIT_WARNING_50 = 50           # Delay threshold 1
-RATE_LIMIT_WARNING_100 = 100         # Delay threshold 2
-RATE_LIMIT_INITIAL = 5000            # Assumed initial rate limit
+RATE_LIMIT_LOW_THRESHOLD = 10  # Trigger warning when below this
+RATE_LIMIT_WARNING_50 = 50  # Delay threshold 1
+RATE_LIMIT_WARNING_100 = 100  # Delay threshold 2
+RATE_LIMIT_INITIAL = 5000  # Assumed initial rate limit
 
 # Adaptive delays (seconds)
-RATE_LIMIT_DELAY_LOW = 2.0           # Delay when rate limit is very low
-RATE_LIMIT_DELAY_MEDIUM = 1.0        # Delay when rate limit is medium
-RATE_LIMIT_DELAY_HIGH = 0.5          # Delay when rate limit is high
+RATE_LIMIT_DELAY_LOW = 2.0  # Delay when rate limit is very low
+RATE_LIMIT_DELAY_MEDIUM = 1.0  # Delay when rate limit is medium
+RATE_LIMIT_DELAY_HIGH = 0.5  # Delay when rate limit is high
 
 # Rate limit multipliers
 RATE_LIMIT_BACKOFF_MULTIPLIER = 1.5  # Multiply interval by this when low
@@ -284,9 +290,9 @@ RATE_LIMIT_BACKOFF_MULTIPLIER = 1.5  # Multiply interval by this when low
 # LOGGING CONSTANTS
 # =============================================================================
 
-LOG_MAX_FILE_SIZE_MB_DEFAULT = 10        # Maximum single log file size before rolling (MB)
-LOG_CHUNK_SIZE = 8192                    # Chunk size for file downloads
-LOG_SEPARATOR_WIDTH = 80                 # Width of separator lines in logs (e.g., "=" * 80)
+LOG_MAX_FILE_SIZE_MB_DEFAULT = 10  # Maximum single log file size before rolling (MB)
+LOG_CHUNK_SIZE = 8192  # Chunk size for file downloads
+LOG_SEPARATOR_WIDTH = 80  # Width of separator lines in logs (e.g., "=" * 80)
 
 
 # =============================================================================
@@ -294,16 +300,16 @@ LOG_SEPARATOR_WIDTH = 80                 # Width of separator lines in logs (e.g
 # =============================================================================
 
 # Process termination timeouts (seconds)
-PROCESS_TERMINATE_TIMEOUT_S = 5         # Timeout for process.wait() after terminate/kill
-PROCESS_TERMINATE_WAIT_S = 0.3          # Short timeout for process wait after terminate() before kill()
-PROCESS_ENUM_TIMEOUT_S = 2.0            # Timeout for process enumeration when finding runoverlay
-THREAD_JOIN_TIMEOUT_S = 2               # Timeout for thread.join() on shutdown (increased from 1.0s)
-THREAD_FORCE_EXIT_TIMEOUT_S = 4         # Total timeout before forcing app exit
-INJECTION_LOCK_TIMEOUT_S = 2.0          # Timeout for acquiring injection lock
+PROCESS_TERMINATE_TIMEOUT_S = 5  # Timeout for process.wait() after terminate/kill
+PROCESS_TERMINATE_WAIT_S = 0.3  # Short timeout for process wait after terminate() before kill()
+PROCESS_ENUM_TIMEOUT_S = 2.0  # Timeout for process enumeration when finding runoverlay
+THREAD_JOIN_TIMEOUT_S = 2  # Timeout for thread.join() on shutdown (increased from 1.0s)
+THREAD_FORCE_EXIT_TIMEOUT_S = 4  # Total timeout before forcing app exit
+INJECTION_LOCK_TIMEOUT_S = 2.0  # Timeout for acquiring injection lock
 
 # Main loop watchdog timeouts (seconds)
-MAIN_LOOP_STALL_THRESHOLD_S = 5.0       # Threshold for detecting main loop stalls
-MAIN_LOOP_FORCE_QUIT_TIMEOUT_S = 2.0    # Timeout before forcing quit when stop flag is set
+MAIN_LOOP_STALL_THRESHOLD_S = 5.0  # Threshold for detecting main loop stalls
+MAIN_LOOP_FORCE_QUIT_TIMEOUT_S = 2.0  # Timeout before forcing quit when stop flag is set
 CHROMA_PANEL_PROCESSING_THRESHOLD_S = 1.0  # Warning threshold for chroma panel processing
 
 # Process priority settings
@@ -311,60 +317,60 @@ CHROMA_PANEL_PROCESSING_THRESHOLD_S = 1.0  # Warning threshold for chroma panel 
 # But the CPU contention also provides a buffer window for late injections to complete
 
 # API request timeouts (seconds)
-LCU_API_TIMEOUT_S = 2.0                 # Timeout for LCU API requests
-LCU_GET_CACHE_TTL_S = 0.2               # TTL for LCU GET response cache (de-dupes rapid polls across threads)
-LCU_SKIN_SCRAPER_TIMEOUT_S = 3.0        # Timeout for LCU skin scraper requests
-CHROMA_DOWNLOAD_TIMEOUT_S = 10          # Timeout for chroma preview downloads
-DEFAULT_SKIN_DOWNLOAD_TIMEOUT_S = 30    # Timeout for skin downloads
-SKIN_DOWNLOAD_STREAM_TIMEOUT_S = 60     # Timeout for streaming skin downloads
+LCU_API_TIMEOUT_S = 2.0  # Timeout for LCU API requests
+LCU_GET_CACHE_TTL_S = 0.2  # TTL for LCU GET response cache (de-dupes rapid polls across threads)
+LCU_SKIN_SCRAPER_TIMEOUT_S = 3.0  # Timeout for LCU skin scraper requests
+CHROMA_DOWNLOAD_TIMEOUT_S = 10  # Timeout for chroma preview downloads
+DEFAULT_SKIN_DOWNLOAD_TIMEOUT_S = 30  # Timeout for skin downloads
+SKIN_DOWNLOAD_STREAM_TIMEOUT_S = 60  # Timeout for streaming skin downloads
 
 # =============================================================================
 # SLEEP & DELAY CONSTANTS
 # =============================================================================
 
 # General sleep intervals (seconds)
-TRAY_INIT_SLEEP_S = 0.2                 # Sleep after tray icon initialization
-PROCESS_MONITOR_SLEEP_S = 0.5           # Sleep during process monitoring loop
-WINDOW_CHECK_SLEEP_S = 1                # Sleep between window existence checks
-API_POLITENESS_DELAY_S = 0.5            # Delay between API calls to be polite
-CONSOLE_BUFFER_CLEAR_INTERVAL_S = 0.5   # Interval to clear console buffer on Windows
+TRAY_INIT_SLEEP_S = 0.2  # Sleep after tray icon initialization
+PROCESS_MONITOR_SLEEP_S = 0.5  # Sleep during process monitoring loop
+WINDOW_CHECK_SLEEP_S = 1  # Sleep between window existence checks
+API_POLITENESS_DELAY_S = 0.5  # Delay between API calls to be polite
+CONSOLE_BUFFER_CLEAR_INTERVAL_S = 0.5  # Interval to clear console buffer on Windows
 
 # =============================================================================
 # SYSTEM TRAY CONSTANTS
 # =============================================================================
 
 # Tray icon initialization
-TRAY_READY_MAX_WAIT_S = 5.0             # Maximum time to wait for tray icon to be ready
-TRAY_READY_CHECK_INTERVAL_S = 0.1       # Interval to check if tray icon is ready
-TRAY_THREAD_JOIN_TIMEOUT_S = 2.0        # Timeout for tray thread join on shutdown
+TRAY_READY_MAX_WAIT_S = 5.0  # Maximum time to wait for tray icon to be ready
+TRAY_READY_CHECK_INTERVAL_S = 0.1  # Interval to check if tray icon is ready
+TRAY_THREAD_JOIN_TIMEOUT_S = 2.0  # Timeout for tray thread join on shutdown
 
 # Tray icon dimensions
-TRAY_ICON_WIDTH = 128                   # Tray icon width in pixels
-TRAY_ICON_HEIGHT = 128                  # Tray icon height in pixels
+TRAY_ICON_WIDTH = 128  # Tray icon width in pixels
+TRAY_ICON_HEIGHT = 128  # Tray icon height in pixels
 TRAY_ICON_ELLIPSE_COORDS = [16, 16, 112, 112]  # Ellipse coordinates for icon
-TRAY_ICON_BORDER_WIDTH = 4              # Border width for icon ellipse
+TRAY_ICON_BORDER_WIDTH = 4  # Border width for icon ellipse
 
 # Tray icon text and indicators
-TRAY_ICON_FONT_SIZE = 40                # Font size for "SC" text on icon
-TRAY_ICON_TEXT_X = 36                   # X position for text
-TRAY_ICON_TEXT_Y = 44                   # Y position for text
-TRAY_ICON_DOT_SIZE = 70                 # Size of status indicator dot
+TRAY_ICON_FONT_SIZE = 40  # Font size for "SC" text on icon
+TRAY_ICON_TEXT_X = 36  # X position for text
+TRAY_ICON_TEXT_Y = 44  # Y position for text
+TRAY_ICON_DOT_SIZE = 70  # Size of status indicator dot
 
 # =============================================================================
 # WINDOWS API CONSTANTS
 # =============================================================================
 
 # Process access rights
-WINDOWS_PROCESS_QUERY = 0x1000          # PROCESS_QUERY_LIMITED_INFORMATION
+WINDOWS_PROCESS_QUERY = 0x1000  # PROCESS_QUERY_LIMITED_INFORMATION
 
 # Window display commands
-WINDOWS_SW_HIDE = 0                      # Hide window command
+WINDOWS_SW_HIDE = 0  # Hide window command
 
 # MessageBox flags
-WINDOWS_MB_ICONERROR = 0x10              # Error icon for message box
+WINDOWS_MB_ICONERROR = 0x10  # Error icon for message box
 
 # DPI Awareness
-WINDOWS_DPI_AWARENESS_SYSTEM = 1         # PROCESS_SYSTEM_DPI_AWARE
+WINDOWS_DPI_AWARENESS_SYSTEM = 1  # PROCESS_SYSTEM_DPI_AWARE
 
 
 # =============================================================================
@@ -393,24 +399,15 @@ LOG_TIMESTAMP_FORMAT = "%d-%m-%Y_%H-%M-%S"  # European format, Windows-compatibl
 # Interesting game phases to log
 INTERESTING_PHASES = {
     "Lobby",
-    "Matchmaking", 
+    "Matchmaking",
     "ReadyCheck",
     "ChampSelect",
     "FINALIZATION",
     "GameStart",
     "InProgress",
-    "EndOfGame"
+    "EndOfGame",
 }
 
-
-# =============================================================================
-# ANALYTICS CONSTANTS
-# =============================================================================
-
-ANALYTICS_SERVER_URL = 'https://analytics.rosekeys.site/'  # Analytics server endpoint
-ANALYTICS_PING_INTERVAL_S = 900  # Seconds between presence heartbeats (15 minutes)
-ANALYTICS_ENABLED = True  # Enable/disable analytics tracking
-ANALYTICS_TIMEOUT_S = 5  # Request timeout in seconds
 
 # =============================================================================
 # DEFAULT ARGUMENTS

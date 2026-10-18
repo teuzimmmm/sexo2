@@ -10,8 +10,7 @@ from .websocket_thread import WSEventThread
 from .lcu_monitor_thread import LCUMonitorThread
 
 __all__ = [
-    'PhaseThread',
-    'WSEventThread',
-    'LCUMonitorThread',
+    "PhaseThread",
+    "WSEventThread",
+    "LCUMonitorThread",
 ]
-

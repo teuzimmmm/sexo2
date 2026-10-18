@@ -1,4 +1,5 @@
 """Bounded collection, validated caches and per-client request coalescing."""
+
 from collections import OrderedDict
 from concurrent.futures import Future
 from copy import deepcopy
@@ -52,8 +53,12 @@ def _validate_item_sets(data):
         if not isinstance(name, str) or not isinstance(rows, list):
             raise SchemaError("Lazy item sets: invalid table")
         for row in rows:
-            if (not isinstance(row, list) or len(row) != 3 or not isinstance(row[0], str)
-                    or any(isinstance(v, bool) or not isinstance(v, int) or v < 0 for v in row[1:])):
+            if (
+                not isinstance(row, list)
+                or len(row) != 3
+                or not isinstance(row[0], str)
+                or any(isinstance(v, bool) or not isinstance(v, int) or v < 0 for v in row[1:])
+            ):
                 raise SchemaError("Lazy item sets: unsupported row schema")
 
 
@@ -66,7 +71,12 @@ class Client:
     """
 
     def __init__(self, *, cache_dir=None, ttl=900, transport=None, clock=time.time):
-        if isinstance(ttl, bool) or not isinstance(ttl, (int, float)) or not math.isfinite(ttl) or not 0 <= ttl <= 86400:
+        if (
+            isinstance(ttl, bool)
+            or not isinstance(ttl, (int, float))
+            or not math.isfinite(ttl)
+            or not 0 <= ttl <= 86400
+        ):
             raise QueryError("ttl must be between 0 and 86400 seconds")
         self.ttl = ttl
         self._clock = clock
@@ -80,6 +90,7 @@ class Client:
 
     def _cached(self, key):
         with self._lock:
+
             def read(envelope):
                 if envelope is None:
                     return None
@@ -169,8 +180,9 @@ class Client:
             collected_at = datetime.fromtimestamp(self._clock(), timezone.utc).isoformat()
             result = parse_payload(nav, payload, query, query.url, collected_at)
             # Persist only sanitized aggregate data, never the upstream Arena body.
-            self._remember(query.key, {"nav": nav, "payload": sanitize_payload(payload, query.mode),
-                                       "collected_at": collected_at})
+            self._remember(
+                query.key, {"nav": nav, "payload": sanitize_payload(payload, query.mode), "collected_at": collected_at}
+            )
             return result
 
         return self._once(query.key, operation)
@@ -197,9 +209,13 @@ class Client:
 
         base = self.collect(query)
         if query.mode == "swift":
-            return BuildCollection(query=query.to_dict(), pages=[
-                build_page(base, selection, self._summary_keystone(base, selection), conditioning="mode")
-                for selection in ("win", "pick")])
+            return BuildCollection(
+                query=query.to_dict(),
+                pages=[
+                    build_page(base, selection, self._summary_keystone(base, selection), conditioning="mode")
+                    for selection in ("win", "pick")
+                ],
+            )
         if query.keystone is not None:
             pages = [build_page(base, selection, query.keystone) for selection in ("win", "pick")]
             return BuildCollection(query=query.to_dict(), pages=pages)
@@ -212,17 +228,23 @@ class Client:
             pinned_lane = base.resolved.get("effective_lane")
             if pinned_lane is None or pinned_lane == "all":
                 raise DataUnavailable("LoLalytics did not resolve an effective ranked lane")
-        filtered_query = Query(query.champion, mode=query.mode, patch=pinned_patch,
-                               lane=pinned_lane, tier=query.tier, region=query.region)
+        filtered_query = Query(
+            query.champion, mode=query.mode, patch=pinned_patch, lane=pinned_lane, tier=query.tier, region=query.region
+        )
         snapshots = {}
         pages = []
         for selection in ("win", "pick"):
             keystone = selections[selection]
             if keystone not in snapshots:
-                keyed_query = Query(filtered_query.champion, mode=filtered_query.mode,
-                                    patch=filtered_query.patch, lane=filtered_query.lane,
-                                    tier=filtered_query.tier, region=filtered_query.region,
-                                    keystone=keystone)
+                keyed_query = Query(
+                    filtered_query.champion,
+                    mode=filtered_query.mode,
+                    patch=filtered_query.patch,
+                    lane=filtered_query.lane,
+                    tier=filtered_query.tier,
+                    region=filtered_query.region,
+                    keystone=keystone,
+                )
                 snapshots[keystone] = self.collect(keyed_query)
             pages.append(build_page(snapshots[keystone], selection, keystone))
         return BuildCollection(query=query.to_dict(), pages=pages)
@@ -258,19 +280,25 @@ class Client:
                 raise DataUnavailable("champion overview win rate is unavailable for recommendation")
             score_observation(None, None, baseline, level)
         arena = query.mode == "arena"
-        policy = {"method": "pick_rate" if arena else "prior_weighted_mean",
-                  "prior_games": None if arena else BUILD_PRIOR_GAMES[level],
-                  "baseline": None if arena else base.overview.get("win_rate"),
-                  "baseline_source": None if arena else "champion_query_overview",
-                  "item_baseline": None,
-                  "item_baseline_source": None,
-                  "score_unit": None if arena else "percent",
-                  "not_calibrated": True}
+        policy = {
+            "method": "pick_rate" if arena else "prior_weighted_mean",
+            "prior_games": None if arena else BUILD_PRIOR_GAMES[level],
+            "baseline": None if arena else base.overview.get("win_rate"),
+            "baseline_source": None if arena else "champion_query_overview",
+            "item_baseline": None,
+            "item_baseline_source": None,
+            "score_unit": None if arena else "percent",
+            "not_calibrated": True,
+        }
         warnings = list(base.warnings)
         if query.mode != "arena":
-            warnings.extend(("rune_scope_primary_not_joint_page",
-                             "only_two_upstream_layout_candidates",
-                             "local_risk_not_draftgap_prediction"))
+            warnings.extend(
+                (
+                    "rune_scope_primary_not_joint_page",
+                    "only_two_upstream_layout_candidates",
+                    "local_risk_not_draftgap_prediction",
+                )
+            )
         selected_page = None
         selected = None
         rune_candidates = []
@@ -309,14 +337,19 @@ class Client:
                     pinned_lane = base.resolved.get("effective_lane")
                     if pinned_lane is None or pinned_lane == "all":
                         raise DataUnavailable("LoLalytics did not resolve an effective ranked lane")
-                filtered = Query(query.champion, mode=query.mode, patch=base.resolved["patch"],
-                                 lane=pinned_lane, tier=query.tier, region=query.region,
-                                 keystone=chosen_keystone)
+                filtered = Query(
+                    query.champion,
+                    mode=query.mode,
+                    patch=base.resolved["patch"],
+                    lane=pinned_lane,
+                    tier=query.tier,
+                    region=query.region,
+                    keystone=chosen_keystone,
+                )
                 working = self.collect(filtered)
             selected_page = build_page(working, selected, chosen_keystone)
             source_layout = winner["runes"]
-            if any(source_layout.get(slot) != selected_page.runes.get(slot)
-                   for slot in ("pri", "sec", "mod")):
+            if any(source_layout.get(slot) != selected_page.runes.get(slot) for slot in ("pri", "sec", "mod")):
                 warnings.append("selected_keystone_then_refresh_layout")
 
         if selected_page is not None:
@@ -330,14 +363,26 @@ class Client:
             policy["item_baseline"] = item_baseline
             policy["item_baseline_source"] = "item_source.champion_query_overview"
         item_rankings_result = item_rankings(working, item_baseline, level)
-        item_source = {"source_url": working.source_url, "query": deepcopy(working.query),
-                       "resolved": deepcopy(working.resolved), "collected_at": working.collected_at,
-                       "cache_hit": bool(working.cache_hit)}
+        item_source = {
+            "source_url": working.source_url,
+            "query": deepcopy(working.query),
+            "resolved": deepcopy(working.resolved),
+            "collected_at": working.collected_at,
+            "cache_hit": bool(working.cache_hit),
+        }
         return Recommendation(
-            query=query.to_dict(), resolved=deepcopy(base.resolved), source_url=base.source_url,
-            collected_at=base.collected_at, cache_hit=bool(base.cache_hit and working.cache_hit), risk_level=level,
-            policy=policy, rune_candidates=rune_candidates, recommended_selection=selected,
-            build_page=selected_page, item_source=item_source, item_rankings=item_rankings_result,
+            query=query.to_dict(),
+            resolved=deepcopy(base.resolved),
+            source_url=base.source_url,
+            collected_at=base.collected_at,
+            cache_hit=bool(base.cache_hit and working.cache_hit),
+            risk_level=level,
+            policy=policy,
+            rune_candidates=rune_candidates,
+            recommended_selection=selected,
+            build_page=selected_page,
+            item_source=item_source,
+            item_rankings=item_rankings_result,
             warnings=list(dict.fromkeys(warnings)),
         )
 
@@ -370,9 +415,16 @@ class Client:
         if getattr(query, "opponent", None) is not None:
             raise QueryError("lazy item sets do not support opponent-filtered queries")
         base = self.collect(query)
-        params = {"ep": "build-itemset", "v": 1, "patch": base.resolved["patch"],
-                  "c": query.champion, "lane": query.lane, "tier": query.tier,
-                  "queue": query.mode, "region": query.region}
+        params = {
+            "ep": "build-itemset",
+            "v": 1,
+            "patch": base.resolved["patch"],
+            "c": query.champion,
+            "lane": query.lane,
+            "tier": query.tier,
+            "queue": query.mode,
+            "region": query.region,
+        }
         url = "https://a1.lolalytics.com/mega/?" + urlencode(params)
 
         def operation():
@@ -389,10 +441,16 @@ class Client:
             except (ValueError, UnicodeError, RecursionError):
                 raise SchemaError("Lazy item sets: expected JSON") from None
             _validate_item_sets(data)
-            result = {"source_url": url, "query": query.to_dict(), "resolved": base.resolved,
-                      "collected_at": datetime.fromtimestamp(self._clock(), timezone.utc).isoformat(),
-                      "raw": data, "cache_hit": False, "stale": False,
-                      "limitations": ["Counter columns are preserved without inferred metrics; not a full build ranking."]}
+            result = {
+                "source_url": url,
+                "query": query.to_dict(),
+                "resolved": base.resolved,
+                "collected_at": datetime.fromtimestamp(self._clock(), timezone.utc).isoformat(),
+                "raw": data,
+                "cache_hit": False,
+                "stale": False,
+                "limitations": ["Counter columns are preserved without inferred metrics; not a full build ranking."],
+            }
             self._remember(url, result)
             return result
 

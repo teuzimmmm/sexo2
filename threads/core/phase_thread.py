@@ -21,9 +21,9 @@ log = get_logger()
 
 class PhaseThread(threading.Thread):
     """Thread for monitoring game phase changes"""
-    
+
     INTERESTING = INTERESTING_PHASES
-    
+
     def __init__(
         self,
         lcu: LCU,
@@ -47,11 +47,15 @@ class PhaseThread(threading.Thread):
         self._null_phase_streak = 0
         from friends.auto_accept import AutoAccept
         from config import get_config_option
-        if not getattr(state,'auto_accept_controller',None):
-            state.auto_accept_controller=AutoAccept(lcu)
-            state.auto_accept_controller.enabled=str(get_config_option('General','autoaccept','false')).lower()=='true'
+
+        if not getattr(state, "auto_accept_controller", None):
+            state.auto_accept_controller = AutoAccept(lcu)
+            state.auto_accept_controller.enabled = (
+                str(get_config_option("General", "autoaccept", "false")).lower() == "true"
+            )
 
         from friends.arena_bravery import ArenaBravery
+
         self.arena_bravery = ArenaBravery(lcu, state, injection_manager)
         state.arena_bravery_controller = self.arena_bravery
 
@@ -71,7 +75,7 @@ class PhaseThread(threading.Thread):
                 self.lcu.refresh_if_needed()
             except (OSError, ConnectionError) as e:
                 log.debug(f"LCU refresh failed in phase thread: {e}")
-            
+
             ph = self.lcu.phase if self.lcu.ok else None
             self.state.auto_accept_controller.tick(ph)
             try:
@@ -86,16 +90,18 @@ class PhaseThread(threading.Thread):
                 self._last_raw_phase = ph
                 if ph in ("None", "Lobby", "EndOfGame"):
                     from utils.integration import pengu_loader
+
                     pengu_loader.retry_deferred_restart()
 
             if ph == "None":
                 ph = None
-            
+
             # If phase is unknown (None), skip handling.
             # Use a grace period to avoid wiping Swiftplay state on transient
             # API hiccups (the LCU can briefly return None during transitions).
             if ph is None:
                 from threads.handlers.champ_select_reset import note_phase_for_reset
+
                 note_phase_for_reset(self.state, None)
                 self.state.phase = None
                 self._null_phase_streak += 1
@@ -115,7 +121,7 @@ class PhaseThread(threading.Thread):
                 continue
 
             self._null_phase_streak = 0
-            phase_changed = (ph != self.last_phase)
+            phase_changed = ph != self.last_phase
 
             if ph == "Lobby":
                 self.lobby_processor.process_lobby_state(force=phase_changed)

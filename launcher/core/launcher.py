@@ -53,6 +53,7 @@ def _route_logger(source: logging.Logger, target: logging.Logger) -> Iterator[No
             source.removeHandler(handler)
         source.setLevel(previous_level)
 
+
 MB_ICONERROR = 0x00000010
 MB_ICONINFORMATION = 0x00000040
 MB_YESNO = 0x00000004
@@ -79,6 +80,7 @@ def _show_error(message: str) -> None:
 
 def _with_ui_updates(dialog: UpdateDialog) -> tuple[Callable[[str], None], Callable[[int], None]]:
     """Create UI update callbacks for dialog"""
+
     def update_status(message: str) -> None:
         dialog.set_status(message)
         dialog.pump_messages()
@@ -96,11 +98,11 @@ def _confirm_update(dialog: UpdateDialog, remote_version: str, local_version: st
     """Ask whether the user wants to download an available Rose update."""
     dialog.set_marquee(False)
     dialog.set_detail("Update available")
-    dialog.set_status(f"Rose {remote_version} is ready to install.")
+    dialog.set_status(f"SEXO2 {remote_version} is ready to install.")
     dialog.pump_messages()
 
     message = (
-        f"A new version of Rose is available.\n\n"
+        f"A new version of SEXO2 is available.\n\n"
         f"Current version: {local_version}\n"
         f"New version: {remote_version}\n\n"
         "Do you want to download and install it now?"
@@ -108,7 +110,7 @@ def _confirm_update(dialog: UpdateDialog, remote_version: str, local_version: st
     result = user32.MessageBoxW(
         dialog.hwnd or None,
         message,
-        "Rose update available",
+        "SEXO2 update available",
         MB_YESNO | MB_ICONINFORMATION | MB_DEFBUTTON2 | MB_TOPMOST,
     )
     accepted = result == IDYES
@@ -120,7 +122,7 @@ def _confirm_update(dialog: UpdateDialog, remote_version: str, local_version: st
     )
 
     if accepted:
-        dialog.set_detail("Updating Rose...")
+        dialog.set_detail("Updating SEXO2...")
         dialog.set_status("Downloading update...")
     else:
         dialog.set_detail("Update skipped")
@@ -132,12 +134,13 @@ def _confirm_update(dialog: UpdateDialog, remote_version: str, local_version: st
 
 def _perform_update(dialog: UpdateDialog, dev_mode: bool = False) -> bool:
     """Perform update check and installation
-    
+
     Args:
         dialog: UpdateDialog instance for UI updates
         dev_mode: If True, skip update check (for development)
     """
     from config import FORK_BUILD, FORK_LABEL
+
     if FORK_BUILD:
         updater_log.info("Fork build: upstream application auto-update disabled")
         dialog.set_detail(FORK_LABEL)
@@ -206,9 +209,10 @@ def run_launcher(dev_mode: bool = False, test_download_fail: bool = False) -> No
         return
 
     from . import startup_policy
+
     if not dev_mode and not test_download_fail and startup_policy.can_start_fast():
         startup_policy._fast_used = True
-        updater_log.info('[STARTUP] Reusing confirmed local library; remote check deferred')
+        updater_log.info("[STARTUP] Reusing confirmed local library; remote check deferred")
         return
     startup_policy._fast_used = False
     with _route_logger(log, updater_log):
@@ -235,12 +239,13 @@ def _run_launcher_dialog(dev_mode: bool, test_download_fail: bool) -> None:
                 stage = time.monotonic()
                 hashes_ready = hash_sequence.perform_hash_check(dialog, dev_mode=dev_mode)
                 updater_log.info("[STARTUP] hash_check_seconds=%.3f", time.monotonic() - stage)
-                
+
                 skin_sequence = SkinSyncSequence()
                 stage = time.monotonic()
                 skins_ready = skin_sequence.perform_skin_sync(dialog, test_fail=test_download_fail)
                 if hashes_ready and skins_ready:
                     from .startup_policy import record_ready
+
                     record_ready()
                 updater_log.info("[STARTUP] skin_sync_seconds=%.3f", time.monotonic() - stage)
                 updater_log.info("[STARTUP] preparation_seconds=%.3f", time.monotonic() - started)

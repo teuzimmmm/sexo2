@@ -9,6 +9,6 @@ from .core.app_status import AppStatus
 from .core.shared_state import SharedState
 
 __all__ = [
-    'AppStatus',
-    'SharedState',
+    "AppStatus",
+    "SharedState",
 ]

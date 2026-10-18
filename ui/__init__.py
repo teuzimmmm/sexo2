@@ -14,10 +14,9 @@ from ui.core.user_interface import UserInterface, get_user_interface
 from ui.chroma.selector import ChromaSelector, get_chroma_selector, init_chroma_selector
 
 __all__ = [
-    'UserInterface',
-    'get_user_interface',
-    'ChromaSelector',
-    'get_chroma_selector',
-    'init_chroma_selector',
+    "UserInterface",
+    "get_user_interface",
+    "ChromaSelector",
+    "get_chroma_selector",
+    "init_chroma_selector",
 ]
-

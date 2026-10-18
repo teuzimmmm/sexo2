@@ -8,4 +8,3 @@ Main entry point for Pengu Loader integration
 from .core.skin_monitor import PenguSkinMonitorThread
 
 __all__ = ["PenguSkinMonitorThread"]
-

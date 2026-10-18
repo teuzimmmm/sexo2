@@ -22,18 +22,18 @@ class MessageType(Enum):
     # Connection management
     PING = "ping"
     PONG = "pong"
-    HELLO = "hello"          # Initial handshake
+    HELLO = "hello"  # Initial handshake
     HELLO_ACK = "hello_ack"  # Handshake acknowledgment
 
     # Skin sharing
-    SKIN_UPDATE = "skin_update"    # Single skin selection update
-    SKIN_SYNC = "skin_sync"        # Full skin state sync request/response
-    SKIN_CLEAR = "skin_clear"      # Clear skin selection
+    SKIN_UPDATE = "skin_update"  # Single skin selection update
+    SKIN_SYNC = "skin_sync"  # Full skin state sync request/response
+    SKIN_CLEAR = "skin_clear"  # Clear skin selection
 
     # Lobby coordination
-    LOBBY_INFO = "lobby_info"      # Share lobby/summoner info
-    LOBBY_MATCH = "lobby_match"    # Confirm same lobby
-    READY = "ready"                # Ready for injection
+    LOBBY_INFO = "lobby_info"  # Share lobby/summoner info
+    LOBBY_MATCH = "lobby_match"  # Confirm same lobby
+    READY = "ready"  # Ready for injection
 
     # Errors
     ERROR = "error"

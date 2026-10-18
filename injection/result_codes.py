@@ -25,13 +25,13 @@ diagnóstico da bandeja, que já tem o contexto certo.
 OK = 0
 
 # Falhas reais da ferramenta de skin.
-BUILD_TIMEOUT = 124      # mkoverlay estourou o tempo de preparação
+BUILD_TIMEOUT = 124  # mkoverlay estourou o tempo de preparação
 MISSING_PREREQUISITE = 127  # pasta do LoL ou mod-tools.exe ausente
 
 # Desfechos deliberados — o Rose agiu como planejado.
-SAFETY_RELEASE = 125     # limite de pausa atingido; LoL liberado sem skin
-GAME_NEVER_SEEN = 126    # ferramenta terminou sem o processo do jogo aparecer
-EMERGENCY_STOP = 130     # usuário pediu "Parar Rose nesta partida"
+SAFETY_RELEASE = 125  # limite de pausa atingido; LoL liberado sem skin
+GAME_NEVER_SEEN = 126  # ferramenta terminou sem o processo do jogo aparecer
+EMERGENCY_STOP = 130  # usuário pediu "Parar Rose nesta partida"
 
 #: Retornos que NÃO devem gerar alarme de erro ao usuário.
 EXPECTED_STOPS = frozenset({SAFETY_RELEASE, GAME_NEVER_SEEN, EMERGENCY_STOP})

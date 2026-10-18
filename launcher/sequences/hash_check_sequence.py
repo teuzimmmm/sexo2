@@ -18,10 +18,10 @@ updater_log = get_named_logger("updater", prefix="log_updater")
 
 class HashCheckSequence:
     """Handles game hash file verification sequence"""
-    
+
     def perform_hash_check(self, dialog, dev_mode: bool = False) -> bool:
         """Perform hash file check and update
-        
+
         Args:
             dialog: UpdateDialog instance for UI updates
             dev_mode: If True, skip hash check (for development)
@@ -32,29 +32,29 @@ class HashCheckSequence:
             dialog.set_status("Hash check skipped (dev mode)")
             dialog.pump_messages()
             return False
-        
+
         updater_log.info("Starting game hash verification sequence.")
         dialog.clear_transfer_text()
         dialog.set_detail("Verifying game hashes…")
         dialog.set_status("Checking game hashes…")
         dialog.set_marquee(True)
         dialog.pump_messages()
-        
+
         def status_callback(message: str) -> None:
             dialog.set_status(message)
             dialog.pump_messages()
             updater_log.info(f"Hash check status: {message}")
-        
+
         hashes_file = None
         try:
             # This will block until hashes are downloaded and merged
             updated = update_hash_files(status_callback=status_callback, dev_mode=dev_mode)
-            
+
             # Verify hashes.game.txt exists before continuing
             # Get the tools directory path (same logic as hash_updater)
-            if getattr(sys, 'frozen', False):
+            if getattr(sys, "frozen", False):
                 # Running as compiled executable
-                if hasattr(sys, '_MEIPASS'):
+                if hasattr(sys, "_MEIPASS"):
                     # One-file mode
                     base_path = Path(sys._MEIPASS)
                     tools_dir = base_path / "injection" / "tools"
@@ -75,9 +75,9 @@ class HashCheckSequence:
             else:
                 # Running as Python script
                 tools_dir = Path(__file__).parent.parent.parent / "injection" / "tools"
-            
+
             hashes_file = tools_dir / "hashes.game.txt"
-            
+
             if not hashes_file.exists():
                 error_msg = "hashes.game.txt not found after download attempt"
                 log.error(error_msg)
@@ -100,11 +100,10 @@ class HashCheckSequence:
             updater_log.exception("Hash check raised an exception", exc_info=True)
             # Don't raise - allow app to continue even if hash check fails
             # The injection system will handle missing hashes gracefully
-        
+
         dialog.set_marquee(False)
         dialog.reset_progress()
         dialog.clear_transfer_text()
         dialog.pump_messages()
-
 
         return hashes_file is not None and hashes_file.is_file()

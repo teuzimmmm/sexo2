@@ -1,4 +1,5 @@
 """Strict normalization of decoded LoLalytics page payloads."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -12,8 +13,19 @@ from .models import Record, Snapshot
 
 _METRIC_KEYS = ("win_rate", "pick_rate", "games")
 _ARENA_ITEM_TABLES = (
-    "startItem", "items", "item", "item1", "item2", "item3", "item4",
-    "item5", "item6", "boots", "popularItem", "winningItem", "prismatic",
+    "startItem",
+    "items",
+    "item",
+    "item1",
+    "item2",
+    "item3",
+    "item4",
+    "item5",
+    "item6",
+    "boots",
+    "popularItem",
+    "winningItem",
+    "prismatic",
 )
 
 
@@ -79,8 +91,8 @@ def _validate_raw_extra(value: Any, path: str) -> None:
         raise _schema(f"{path} must be finite when numeric")
 
 
-def _safe_metric_row(row: list, path: str, *, arena: bool, combination: bool) -> list:
-    """Copy a confirmed row format and redact its win-rate cell for Arena."""
+def _safe_metric_row(row: list, path: str, *, combination: bool) -> list:
+    """Copy a confirmed row format."""
     if not isinstance(row, list):
         raise _schema(f"{path} row must be an array")
     allowed = (4,) if combination else (4, 5)
@@ -95,8 +107,6 @@ def _safe_metric_row(row: list, path: str, *, arena: bool, combination: bool) ->
         # The final upstream value is preserved raw; its timing semantics are
         # intentionally not assigned a normalized name.
         _validate_raw_extra(row[4], f"{path}[4]")
-    if arena:
-        result[1] = None
     return result
 
 
@@ -104,9 +114,8 @@ def sanitize_payload(payload: dict, mode: str) -> dict:
     """Return an independent cache-safe payload copy.
 
     Arena is allowlisted to its champion header/graph and confirmed aggregate
-    tables. Win-rate cells in item, combination, and augment rows are replaced
-    by null. Unknown Arena fields are dropped because they may contain such
-    rates. Other modes retain a deep copy of the decoded payload.
+    tables; unknown Arena fields are dropped. Win rates are kept (decision
+    D-116). Other modes retain a deep copy of the decoded payload.
     """
     if not isinstance(payload, dict):
         raise _schema("payload must be an object")
@@ -132,19 +141,13 @@ def sanitize_payload(payload: dict, mode: str) -> dict:
         if key not in payload:
             continue
         table = _array(payload[key], f"payload.{key}")
-        safe[key] = [
-            _safe_metric_row(row, f"payload.{key}[{i}]", arena=True, combination=True)
-            for i, row in enumerate(table)
-        ]
+        safe[key] = [_safe_metric_row(row, f"payload.{key}[{i}]", combination=True) for i, row in enumerate(table)]
 
     for key in _ARENA_ITEM_TABLES:
         if key not in payload:
             continue
         table = _array(payload[key], f"payload.{key}")
-        safe[key] = [
-            _safe_metric_row(row, f"payload.{key}[{i}]", arena=True, combination=False)
-            for i, row in enumerate(table)
-        ]
+        safe[key] = [_safe_metric_row(row, f"payload.{key}[{i}]", combination=False) for i, row in enumerate(table)]
 
     if "augment" in payload:
         augments = payload["augment"]
@@ -154,8 +157,7 @@ def sanitize_payload(payload: dict, mode: str) -> dict:
         for key, table in augments.items():
             rows = _array(table, f"payload.augment.{key}")
             safe_augment[key] = [
-                _safe_metric_row(row, f"payload.augment.{key}[{i}]", arena=True, combination=True)
-                for i, row in enumerate(rows)
+                _safe_metric_row(row, f"payload.augment.{key}[{i}]", combination=True) for i, row in enumerate(rows)
             ]
         safe["augment"] = safe_augment
 
@@ -208,11 +210,7 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
             isinstance(nav_keystone, bool) or not isinstance(nav_keystone, int) or nav_keystone != -1
         ):
             raise _schema("resolved keystone does not match the requested filter")
-    elif (
-        isinstance(nav_keystone, bool)
-        or not isinstance(nav_keystone, int)
-        or nav_keystone != query.keystone
-    ):
+    elif isinstance(nav_keystone, bool) or not isinstance(nav_keystone, int) or nav_keystone != query.keystone:
         raise _schema("resolved keystone does not match the requested filter")
     nav_patch = nav.get("patch")
     if not isinstance(nav_patch, str) or not re.fullmatch(r"\d{2}\.\d{1,2}", nav_patch):
@@ -236,6 +234,7 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
         if header_vs != nav.get("vsCid"):
             raise _schema("header opponent ID does not match resolved navigation")
         from .query import LANES
+
         header_vs_lane = header.get("vsLane")
         if "vsLane" not in header and query.opponent_lane != "all":
             raise _schema("header opponent lane is missing")
@@ -261,6 +260,7 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
             effective_lane = header.get("defaultLane")
         if effective_lane is not None and effective_lane != "all":
             from .query import LANES
+
             if effective_lane not in LANES:
                 raise _schema("header lane is outside the supported positions")
             if query.lane != "all" and effective_lane != query.lane:
@@ -304,10 +304,15 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
     availability: dict[str, str] = {}
     warnings: list[str] = []
     if arena:
-        warnings.append("Arena item, combination, and augment win rates are suppressed by policy; pick rates and game counts remain available.")
         safe_keys = {
-            "header", "graph", "analysed", "avgWr", "response", "augment",
-            *_combo_tables(query.mode), *_ARENA_ITEM_TABLES,
+            "header",
+            "graph",
+            "analysed",
+            "avgWr",
+            "response",
+            "augment",
+            *_combo_tables(query.mode),
+            *_ARENA_ITEM_TABLES,
         }
         discarded = sorted(set(payload) - safe_keys)
         if discarded:
@@ -328,9 +333,11 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
             if not isinstance(raw_ids, str):
                 raise _schema(f"{path}[0] must be an underscore-separated ID string")
             identifiers = [] if raw_ids == "" else [_id(part, path) for part in raw_ids.split("_")]
-            metrics = _metrics(None if arena else row[1], row[2], row[3], path)
+            metrics = _metrics(row[1], row[2], row[3], path)
             safe_row = safe_payload.get(key, rows)[index]
-            records.append(Record("item_combination", identifiers, metrics, path, deepcopy(safe_row), "joint_build_sample"))
+            records.append(
+                Record("item_combination", identifiers, metrics, path, deepcopy(safe_row), "joint_build_sample")
+            )
 
     item_keys = tuple(dict.fromkeys(_ARENA_ITEM_TABLES + ("boots",)))
     for key in item_keys:
@@ -345,9 +352,11 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
             if len(row) == 5:
                 _validate_raw_extra(row[4], f"{path}[4]")
             identifier = _id(row[0], path)
-            metrics = _metrics(None if arena else row[1], row[2], row[3], path)
+            metrics = _metrics(row[1], row[2], row[3], path)
             safe_row = safe_payload.get(key, rows)[index]
-            records.append(Record("item_statistics", [identifier], metrics, path, deepcopy(safe_row), "item_observation"))
+            records.append(
+                Record("item_statistics", [identifier], metrics, path, deepcopy(safe_row), "item_observation")
+            )
 
     runes = payload.get("runes")
     if arena:
@@ -372,7 +381,11 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
                         "pick_rate": _number(row[0], f"{path}[0]"),
                         "games": _required_games(row[2], f"{path}[2]"),
                     }
-                    records.append(Record("rune_statistics", [rune_key, str(slot)], metrics, path, deepcopy(row), "rune_observation"))
+                    records.append(
+                        Record(
+                            "rune_statistics", [rune_key, str(slot)], metrics, path, deepcopy(row), "rune_observation"
+                        )
+                    )
 
     summary = payload.get("summary")
     complete_suggestions = 0
@@ -416,12 +429,20 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
                 availability[f"rune_suggestion:{result_type}"] = "unavailable"
                 warnings.append(f"Rune suggestion layout '{result_type}' is incomplete and was omitted.")
                 continue
-            records.append(Record(
-                "rune_suggestion", layout_ids, dict.fromkeys(_METRIC_KEYS),
-                f"payload.summary.{result_type}.runes.set",
-                {"selection": deepcopy(layout_ids), "page": deepcopy(rune_info.get("page")), "set": deepcopy(rune_set)},
-                "suggested_layout_not_joint_sample",
-            ))
+            records.append(
+                Record(
+                    "rune_suggestion",
+                    layout_ids,
+                    dict.fromkeys(_METRIC_KEYS),
+                    f"payload.summary.{result_type}.runes.set",
+                    {
+                        "selection": deepcopy(layout_ids),
+                        "page": deepcopy(rune_info.get("page")),
+                        "set": deepcopy(rune_set),
+                    },
+                    "suggested_layout_not_joint_sample",
+                )
+            )
             complete_suggestions += 1
             availability[f"rune_suggestion:{result_type}"] = "available"
     availability["rune_suggestion"] = "available" if complete_suggestions else "unavailable"
@@ -450,9 +471,13 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
                     if not isinstance(row, list) or len(row) != 4:
                         raise _schema(f"{path} must be [id, win_rate, pick_rate, games]")
                     identifier = _id(row[0], path)
-                    metrics = _metrics(None, row[2], row[3], path)
+                    metrics = _metrics(row[1], row[2], row[3], path)
                     safe_row = safe_payload["augment"][table_name][index]
-                    records.append(Record("augment_statistics", [identifier], metrics, path, deepcopy(safe_row), "augment_observation"))
+                    records.append(
+                        Record(
+                            "augment_statistics", [identifier], metrics, path, deepcopy(safe_row), "augment_observation"
+                        )
+                    )
 
     # Missing optional tables are explicit; an absent table is not an empty
     # successful collector response.
@@ -498,12 +523,14 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
     }
     resolved["keystone"] = query.keystone
     if query.opponent is not None:
-        resolved.update({
-            "opponent": query.opponent,
-            "opponent_id": deepcopy(nav["vsCid"]),
-            "opponent_name": deepcopy(nav["vsName"]),
-            "opponent_lane": query.opponent_lane,
-        })
+        resolved.update(
+            {
+                "opponent": query.opponent,
+                "opponent_id": deepcopy(nav["vsCid"]),
+                "opponent_name": deepcopy(nav["vsName"]),
+                "opponent_lane": query.opponent_lane,
+            }
+        )
         if effective_opponent_lane is not None and effective_opponent_lane != "all":
             resolved["effective_opponent_lane"] = deepcopy(effective_opponent_lane)
     if isinstance(nav.get("champName"), str):
@@ -514,7 +541,13 @@ def parse_payload(nav: dict, payload: dict, query, source_url: str, collected_at
         if effective_lane is not None and effective_lane != "all":
             resolved["effective_lane"] = effective_lane
     return Snapshot(
-        query=query.to_dict(), resolved=resolved, source_url=source_url,
-        collected_at=collected_at, overview=overview, records=records,
-        raw=safe_payload, availability=availability, warnings=warnings,
+        query=query.to_dict(),
+        resolved=resolved,
+        source_url=source_url,
+        collected_at=collected_at,
+        overview=overview,
+        records=records,
+        raw=safe_payload,
+        availability=availability,
+        warnings=warnings,
     )

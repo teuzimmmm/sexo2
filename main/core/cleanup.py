@@ -20,11 +20,14 @@ from main.setup.console import cleanup_console
 log = get_logger()
 
 
-def perform_cleanup(state: SharedState, thread_manager: ThreadManager, tray_manager: TrayManager, injection_manager=None) -> None:
+def perform_cleanup(
+    state: SharedState, thread_manager: ThreadManager, tray_manager: TrayManager, injection_manager=None
+) -> None:
     """Perform application cleanup"""
     log_section(log, "Cleanup", "")
-    service=getattr(state,'friends_service',None)
-    if service:service.room.shutdown()
+    service = getattr(state, "friends_service", None)
+    if service:
+        service.room.shutdown()
 
     # A suspension outlives Rose: resume first, or closing during mkoverlay freezes the game for good
     if injection_manager:
@@ -46,7 +49,7 @@ def perform_cleanup(state: SharedState, thread_manager: ThreadManager, tray_mana
             log_success(log, "Mod-tools processes killed", "")
         except Exception as e:
             log.warning(f"Error killing mod-tools processes: {e}")
-    
+
     # Stop system tray
     if tray_manager:
         try:
@@ -55,28 +58,27 @@ def perform_cleanup(state: SharedState, thread_manager: ThreadManager, tray_mana
             log_success(log, "System tray stopped", "✓")
         except Exception as e:
             log.warning(f"Error stopping system tray: {e}")
-    
+
     # Stop all managed threads using ThreadManager
     still_alive, elapsed = thread_manager.stop_all(timeout=THREAD_JOIN_TIMEOUT_S)
-    
+
     # Check if any threads are still alive
     if still_alive:
         log.warning(f"Some threads did not stop: {', '.join(still_alive)}")
         log.warning(f"Cleanup took {elapsed:.1f}s - forcing exit")
-        
+
         # Clean up lock file before forced exit
         cleanup_lock_file()
-        
+
         # Force exit after timeout
         if elapsed > THREAD_FORCE_EXIT_TIMEOUT_S:
             log.error(f"Forced exit after {elapsed:.1f}s - threads still running")
             os._exit(0)  # Force immediate exit without waiting for threads
     else:
         log_success(log, f"All threads stopped cleanly in {elapsed:.1f}s", "")
-    
+
     # Clean up lock file on exit
     cleanup_lock_file()
-    
+
     # Clean up console if we allocated one
     cleanup_console()
-

@@ -1,9 +1,10 @@
 name: Validate SEXO2
 on:
   push:
-    branches: ['main']
+    branches: ['**']
     tags: ['v*']
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -14,12 +15,85 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Install test dependencies
-        run: python -m pip install -r requirements.txt
-      - name: Test services and update recovery
+        run: python -m pip install -r requirements.txt ruff==0.17.1
+      - name: Lint (blocking set)
+        run: ruff check .
+      - name: Formatting
+        run: ruff format --check .
+      - name: Lint report (informational)
+        run: ruff check --select F --statistics --exit-zero .
+      - name: Python tests (all suites)
         shell: pwsh
         run: |
-          python -m unittest discover -s tests -q
-          if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
+          python scripts/run_tests.py -q
+          if ($LASTEXITCODE -ne 0) { throw 'Python tests failed.' }
+      - name: Plugin tests (node:test)
+        shell: pwsh
+        run: |
+          node --test (Get-ChildItem tests -Filter 'test_*.cjs').FullName
+          if ($LASTEXITCODE -ne 0) { throw 'Plugin tests failed.' }
+  test-build:
+    # Unsigned test build for manual checks. Pushes to sexoatividade also publish it as a
+    # GitHub pre-release "teste-<commit>" (authorised by the user); the updater ignores
+    # pre-releases (sexo2/update/client.py), so no installation ever receives it.
+    needs: test
+    permissions:
+      contents: write
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/sexoatividade')
+    runs-on: windows-latest
+    # The repository root has an __init__.py, so PyInstaller puts its parent folder on the
+    # module path: a checkout folder named "sexo2" would shadow the sexo2 package.
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: app
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Install build dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Restore build-only binaries from the 1.6.4 baseline
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.6.4 --repo ${{ github.repository }} --pattern SEXO2-baseline.zip --dir baseline
+          if ($LASTEXITCODE -ne 0) { throw 'Baseline download failed.' }
+          Expand-Archive baseline/SEXO2-baseline.zip -DestinationPath baseline/extracted
+          python scripts/restore_build_binaries.py --base baseline/extracted
+          if ($LASTEXITCODE -ne 0) { throw 'Binary restore failed.' }
+      - name: Build
+        shell: pwsh
+        run: |
+          python -m PyInstaller SEXO2.spec --distpath dist-test --workpath build-test --noconfirm
+          if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+          python audit_frozen.py dist-test/SEXO2
+          if ($LASTEXITCODE -ne 0) { throw 'Audit failed.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEXO2-teste-${{ github.sha }}
+          path: app/dist-test/SEXO2
+          retention-days: 14
+      - name: Publish test pre-release
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "teste-$($env:GITHUB_SHA.Substring(0, 7))"
+          Compress-Archive -Path dist-test/SEXO2 -DestinationPath SEXO2-teste.zip
+          $notes = "Build de teste da branch sexoatividade ($env:GITHUB_SHA), sem assinatura. Extraia o zip e rode SEXO2.exe com o SEXO2 instalado e o cliente do LoL fechados."
+          gh release create $tag SEXO2-teste.zip --repo ${{ github.repository }} --prerelease --target $env:GITHUB_SHA --title "SEXO2 teste $tag" --notes $notes
+          if ($LASTEXITCODE -ne 0) { throw 'Pre-release failed.' }
+          # Keep only the newest test pre-release.
+          $old = gh release list --repo ${{ github.repository }} --limit 100 --json tagName,isPrerelease | ConvertFrom-Json | Where-Object { $_.isPrerelease -and $_.tagName -like 'teste-*' -and $_.tagName -ne $tag }
+          foreach ($r in $old) { gh release delete $r.tagName --repo ${{ github.repository }} --yes --cleanup-tag }
 # Releases are compiled and signed locally by scripts/release_local.ps1.
 # The private signing key is never stored in GitHub Actions.

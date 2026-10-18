@@ -10,6 +10,7 @@ from typing import TypedDict, List, Optional
 
 class ChromaData(TypedDict, total=False):
     """Chroma data from LCU API"""
+
     id: int
     name: str
     chromaPath: str
@@ -20,6 +21,7 @@ class ChromaData(TypedDict, total=False):
 
 class SkinData(TypedDict, total=False):
     """Skin data from LCU API"""
+
     id: int
     skinId: int
     name: str
@@ -36,6 +38,7 @@ class SkinData(TypedDict, total=False):
 
 class ChampionData(TypedDict, total=False):
     """Champion data from LCU API"""
+
     id: int
     name: str
     alias: str
@@ -46,6 +49,7 @@ class ChampionData(TypedDict, total=False):
 
 class SessionData(TypedDict, total=False):
     """Champion select session data"""
+
     actions: List[List[dict]]
     myTeam: List[dict]
     theirTeam: List[dict]
@@ -56,6 +60,7 @@ class SessionData(TypedDict, total=False):
 
 class LockfileData(TypedDict):
     """Lockfile parsed data"""
+
     name: str
     pid: int
     port: int

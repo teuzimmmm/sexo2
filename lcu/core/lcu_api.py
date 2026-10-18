@@ -71,8 +71,9 @@ class LCUAPI:
                 if key.startswith(path_prefix) or key in ancestors:
                     self._cache.pop(key, None)
 
-    def get(self, path: str, timeout: float = 1.0,
-            cache_ttl: Optional[float] = None, use_cache: bool = True) -> Optional[dict]:
+    def get(
+        self, path: str, timeout: float = 1.0, cache_ttl: Optional[float] = None, use_cache: bool = True
+    ) -> Optional[dict]:
         """Make GET request to LCU API.
 
         Responses are cached for ``cache_ttl`` seconds (default
@@ -132,7 +133,22 @@ class LCUAPI:
             except requests.exceptions.RequestException as e:
                 log.debug(f"[LCU] GET {path} failed after reconnecting: {e}")
                 return None
-    
+
+    def get_bytes(self, path: str, timeout: float = 2.0) -> Optional[bytes]:
+        """Raw body of a GET, uncached (game data assets such as icons); None when unavailable."""
+        if not self.connection.ok:
+            self.connection.refresh_if_needed()
+            if not self.connection.ok:
+                return None
+        try:
+            r = self.connection.session.get((self.connection.base or "") + path, timeout=timeout)
+            if r.status_code != 200:
+                return None
+            return r.content
+        except requests.exceptions.RequestException as e:
+            log.debug(f"[LCU] GET {path} failed: {e}")
+            return None
+
     def put(self, path: str, json_data, timeout: float, headers: Optional[dict] = None) -> Optional[requests.Response]:
         """Make PUT request to LCU API
 
@@ -187,12 +203,12 @@ class LCUAPI:
 
     def patch(self, path: str, json_data: dict, timeout: float) -> Optional[requests.Response]:
         """Make PATCH request to LCU API
-        
+
         Args:
             path: API endpoint path
             json_data: JSON data to send
             timeout: Request timeout in seconds
-            
+
         Returns:
             Response object or None if failed
         """
@@ -237,3 +253,33 @@ class LCUAPI:
                 log.debug(f"[LCU] PATCH {path} failed after reconnecting: {e}")
                 return None
 
+    def post(self, path: str, json_data, timeout: float) -> Optional[requests.Response]:
+        """Make POST request to LCU API.
+
+        Unlike PUT, a POST is not retried after a transport error: it may
+        create a resource, and a blind retry could create it twice. The caller
+        reads the state back to learn what happened.
+
+        Returns:
+            Response object or None if the request could not be sent
+        """
+        if not self.connection.ok:
+            self.connection.refresh_if_needed()
+            if not self.connection.ok:
+                return None
+
+        self.invalidate(path)
+        try:
+            t0 = time.perf_counter()
+            resp = self.connection.session.post(
+                (self.connection.base or "") + path,
+                json=json_data,
+                timeout=timeout,
+            )
+            dt_ms = (time.perf_counter() - t0) * 1000.0
+            log.info(f"[LCU] POST {path} -> {getattr(resp, 'status_code', 'None')} in {dt_ms:.1f}ms")
+            return resp
+        except requests.exceptions.RequestException as exc:
+            log.warning(f"[LCU] POST {path} failed ({type(exc).__name__}): {exc}")
+            self.connection.refresh_if_needed(force=True)
+            return None

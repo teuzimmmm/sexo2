@@ -40,6 +40,7 @@ def _mod_champion_id(selected_custom_mod: Optional[dict]) -> Optional[int]:
 @dataclass
 class PartySkinData:
     """Aggregated skin data from party members"""
+
     summoner_id: int
     summoner_name: str
     champion_id: int
@@ -104,9 +105,7 @@ class SkinCollector:
         """Our injection started in this champ select: our selection is final."""
         return bool(self._frozen) and self._frozen[0] == getattr(self.state, "champ_select_generation", 0)
 
-    def get_my_selection(
-        self, summoner_id: int, summoner_name: str
-    ) -> Optional[SkinSelection]:
+    def get_my_selection(self, summoner_id: int, summoner_name: str) -> Optional[SkinSelection]:
         """Get our own skin selection from state, as it will be injected
         (HistoricMode and random skins, chromas and custom mods included)
 
@@ -121,9 +120,7 @@ class SkinCollector:
             return self._frozen[1]
         return self._current_selection(summoner_id, summoner_name)
 
-    def _current_selection(
-        self, summoner_id: int, summoner_name: str
-    ) -> Optional[SkinSelection]:
+    def _current_selection(self, summoner_id: int, summoner_name: str) -> Optional[SkinSelection]:
         state = self.state
         champion_id = state.locked_champ_id or state.hovered_champ_id
         if not champion_id:
@@ -295,10 +292,7 @@ class SkinCollector:
                 continue
             expected = team_champions.get(sid)
             if expected and expected != champion_id:
-                log.warning(
-                    f"[SKIN_COLLECT] Champion mismatch for {name}: "
-                    f"expected {expected}, got {champion_id}"
-                )
+                log.warning(f"[SKIN_COLLECT] Champion mismatch for {name}: expected {expected}, got {champion_id}")
                 continue
             if champion_id in taken_champions:
                 log.info(f"[SKIN_COLLECT] Skipping {name}: champion {champion_id} already has a skin")
@@ -321,15 +315,17 @@ class SkinCollector:
                 continue  # default skin: nothing to inject
 
             taken_champions.add(champion_id)
-            skins.append(PartySkinData(
-                summoner_id=sid,
-                summoner_name=name,
-                champion_id=champion_id,
-                skin_id=skin_id,
-                chroma_id=_to_int(skin.get("chroma_id")),
-                custom_mod_path=custom_mod_path,
-                is_local=False,
-            ))
+            skins.append(
+                PartySkinData(
+                    summoner_id=sid,
+                    summoner_name=name,
+                    champion_id=champion_id,
+                    skin_id=skin_id,
+                    chroma_id=_to_int(skin.get("chroma_id")),
+                    custom_mod_path=custom_mod_path,
+                    is_local=False,
+                )
+            )
 
         log.info(f"[SKIN_COLLECT] Collected {len(skins)} relay skin selections")
         return skins

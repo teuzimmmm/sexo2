@@ -1,4 +1,5 @@
 """Offline recommendation API tests against captured LoLalytics responses."""
+
 import contextlib
 import copy
 import io
@@ -100,7 +101,10 @@ class RecommendationClientTests(unittest.TestCase):
         self.assertEqual(len(transport.calls), 1)
         self.assertIn("keystone=8112", transport.calls[0])
         self.assertEqual(result.build_page.keystone, 8112)
-        self.assertEqual(result.policy["item_baseline"], result.item_rankings[next(iter(result.item_rankings))][0]["risk"]["baseline"])
+        self.assertEqual(
+            result.policy["item_baseline"],
+            result.item_rankings[next(iter(result.item_rankings))][0]["risk"]["baseline"],
+        )
         self.assertEqual(result.policy["item_baseline_source"], "item_source.champion_query_overview")
         self.assertEqual(result.policy["baseline"], 52.67)
         self.assertEqual(result.policy["item_baseline"], 52.67)
@@ -138,8 +142,9 @@ class RecommendationClientTests(unittest.TestCase):
             return copy.deepcopy(snapshot)
 
         with patch.object(client, "collect", side_effect=collect):
-            result = client.recommend(Query("ahri", patch="16.20", lane="middle",
-                                            opponent="annie", opponent_lane="middle"))
+            result = client.recommend(
+                Query("ahri", patch="16.20", lane="middle", opponent="annie", opponent_lane="middle")
+            )
         pick = next(row for row in result.rune_candidates if row["selection"] == "pick")
         self.assertEqual(result.recommended_selection, "pick")
         self.assertEqual(pick["source_path"], "payload.summary.pick.runes")
@@ -151,7 +156,9 @@ class RecommendationClientTests(unittest.TestCase):
     def test_arena_uses_pick_rate_without_rune_or_winrate_risk(self):
         transport = FixtureTransport([(FIXTURES, MANIFEST, "jinx-arena.json")])
         client = Client(transport=transport)
-        result = client.recommend(Query("jinx", mode="arena", patch="16.20", tier="emerald_plus"), risk_level="very-high")
+        result = client.recommend(
+            Query("jinx", mode="arena", patch="16.20", tier="emerald_plus"), risk_level="very-high"
+        )
         self.assertEqual(len(transport.calls), 1)
         self.assertEqual(result.recommended_selection, None)
         self.assertEqual(result.rune_candidates, [])
@@ -168,10 +175,12 @@ class RecommendationClientTests(unittest.TestCase):
         client.close()
 
     def test_aram_runes_and_pick_page_use_captured_fixture(self):
-        transport = FixtureTransport([
-            (KEYSTONE, KEYSTONE_MANIFEST, "jinx-aram-base.json"),
-            (KEYSTONE, KEYSTONE_MANIFEST, "jinx-aram-filtered.json"),
-        ])
+        transport = FixtureTransport(
+            [
+                (KEYSTONE, KEYSTONE_MANIFEST, "jinx-aram-base.json"),
+                (KEYSTONE, KEYSTONE_MANIFEST, "jinx-aram-filtered.json"),
+            ]
+        )
         client = Client(transport=transport)
         result = client.recommend(Query("jinx", mode="aram", patch="16.20", tier="all"), risk_level="low")
         self.assertEqual(result.recommended_selection, "win")
@@ -274,22 +283,48 @@ class RecommendationClientTests(unittest.TestCase):
 
     def test_item_rankings_keep_category_and_source_parent_groups_separate(self):
         snapshot = Snapshot(
-            query={"mode": "ranked"}, resolved={}, source_url="fixture", collected_at="now",
-            overview={}, raw={}, availability={}, records=[
-                Record("item_statistics", ["1001"], {"win_rate": 52, "pick_rate": 10, "games": 20},
-                       "payload.item1[0]", [1001, 52, 10, 20], "item_observation"),
-                Record("item_combination", ["1001", "2003"], {"win_rate": 60, "pick_rate": 1, "games": 5},
-                       "payload.item1[0]", ["1001_2003", 60, 1, 5], "joint_build_sample"),
-                Record("item_statistics", ["3006"], {"win_rate": 55, "pick_rate": 20, "games": 100},
-                       "payload.boots[0]", [3006, 55, 20, 100], "item_observation"),
+            query={"mode": "ranked"},
+            resolved={},
+            source_url="fixture",
+            collected_at="now",
+            overview={},
+            raw={},
+            availability={},
+            records=[
+                Record(
+                    "item_statistics",
+                    ["1001"],
+                    {"win_rate": 52, "pick_rate": 10, "games": 20},
+                    "payload.item1[0]",
+                    [1001, 52, 10, 20],
+                    "item_observation",
+                ),
+                Record(
+                    "item_combination",
+                    ["1001", "2003"],
+                    {"win_rate": 60, "pick_rate": 1, "games": 5},
+                    "payload.item1[0]",
+                    ["1001_2003", 60, 1, 5],
+                    "joint_build_sample",
+                ),
+                Record(
+                    "item_statistics",
+                    ["3006"],
+                    {"win_rate": 55, "pick_rate": 20, "games": 100},
+                    "payload.boots[0]",
+                    [3006, 55, 20, 100],
+                    "item_observation",
+                ),
             ],
         )
         groups = item_rankings(snapshot, 50, "medium")
         self.assertEqual(len(groups), 3)
-        self.assertEqual({row["category"] for rows in groups.values() for row in rows},
-                         {"item_statistics", "item_combination"})
-        self.assertEqual({row["source_path"] for rows in groups.values() for row in rows},
-                         {"payload.item1[0]", "payload.boots[0]"})
+        self.assertEqual(
+            {row["category"] for rows in groups.values() for row in rows}, {"item_statistics", "item_combination"}
+        )
+        self.assertEqual(
+            {row["source_path"] for rows in groups.values() for row in rows}, {"payload.item1[0]", "payload.boots[0]"}
+        )
         self.assertEqual(sum(len(rows) for rows in groups.values()), 3)
 
 
@@ -297,12 +332,30 @@ class RecommendationMutationTests(unittest.TestCase):
     def test_item_tables_remain_separate_and_source_metrics_are_unchanged(self):
         snapshot = _snapshot(KEYSTONE, KEYSTONE_MANIFEST, "ahri-ranked-base.json")
         snapshot.records = [
-            Record("item_statistics", ["3118"], {"win_rate": 80, "games": 50},
-                   "payload.item1[0]", [3118, 80, None, 50], "item_observation"),
-            Record("item_statistics", ["2503"], {"win_rate": 53, "games": 2000},
-                   "payload.item1[1]", [2503, 53, None, 2000], "item_observation"),
-            Record("item_statistics", ["3118"], {"win_rate": 90, "games": 300},
-                   "payload.item2[0]", [3118, 90, None, 300], "item_observation"),
+            Record(
+                "item_statistics",
+                ["3118"],
+                {"win_rate": 80, "games": 50},
+                "payload.item1[0]",
+                [3118, 80, None, 50],
+                "item_observation",
+            ),
+            Record(
+                "item_statistics",
+                ["2503"],
+                {"win_rate": 53, "games": 2000},
+                "payload.item1[1]",
+                [2503, 53, None, 2000],
+                "item_observation",
+            ),
+            Record(
+                "item_statistics",
+                ["3118"],
+                {"win_rate": 90, "games": 300},
+                "payload.item2[0]",
+                [3118, 90, None, 300],
+                "item_observation",
+            ),
         ]
         original = copy.deepcopy(snapshot.records)
         conservative = item_rankings(snapshot, 50, "very-low")
@@ -369,10 +422,13 @@ class RecommendationCliTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
 
         with patch("lolalytics.__main__.Client") as client_cls:
-            for args in (["--risk-level", "high"], ["--recommend", "--builds"],
-                         ["--recommend", "--item-sets"],
-                         ["--recommend", "--matchup", "--opponent", "annie"],
-                         ["--recommend", "--risk-level", "invalid"]):
+            for args in (
+                ["--risk-level", "high"],
+                ["--recommend", "--builds"],
+                ["--recommend", "--item-sets"],
+                ["--recommend", "--matchup", "--opponent", "annie"],
+                ["--recommend", "--risk-level", "invalid"],
+            ):
                 with self.subTest(args=args), contextlib.redirect_stderr(io.StringIO()):
                     with self.assertRaises(SystemExit) as error:
                         main(["ahri", *args])

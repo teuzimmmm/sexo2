@@ -83,7 +83,9 @@ def on_skin_confirmed(skin_id: int) -> Optional[float]:
 
     # Discard impossibly late confirmations — likely stale tracking from a previous champ select
     if elapsed_s > _MAX_CONFIRMATION_S:
-        log.warning(f"[TRACKER] Discarding stale confirmation (skinId={target}) after {elapsed_s:.1f}s (>{_MAX_CONFIRMATION_S}s)")
+        log.warning(
+            f"[TRACKER] Discarding stale confirmation (skinId={target}) after {elapsed_s:.1f}s (>{_MAX_CONFIRMATION_S}s)"
+        )
         return None
 
     log.info(f"[TRACKER] Base skin confirmed (skinId={target}) in {elapsed_s:.3f}s")

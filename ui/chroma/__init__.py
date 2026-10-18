@@ -18,16 +18,15 @@ from ui.chroma.special_cases import ChromaSpecialCases
 from ui.chroma.preview_manager import ChromaPreviewManager, get_preview_manager
 
 __all__ = [
-    'ChromaSelector',
-    'get_chroma_selector',
-    'init_chroma_selector',
-    'ChromaUI',
-    'ChromaPanelManager',
-    'get_chroma_panel',
-    'clear_global_panel_manager',
-    'ChromaSelectionHandler',
-    'ChromaSpecialCases',
-    'ChromaPreviewManager',
-    'get_preview_manager',
+    "ChromaSelector",
+    "get_chroma_selector",
+    "init_chroma_selector",
+    "ChromaUI",
+    "ChromaPanelManager",
+    "get_chroma_panel",
+    "clear_global_panel_manager",
+    "ChromaSelectionHandler",
+    "ChromaSpecialCases",
+    "ChromaPreviewManager",
+    "get_preview_manager",
 ]
-

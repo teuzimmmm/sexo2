@@ -9,7 +9,6 @@ from .app_status import AppStatus
 from .shared_state import SharedState
 
 __all__ = [
-    'AppStatus',
-    'SharedState',
+    "AppStatus",
+    "SharedState",
 ]
-

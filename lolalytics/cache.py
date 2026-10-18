@@ -1,4 +1,5 @@
 """Private, bounded on-disk cache for validated response bytes."""
+
 from __future__ import annotations
 
 import base64
@@ -35,8 +36,7 @@ def _is_finite(value):
 
 
 class FileCache:
-    def __init__(self, directory, ttl=900, max_bytes=_MAX_ENTRY_BYTES, *, max_entries=32,
-                 clock=time.time):
+    def __init__(self, directory, ttl=900, max_bytes=_MAX_ENTRY_BYTES, *, max_entries=32, clock=time.time):
         self.directory = Path(directory)
         self.ttl = _finite(ttl, "ttl")  # Expiration is decided by the caller.
         try:
@@ -86,8 +86,7 @@ class FileCache:
                     return None
                 item = json.loads(raw)
                 stored_at = item["stored_at"]
-                if (isinstance(stored_at, bool) or not isinstance(stored_at, (float, int))
-                        or not _is_finite(stored_at)):
+                if isinstance(stored_at, bool) or not isinstance(stored_at, (float, int)) or not _is_finite(stored_at):
                     return None
                 value = base64.b64decode(item["value"], validate=True)
                 if len(value) > self.max_bytes:
@@ -109,9 +108,11 @@ class FileCache:
         stored_at = self._clock()
         if isinstance(stored_at, bool) or not isinstance(stored_at, (int, float)) or not _is_finite(stored_at):
             raise ValueError("cache clock must return a finite timestamp")
-        envelope = json.dumps({"stored_at": stored_at,
-                               "value": base64.b64encode(value).decode("ascii")},
-                              separators=(",", ":"), allow_nan=False).encode("utf-8")
+        envelope = json.dumps(
+            {"stored_at": stored_at, "value": base64.b64encode(value).decode("ascii")},
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
         with self._lock:
             fd, temp_name = tempfile.mkstemp(prefix=".lolalytics-", dir=self.directory)
             try:

@@ -47,6 +47,7 @@ RECORD_KEY_OWN = "rose_character_displayname_"
 # the game's files
 # --------------------------------------------------------------------------------------
 
+
 def _language_wads(game_dir: Path) -> List[Path]:
     localized = Path(game_dir) / "DATA" / "FINAL" / "Localized"
     return sorted(localized.glob("Global.*.wad.client")) if localized.is_dir() else []
@@ -66,9 +67,9 @@ def _read_entry(wad: Path, path_hash: int) -> Optional[bytes]:
             continue
         kind = data[at + 20] & 0xF
         if kind == 0:
-            return data[offset:offset + size]
+            return data[offset : offset + size]
         if kind in (3, 4):
-            return _unzstd(data[offset:offset + packed], size, single_frame=kind == 3)
+            return _unzstd(data[offset : offset + packed], size, single_frame=kind == 3)
         log.warning(f"[LOADNAME] {wad.name}: entry {path_hash:016x} is stored as type {kind}")
         return None
     return None
@@ -106,14 +107,15 @@ def _with_own_record_key(record: bytes, alias: str) -> Optional[bytes]:
     # a bin string is its u16 length and its bytes
     pattern = re.compile(b"(?-i:" + re.escape(struct.pack("<H", len(key))) + b")" + re.escape(key), re.IGNORECASE)
     own = RECORD_KEY_OWN.encode("utf-8")
-    patched, found = pattern.subn(lambda m: m.group(0)[:2] + own + m.group(0)[2 + len(own):], record)
+    patched, found = pattern.subn(lambda m: m.group(0)[:2] + own + m.group(0)[2 + len(own) :], record)
     return patched if found else None
 
 
 def _unzstd(chunk: bytes, size: int, single_frame: bool) -> Optional[bytes]:
     """Decompresses a wad entry: the standard library from Python 3.14 on, zstandard before that."""
     try:
-        from compression.zstd import decompress   # Python 3.14+, reads frames one after the other
+        from compression.zstd import decompress  # Python 3.14+, reads frames one after the other
+
         return decompress(chunk)
     except ImportError:
         pass
@@ -125,6 +127,7 @@ def _unzstd(chunk: bytes, size: int, single_frame: bool) -> Optional[bytes]:
     if single_frame:
         return zstandard.ZstdDecompressor().decompress(chunk, max_output_size=size)
     import io
+
     # type 4 is the same stream cut into frames, so they are read one after the other
     with zstandard.ZstdDecompressor().stream_reader(io.BytesIO(chunk), read_across_frames=True) as reader:
         return reader.read(size)
@@ -133,6 +136,7 @@ def _unzstd(chunk: bytes, size: int, single_frame: bool) -> Optional[bytes]:
 # --------------------------------------------------------------------------------------
 # RST v5: "RST", 5, u32 count, count x u64 (38-bit key hash | offset << 38), then the texts
 # --------------------------------------------------------------------------------------
+
 
 def _entries(table: bytes) -> Tuple[int, int]:
     count = struct.unpack_from("<I", table, 4)[0]
@@ -206,8 +210,9 @@ def _mul_fold(a: int, b: int) -> int:
 
 
 def _mix16(data: bytes, at: int, secret_at: int) -> int:
-    return _mul_fold(_read64(data, at) ^ _read64(_SECRET, secret_at),
-                     _read64(data, at + 8) ^ _read64(_SECRET, secret_at + 8))
+    return _mul_fold(
+        _read64(data, at) ^ _read64(_SECRET, secret_at), _read64(data, at + 8) ^ _read64(_SECRET, secret_at + 8)
+    )
 
 
 def _xxh3_64(data: bytes) -> int:
@@ -278,6 +283,7 @@ def _xxh64(data: bytes) -> int:
 # what the injector calls
 # --------------------------------------------------------------------------------------
 
+
 def champion_aliases(mod_folder: Path) -> List[str]:
     """The champions a mod carries files for, from the names of its wads (Zed.wad.client -> Zed)."""
     wad_dir = Path(mod_folder) / "WAD"
@@ -344,12 +350,17 @@ def build(game_dir: Path, mods_dir: Path, mod_folder: Path, skin_id: int) -> Opt
                 target = Path(mods_dir) / MOD_FOLDER
                 (target / TABLE_PATH.parent).mkdir(parents=True, exist_ok=True)
                 (target / "META").mkdir(parents=True, exist_ok=True)
-                (target / "META" / "info.json").write_text(json.dumps({
-                    "Author": "Rose",
-                    "Description": name,
-                    "Name": "Loading screen name",
-                    "Version": "1.0.0",
-                }), encoding="utf-8")
+                (target / "META" / "info.json").write_text(
+                    json.dumps(
+                        {
+                            "Author": "Rose",
+                            "Description": name,
+                            "Name": "Loading screen name",
+                            "Version": "1.0.0",
+                        }
+                    ),
+                    encoding="utf-8",
+                )
                 table = _with_text(table, champion_key, name)
 
                 # the chat and the name over the head keep the champion's name (see the module's note)

@@ -33,17 +33,20 @@ from config import (
 TRACE = 5
 logging.addLevelName(TRACE, "TRACE")
 
+
 def trace(self, message, *args, **kwargs):
     """Log a trace message (ultra-detailed, below DEBUG)"""
     if self.isEnabledFor(TRACE):
         self._log(TRACE, message, args, **kwargs)
 
+
 # Add trace() method to Logger class
 logging.Logger.trace = trace
 
 # Global log mode (set by setup_logging)
-_CURRENT_LOG_MODE = 'customer'
+_CURRENT_LOG_MODE = "customer"
 _NAMED_LOGGERS: Dict[str, logging.Logger] = {}
+
 
 def get_log_mode() -> str:
     """Get the current logging mode"""
@@ -58,6 +61,7 @@ class SizeRotatingCompositeHandler(logging.Handler):
     - Creates files as: base.ext, base.ext.1, base.ext.2, ...
     - Does not delete on rotation (retention handled separately on startup)
     """
+
     def __init__(self, base_path: Path, create_handler_fn, max_bytes: int):
         super().__init__()
         self.base_path = Path(base_path)
@@ -83,7 +87,7 @@ class SizeRotatingCompositeHandler(logging.Handler):
             if self._stored_formatter is not None:
                 self.current_handler.setFormatter(self._stored_formatter)
             # Filters
-            for flt in getattr(self, 'filters', []) or []:
+            for flt in getattr(self, "filters", []) or []:
                 try:
                     self.current_handler.addFilter(flt)
                 except Exception:
@@ -156,10 +160,11 @@ class SizeRotatingCompositeHandler(logging.Handler):
         except Exception:
             pass
 
-def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
+
+def setup_logging(log_mode: str = "customer", *, write_logs: bool = True):
     """
     Setup logging configuration with three modes.
-    
+
     Args:
         log_mode: 'customer' (clean logs), 'verbose' (developer), or 'debug' (ultra-detailed)
         write_logs: If False, skip creating log files (useful for --dev runs).
@@ -168,21 +173,22 @@ def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
     global _CURRENT_LOG_MODE
     _CURRENT_LOG_MODE = log_mode
     # Handle windowed mode where stdout/stderr might be None or redirected to devnull
-    if sys.stdout is not None and not hasattr(sys.stdout, 'name') or sys.stdout.name != os.devnull:
+    if sys.stdout is not None and not hasattr(sys.stdout, "name") or sys.stdout.name != os.devnull:
         try:
             sys.stdout.reconfigure(line_buffering=True)
         except (AttributeError, OSError):
             pass  # stdout doesn't support reconfigure or is redirected
-    
-    if sys.stderr is not None and not hasattr(sys.stderr, 'name') or sys.stderr.name != os.devnull:
+
+    if sys.stderr is not None and not hasattr(sys.stderr, "name") or sys.stderr.name != os.devnull:
         try:
             sys.stderr.reconfigure(line_buffering=True)
         except (AttributeError, OSError):
             pass  # stderr doesn't support reconfigure or is redirected
-    
+
     # Create a queue-based non-blocking logging handler
     class QueueHandler(logging.Handler):
         """A queue-based handler that never blocks the calling thread"""
+
         def __init__(self, target_handler):
             super().__init__()
             self.target_handler = target_handler
@@ -190,9 +196,10 @@ def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
             self.worker_thread = None
             self._stop_event = threading.Event()
             self._start_worker()
-        
+
         def _start_worker(self):
             """Start the worker thread that processes log records"""
+
             def worker():
                 while not self._stop_event.is_set():
                     try:
@@ -210,10 +217,10 @@ def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
                             self.queue.task_done()
                     except queue.Empty:
                         continue
-            
+
             self.worker_thread = threading.Thread(target=worker, daemon=True, name="LogQueueWorker")
             self.worker_thread.start()
-        
+
         def emit(self, record):
             """Queue the log record without blocking"""
             try:
@@ -223,7 +230,7 @@ def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
                 # Queue is full - drop the message silently
                 # This prevents blocking even under extreme log load
                 pass
-        
+
         def close(self):
             """Stop the worker thread gracefully"""
             self._stop_event.set()
@@ -234,23 +241,25 @@ def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
             if self.worker_thread and self.worker_thread.is_alive():
                 self.worker_thread.join(timeout=1.0)
             super().close()
-    
+
     # Create a safe logging handler that works even without console
     class SafeStreamHandler(logging.StreamHandler):
         """A stream handler that safely handles None streams and prevents blocking"""
+
         def __init__(self, stream=None):
             # If stream is None, create a dummy stream that does nothing
             if stream is None:
                 import io
+
                 stream = io.StringIO()
             super().__init__(stream)
-        
+
         def emit(self, record):
             try:
                 # Use non-blocking emit with timeout protection
                 msg = self.format(record)
                 stream = self.stream
-                
+
                 # Try to write without blocking (with signal-based timeout on Unix, best-effort on Windows)
                 try:
                     stream.write(msg + self.terminator)
@@ -261,37 +270,37 @@ def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
             except (AttributeError, OSError, ValueError):
                 # If the stream is broken, silently ignore
                 pass
-    
+
     # Use stderr if stdout is None or redirected to devnull (windowed mode), but make it safe
-    if sys.stdout is not None and hasattr(sys.stdout, 'name') and sys.stdout.name == os.devnull:
+    if sys.stdout is not None and hasattr(sys.stdout, "name") and sys.stdout.name == os.devnull:
         output_stream = sys.stderr if sys.stderr is not None else sys.stdout
     else:
         output_stream = sys.stdout if sys.stdout is not None else sys.stderr
-    
+
     # Create a safe stream handler
     safe_handler = SafeStreamHandler(output_stream)
-    
+
     # Set up formatter based on log mode
-    if log_mode == 'customer':
+    if log_mode == "customer":
         # Clean, minimal format for customer logs
         fmt = "%(_when)s | %(message)s"
-    elif log_mode == 'verbose':
+    elif log_mode == "verbose":
         # Detailed format for developer logs
         fmt = "%(_when)s | %(levelname)-7s | %(message)s"
     else:  # debug mode
         # Ultra-detailed format for debug logs
         fmt = "%(_when)s | %(levelname)-7s | %(name)-15s | %(funcName)-20s | %(message)s"
-    
+
     class _Fmt(logging.Formatter):
         def format(self, record):
             record._when = time.strftime("%H:%M:%S", time.localtime())
             return super().format(record)
-    
+
     safe_handler.setFormatter(_Fmt(fmt))
-    
+
     # Wrap in queue handler to prevent blocking
     h = QueueHandler(safe_handler)
-    
+
     # Setup file logging (only if dev mode isn't explicitly suppressing it)
     file_handler = None
     log_file = None
@@ -299,107 +308,110 @@ def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
         try:
             # Create logs directory in user data directory
             from .paths import get_user_data_dir
+
             logs_dir = get_user_data_dir() / "logs"
             logs_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Create a unique log file for this session with timestamp
             # Format: dd-mm-yyyy_hh-mm-ss (European format, no colons for Windows compatibility)
             timestamp = datetime.now().strftime(LOG_TIMESTAMP_FORMAT)
-            
+
             max_bytes = int(LOG_MAX_FILE_SIZE_MB_DEFAULT * 1024 * 1024)
             log_file = logs_dir / f"rose_{timestamp}.log"
+
             def _factory_plain(p: Path):
-                return logging.FileHandler(p, encoding='utf-8')
+                return logging.FileHandler(p, encoding="utf-8")
+
             file_handler = SizeRotatingCompositeHandler(log_file, _factory_plain, max_bytes)
-            
+
             # File formatter based on log mode
-            if log_mode == 'customer':
+            if log_mode == "customer":
                 # Clean format for customer logs
                 file_fmt = "%(_when)s | %(message)s"
-            elif log_mode == 'verbose':
+            elif log_mode == "verbose":
                 # Detailed format for developer logs
                 file_fmt = "%(_when)s | %(levelname)-7s | %(message)s"
             else:  # debug mode
                 # Ultra-detailed format with logger name and function
                 file_fmt = "%(_when)s | %(levelname)-7s | %(name)-15s | %(funcName)-20s | %(message)s"
-            
+
             class _FileFmt(logging.Formatter):
                 def format(self, record):
                     record._when = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                     return super().format(record)
-            
+
             file_handler.setFormatter(_FileFmt(file_fmt))
-            
+
             # File handler logging level based on mode
-            if log_mode == 'debug':
+            if log_mode == "debug":
                 file_handler.setLevel(TRACE)  # Show everything including TRACE
-            elif log_mode == 'verbose':
+            elif log_mode == "verbose":
                 file_handler.setLevel(logging.DEBUG)  # Show DEBUG and above
             else:  # customer mode
                 file_handler.setLevel(logging.INFO)  # Show INFO and above
-            
+
         except Exception as e:
             # If file logging fails, continue without it
             file_handler = None
             log_file = None
             print(f"Warning: Could not setup file logging: {e}", file=sys.stderr)
-    
+
     root = logging.getLogger()
     root.handlers.clear()
-    
+
     # Add console handler
     root.addHandler(h)
     # Console handler level based on log mode
-    if log_mode == 'debug':
+    if log_mode == "debug":
         h.setLevel(TRACE)  # Show everything including TRACE
-    elif log_mode == 'verbose':
+    elif log_mode == "verbose":
         h.setLevel(logging.DEBUG)  # Show DEBUG and above
     else:  # customer mode
         h.setLevel(logging.INFO)  # Show INFO and above (clean output)
-    
+
     # Always add file handler
     if file_handler:
         root.addHandler(file_handler)
-    
+
     # Root logger must be at TRACE to allow all handlers to receive all messages
     # This is critical - if root is at INFO, DEBUG/TRACE messages never reach handlers
     root.setLevel(TRACE)
-    
+
     # Add a console print to ensure output is visible (only if we have stdout and it's not redirected)
-    if sys.stdout is not None and not (hasattr(sys.stdout, 'name') and sys.stdout.name == os.devnull):
+    if sys.stdout is not None and not (hasattr(sys.stdout, "name") and sys.stdout.name == os.devnull):
         try:
             # Use logging instead of direct print to avoid blocking
             logger = logging.getLogger("startup")
-            
+
             # Show startup message based on log mode
-            if _CURRENT_LOG_MODE == 'customer':
+            if _CURRENT_LOG_MODE == "customer":
                 # Clean startup for customer mode
                 if log_file:
-                    logger.info(f"Rose Started (Log: {log_file.name})")
+                    logger.info(f"SEXO2 Started (Log: {log_file.name})")
                 else:
-                    logger.info("Rose Started (logs disabled)")
+                    logger.info("SEXO2 Started (logs disabled)")
             else:
                 # Detailed startup for verbose/debug modes
                 logger.info("=" * LOG_SEPARATOR_WIDTH)
                 if log_file:
-                    logger.info(f"Rose - Starting... (Log file: {log_file.name})")
+                    logger.info(f"SEXO2 - Starting... (Log file: {log_file.name})")
                 else:
-                    logger.info("Rose - Starting... (logs disabled)")
+                    logger.info("SEXO2 - Starting... (logs disabled)")
                 logger.info("=" * LOG_SEPARATOR_WIDTH)
-                
+
                 # Log mode information
-                if _CURRENT_LOG_MODE == 'debug':
+                if _CURRENT_LOG_MODE == "debug":
                     logger.info("Debug mode: ON (ultra-detailed logs with function traces)")
                     if log_file:
                         logger.debug(f"Log file location: {log_file.absolute()}")
-                elif _CURRENT_LOG_MODE == 'verbose':
+                elif _CURRENT_LOG_MODE == "verbose":
                     logger.info("Verbose mode: ON (developer logs with technical details)")
                     if log_file:
                         logger.debug(f"Log file location: {log_file.absolute()}")
-                    
+
         except (AttributeError, OSError):
             pass  # stdout is broken, ignore
-    
+
     # Suppress HTTPS/HTTP logs
     logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
     logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
@@ -409,10 +421,9 @@ def setup_logging(log_mode: str = 'customer', *, write_logs: bool = True):
     # startup race where the LCU port is up before its WebSocket accepts. The same error already
     # reaches our on_error callback and the retry WARNING, so the library copy is only noise.
     logging.getLogger("websocket").setLevel(logging.CRITICAL)
-    
+
     # Disable SSL warnings for LCU (self-signed cert)
     urllib3.disable_warnings(InsecureRequestWarning)
-    
 
 
 class _ThreadExceptionLogger:
@@ -425,7 +436,9 @@ class _ThreadExceptionLogger:
         if args.exc_type is not SystemExit:
             thread_name = args.thread.name if args.thread is not None else "unknown"
             exc_info = args.exc_value if args.exc_value is not None else False
-            get_logger().critical("Uncaught exception in thread %s: %s", thread_name, args.exc_type.__name__, exc_info=exc_info)
+            get_logger().critical(
+                "Uncaught exception in thread %s: %s", thread_name, args.exc_type.__name__, exc_info=exc_info
+            )
         self._previous_hook(args)
 
 
@@ -464,6 +477,7 @@ def get_named_logger(name: str, prefix: str, log_mode: str = None) -> logging.Lo
 
     try:
         from .paths import get_user_data_dir
+
         logs_dir = get_user_data_dir() / "logs"
         logs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -524,6 +538,7 @@ def cleanup_logs():
     """
     try:
         from .paths import get_user_data_dir
+
         logs_dir = get_user_data_dir() / "logs"
         if not logs_dir.exists():
             return
@@ -552,14 +567,14 @@ def _clear_log_file(log_file: Path):
     try:
         if log_file.exists():
             # Truncate the file to 0 bytes
-            with open(log_file, 'w', encoding='utf-8') as f:
+            with open(log_file, "w", encoding="utf-8") as f:
                 f.write("")
-            
+
             # Also clean up backup files
             for backup_file in log_file.parent.glob(f"{log_file.name}.*"):
                 if backup_file.is_file():
                     backup_file.unlink()
-                    
+
     except Exception:
         # Silently ignore cleanup errors
         pass
@@ -572,10 +587,11 @@ def cleanup_logs_on_startup():
 
 # ==================== Pretty Logging Helpers ====================
 
+
 def log_section(logger: logging.Logger, title: str, icon: str = "", details: dict = None, mode: str = None):
     """
     Log a beautiful section with title and optional details
-    
+
     Args:
         logger: Logger instance
         title: Main title text (will be uppercased in verbose/debug mode)
@@ -583,16 +599,16 @@ def log_section(logger: logging.Logger, title: str, icon: str = "", details: dic
         details: Optional dict of key-value pairs to display
         mode: 'customer' (simple), 'verbose' (detailed), or 'debug' (ultra-detailed).
               If None, uses current global log mode.
-    
+
     Example:
         log_section(log, "LCU Connected", "", {"Port": 2999, "Status": "Ready"})
     """
     # Use global log mode if not specified
     if mode is None:
         mode = get_log_mode()
-    
+
     # In customer mode, use simpler format without separators
-    if mode == 'customer':
+    if mode == "customer":
         if details:
             detail_str = ", ".join(f"{k}: {v}" for k, v in details.items())
             logger.info(f"{icon} {title} ({detail_str})" if icon else f"{title} ({detail_str})")
@@ -611,13 +627,13 @@ def log_section(logger: logging.Logger, title: str, icon: str = "", details: dic
 def log_event(logger: logging.Logger, event: str, icon: str = "", details: dict = None):
     """
     Log a single event with optional details
-    
+
     Args:
         logger: Logger instance
         event: Event description
         icon: Icon prefix to use (empty by default)
         details: Optional dict of key-value pairs
-    
+
     Example:
         log_event(log, "Game process found", "", {"PID": 12345, "Status": "Suspended"})
     """
@@ -630,12 +646,12 @@ def log_event(logger: logging.Logger, event: str, icon: str = "", details: dict 
 def log_action(logger: logging.Logger, action: str, icon: str = ""):
     """
     Log an action being performed
-    
+
     Args:
         logger: Logger instance
         action: Action description
         icon: Icon prefix to use (empty by default)
-    
+
     Example:
         log_action(log, "Injecting skin...", "")
     """
@@ -645,12 +661,12 @@ def log_action(logger: logging.Logger, action: str, icon: str = ""):
 def log_success(logger: logging.Logger, message: str, icon: str = ""):
     """
     Log a success message
-    
+
     Args:
         logger: Logger instance
         message: Success message
         icon: Icon prefix to use (empty by default)
-    
+
     Example:
         log_success(log, "Skin injected successfully!")
     """
@@ -660,13 +676,13 @@ def log_success(logger: logging.Logger, message: str, icon: str = ""):
 def log_status(logger: logging.Logger, status: str, value: any, icon: str = ""):
     """
     Log a status update
-    
+
     Args:
         logger: Logger instance
         status: Status name
         value: Status value
         icon: Icon prefix to use (empty by default)
-    
+
     Example:
         log_status(log, "Champion", "Ahri", "")
     """

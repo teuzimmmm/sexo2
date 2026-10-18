@@ -25,6 +25,7 @@ from ..processing.skin_processor import SkinProcessor
 from ..processing.skin_mapping import SkinMapping
 from ..communication.broadcaster import Broadcaster
 from ..processing.flow_controller import FlowController
+
 log = logging.getLogger(__name__)
 
 # Suppress websockets library DEBUG logs
@@ -58,7 +59,7 @@ class PenguSkinMonitorThread(threading.Thread):
         self.skin_scraper = skin_scraper
         self.injection_manager = injection_manager
         self.host = host
-        
+
         # Find free port if not specified (use high port range like LCU)
         if port is None:
             free_port = find_free_port(start_port=BRIDGE_FIRST_PORT, max_attempts=BRIDGE_PORT_COUNT)
@@ -69,7 +70,7 @@ class PenguSkinMonitorThread(threading.Thread):
                 self.port = free_port
         else:
             self.port = port
-        
+
         # Write port to file for plugin discovery
         write_bridge_port(self.port)
 
@@ -81,7 +82,7 @@ class PenguSkinMonitorThread(threading.Thread):
 
         # Initialize HTTP handler
         self.http_handler = HTTPHandler(self.port, shared_state)
-        
+
         # Initialize WebSocket server
         self.websocket_server = WebSocketServer(
             host=self.host,
@@ -89,7 +90,7 @@ class PenguSkinMonitorThread(threading.Thread):
             message_handler=self._handle_message,
             http_handler=self.http_handler.handle_request,
         )
-        
+
         # Initialize broadcaster
         self.broadcaster = Broadcaster(self.websocket_server, shared_state, self.skin_mapping, skin_scraper)
 
@@ -105,7 +106,7 @@ class PenguSkinMonitorThread(threading.Thread):
             injection_manager=self.injection_manager,
             port=self.port,
         )
-        
+
         # Set message handler on WebSocket server
         self.websocket_server.message_handler = self.message_handler.handle_message
 
@@ -152,7 +153,7 @@ class PenguSkinMonitorThread(threading.Thread):
 
     # ---------------------------------------------------------- JS Integration
     # These methods delegate to broadcaster for backward compatibility
-    
+
     def _broadcast_skin_state(self, skin_name: str, skin_id: Optional[int]) -> None:
         """Broadcast skin state (delegates to broadcaster)"""
         self.broadcaster.broadcast_skin_state(skin_name, skin_id)
@@ -168,11 +169,11 @@ class PenguSkinMonitorThread(threading.Thread):
     def _broadcast_custom_mod_state(self) -> None:
         """Broadcast custom mod state (delegates to broadcaster)"""
         self.broadcaster.broadcast_custom_mod_state()
-    
+
     def _broadcast_phase_change(self, phase: str) -> None:
         """Broadcast phase change (delegates to broadcaster)"""
         self.broadcaster.broadcast_phase_change(phase)
-    
+
     def _broadcast_language_changed(self) -> None:
         """Broadcast a menu language change (delegates to broadcaster)"""
         self.broadcaster.broadcast_language_changed()
@@ -180,25 +181,25 @@ class PenguSkinMonitorThread(threading.Thread):
     def _broadcast_champion_locked(self, locked: bool) -> None:
         """Broadcast champion lock state (delegates to broadcaster)"""
         self.broadcaster.broadcast_champion_locked(locked)
-    
+
     def _broadcast_random_mode_state(self) -> None:
         """Broadcast random mode state (delegates to broadcaster)"""
         self.broadcaster.broadcast_random_mode_state()
 
     def _broadcast_skip_base_skin(self) -> None:
         self.broadcaster.broadcast_skip_base_skin()
-    
+
     # Backward compatibility properties
     @property
     def ready_event(self) -> threading.Event:
         """Get ready event from WebSocket server"""
         return self.websocket_server.ready_event
-    
+
     @property
     def last_skin_name(self) -> Optional[str]:
         """Get last skin name from processor"""
         return self.skin_processor.last_skin_name
-    
+
     @last_skin_name.setter
     def last_skin_name(self, value: Optional[str]) -> None:
         """Set last skin name on processor"""

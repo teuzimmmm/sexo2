@@ -22,16 +22,16 @@ class LobbyPickQueueTests(unittest.TestCase):
 
     def test_quickplay_picks_skins_in_the_lobby(self):
         # Quickplay reports the CLASSIC game mode: only its queue tells
-        self.assertTrue(self._takes_lobby_pick_path('CLASSIC', 490))
+        self.assertTrue(self._takes_lobby_pick_path("CLASSIC", 490))
 
     def test_swiftplay_still_does(self):
-        self.assertTrue(self._takes_lobby_pick_path('SWIFTPLAY', 480))
+        self.assertTrue(self._takes_lobby_pick_path("SWIFTPLAY", 480))
         self.assertTrue(self._takes_lobby_pick_path(None, 480))
 
     def test_champ_select_queues_do_not(self):
         for queue in (400, 420, 430, 440):
-            self.assertFalse(self._takes_lobby_pick_path('CLASSIC', queue))
+            self.assertFalse(self._takes_lobby_pick_path("CLASSIC", queue))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

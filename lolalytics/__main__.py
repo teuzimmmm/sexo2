@@ -1,4 +1,5 @@
 """Run with python -m lolalytics; JSON per champion allows resumable batches."""
+
 import argparse
 import json
 import sys
@@ -19,15 +20,26 @@ def main(argv=None) -> int:
     parser.add_argument("--region", choices=REGIONS, default="all")
     parser.add_argument("--cache-dir", help="optional private directory for a resumable disk cache")
     parser.add_argument("--ttl", type=float, default=900, help="cache lifetime in seconds, 0–86400 (default 900)")
-    parser.add_argument("--item-sets", action="store_true", help="also fetch reproduced ranked lazy item sets; preserve raw counters")
+    parser.add_argument(
+        "--item-sets", action="store_true", help="also fetch reproduced ranked lazy item sets; preserve raw counters"
+    )
     parser.add_argument("--keystone", type=int, help="filter by a primary rune ID")
-    parser.add_argument("--builds", action="store_true", help="collect win/common builds (Swiftplay: unfiltered mode summaries)")
+    parser.add_argument(
+        "--builds", action="store_true", help="collect win/common builds (Swiftplay: unfiltered mode summaries)"
+    )
     parser.add_argument("--opponent", help="explicit opponent champion slug for matchup data")
     parser.add_argument("--opponent-lane", choices=LANES, default="all")
     parser.add_argument("--matchup", action="store_true", help="collect one opponent-conditioned build page")
     parser.add_argument("--recommend", action="store_true", help="rank one local risk-adjusted recommendation")
-    parser.add_argument("--risk-level", choices=RISK_LEVELS, help="local recommendation prior strength (requires --recommend)")
-    parser.add_argument("--min-games", type=int, default=100, help="warn on item samples below this count (0 disables the low-sample threshold)")
+    parser.add_argument(
+        "--risk-level", choices=RISK_LEVELS, help="local recommendation prior strength (requires --recommend)"
+    )
+    parser.add_argument(
+        "--min-games",
+        type=int,
+        default=100,
+        help="warn on item samples below this count (0 disables the low-sample threshold)",
+    )
     args = parser.parse_args(argv)
     try:
         if len(args.champions) > 20:
@@ -50,9 +62,20 @@ def main(argv=None) -> int:
             parser.error("--item-sets and --opponent are incompatible")
         if args.min_games < 0:
             parser.error("--min-games must be non-negative")
-        queries = [Query(champion, mode=args.mode, patch=args.patch, lane=args.lane,
-                         tier=args.tier, region=args.region, keystone=args.keystone,
-                         opponent=args.opponent, opponent_lane=args.opponent_lane) for champion in args.champions]
+        queries = [
+            Query(
+                champion,
+                mode=args.mode,
+                patch=args.patch,
+                lane=args.lane,
+                tier=args.tier,
+                region=args.region,
+                keystone=args.keystone,
+                opponent=args.opponent,
+                opponent_lane=args.opponent_lane,
+            )
+            for champion in args.champions
+        ]
         if args.item_sets and args.mode != "ranked":
             parser.error("--item-sets currently supports ranked only")
         with Client(cache_dir=args.cache_dir, ttl=args.ttl) as client:

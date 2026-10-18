@@ -11,15 +11,22 @@ This subpackage contains system and OS-specific utilities:
 """
 
 from utils.system.admin_utils import (
-    is_admin, request_admin_elevation, ensure_admin_rights,
-    is_registered_for_autostart, register_autostart, unregister_autostart,
-    show_message_box_threaded
+    is_admin,
+    request_admin_elevation,
+    ensure_admin_rights,
+    is_registered_for_autostart,
+    register_autostart,
+    unregister_autostart,
+    show_message_box_threaded,
 )
 
 __all__ = [
     # Admin
-    'is_admin', 'request_admin_elevation', 'ensure_admin_rights',
-    'is_registered_for_autostart', 'register_autostart', 'unregister_autostart',
-    'show_message_box_threaded',
+    "is_admin",
+    "request_admin_elevation",
+    "ensure_admin_rights",
+    "is_registered_for_autostart",
+    "register_autostart",
+    "unregister_autostart",
+    "show_message_box_threaded",
 ]
-

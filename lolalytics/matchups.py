@@ -1,4 +1,5 @@
 """Structured, opponent-conditioned build suggestions without inferred cores."""
+
 from __future__ import annotations
 
 from copy import deepcopy

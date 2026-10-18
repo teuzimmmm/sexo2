@@ -200,6 +200,7 @@ class InjectionSettingsWindow(Win32Window):
             if not game_dir.exists() or not game_dir.is_dir():
                 return False
             from config import GAME_EXECUTABLE_NAMES
+
             return any((game_dir / name).is_file() for name in GAME_EXECUTABLE_NAMES)
         except Exception as exc:
             log.debug(f"[Settings] Could not validate the game path: {exc}")
@@ -218,10 +219,10 @@ class InjectionSettingsWindow(Win32Window):
                 buffer = ctypes.create_unicode_buffer(length + 1)
                 self.send_message(self.game_path_edit_hwnd, WM_GETTEXT, length + 1, ctypes.addressof(buffer))
                 path = buffer.value
-        
+
         if not self.game_path_status_hwnd:
             return
-        
+
         is_valid = self._validate_game_path(path)
         status_text = "✅" if is_valid else "❌"
         user32.SetWindowTextW(self.game_path_status_hwnd, status_text)
@@ -489,7 +490,7 @@ def show_injection_settings_dialog() -> None:
         user32.MessageBoxW(
             None,
             f"Failed to save settings:\n\n{exc}",
-            "Rose Settings",
+            "SEXO2 Settings",
             MB_OK | MB_ICONERROR | MB_TOPMOST,
         )
         # Even if threshold save fails, fall through to process auto-start changes.
@@ -502,13 +503,18 @@ def show_injection_settings_dialog() -> None:
                 set_config_option("General", "leaguePath", game_path.strip())
                 # Try to infer and save client path
                 from injection.config.config_manager import ConfigManager
+
                 config_manager = ConfigManager()
                 inferred_client_path = config_manager.infer_client_path_from_league_path(game_path.strip())
                 if inferred_client_path:
                     set_config_option("General", "clientPath", inferred_client_path)
-                    log.info(f"[TraySettings] League path updated to: {game_path.strip()}, client path: {inferred_client_path}")
+                    log.info(
+                        f"[TraySettings] League path updated to: {game_path.strip()}, client path: {inferred_client_path}"
+                    )
                 else:
-                    log.info(f"[TraySettings] League path updated to: {game_path.strip()} (client path could not be inferred)")
+                    log.info(
+                        f"[TraySettings] League path updated to: {game_path.strip()} (client path could not be inferred)"
+                    )
             else:
                 # Empty path means clear the manual path (will use auto-detection)
                 set_config_option("General", "leaguePath", "")
@@ -525,7 +531,7 @@ def show_injection_settings_dialog() -> None:
                 if not is_admin():
                     msg = (
                         "Administrator privileges are required to enable auto-start.\n\n"
-                        "Please restart Rose with Administrator rights and try again."
+                        "Please restart SEXO2 with Administrator rights and try again."
                     )
                     show_message_box_threaded(msg, "Auto-Start", MB_ICONERROR)
                     log.warning("[TraySettings] Auto-start enable blocked - not running as administrator")
@@ -545,7 +551,7 @@ def show_injection_settings_dialog() -> None:
                 if not is_admin():
                     msg = (
                         "Administrator privileges are required to disable auto-start.\n\n"
-                        "Please restart Rose with Administrator rights and try again."
+                        "Please restart SEXO2 with Administrator rights and try again."
                     )
                     show_message_box_threaded(msg, "Auto-Start", MB_ICONERROR)
                     log.warning("[TraySettings] Auto-start disable blocked - not running as administrator")
@@ -561,4 +567,3 @@ def show_injection_settings_dialog() -> None:
                         "Auto-Start",
                         MB_ICONERROR,
                     )
-

@@ -26,6 +26,7 @@ SWIFTPLAY_QUEUE_IDS = frozenset({480, 490})
 @dataclass
 class Lockfile:
     """Parsed lockfile data"""
+
     name: str
     pid: int
     port: int
@@ -35,10 +36,10 @@ class Lockfile:
 
 def find_lockfile(explicit: Optional[str] = None) -> Optional[str]:
     """Find League Client lockfile using pathlib
-    
+
     Args:
         explicit: Optional explicit path to lockfile
-        
+
     Returns:
         Path to lockfile if found, None otherwise
     """
@@ -47,14 +48,14 @@ def find_lockfile(explicit: Optional[str] = None) -> Optional[str]:
         explicit_path = Path(explicit)
         if explicit_path.is_file():
             return str(explicit_path)
-    
+
     # Check environment variable
     env = os.environ.get("LCU_LOCKFILE")
     if env:
         env_path = Path(env)
         if env_path.is_file():
             return str(env_path)
-    
+
     # Check common installation paths
     if os.name == "nt":
         common_paths = [
@@ -67,11 +68,11 @@ def find_lockfile(explicit: Optional[str] = None) -> Optional[str]:
             Path("/Applications/League of Legends.app/Contents/LoL/lockfile"),
             Path.home() / ".local/share/League of Legends/lockfile",
         ]
-    
+
     for p in common_paths:
         if p.is_file():
             return str(p)
-    
+
     # Try to find via process scanning
     try:
         for proc in psutil.process_iter(attrs=["name", "exe"]):
@@ -87,36 +88,30 @@ def find_lockfile(explicit: Optional[str] = None) -> Optional[str]:
                             return str(lockfile)
     except (psutil.Error, OSError, AttributeError) as e:
         log.debug(f"Failed to find lockfile via process iteration: {e}")
-    
+
     return None
 
 
 def parse_lockfile(lockfile_path: str) -> Optional[Lockfile]:
     """Parse lockfile and return Lockfile dataclass
-    
+
     Args:
         lockfile_path: Path to lockfile
-        
+
     Returns:
         Parsed Lockfile or None if failed
     """
     path = Path(lockfile_path)
     if not path.is_file():
         return None
-    
+
     try:
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
         if not content.strip():
             return None
         name, pid, port, pw, proto = content.split(":")[:5]
-        return Lockfile(
-            name=name,
-            pid=int(pid),
-            port=int(port),
-            password=pw,
-            protocol=proto
-        )
+        return Lockfile(name=name, pid=int(pid), port=int(port), password=pw, protocol=proto)
     except Exception as e:
         log.debug(f"Failed to parse lockfile: {e}")
         return None
@@ -155,4 +150,3 @@ def find_process_credentials() -> Optional[Lockfile]:
     except (psutil.Error, OSError) as e:
         log.debug(f"[LCU] Could not list client processes: {e}")
     return None
-

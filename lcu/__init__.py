@@ -11,4 +11,4 @@ from .data.skin_scraper import LCUSkinScraper
 from .core.lockfile import Lockfile
 from .data.utils import compute_locked, map_cells
 
-__all__ = ['LCU', 'LCUSkinScraper', 'Lockfile', 'compute_locked', 'map_cells']
+__all__ = ["LCU", "LCUSkinScraper", "Lockfile", "compute_locked", "map_cells"]

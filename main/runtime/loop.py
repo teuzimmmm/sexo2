@@ -10,7 +10,12 @@ from typing import Any
 from state import SharedState
 from lcu import LCUSkinScraper
 from utils.core.logging import get_logger, log_section
-from config import MAIN_LOOP_SLEEP, MAIN_LOOP_IDLE_SLEEP, MAIN_LOOP_STALL_THRESHOLD_S, CHROMA_PANEL_PROCESSING_THRESHOLD_S
+from config import (
+    MAIN_LOOP_SLEEP,
+    MAIN_LOOP_IDLE_SLEEP,
+    MAIN_LOOP_STALL_THRESHOLD_S,
+    CHROMA_PANEL_PROCESSING_THRESHOLD_S,
+)
 
 log = get_logger()
 
@@ -64,10 +69,7 @@ def _compute_main_loop_sleep(state: SharedState, ui_activity: bool) -> float:
     if state.phase in ("GameStart", "InProgress", "Reconnect"):
         return max(MAIN_LOOP_IDLE_SLEEP, 0.25)
     fast_loop = (
-        ui_activity
-        or state.champion_exchange_triggered
-        or state.chroma_panel_open
-        or state.pending_chroma_selection
+        ui_activity or state.champion_exchange_triggered or state.chroma_panel_open or state.pending_chroma_selection
     )
     return MAIN_LOOP_SLEEP if fast_loop else MAIN_LOOP_IDLE_SLEEP
 
@@ -81,6 +83,7 @@ def _process_ui_updates(state: SharedState, skin_scraper: LCUSkinScraper) -> boo
     """
     if state.phase in ("GameStart", "InProgress", "Reconnect"):
         from ui.core import user_interface as ui_module
+
         ui = ui_module._user_interface
         if ui is not None and ui.has_pending_operations():
             ui.process_pending_operations()  # Preserve pending hide/destroy requests.
@@ -94,6 +97,7 @@ def _process_ui_updates(state: SharedState, skin_scraper: LCUSkinScraper) -> boo
         current_skin_name = state.ui_last_text or f"Skin {current_skin_id}"
         # Calculate champion ID from skin ID for Swiftplay
         from utils.core.utilities import get_champion_id_from_skin_id
+
         champion_id = get_champion_id_from_skin_id(current_skin_id)
         champion_name = None
         # Load champion data if not already loaded
@@ -126,9 +130,10 @@ def _process_ui_updates(state: SharedState, skin_scraper: LCUSkinScraper) -> boo
         has_extracted_mods = state.swiftplay_extracted_mods and len(state.swiftplay_extracted_mods) > 0
         if not has_extracted_mods:
             # Use a flag to avoid spamming hide() calls
-            if not _loop_state.get('swiftplay_ui_hidden'):
+            if not _loop_state.get("swiftplay_ui_hidden"):
                 try:
                     from ui.core.user_interface import get_user_interface
+
                     user_interface = get_user_interface(state, skin_scraper)
                     if user_interface.is_ui_initialized():
                         if user_interface.chroma_ui:
@@ -139,53 +144,57 @@ def _process_ui_updates(state: SharedState, skin_scraper: LCUSkinScraper) -> boo
                             user_interface.current_skin_name = None
                             user_interface.current_champion_name = None
                             user_interface.current_champion_id = None
-                        _loop_state['swiftplay_ui_hidden'] = True
+                        _loop_state["swiftplay_ui_hidden"] = True
                         log.debug("[MAIN] Hiding UI - no skin detected in Swiftplay mode (reset skin state)")
                 except Exception as e:
                     log.debug(f"[MAIN] Error hiding UI: {e}")
         else:
             # Reset the hidden flag if we have extracted mods (overlay might be building)
-            _loop_state['swiftplay_ui_hidden'] = False
+            _loop_state["swiftplay_ui_hidden"] = False
 
     if current_skin_id:
         ui_activity = True
 
         # Check if we need to reset skin notification debouncing
         if state.reset_skin_notification:
-            _loop_state.pop('last_notified_skin_id', None)
+            _loop_state.pop("last_notified_skin_id", None)
             state.reset_skin_notification = False
             log.debug("[MAIN] Reset skin notification debouncing for new ChampSelect")
 
         # Check if this is a new skin (debouncing at main loop level)
-        last_notified = _loop_state.get('last_notified_skin_id')
-        should_notify = (last_notified is None or last_notified != current_skin_id)
+        last_notified = _loop_state.get("last_notified_skin_id")
+        should_notify = last_notified is None or last_notified != current_skin_id
 
         if should_notify:
             # Notify UserInterface of the skin change
             try:
                 # Get the user interface that was already initialized
                 from ui.core.user_interface import get_user_interface
+
                 user_interface = get_user_interface(state, skin_scraper)
                 if user_interface.is_ui_initialized():
                     # Use the correct champion_id (either from Swiftplay or regular mode)
                     champ_id_for_ui = champion_id if state.is_swiftplay_mode else state.locked_champ_id
-                    user_interface.show_skin(current_skin_id, current_skin_name or f"Skin {current_skin_id}", champion_name, champ_id_for_ui)
+                    user_interface.show_skin(
+                        current_skin_id, current_skin_name or f"Skin {current_skin_id}", champion_name, champ_id_for_ui
+                    )
                     log.info(f"[MAIN] Notified UI of skin change: {current_skin_id} - '{current_skin_name}'")
                     # Track the last notified skin
-                    _loop_state['last_notified_skin_id'] = current_skin_id
+                    _loop_state["last_notified_skin_id"] = current_skin_id
                     # Reset hide flag since we're showing a skin
-                    _loop_state.pop('swiftplay_ui_hidden', None)
+                    _loop_state.pop("swiftplay_ui_hidden", None)
                     log.debug("[MAIN] Reset UI hide flag - skin detected")
                 else:
                     # Only log once per skin to avoid spam
-                    if _loop_state.get('ui_not_initialized_logged') != current_skin_id:
+                    if _loop_state.get("ui_not_initialized_logged") != current_skin_id:
                         log.debug(f"[MAIN] UI not initialized yet - skipping skin notification for {current_skin_id}")
-                        _loop_state['ui_not_initialized_logged'] = current_skin_id
+                        _loop_state["ui_not_initialized_logged"] = current_skin_id
             except Exception as e:
                 log.error(f"[MAIN] Failed to notify UI: {e}")
 
     # Process pending UI initialization and requests
     from ui.core.user_interface import get_user_interface
+
     user_interface = get_user_interface(state, skin_scraper)
 
     # Process pending UI operations first (must be done in main thread)
@@ -207,7 +216,12 @@ def _process_ui_updates(state: SharedState, skin_scraper: LCUSkinScraper) -> boo
         except Exception as e:
             log.error(f"[MAIN] Failed to hide UI during champion exchange: {e}")
 
-    if user_interface.is_ui_initialized() and user_interface.chroma_ui and user_interface.chroma_ui.chroma_selector and user_interface.chroma_ui.chroma_selector.panel:
+    if (
+        user_interface.is_ui_initialized()
+        and user_interface.chroma_ui
+        and user_interface.chroma_ui.chroma_selector
+        and user_interface.chroma_ui.chroma_selector.panel
+    ):
         panel = user_interface.chroma_ui.chroma_selector.panel
         panel_has_work = (
             state.chroma_panel_open

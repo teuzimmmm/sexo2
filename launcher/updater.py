@@ -11,6 +11,7 @@ from typing import Callable, Optional
 
 from .update.update_sequence import UpdateSequence
 
+
 # Backward compatibility - maintain the auto_update function signature
 def auto_update(
     status_callback: Callable[[str], None],

@@ -1,4 +1,5 @@
 """Deterministic Client tests using only sanitized, checked-in JSON fixtures."""
+
 import base64
 import json
 from pathlib import Path
@@ -27,10 +28,7 @@ def query_for(name):
 
 class FixtureTransport:
     def __init__(self, fixture_names=(), *, errors=None, before_return=None):
-        self.bodies = {
-            Query(**entry(name)["filters"]).url: (FIXTURES / name).read_bytes()
-            for name in fixture_names
-        }
+        self.bodies = {Query(**entry(name)["filters"]).url: (FIXTURES / name).read_bytes() for name in fixture_names}
         self.errors = errors or {}
         self.before_return = before_return
         self.calls = []
@@ -69,9 +67,14 @@ def fixture_with_patch(name, patch_value):
 
 def lazy_itemsets_url(query, patch="16.20"):
     params = {
-        "ep": "build-itemset", "v": 1, "patch": patch,
-        "c": query.champion, "lane": query.lane, "tier": query.tier,
-        "queue": query.mode, "region": query.region,
+        "ep": "build-itemset",
+        "v": 1,
+        "patch": patch,
+        "c": query.champion,
+        "lane": query.lane,
+        "tier": query.tier,
+        "queue": query.mode,
+        "region": query.region,
     }
     return "https://a1.lolalytics.com/mega/?" + urlencode(params)
 
@@ -79,7 +82,7 @@ def lazy_itemsets_url(query, patch="16.20"):
 def add_deep_json_member(encoded, name="deep", levels=12000):
     """Append JSON nesting without relying on a platform-specific recursion limit."""
     depth = "[" * levels + "0" + "]" * levels
-    return encoded[:-1] + b',"' + name.encode() + b'":' + depth.encode() + b'}'
+    return encoded[:-1] + b',"' + name.encode() + b'":' + depth.encode() + b"}"
 
 
 class MutableClock:
@@ -124,7 +127,9 @@ class ClientCacheTests(unittest.TestCase):
         current = query_for("ahri-ranked.json")
         aram = query_for("jinx-aram.json")
         arena = query_for("jinx-arena.json")
-        transport = FixtureTransport(("ahri-ranked-16.19-br-gold.json", "ahri-ranked.json", "jinx-aram.json", "jinx-arena.json"))
+        transport = FixtureTransport(
+            ("ahri-ranked-16.19-br-gold.json", "ahri-ranked.json", "jinx-aram.json", "jinx-arena.json")
+        )
         client = Client(transport=transport)
         for q in (old, current, aram, arena, old, current, aram, arena):
             client.collect(q)
@@ -301,7 +306,7 @@ class ClientBatchTests(unittest.TestCase):
         self.assertEqual(transport.calls.count(bad.url), 1)
         client.close()
 
-    def test_disk_cache_arena_payload_has_no_item_or_augment_win_rates(self):
+    def test_disk_cache_arena_payload_keeps_only_allowlisted_tables(self):
         q = query_for("ahri-arena.json")
         transport = FixtureTransport(("ahri-arena.json",))
         with tempfile.TemporaryDirectory() as tmp:
@@ -313,12 +318,7 @@ class ClientBatchTests(unittest.TestCase):
             envelope = json.loads(cache_files[0].read_text())
             stored = json.loads(base64.b64decode(envelope["value"]))
             payload = stored["payload"]
-            for key in ("builtItemSet3", "startSet", "item", "item1", "item2", "item3", "item4", "item5", "item6", "startItem", "prismatic"):
-                for row in payload.get(key, []):
-                    self.assertIsNone(row[1], key)
-            for rows in payload.get("augment", {}).values():
-                for row in rows:
-                    self.assertIsNone(row[1])
+            self.assertEqual(payload["augment"], snapshot.raw["augment"])
             self.assertNotIn("sidebar", payload)
             client.close()
 

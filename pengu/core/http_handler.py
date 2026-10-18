@@ -63,14 +63,14 @@ class HTTPHandler:
     def _forbidden(self) -> tuple:
         """Return a generic forbidden response."""
         return (403, {"Content-Type": "text/plain"}, b"Forbidden")
-    
+
     def handle_request(self, path: str, request_headers: dict) -> Optional[tuple]:
         """Process HTTP requests
-        
+
         Args:
             path: Request path
             request_headers: Request headers
-            
+
         Returns:
             Tuple of (status_code, headers_dict, body_bytes) for HTTP responses
             None to let WebSocket handshake proceed
@@ -84,41 +84,30 @@ class HTTPHandler:
                 return self._forbidden()
 
             cors_headers = cors_headers_for_origin(origin)
-            
+
             log.debug(f"[SkinMonitor] HTTP request: {path_clean}")
-            
+
             # Handle /port endpoint (backward compatibility)
             if path_clean == "/port":
-                return (
-                    200,
-                    {"Content-Type": "text/plain", **cors_headers},
-                    str(self.port).encode('utf-8')
-                )
-            
+                return (200, {"Content-Type": "text/plain", **cors_headers}, str(self.port).encode("utf-8"))
+
             # Handle /bridge-port endpoint (for file-based discovery)
             if path_clean == "/bridge-port":
                 port_file = get_state_dir() / "bridge_port.txt"
                 if port_file.exists():
                     try:
-                        port = port_file.read_text(encoding='utf-8').strip()
-                        return (
-                            200,
-                            {"Content-Type": "text/plain", **cors_headers},
-                            port.encode('utf-8')
-                        )
+                        port = port_file.read_text(encoding="utf-8").strip()
+                        return (200, {"Content-Type": "text/plain", **cors_headers}, port.encode("utf-8"))
                     except Exception as e:
                         log.debug(f"[SkinMonitor] Failed to read bridge port file: {e}")
                 # Fallback to current port if file doesn't exist
-                return (
-                    200,
-                    {"Content-Type": "text/plain", **cors_headers},
-                    str(self.port).encode('utf-8')
-                )
-            
+                return (200, {"Content-Type": "text/plain", **cors_headers}, str(self.port).encode("utf-8"))
+
             # The language of Rose's menus and its texts (ROSE-I18n)
             if path_clean == "/i18n":
                 import json
                 from utils.core.i18n import i18n_payload
+
                 return (
                     200,
                     {"Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", **cors_headers},
@@ -128,29 +117,25 @@ class HTTPHandler:
             # Handle preview requests
             if path_clean.startswith("/preview/"):
                 return self._handle_preview_request(path_clean, cors_headers)
-            
+
             # Handle asset requests
             elif path_clean.startswith("/asset/"):
                 return self._handle_asset_request(path_clean, cors_headers)
 
-            # Handle mod asset requests (for files under %LOCALAPPDATA%\\Rose\\mods)
+            # Handle mod asset requests (for files under %LOCALAPPDATA%\\SEXO2\\mods)
             elif path_clean.startswith("/mod-asset/"):
                 return self._handle_mod_asset_request(path_clean, cors_headers)
 
             # Handle plugin file requests
             elif path_clean.startswith("/plugin/"):
                 return self._handle_plugin_request(path_clean, cors_headers)
-            
+
             # Return None to let WebSocket handshake proceed
             return None
         except Exception as e:
             log.warning(f"[SkinMonitor] HTTP request error: {e}", exc_info=True)
-            return (
-                500,
-                {"Content-Type": "text/plain"},
-                b"Internal Server Error"
-            )
-    
+            return (500, {"Content-Type": "text/plain"}, b"Internal Server Error")
+
     def _handle_preview_request(self, path_clean: str, cors_headers: dict[str, str]) -> Optional[tuple]:
         """Handle preview image requests"""
         parts = path_clean.replace("/preview/", "").split("/")
@@ -179,37 +164,29 @@ class HTTPHandler:
                     file_data = f.read()
                 return (
                     200,
-                    {
-                        "Content-Type": "image/png",
-                        **cors_headers,
-                        "Cache-Control": "public, max-age=3600"
-                    },
-                    file_data
+                    {"Content-Type": "image/png", **cors_headers, "Cache-Control": "public, max-age=3600"},
+                    file_data,
                 )
         return None
-    
+
     def _handle_asset_request(self, path_clean: str, cors_headers: dict[str, str]) -> Optional[tuple]:
         """Handle asset file requests"""
         asset_path = path_clean.replace("/asset/", "")
         asset_file = get_asset_path(asset_path)
-        
+
         if asset_file and asset_file.exists():
             log.debug(f"[SkinMonitor] Serving asset: {asset_file}")
             content_type = self._get_content_type(asset_file)
-            
+
             with open(asset_file, "rb") as f:
                 file_data = f.read()
             return (
                 200,
-                {
-                    "Content-Type": content_type,
-                    **cors_headers,
-                    "Cache-Control": "public, max-age=3600"
-                },
-                file_data
+                {"Content-Type": content_type, **cors_headers, "Cache-Control": "public, max-age=3600"},
+                file_data,
             )
         return None
-    
+
     def _handle_mod_asset_request(self, path_clean: str, cors_headers: dict[str, str]) -> Optional[tuple]:
         """Handle mod file requests under the local mods directory."""
         relative_path = path_clean.replace("/mod-asset/", "")
@@ -244,11 +221,12 @@ class HTTPHandler:
             plugin_name, file_name = parts
             try:
                 from utils.core.paths import get_app_dir
+
                 app_dir = get_app_dir()
                 plugins_dir = app_dir.parent / "Pengu Loader" / "plugins"
                 if not plugins_dir.exists():
                     plugins_dir = app_dir / "Pengu Loader" / "plugins"
-                
+
                 if plugins_dir.exists():
                     file_path = plugins_dir / plugin_name / file_name
 
@@ -260,20 +238,18 @@ class HTTPHandler:
                     if file_path.exists():
                         log.debug(f"[SkinMonitor] Serving plugin file: {file_path}")
                         content_type = self._get_content_type(file_path)
-                        
+
                         with open(file_path, "rb") as f:
                             file_data = f.read()
                         return (
                             200,
-                            {
-                                "Content-Type": content_type,
-                                **cors_headers,
-                                "Cache-Control": "public, max-age=3600"
-                            },
-                            file_data
+                            {"Content-Type": content_type, **cors_headers, "Cache-Control": "public, max-age=3600"},
+                            file_data,
                         )
                     else:
-                        log.info(f"[SkinMonitor] Plugin file not found: {file_path} (plugins_dir: {plugins_dir}, plugin_name: {plugin_name}, file_name: {file_name})")
+                        log.info(
+                            f"[SkinMonitor] Plugin file not found: {file_path} (plugins_dir: {plugins_dir}, plugin_name: {plugin_name}, file_name: {file_name})"
+                        )
                 else:
                     log.info(f"[SkinMonitor] Plugins directory not found: {plugins_dir} (app_dir: {app_dir})")
             except Exception as e:
@@ -281,7 +257,7 @@ class HTTPHandler:
         else:
             log.info(f"[SkinMonitor] Invalid plugin path format: {path_clean} (parts: {parts})")
         return None
-    
+
     def _get_content_type(self, file_path: Path) -> str:
         """Determine content type from file extension"""
         suffix = file_path.suffix.lower()
@@ -291,9 +267,9 @@ class HTTPHandler:
             ".jpeg": "image/jpeg",
             ".webp": "image/webp",
             ".ttf": "font/ttf",
+            ".woff2": "font/woff2",
             ".ogg": "audio/ogg",
             ".js": "application/javascript",
             ".css": "text/css",
         }
         return content_types.get(suffix, "application/octet-stream")
-

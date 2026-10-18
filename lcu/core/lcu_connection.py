@@ -21,10 +21,10 @@ log = get_logger()
 
 class LCUConnection:
     """Manages LCU connection lifecycle"""
-    
+
     def __init__(self, lockfile_path: Optional[str] = None):
         """Initialize LCU connection
-        
+
         Args:
             lockfile_path: Optional explicit path to lockfile
         """
@@ -45,19 +45,21 @@ class LCUConnection:
         session = requests.Session()
         session.verify = False  # self-signed cert on 127.0.0.1
         session.trust_env = False  # ignore system/corporate proxy settings
-        session.proxies.update({
-            "http": None,
-            "https": None,
-        })  # explicit None keeps Requests from re-reading env vars later
+        session.proxies.update(
+            {
+                "http": None,
+                "https": None,
+            }
+        )  # explicit None keeps Requests from re-reading env vars later
         return session
-    
+
     def _init_from_lockfile(self, force: bool = False):
         """Initialize from lockfile or a running regional client's arguments."""
         previous_path = self.lf_path
         lf = find_lockfile(self._explicit_lockfile)
         self.lf_path = lf
         self._next_credentials_check = time.monotonic() + 1.0
-        
+
         try:
             # Parse lockfile
             lockfile_data = parse_lockfile(lf) if lf else None
@@ -68,15 +70,10 @@ class LCUConnection:
                 if not lockfile_data:
                     self._disable("LCU credentials unavailable")
                     return
-            
+
             new_credentials = (lockfile_data.port, lockfile_data.password)
             current_credentials = (self.port, self.pw)
-            same_connection = (
-                not force
-                and self.ok
-                and previous_path == lf
-                and current_credentials == new_credentials
-            )
+            same_connection = not force and self.ok and previous_path == lf and current_credentials == new_credentials
 
             try:
                 self.lf_mtime = Path(lf).stat().st_mtime if lf else 0.0
@@ -105,17 +102,17 @@ class LCUConnection:
             log_section(log, "LCU Connected", "", {"Port": self.port, "Status": "Ready", "Source": source})
         except Exception as e:
             self._disable(f"LCU unavailable: {e}")
-    
+
     def _disable(self, reason: str):
         """Disable LCU connection"""
-        if self.ok: 
+        if self.ok:
             log.debug(f"LCU disabled: {reason}")
         self.ok = False
         self.base = None
         self.port = None
         self.pw = None
         self.session = self._prepare_session()
-    
+
     def refresh_if_needed(self, force: bool = False):
         """Refresh once per second, including tokens rotated on client restart."""
         with self._lock:

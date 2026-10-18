@@ -22,7 +22,7 @@ def signal_handler(signum, frame):
     if app_state.shutting_down:
         return  # Prevent multiple shutdown attempts
     app_state.shutting_down = True
-    
+
     print(f"\nReceived signal {signum}, initiating graceful shutdown...")
     try:
         pengu_loader.deactivate_on_exit()
@@ -41,9 +41,10 @@ def force_quit_handler():
     if app_state.shutting_down:
         return
     app_state.shutting_down = True
-    room=getattr(app_state,'room_service',None)
-    if room:room.shutdown()
-    
+    room = getattr(app_state, "room_service", None)
+    if room:
+        room.shutdown()
+
     print("\nForce quit initiated...")
     try:
         pengu_loader.deactivate_on_exit()
@@ -75,10 +76,7 @@ def _start_shutdown_watcher() -> None:
 
     # -- Minimal type scaffolding ------------------------------------------------
     pointer_size = ctypes.sizeof(ctypes.c_void_p)
-    LRESULT = (
-        getattr(wintypes, "LRESULT", None)
-        or (ctypes.c_longlong if pointer_size == 8 else ctypes.c_long)
-    )
+    LRESULT = getattr(wintypes, "LRESULT", None) or (ctypes.c_longlong if pointer_size == 8 else ctypes.c_long)
     WPARAM = getattr(wintypes, "WPARAM", ctypes.c_ulonglong if pointer_size == 8 else ctypes.c_ulong)
     LPARAM = getattr(wintypes, "LPARAM", ctypes.c_longlong if pointer_size == 8 else ctypes.c_long)
 
@@ -144,12 +142,15 @@ def _start_shutdown_watcher() -> None:
         # Create a regular (non-message-only) top-level window so it receives
         # broadcast messages like WM_QUERYENDSESSION.  It is never shown.
         hwnd = user32.CreateWindowExW(
-            0,             # no extended style
+            0,  # no extended style
             class_name,
             "Rose Shutdown Watcher",
-            0,             # no visible style flags
-            0, 0, 0, 0,   # position / size irrelevant
-            None,          # no parent → top-level
+            0,  # no visible style flags
+            0,
+            0,
+            0,
+            0,  # position / size irrelevant
+            None,  # no parent → top-level
             None,
             h_instance,
             None,
@@ -178,4 +179,3 @@ def setup_signal_handlers() -> None:
     # top-level windows.
     if sys.platform == "win32":
         _start_shutdown_watcher()
-

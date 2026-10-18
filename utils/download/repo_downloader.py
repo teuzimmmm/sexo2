@@ -39,7 +39,7 @@ def _format_size(num: Optional[int]) -> str:
 
 class RepoDownloader:
     """Downloads entire repository as ZIP and extracts locally with incremental updates"""
-    
+
     def __init__(
         self,
         target_dir: Path = None,
@@ -50,41 +50,43 @@ class RepoDownloader:
         # Use user data directory for skins to avoid permission issues
         self.target_dir = target_dir or get_skins_dir()
         self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': APP_USER_AGENT,
-        })
+        self.session.headers.update(
+            {
+                "User-Agent": APP_USER_AGENT,
+            }
+        )
         self.progress_callback = progress_callback
         self.last_extraction_failures = 0
 
         # Rift Classic skins (the repository's classic/ folder), next to the skins
         self.classic_dir = get_classic_skins_dir() if target_dir is None else self.target_dir.parent / "classic"
         # "_state.json" keeps it out of the removed-files cleanup
-        self.classic_state_file = self.classic_dir / '.classic_state.json'
+        self.classic_state_file = self.classic_dir / ".classic_state.json"
 
         # Version tracking
-        self.version_file = self.target_dir / '.skin_version'
+        self.version_file = self.target_dir / ".skin_version"
         self.api_base = "https://api.github.com/repos/Alban1911/LeagueSkins"
         self.raw_base = "https://raw.githubusercontent.com/Alban1911/LeagueSkins/main"
 
         # If changed files exceed this, use full ZIP instead of individual downloads
         self.incremental_file_threshold = 200
-    
+
     def _emit_progress(self, percent: float, message: Optional[str] = None):
         if not self.progress_callback:
             return
         bounded = max(0.0, min(percent, 100.0))
         self.progress_callback(int(bounded), message)
-    
+
     def fetch_remote_sha(self) -> Optional[str]:
         """Fetch the latest commit SHA from the skin repo via GitHub API (1 API call)."""
         try:
             response = self.session.get(
                 f"{self.api_base}/commits/main",
-                headers={'Accept': 'application/vnd.github.v3+json'},
+                headers={"Accept": "application/vnd.github.v3+json"},
                 timeout=10,
             )
             response.raise_for_status()
-            sha = response.json().get('sha')
+            sha = response.json().get("sha")
             if sha:
                 log.info(f"Remote skin SHA: {sha[:8]}")
             return sha
@@ -97,7 +99,7 @@ class RepoDownloader:
         if not self.version_file.exists():
             return None
         try:
-            return self.version_file.read_text(encoding='utf-8').strip()
+            return self.version_file.read_text(encoding="utf-8").strip()
         except (IOError, OSError) as e:
             log.warning(f"Failed to read local SHA: {e}")
             return None
@@ -142,12 +144,14 @@ class RepoDownloader:
             response.raise_for_status()
             data = response.json()
             files = []
-            for f in data.get('files', []):
-                files.append({
-                    'filename': f['filename'],
-                    'status': f['status'],
-                    'previous_filename': f.get('previous_filename'),
-                })
+            for f in data.get("files", []):
+                files.append(
+                    {
+                        "filename": f["filename"],
+                        "status": f["status"],
+                        "previous_filename": f.get("previous_filename"),
+                    }
+                )
             log.info(f"Compare API: {len(files)} changed files between {old_sha[:8]}..{new_sha[:8]}")
             return files
         except requests.RequestException as e:
@@ -157,12 +161,13 @@ class RepoDownloader:
     def _resolve_local_path(self, repo_path: str) -> Optional[Path]:
         """Map a repo-relative path (skins/..., classic/... or resources/...) to a local path."""
         from utils.core.paths import get_user_data_dir
-        if repo_path.startswith('skins/'):
-            base_dir, relative = self.target_dir, repo_path[len('skins/'):]
-        elif repo_path.startswith('classic/'):
-            base_dir, relative = self.classic_dir, repo_path[len('classic/'):]
-        elif repo_path.startswith('resources/'):
-            base_dir, relative = get_user_data_dir() / "resources", repo_path[len('resources/'):]
+
+        if repo_path.startswith("skins/"):
+            base_dir, relative = self.target_dir, repo_path[len("skins/") :]
+        elif repo_path.startswith("classic/"):
+            base_dir, relative = self.classic_dir, repo_path[len("classic/") :]
+        elif repo_path.startswith("resources/"):
+            base_dir, relative = get_user_data_dir() / "resources", repo_path[len("resources/") :]
         else:
             return None
         local_path = base_dir / relative
@@ -192,16 +197,16 @@ class RepoDownloader:
         dirs_to_check = set()
 
         for idx, file_info in enumerate(changed_files, 1):
-            filename = file_info['filename']
-            status = file_info['status']
+            filename = file_info["filename"]
+            status = file_info["status"]
             local_path = self._resolve_local_path(filename)
 
             if local_path is None:
                 continue
 
             # Handle renames — delete old path, then download new
-            if status == 'renamed' and file_info.get('previous_filename'):
-                old_path = self._resolve_local_path(file_info['previous_filename'])
+            if status == "renamed" and file_info.get("previous_filename"):
+                old_path = self._resolve_local_path(file_info["previous_filename"])
                 if old_path and old_path.exists():
                     try:
                         old_path.unlink()
@@ -211,7 +216,7 @@ class RepoDownloader:
                         log.warning(f"Failed to remove old path {old_path}: {e}")
 
             # Handle removals
-            if status == 'removed':
+            if status == "removed":
                 if local_path.exists():
                     try:
                         local_path.unlink()
@@ -230,8 +235,11 @@ class RepoDownloader:
                 resp = self.session.get(raw_url, stream=True, timeout=SKIN_DOWNLOAD_STREAM_TIMEOUT_S)
                 resp.raise_for_status()
                 from .verified_file import write_download
-                try: write_download(resp, local_path, 8192)
-                finally: resp.close()
+
+                try:
+                    write_download(resp, local_path, 8192)
+                finally:
+                    resp.close()
                 success_count += 1
                 log.debug(f"Downloaded {filename}")
             except (requests.RequestException, OSError) as e:
@@ -243,6 +251,7 @@ class RepoDownloader:
 
         # Clean up empty directories left by removals/renames
         from utils.core.paths import get_user_data_dir
+
         roots = {self.target_dir, self.classic_dir, get_user_data_dir() / "resources"}
         for dir_path in sorted(dirs_to_check, reverse=True):
             try:
@@ -254,8 +263,10 @@ class RepoDownloader:
 
         log.info(f"Incremental update: {success_count} succeeded, {fail_count} failed out of {total}")
         return fail_count == 0
-    
-    def download_repo_zip(self, progress_start: float = 0.0, progress_end: float = 70.0, download_label: str = "skins") -> Optional[Path]:
+
+    def download_repo_zip(
+        self, progress_start: float = 0.0, progress_end: float = 70.0, download_label: str = "skins"
+    ) -> Optional[Path]:
         """Download the entire repository as a ZIP file with retry logic"""
         # GitHub's ZIP download URL format
         zip_url = f"{self.repo_url}/archive/refs/heads/main.zip"
@@ -270,16 +281,18 @@ class RepoDownloader:
             temp_zip_path = None
             try:
                 # Create temporary file for ZIP
-                temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
+                temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
                 temp_zip_path = Path(temp_zip.name)
                 temp_zip.close()
 
                 # Try to resolve total size via HEAD request first
                 total_size: Optional[int] = None
                 try:
-                    head_response = self.session.head(zip_url, allow_redirects=True, timeout=SKIN_DOWNLOAD_STREAM_TIMEOUT_S)
+                    head_response = self.session.head(
+                        zip_url, allow_redirects=True, timeout=SKIN_DOWNLOAD_STREAM_TIMEOUT_S
+                    )
                     head_response.raise_for_status()
-                    total_size_header = head_response.headers.get('Content-Length')
+                    total_size_header = head_response.headers.get("Content-Length")
                     if total_size_header:
                         total_size = int(total_size_header)
                 except requests.RequestException:
@@ -291,7 +304,7 @@ class RepoDownloader:
                 response = self.session.get(zip_url, stream=True, timeout=SKIN_DOWNLOAD_STREAM_TIMEOUT_S)
                 response.raise_for_status()
                 if total_size is None:
-                    total_size_header = response.headers.get('Content-Length')
+                    total_size_header = response.headers.get("Content-Length")
                     try:
                         total_size = int(total_size_header) if total_size_header else None
                     except ValueError:
@@ -315,7 +328,7 @@ class RepoDownloader:
                 self._emit_progress(progress_start, progress_msg)
 
                 # Save ZIP file
-                with open(temp_zip_path, 'wb') as f:
+                with open(temp_zip_path, "wb") as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
                             f.write(chunk)
@@ -339,7 +352,9 @@ class RepoDownloader:
 
                 log.info(f"Repository ZIP downloaded: {temp_zip_path}")
                 final_total = total_size if total_size else downloaded
-                self._emit_progress(progress_end, f"Download complete ({_format_size(downloaded)} / {_format_size(final_total)})")
+                self._emit_progress(
+                    progress_end, f"Download complete ({_format_size(downloaded)} / {_format_size(final_total)})"
+                )
                 return temp_zip_path
 
             except requests.RequestException as e:
@@ -371,7 +386,7 @@ class RepoDownloader:
                 return None
 
         return None
-    
+
     def _cleanup_removed_skin_files(
         self,
         zip_file_list: List[zipfile.ZipInfo],
@@ -388,57 +403,57 @@ class RepoDownloader:
         """
         if not target_dir.exists():
             return 0
-        
+
         # Guard: Skip cleanup if file list is empty to prevent deleting all files
         if not zip_file_list:
             log.debug("Skipping cleanup: no files in ZIP list (empty list would delete all local files)")
             return 0
-        
+
         # Build set of expected file paths from ZIP (as relative paths for comparison)
         expected_relative_paths = set()
         for file_info in zip_file_list:
             if file_info.is_dir():
                 continue
-            
+
             # Convert ZIP path to relative path
-            relative_path = file_info.filename.replace('LeagueSkins-main/', '')
+            relative_path = file_info.filename.replace("LeagueSkins-main/", "")
 
             # Remove 'skins/', 'classic/' or 'resources/' prefix to match local structure
-            if relative_path.startswith('skins/'):
-                relative_path = relative_path.replace('skins/', '', 1)
-            elif relative_path.startswith('classic/'):
-                relative_path = relative_path.replace('classic/', '', 1)
-            elif relative_path.startswith('resources/'):
-                relative_path = relative_path.replace('resources/', '', 1)
+            if relative_path.startswith("skins/"):
+                relative_path = relative_path.replace("skins/", "", 1)
+            elif relative_path.startswith("classic/"):
+                relative_path = relative_path.replace("classic/", "", 1)
+            elif relative_path.startswith("resources/"):
+                relative_path = relative_path.replace("resources/", "", 1)
 
             # Store as relative path string for comparison (normalize separators and case)
-            normalized_path = relative_path.replace('\\', '/').lower()  # Case-insensitive comparison
+            normalized_path = relative_path.replace("\\", "/").lower()  # Case-insensitive comparison
             expected_relative_paths.add(normalized_path)
-        
+
         # Guard: Skip cleanup if expected paths set is empty (e.g., all entries were directories)
         if not expected_relative_paths:
             log.debug("Skipping cleanup: no file entries found in ZIP list (only directories or empty)")
             return 0
-        
+
         # Find all files in target directory
         deleted_count = 0
-        for local_file in target_dir.rglob('*'):
+        for local_file in target_dir.rglob("*"):
             if not local_file.is_file():
                 continue
-            
+
             # Skip state files (like .repo_state.json) but keep other files
-            if local_file.name.startswith('.') and local_file.name.endswith('_state.json'):
+            if local_file.name.startswith(".") and local_file.name.endswith("_state.json"):
                 continue
-            
+
             # Get relative path from target_dir
             try:
                 relative_path = local_file.relative_to(target_dir)
                 # Normalize separators and case for case-insensitive comparison
-                relative_path_str = str(relative_path).replace('\\', '/').lower()
+                relative_path_str = str(relative_path).replace("\\", "/").lower()
             except ValueError:
                 # File is not under target_dir (shouldn't happen, but skip if it does)
                 continue
-            
+
             # If file exists locally but not in expected set, delete it
             if relative_path_str not in expected_relative_paths:
                 try:
@@ -447,10 +462,10 @@ class RepoDownloader:
                     log.debug(f"Removed obsolete file: {local_file}")
                 except Exception as e:
                     log.warning(f"Failed to remove {local_file}: {e}")
-        
+
         # Clean up empty directories
         try:
-            for dir_path in sorted(target_dir.rglob('*'), reverse=True):
+            for dir_path in sorted(target_dir.rglob("*"), reverse=True):
                 if dir_path.is_dir() and not any(dir_path.iterdir()):
                     try:
                         dir_path.rmdir()
@@ -458,9 +473,9 @@ class RepoDownloader:
                         log.debug(f"Could not remove empty skin directory {dir_path}: {rmdir_error}")
         except Exception as e:
             log.debug(f"Error cleaning up empty directories: {e}")
-        
+
         return deleted_count
-    
+
     def extract_skins_from_zip(
         self,
         zip_path: Path,
@@ -474,60 +489,67 @@ class RepoDownloader:
         try:
             log.info("Extracting skins, previews, and resources folder from LeagueSkins repository ZIP...")
 
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
                 # Find all files in the skins/ directory
                 skins_files = []
                 zip_count = 0
                 png_count = 0
-                
+
                 if extract_skins:
                     for file_info in zip_ref.filelist:
                         # Look for files in skins/ directory, but skip the skins directory itself
-                        if (file_info.filename.startswith('LeagueSkins-main/skins/') and 
-                            file_info.filename != 'LeagueSkins-main/skins/' and
-                            not file_info.filename.endswith('/')):
+                        if (
+                            file_info.filename.startswith("LeagueSkins-main/skins/")
+                            and file_info.filename != "LeagueSkins-main/skins/"
+                            and not file_info.filename.endswith("/")
+                        ):
                             skins_files.append(file_info)
-                            
+
                             # Count file types for accurate reporting
-                            if file_info.filename.endswith(('.zip', '.fantome')):
+                            if file_info.filename.endswith((".zip", ".fantome")):
                                 zip_count += 1
-                            elif file_info.filename.endswith('.png'):
+                            elif file_info.filename.endswith(".png"):
                                 png_count += 1
-                
+
                 # Rift Classic skins (classic/ folder) come with the skins
                 classic_files = []
                 if extract_skins:
                     classic_files = [
-                        info for info in zip_ref.filelist
-                        if info.filename.startswith('LeagueSkins-main/classic/') and not info.filename.endswith('/')
+                        info
+                        for info in zip_ref.filelist
+                        if info.filename.startswith("LeagueSkins-main/classic/") and not info.filename.endswith("/")
                     ]
 
                 # Find all files in the resources/ directory (entire folder)
                 resources_files = []
                 resources_count = 0
-                
+
                 if extract_resources:
                     for file_info in zip_ref.filelist:
                         # Look for files in resources/ directory (entire folder)
-                        if (file_info.filename.startswith('LeagueSkins-main/resources/') and 
-                            file_info.filename != 'LeagueSkins-main/resources/' and
-                            not file_info.filename.endswith('/')):
+                        if (
+                            file_info.filename.startswith("LeagueSkins-main/resources/")
+                            and file_info.filename != "LeagueSkins-main/resources/"
+                            and not file_info.filename.endswith("/")
+                        ):
                             resources_files.append(file_info)
                             resources_count += 1
-                
+
                 if not skins_files and not resources_files:
                     log.error("No skins or resources folder found in repository ZIP")
                     return False
-                
+
                 if extract_skins and not skins_files:
                     log.warning("No skins folder found in repository ZIP, but skins extraction was requested")
-                
+
                 if extract_resources and not resources_files:
                     log.warning("No resources folder found in repository ZIP, but resources extraction was requested")
-                
-                log.info(f"Found {zip_count} skin archive files, {png_count} preview .png files, {len(classic_files)} Rift Classic files, "
-                         f"and {resources_count} resource files in repository")
-                
+
+                log.info(
+                    f"Found {zip_count} skin archive files, {png_count} preview .png files, {len(classic_files)} Rift Classic files, "
+                    f"and {resources_count} resource files in repository"
+                )
+
                 # Extract all skins and resource files with byte-level progress tracking
                 extracted_zip_count = 0
                 extracted_png_count = 0
@@ -551,6 +573,7 @@ class RepoDownloader:
                 self.last_extraction_failures = 0
 
                 from utils.core.paths import get_user_data_dir
+
                 # Place the entire resources folder as resources
                 mapping_target_dir = get_user_data_dir() / "resources"
                 resolved_bases = {
@@ -562,7 +585,7 @@ class RepoDownloader:
                 # Reserve 5% of progress range for cleanup operations
                 cleanup_reserve = 5.0
                 extraction_end = progress_end - cleanup_reserve
-                
+
                 def update_progress(label: str):
                     if total_bytes <= 0:
                         return
@@ -579,20 +602,20 @@ class RepoDownloader:
                             continue
 
                         label = "Extracting skins..." if entry_type != "resource" else "Extracting skin ID mapping..."
-                        relative_path = file_info.filename.replace('LeagueSkins-main/', '')
-                        is_zip = relative_path.endswith(('.zip', '.fantome'))
-                        is_png = relative_path.endswith('.png')
+                        relative_path = file_info.filename.replace("LeagueSkins-main/", "")
+                        is_zip = relative_path.endswith((".zip", ".fantome"))
+                        is_png = relative_path.endswith(".png")
 
                         if entry_type == "skin":
-                            if relative_path.startswith('skins/'):
-                                relative_path = relative_path.replace('skins/', '', 1)
+                            if relative_path.startswith("skins/"):
+                                relative_path = relative_path.replace("skins/", "", 1)
                         elif entry_type == "classic":
-                            relative_path = relative_path.replace('classic/', '', 1)
+                            relative_path = relative_path.replace("classic/", "", 1)
                         else:
                             # Extract entire resources folder structure, removing 'resources/' prefix
                             # so it becomes the resources folder
-                            if relative_path.startswith('resources/'):
-                                relative_path = relative_path.replace('resources/', '', 1)
+                            if relative_path.startswith("resources/"):
+                                relative_path = relative_path.replace("resources/", "", 1)
                         extract_path = join_within(resolved_bases[entry_type], relative_path)
 
                         file_bytes = _info_size(file_info) or 1
@@ -612,7 +635,10 @@ class RepoDownloader:
                             update_progress(label)
                             continue
 
-                        with zip_ref.open(file_info) as source, atomic_write(extract_path, 'wb', durable=False) as target:
+                        with (
+                            zip_ref.open(file_info) as source,
+                            atomic_write(extract_path, "wb", durable=False) as target,
+                        ):
                             while True:
                                 chunk = source.read(64 * 1024)
                                 if not chunk:
@@ -655,8 +681,10 @@ class RepoDownloader:
                 if classic_files:
                     deleted_classic_count = self._cleanup_removed_skin_files(classic_files, self.classic_dir)
                     if deleted_classic_count > 0:
-                        log.info(f"Removed {deleted_classic_count} Rift Classic files that no longer exist in repository")
-                
+                        log.info(
+                            f"Removed {deleted_classic_count} Rift Classic files that no longer exist in repository"
+                        )
+
                 if extract_resources and resources_files:
                     if extract_skins and skins_files:
                         # Both cleanups: second one
@@ -670,26 +698,30 @@ class RepoDownloader:
 
                 self.last_extraction_failures = failed_count
                 if failed_count:
-                    log.warning(f"{failed_count} repository files could not be extracted; they will be retried on the next start")
+                    log.warning(
+                        f"{failed_count} repository files could not be extracted; they will be retried on the next start"
+                    )
                 elif extract_skins:
                     self._mark_classic_library_synced()
-                log.info(f"Extracted {extracted_zip_count} new skin archive files, {extracted_png_count} preview .png files, "
-                        f"{extracted_classic_count} Rift Classic files, and {extracted_resources_count} resource files "
-                        f"(skipped {skipped_skin_count} existing skin files, {skipped_resources_count} existing resource files)")
+                log.info(
+                    f"Extracted {extracted_zip_count} new skin archive files, {extracted_png_count} preview .png files, "
+                    f"{extracted_classic_count} Rift Classic files, and {extracted_resources_count} resource files "
+                    f"(skipped {skipped_skin_count} existing skin files, {skipped_resources_count} existing resource files)"
+                )
 
                 total_mb = _format_size(total_bytes)
                 self._emit_progress(progress_end, f"Extraction complete ({_format_size(processed_bytes)} / {total_mb})")
                 # Return True if extraction completed successfully, regardless of whether new files were extracted
                 # (files may already be up to date, which is still a success)
                 return True
-                
+
         except zipfile.BadZipFile:
             log.error("Invalid ZIP file")
             return False
         except Exception as e:
             log.error(f"Error extracting skins: {e}")
             return False
-    
+
     def download_incremental_updates(self, force_update: bool = False) -> bool:
         """Check for updates via commit SHA and download incrementally if possible."""
         try:
@@ -721,7 +753,9 @@ class RepoDownloader:
                 changed_files = self.get_changed_files(local_sha, remote_sha)
 
                 if changed_files is not None and 0 < len(changed_files) <= self.incremental_file_threshold:
-                    log.info(f"Incremental update: {len(changed_files)} files (threshold: {self.incremental_file_threshold})")
+                    log.info(
+                        f"Incremental update: {len(changed_files)} files (threshold: {self.incremental_file_threshold})"
+                    )
                     self._emit_progress(10, f"Downloading {len(changed_files)} changed files...")
                     success = self.download_changed_files(changed_files)
                     if success:
@@ -741,7 +775,7 @@ class RepoDownloader:
             log.error(f"Failed to check for updates: {e}")
             self._emit_progress(100, f"Failed: {e}")
             return False
-    
+
     def download_and_extract_skins(self, force_update: bool = False, remote_sha: Optional[str] = None) -> bool:
         """Download repository ZIP and extract skins + resources"""
         try:
@@ -799,12 +833,12 @@ class RepoDownloader:
             log.error(f"Failed to download and extract skins: {e}")
             self._emit_progress(100, f"Failed: {e}")
             return False
-    
+
     def get_skin_stats(self) -> dict:
         """Get statistics about downloaded skins (total IDs per champion)"""
         if not self.target_dir.exists():
             return {}
-        
+
         stats = {}
         for champion_dir in self.target_dir.iterdir():
             if champion_dir.is_dir():
@@ -812,39 +846,39 @@ class RepoDownloader:
                 stats[champion_dir.name] = len(skin_files)
 
         return stats
-    
+
     def get_detailed_stats(self) -> Dict[str, int]:
         """
         Get detailed statistics categorizing base skins and chromas from new merged format
-        
+
         Structure:
         - Base skin: {champion_id}/{skin_id}/{skin_id}.zip and {skin_id}.png
         - Chroma: {champion_id}/{skin_id}/{chroma_id}/{chroma_id}.zip and {chroma_id}.png
-        
+
         Returns:
             Dict with keys: 'total_skins', 'total_chromas', 'total_ids', 'total_previews'
         """
         if not self.target_dir.exists():
-            return {'total_skins': 0, 'total_chromas': 0, 'total_ids': 0, 'total_previews': 0}
-        
+            return {"total_skins": 0, "total_chromas": 0, "total_ids": 0, "total_previews": 0}
+
         total_skins = 0  # Base skins only (zip files in skin subdirectories)
         total_chromas = 0  # Chromas only (zip files in chroma subdirectories)
         total_previews = 0  # All preview images (png files)
-        
+
         for champion_dir in self.target_dir.iterdir():
             if not champion_dir.is_dir():
                 continue
-            
+
             # Count skins and chromas in skin subdirectories
             # Structure: {champion_id}/{skin_id}/{skin_id}.zip and {skin_id}.png
             for skin_dir in champion_dir.iterdir():
                 if not skin_dir.is_dir():
                     continue
-                
+
                 # Check if this is a skin directory (contains only numeric name)
                 try:
                     int(skin_dir.name)  # If this succeeds, it's a skin ID directory
-                    
+
                     # Count base skin files
                     skin_zip = skin_dir / f"{skin_dir.name}.zip"
                     skin_fantome = skin_dir / f"{skin_dir.name}.fantome"
@@ -876,12 +910,12 @@ class RepoDownloader:
                 except ValueError:
                     # Not a skin directory, skip
                     continue
-        
+
         return {
-            'total_skins': total_skins,
-            'total_chromas': total_chromas,
-            'total_ids': total_skins + total_chromas,
-            'total_previews': total_previews
+            "total_skins": total_skins,
+            "total_chromas": total_chromas,
+            "total_ids": total_skins + total_chromas,
+            "total_previews": total_previews,
         }
 
 
@@ -896,16 +930,18 @@ def download_skins_from_repo(
     try:
         # Note: tray_manager status is already set by caller (download_skins_on_startup)
         downloader = RepoDownloader(target_dir, progress_callback=progress_callback)
-        
+
         # Get current detailed stats
         current_detailed = downloader.get_detailed_stats()
-        
-        if current_detailed['total_ids'] > 0:
-            log.info(f"Found {current_detailed['total_skins']} base skins + "
-                    f"{current_detailed['total_chromas']} chromas = "
-                    f"{current_detailed['total_ids']} total skin IDs + "
-                    f"{current_detailed['total_previews']} preview images")
-        
+
+        if current_detailed["total_ids"] > 0:
+            log.info(
+                f"Found {current_detailed['total_skins']} base skins + "
+                f"{current_detailed['total_chromas']} chromas = "
+                f"{current_detailed['total_ids']} total skin IDs + "
+                f"{current_detailed['total_previews']} preview images"
+            )
+
         # Choose download method based on preferences
         if use_incremental and not force_update:
             log.info("Using incremental update mode")
@@ -913,28 +949,30 @@ def download_skins_from_repo(
         else:
             log.info("Using full download mode")
             success = downloader.download_and_extract_skins(force_update)
-        
+
         if success:
             # Get updated detailed stats
             final_detailed = downloader.get_detailed_stats()
-            new_ids = final_detailed['total_ids'] - current_detailed['total_ids']
-            new_previews = final_detailed['total_previews'] - current_detailed['total_previews']
-            
+            new_ids = final_detailed["total_ids"] - current_detailed["total_ids"]
+            new_previews = final_detailed["total_previews"] - current_detailed["total_previews"]
+
             if new_ids > 0 or new_previews > 0:
                 log.info(f"Downloaded {new_ids} new skin IDs and {new_previews} new preview images")
-                log.info(f"Final totals: {final_detailed['total_skins']} base skins + "
-                        f"{final_detailed['total_chromas']} chromas = "
-                        f"{final_detailed['total_ids']} total skin IDs + "
-                        f"{final_detailed['total_previews']} preview images")
+                log.info(
+                    f"Final totals: {final_detailed['total_skins']} base skins + "
+                    f"{final_detailed['total_chromas']} chromas = "
+                    f"{final_detailed['total_ids']} total skin IDs + "
+                    f"{final_detailed['total_previews']} preview images"
+                )
             else:
                 log.info("No new skins or previews to download")
-            
+
             # Log completion
             update_type = "incremental" if use_incremental and not force_update else "full"
             log.info(f"{update_type.title()} database download complete (skins + previews)")
-        
+
         return success
-        
+
     except Exception as e:
         log.error(f"Repository download failed: {e}")
         return False

@@ -18,17 +18,17 @@ log = get_logger()
 
 class GameModeDetector:
     """Detects game mode and map information"""
-    
+
     def __init__(self, lcu: LCU, state: SharedState):
         """Initialize game mode detector
-        
+
         Args:
             lcu: LCU client instance
             state: Shared application state
         """
         self.lcu = lcu
         self.state = state
-    
+
     def detect_game_mode(self):
         """Detect game mode once when entering champion select"""
         old_swiftplay_mode = self.state.is_swiftplay_mode
@@ -113,4 +113,3 @@ class GameModeDetector:
         except Exception as e:
             log.warning(f"[WS] Error detecting game mode: {e}")
             log.warning(f"[WS] Traceback: {traceback.format_exc()}")
-

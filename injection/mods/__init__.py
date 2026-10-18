@@ -10,8 +10,7 @@ from .mod_manager import ModManager
 from .storage import ModStorageService
 
 __all__ = [
-    'ZipResolver',
-    'ModManager',
-    'ModStorageService',
+    "ZipResolver",
+    "ModManager",
+    "ModStorageService",
 ]
-

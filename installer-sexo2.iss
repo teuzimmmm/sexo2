@@ -1,12 +1,12 @@
 ﻿#define MyAppName "SEXO2"
-#define MyAppVersion "1.4.7.10"
+#define MyAppVersion "1.6.4.0"
 [Setup]
 AppId={{B876AA51-DB38-448E-BD13-716F1C9DE750}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName=SEXO2
 AppPublisher=Projeto personalizado baseado em Rose
-DefaultDirName={localappdata}\SEXO2
+DefaultDirName={localappdata}\Programs\SEXO2
 DefaultGroupName=SEXO2
 UsePreviousGroup=no
 DisableProgramGroupPage=yes
@@ -109,7 +109,8 @@ begin
   Result := '';
   AppDir := RemoveBackslashUnlessRoot(ExpandConstant('{app}'));
   if (AppDir = ExtractFileDrive(AppDir) + '\') or
-     (CompareText(AppDir, ExpandConstant('{localappdata}\Rose')) = 0) then begin
+     (CompareText(AppDir, ExpandConstant('{localappdata}\Rose')) = 0) or
+     (CompareText(AppDir, ExpandConstant('{localappdata}\SEXO2')) = 0) then begin
     Result := 'Escolha uma pasta para o programa, separada dos dados pessoais.'; exit;
   end;
   try
@@ -117,7 +118,7 @@ begin
     Service := Locator.ConnectServer('', 'root\CIMV2');
     Processes := Service.ExecQuery('SELECT Name FROM Win32_Process WHERE Name="SEXO2.exe" OR Name="Rose.exe" OR Name="Rose Sala.exe" OR Name="LeagueClient.exe" OR Name="League of Legends.exe"');
     if Processes.Count > 0 then begin
-      Result := 'Feche Rose, Rose Sala e o cliente LoL antes de instalar.'; exit;
+      Result := 'Feche o SEXO2 e o cliente LoL antes de instalar.'; exit;
     end;
     NeededMB := 400;
     if (FileExists(AddBackslash(AppDir) + 'Rose.exe') or FileExists(AddBackslash(AppDir) + 'SEXO2.exe')) then
@@ -147,7 +148,7 @@ begin
     if BackupComplete then
       SaveStringToFile(ExpandConstant('{app}\VERSAO-ANTERIOR.txt'),
         'A versao anterior foi preservada em:' + #13#10 + BackupDir + #13#10 +
-        'Suas skins e preferencias continuam em LocalAppData\Rose.' + #13#10, False);
+        'Suas skins e preferencias continuam em LocalAppData\SEXO2.' + #13#10, False);
   end;
 end;
 

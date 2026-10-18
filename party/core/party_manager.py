@@ -179,8 +179,10 @@ class PartyManager:
             self._skin_collector = SkinCollector(self.state)
 
             matcher = self._lobby_matcher
+
             def read_identity():
                 return (matcher.get_my_summoner_id(), matcher.get_my_summoner_name())
+
             # These are synchronous HTTP requests; don't freeze the websocket
             # loop (room messages, reconnection and UI) while LCU times out.
             my_summoner_id, my_summoner_name = await asyncio.to_thread(read_identity)

@@ -19,13 +19,13 @@ from .sequences.hash_check_sequence import HashCheckSequence
 from .sequences.skin_sync_sequence import SkinSyncSequence
 
 __all__ = [
-    'run_launcher',
-    'auto_update',
-    'UpdateSequence',
-    'UpdateDownloader',
-    'UpdateInstaller',
-    'GitHubClient',
-    'UpdateDialog',
-    'HashCheckSequence',
-    'SkinSyncSequence',
+    "run_launcher",
+    "auto_update",
+    "UpdateSequence",
+    "UpdateDownloader",
+    "UpdateInstaller",
+    "GitHubClient",
+    "UpdateDialog",
+    "HashCheckSequence",
+    "SkinSyncSequence",
 ]

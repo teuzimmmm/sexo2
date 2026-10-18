@@ -1,4 +1,5 @@
 """Serializable domain records, independent of the SEXO2 runtime."""
+
 from dataclasses import asdict, dataclass, field
 from typing import Any
 

@@ -103,5 +103,4 @@ class SkinSyncSequence:
             dialog.pump_messages()
             updater_log.warning("Skin download failed; continuing startup.")
 
-
         return success

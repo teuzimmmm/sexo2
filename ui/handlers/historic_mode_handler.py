@@ -70,11 +70,7 @@ def historic_custom_mod_affects_skin(state: SharedState, *skin_ids: object) -> b
                     continue
 
                 try:
-                    target_ids = {
-                        int(value)
-                        for value in getattr(entry, "target_skin_ids", ())
-                        if int(value) > 0
-                    }
+                    target_ids = {int(value) for value in getattr(entry, "target_skin_ids", ()) if int(value) > 0}
                     if not target_ids:
                         target_ids = {int(entry.skin_id)}
                     return bool(target_ids & requested_ids)
@@ -96,20 +92,20 @@ def historic_custom_mod_affects_skin(state: SharedState, *skin_ids: object) -> b
 
 class HistoricModeHandler:
     """Handles historic mode activation and deactivation"""
-    
+
     def __init__(self, state: SharedState):
         """Initialize historic mode handler
-        
+
         Args:
             state: Shared application state
         """
         self.state = state
-    
+
     def check_and_activate(self, skin_id: int) -> None:
         """Check and activate historic mode if conditions are met"""
         if self.state.historic_first_detection_done or self.state.locked_champ_id is None:
             return
-        
+
         # History may be restored while the client is already showing the
         # manually selected target; do not require a default-skin spawn first.
         base_skin_id = self.state.locked_champ_id * 1000
@@ -118,19 +114,22 @@ class HistoricModeHandler:
                 get_historic_skin_for_champion,
                 is_custom_mod_path,
             )
+
             historic_value = get_historic_skin_for_champion(self.state.locked_champ_id)
             custom_mod_applies = historic_custom_mod_affects_skin(self.state, skin_id)
 
-            if historic_value is not None and (
-                skin_id == base_skin_id or custom_mod_applies
-            ):
+            if historic_value is not None and (skin_id == base_skin_id or custom_mod_applies):
                 self.state.historic_mode_active = True
                 self.state.historic_skin_id = historic_value
 
                 if is_custom_mod_path(historic_value):
-                    log.info(f"[HISTORIC] Historic mode ACTIVATED for champion {self.state.locked_champ_id} (custom mod path: {historic_value})")
+                    log.info(
+                        f"[HISTORIC] Historic mode ACTIVATED for champion {self.state.locked_champ_id} (custom mod path: {historic_value})"
+                    )
                 else:
-                    log.info(f"[HISTORIC] Historic mode ACTIVATED for champion {self.state.locked_champ_id} (historic skin ID: {historic_value})")
+                    log.info(
+                        f"[HISTORIC] Historic mode ACTIVATED for champion {self.state.locked_champ_id} (historic skin ID: {historic_value})"
+                    )
 
                 try:
                     if self.state and hasattr(self.state, "ui_skin_thread") and self.state.ui_skin_thread:
@@ -141,44 +140,43 @@ class HistoricModeHandler:
             elif historic_value is None:
                 log.debug(f"[HISTORIC] No historic entry found for champion {self.state.locked_champ_id}")
             else:
-                log.debug(f"[HISTORIC] First detected skin is not the default or saved custom-mod target (skin_id={skin_id}, base={base_skin_id}) - historic mode not activated")
+                log.debug(
+                    f"[HISTORIC] First detected skin is not the default or saved custom-mod target (skin_id={skin_id}, base={base_skin_id}) - historic mode not activated"
+                )
         except Exception as e:
             log.debug(f"[HISTORIC] Failed to check historic entry: {e}")
 
         # Mark first detection as done AFTER processing
         self.state.historic_first_detection_done = True
-    
+
     def check_and_deactivate(self, skin_id: int, new_base_skin_id: Optional[int]) -> None:
         """Check and deactivate historic mode if skin changed from default"""
         if not self.state.historic_mode_active or self.state.locked_champ_id is None:
             return
-        
+
         base_skin_id = self.state.locked_champ_id * 1000
         # Keep custom-mod history active when the selected skin/chroma is one
         # of the saved mod targets. The client is allowed to remain on that
         # real skin; history is only tracking the mod, not forcing base skin.
-        if new_base_skin_id != base_skin_id and historic_custom_mod_affects_skin(
-            self.state, skin_id, new_base_skin_id
-        ):
+        if new_base_skin_id != base_skin_id and historic_custom_mod_affects_skin(self.state, skin_id, new_base_skin_id):
             log.debug(
-                "[HISTORIC] Keeping custom-mod history active for selected "
-                "skin/chroma %s (base: %s)",
+                "[HISTORIC] Keeping custom-mod history active for selected skin/chroma %s (base: %s)",
                 skin_id,
                 new_base_skin_id,
             )
             return
 
         if new_base_skin_id != base_skin_id:
-
             # Skin changed to a different base skin - deactivate historic mode
             self.state.historic_mode_active = False
             self.state.historic_skin_id = None
-            log.info(f"[HISTORIC] Historic mode DEACTIVATED - skin changed from default to {skin_id} (base: {new_base_skin_id})")
-            
+            log.info(
+                f"[HISTORIC] Historic mode DEACTIVATED - skin changed from default to {skin_id} (base: {new_base_skin_id})"
+            )
+
             # Broadcast state to JavaScript
             try:
-                if self.state and hasattr(self.state, 'ui_skin_thread') and self.state.ui_skin_thread:
+                if self.state and hasattr(self.state, "ui_skin_thread") and self.state.ui_skin_thread:
                     self.state.ui_skin_thread._broadcast_historic_state()
             except Exception as e:
                 log.debug(f"[UI] Failed to broadcast historic state on deactivation: {e}")
-

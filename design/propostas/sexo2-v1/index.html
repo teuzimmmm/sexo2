@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEXO2 1.0 — protótipo</title>
+<link rel="stylesheet" href="../../tokens.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Barra do protótipo: não faz parte do produto. -->
+  <header class="proto-bar">
+    <strong>SEXO2 1.0</strong>
+    <nav id="views">
+      <button data-view="champ">Seleção de campeões</button>
+      <button data-view="game">Partida</button>
+      <button data-view="aug">Aprimoramentos</button>
+      <button data-view="home">Cliente e painel SEXO2</button>
+    </nav>
+    <span class="spacer"></span>
+    <span class="note">Protótipo com dados simulados · cliente em 1280×720</span>
+    <button class="sim-toggle" id="sim-toggle">Simulação</button>
+  </header>
+
+  <main class="stage with-sim" id="stage">
+    <div class="client-wrap"><div class="client" id="client"></div></div>
+  </main>
+
+  <aside class="sim" id="sim"></aside>
+  <div class="tip" id="tip" hidden></div>
+
+  <script src="js/game-data.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/runes.js"></script>
+  <script src="js/anchor.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

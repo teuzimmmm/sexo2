@@ -155,34 +155,43 @@ def build_package(chunks, layers=(("base", 0),), metadata=METADATA, tweak=None) 
 class ModpkgFormatTests(unittest.TestCase):
     def test_reads_the_reference_package(self):
         package = ModPackage(REFERENCE_PACKAGE)
-        self.assertEqual(package.metadata(), {
-            "schema_version": 3,
-            "name": "example",
-            "display_name": "Example",
-            "description": "An example",
-            "version": "1.0.0",
-            "distributor": None,
-            "authors": [{"name": "Crauzer", "role": None}],
-            "license": {"type": "spdx", "spdx_id": "MIT"},
-        })
+        self.assertEqual(
+            package.metadata(),
+            {
+                "schema_version": 3,
+                "name": "example",
+                "display_name": "Example",
+                "description": "An example",
+                "version": "1.0.0",
+                "distributor": None,
+                "authors": [{"name": "Crauzer", "role": None}],
+                "license": {"type": "spdx", "spdx_id": "MIT"},
+            },
+        )
         files = dict(package.iter_files())
         self.assertEqual(list(files), ["META/info.json", "WAD/aatrox.wad.client/35fa033498b5c335.bin"])
         self.assertEqual(files["WAD/aatrox.wad.client/35fa033498b5c335.bin"], b"hello")
-        self.assertEqual(json.loads(files["META/info.json"]), {
-            "Name": "Example",
-            "Author": "Crauzer",
-            "Version": "1.0.0",
-            "Description": "An example",
-        })
+        self.assertEqual(
+            json.loads(files["META/info.json"]),
+            {
+                "Name": "Example",
+                "Author": "Crauzer",
+                "Version": "1.0.0",
+                "Description": "An example",
+            },
+        )
 
     def test_reads_packages_from_league_mod_0_2_1(self):
         files = dict(ModPackage(LEGACY_PACKAGE).iter_files())
         skin0_hash = xxhash.xxh64_intdigest(b"data/characters/aatrox/skins/skin0.bin")
-        self.assertEqual(sorted(files), [
-            "META/info.json",
-            f"WAD/aatrox.wad.client/{skin0_hash:016x}.bin",
-            "WAD/map11.wad.client/0123456789abcdef.tex",
-        ])
+        self.assertEqual(
+            sorted(files),
+            [
+                "META/info.json",
+                f"WAD/aatrox.wad.client/{skin0_hash:016x}.bin",
+                "WAD/map11.wad.client/0123456789abcdef.tex",
+            ],
+        )
         self.assertEqual(files[f"WAD/aatrox.wad.client/{skin0_hash:016x}.bin"], b"hello")
         self.assertEqual(files["WAD/map11.wad.client/0123456789abcdef.tex"], b"hex")
         self.assertEqual(json.loads(files["META/info.json"])["Name"], "Legacy")
@@ -192,38 +201,49 @@ class ModpkgFormatTests(unittest.TestCase):
             ModPackage(EARLY_PACKAGE)
 
     def test_unpacks_the_base_layer_into_wad_folders(self):
-        package = ModPackage(build_package([
-            Chunk(SKIN0, b"skin" * 1000, zstd=True),
-            Chunk("ASSETS/Characters/Aatrox/Skins/Base/Aatrox.TEX", b"texture", wad="Aatrox.wad.client"),
-            # Hex-named: the path hash is the value the name spells
-            Chunk("0123456789abcdef.dds", b"unknown", path_hash=0x0123456789ABCDEF),
-            # One file shared by two WADs lands in both
-            Chunk("data/shared.bin", b"shared", wad="map11.wad.client"),
-            Chunk("data/shared.bin", b"shared", wad="map12.wad.client"),
-            Chunk("assets/hd.tex", b"hd", layer="high-res"),
-            Chunk("data/override.bin", b"no wad", wad=None),
-            Chunk("_meta_/thumbnail.webp", b"RIFF-webp", layer=None, wad=None),
-        ], layers=(("base", 0), ("high-res", 10))))
+        package = ModPackage(
+            build_package(
+                [
+                    Chunk(SKIN0, b"skin" * 1000, zstd=True),
+                    Chunk("ASSETS/Characters/Aatrox/Skins/Base/Aatrox.TEX", b"texture", wad="Aatrox.wad.client"),
+                    # Hex-named: the path hash is the value the name spells
+                    Chunk("0123456789abcdef.dds", b"unknown", path_hash=0x0123456789ABCDEF),
+                    # One file shared by two WADs lands in both
+                    Chunk("data/shared.bin", b"shared", wad="map11.wad.client"),
+                    Chunk("data/shared.bin", b"shared", wad="map12.wad.client"),
+                    Chunk("assets/hd.tex", b"hd", layer="high-res"),
+                    Chunk("data/override.bin", b"no wad", wad=None),
+                    Chunk("_meta_/thumbnail.webp", b"RIFF-webp", layer=None, wad=None),
+                ],
+                layers=(("base", 0), ("high-res", 10)),
+            )
+        )
 
         files = dict(package.iter_files())
-        self.assertEqual(sorted(files), [
-            "META/image.webp",
-            "META/info.json",
-            "WAD/aatrox.wad.client/0123456789abcdef.dds",
-            f"WAD/aatrox.wad.client/{SKIN0_HASH:016x}.bin",
-            f"WAD/aatrox.wad.client/{xxhash.xxh64_intdigest(b'assets/characters/aatrox/skins/base/aatrox.tex'):016x}.tex",
-            f"WAD/map11.wad.client/{xxhash.xxh64_intdigest(b'data/shared.bin'):016x}.bin",
-            f"WAD/map12.wad.client/{xxhash.xxh64_intdigest(b'data/shared.bin'):016x}.bin",
-        ])
+        self.assertEqual(
+            sorted(files),
+            [
+                "META/image.webp",
+                "META/info.json",
+                "WAD/aatrox.wad.client/0123456789abcdef.dds",
+                f"WAD/aatrox.wad.client/{SKIN0_HASH:016x}.bin",
+                f"WAD/aatrox.wad.client/{xxhash.xxh64_intdigest(b'assets/characters/aatrox/skins/base/aatrox.tex'):016x}.tex",
+                f"WAD/map11.wad.client/{xxhash.xxh64_intdigest(b'data/shared.bin'):016x}.bin",
+                f"WAD/map12.wad.client/{xxhash.xxh64_intdigest(b'data/shared.bin'):016x}.bin",
+            ],
+        )
         self.assertEqual(package.file_paths(), sorted(files))
         self.assertEqual(files[f"WAD/aatrox.wad.client/{SKIN0_HASH:016x}.bin"], b"skin" * 1000)
         self.assertEqual(files["META/image.webp"], b"RIFF-webp")
-        self.assertEqual(json.loads(files["META/info.json"]), {
-            "Name": "Old Aatrox",
-            "Author": "Crauzer, Alban",
-            "Version": "1.2.0",
-            "Description": "Brings him back",
-        })
+        self.assertEqual(
+            json.loads(files["META/info.json"]),
+            {
+                "Name": "Old Aatrox",
+                "Author": "Crauzer, Alban",
+                "Version": "1.2.0",
+                "Description": "Brings him back",
+            },
+        )
         self.assertEqual(package.optional_layers, ["high-res"])
         self.assertEqual(package.unplaced_file_count, 1)
 
@@ -234,10 +254,15 @@ class ModpkgFormatTests(unittest.TestCase):
         self.assertEqual(info, {"Name": "", "Author": "", "Version": "", "Description": ""})
 
         # Early packages named the chunk _meta_/metadata.msgpack
-        legacy = ModPackage(build_package([
-            Chunk(SKIN0, b"skin"),
-            Chunk("_meta_/metadata.msgpack", msgpack({"name": "legacy"}), layer=None, wad=None),
-        ], metadata=None))
+        legacy = ModPackage(
+            build_package(
+                [
+                    Chunk(SKIN0, b"skin"),
+                    Chunk("_meta_/metadata.msgpack", msgpack({"name": "legacy"}), layer=None, wad=None),
+                ],
+                metadata=None,
+            )
+        )
         self.assertEqual(legacy.metadata(), {"name": "legacy"})
 
     def test_refuses_names_that_escape_the_mod_folder(self):
@@ -283,10 +308,14 @@ class ModpkgFormatTests(unittest.TestCase):
 
     def test_refuses_two_contents_for_one_path(self):
         with self.assertRaises(ModpkgError):
-            ModPackage(build_package([
-                Chunk(SKIN0, b"one", wad="aatrox.wad.client"),
-                Chunk(SKIN0, b"two", wad="aatrox.en_us.wad.client"),
-            ]))
+            ModPackage(
+                build_package(
+                    [
+                        Chunk(SKIN0, b"one", wad="aatrox.wad.client"),
+                        Chunk(SKIN0, b"two", wad="aatrox.en_us.wad.client"),
+                    ]
+                )
+            )
 
     def test_checks_file_contents(self):
         data = bytearray(build_package([Chunk(SKIN0, b"skin")]))
@@ -315,21 +344,33 @@ class MsgpackTests(unittest.TestCase):
     def test_decodes_the_formats_a_document_can_use(self):
         data = (
             b"\x8a"
-            b"\xa1a\x7f"                                  # positive fixint
-            b"\xa1b\xff"                                  # negative fixint
-            b"\xa1c\xd1\xfc\x18"                          # int16
-            b"\xa1d\xcd\x01\x00"                          # uint16
-            b"\xa1e\xcb" + struct.pack(">d", 1.5) +       # float64
-            b"\xa1f\xc4\x02\x00\x01"                      # bin8
-            b"\xa1g\xd6\x01\x00\x00\x00\x00"              # fixext4, skipped
-            b"\xa1h\xdc\x00\x02\xc3\xc2"                  # array16
-            b"\xa1i\xda\x00\x03\xc3\xa9t"                 # str16
-            b"\xa1j\xde\x00\x01\xa1k\xc0"                 # map16
+            b"\xa1a\x7f"  # positive fixint
+            b"\xa1b\xff"  # negative fixint
+            b"\xa1c\xd1\xfc\x18"  # int16
+            b"\xa1d\xcd\x01\x00"  # uint16
+            b"\xa1e\xcb"
+            + struct.pack(">d", 1.5)  # float64
+            + b"\xa1f\xc4\x02\x00\x01"  # bin8
+            b"\xa1g\xd6\x01\x00\x00\x00\x00"  # fixext4, skipped
+            b"\xa1h\xdc\x00\x02\xc3\xc2"  # array16
+            b"\xa1i\xda\x00\x03\xc3\xa9t"  # str16
+            b"\xa1j\xde\x00\x01\xa1k\xc0"  # map16
         )
-        self.assertEqual(_unpack_msgpack(data), {
-            "a": 127, "b": -1, "c": -1000, "d": 256, "e": 1.5, "f": b"\x00\x01",
-            "g": None, "h": [True, False], "i": "ét", "j": {"k": None},
-        })
+        self.assertEqual(
+            _unpack_msgpack(data),
+            {
+                "a": 127,
+                "b": -1,
+                "c": -1000,
+                "d": 256,
+                "e": 1.5,
+                "f": b"\x00\x01",
+                "g": None,
+                "h": [True, False],
+                "i": "ét",
+                "j": {"k": None},
+            },
+        )
 
     def test_refuses_unreadable_documents(self):
         for data in (b"", b"\x82\xa1a", b"\xdb\xff\xff\xff\xff", b"\xc1", b"\x81\x90\x01", b"\x91" * 100 + b"\xc0"):
@@ -345,10 +386,14 @@ class ModpkgModTests(unittest.TestCase):
         self.addCleanup(temp_dir.cleanup)
         self.root = Path(temp_dir.name)
         self.package = self.root / "old-aatrox_1.2.0.modpkg"
-        self.package.write_bytes(build_package([
-            Chunk(SKIN0, b"skin" * 1000, zstd=True),
-            Chunk("_meta_/thumbnail.webp", b"RIFF-webp", layer=None, wad=None),
-        ]))
+        self.package.write_bytes(
+            build_package(
+                [
+                    Chunk(SKIN0, b"skin" * 1000, zstd=True),
+                    Chunk("_meta_/thumbnail.webp", b"RIFF-webp", layer=None, wad=None),
+                ]
+            )
+        )
 
     def test_extracts_a_folder_mod_tools_reads(self):
         target = self.root / "mod"
@@ -362,8 +407,9 @@ class ModpkgModTests(unittest.TestCase):
 
     def test_a_package_without_game_files_is_refused(self):
         empty = self.root / "empty.modpkg"
-        empty.write_bytes(build_package([Chunk("assets/hd.tex", b"hd", layer="high-res")],
-                                        layers=(("base", 0), ("high-res", 1))))
+        empty.write_bytes(
+            build_package([Chunk("assets/hd.tex", b"hd", layer="high-res")], layers=(("base", 0), ("high-res", 1)))
+        )
         with self.assertRaises(ModpkgError):
             extract_modpkg(empty, self.root / "empty")
 
@@ -407,40 +453,52 @@ class ModpkgModTests(unittest.TestCase):
 
 class StreamingChunkTests(unittest.TestCase):
     def test_large_raw_and_zstd_chunks_extract_without_reading_whole_chunk(self):
-        content=b'large chunk data' * (1024*1024)
-        for compressed in (False,True):
+        content = b"large chunk data" * (1024 * 1024)
+        for compressed in (False, True):
             with self.subTest(compressed=compressed), tempfile.TemporaryDirectory() as tmp:
-                root=Path(tmp);archive=root/'large.modpkg'
-                archive.write_bytes(build_package([Chunk(SKIN0,content,zstd=compressed)],metadata=None))
-                with patch.object(ModPackage,'read',side_effect=AssertionError('whole-chunk read')):
-                    extract_modpkg(archive,root/'out')
-                target=root/'out/WAD/aatrox.wad.client'/f'{SKIN0_HASH:016x}.bin'
-                self.assertEqual(target.read_bytes(),content)
+                root = Path(tmp)
+                archive = root / "large.modpkg"
+                archive.write_bytes(build_package([Chunk(SKIN0, content, zstd=compressed)], metadata=None))
+                with patch.object(ModPackage, "read", side_effect=AssertionError("whole-chunk read")):
+                    extract_modpkg(archive, root / "out")
+                target = root / "out/WAD/aatrox.wad.client" / f"{SKIN0_HASH:016x}.bin"
+                self.assertEqual(target.read_bytes(), content)
 
     def test_hashing_large_package_matches_folder_without_whole_chunk_read(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root=Path(tmp);archive=root/'large.modpkg'
-            archive.write_bytes(build_package([Chunk(SKIN0,b'data'*(1024*1024),zstd=True)],metadata=None))
-            with patch.object(ModPackage,'read',side_effect=AssertionError('whole-chunk read')):
-                extract_modpkg(archive,root/'out')
-                archive_hash,_=custom_mods.mod_hashes(archive)
-                folder_hash,_=custom_mods.mod_hashes(root/'out')
-            self.assertIsNotNone(archive_hash);self.assertEqual(archive_hash,folder_hash)
+            root = Path(tmp)
+            archive = root / "large.modpkg"
+            archive.write_bytes(build_package([Chunk(SKIN0, b"data" * (1024 * 1024), zstd=True)], metadata=None))
+            with patch.object(ModPackage, "read", side_effect=AssertionError("whole-chunk read")):
+                extract_modpkg(archive, root / "out")
+                archive_hash, _ = custom_mods.mod_hashes(archive)
+                folder_hash, _ = custom_mods.mod_hashes(root / "out")
+            self.assertIsNotNone(archive_hash)
+            self.assertEqual(archive_hash, folder_hash)
 
     def test_invalid_size_and_checksum_preserve_existing_output_and_remove_partial(self):
-        for corrupted in ('short','long','checksum','frame'):
+        for corrupted in ("short", "long", "checksum", "frame"):
             with self.subTest(corrupted=corrupted), tempfile.TemporaryDirectory() as tmp:
-                root=Path(tmp)
-                def tweak(index,fields):
-                    if corrupted=='short':fields[4]+=1
-                    elif corrupted=='long':fields[4]-=1
-                    elif corrupted=='checksum':fields[6]^=1
-                    elif corrupted=='frame':fields[2]=1
-                package=ModPackage(build_package([Chunk(SKIN0,b'data')],metadata=None,tweak=tweak))
-                target=root/'existing.bin';target.write_bytes(b'original')
-                with self.assertRaises(ModpkgError):package.write_record(package.records[0],target)
-                self.assertEqual(target.read_bytes(),b'original')
-                self.assertEqual([p.name for p in root.iterdir()],['existing.bin'])
+                root = Path(tmp)
+
+                def tweak(index, fields):
+                    if corrupted == "short":
+                        fields[4] += 1
+                    elif corrupted == "long":
+                        fields[4] -= 1
+                    elif corrupted == "checksum":
+                        fields[6] ^= 1
+                    elif corrupted == "frame":
+                        fields[2] = 1
+
+                package = ModPackage(build_package([Chunk(SKIN0, b"data")], metadata=None, tweak=tweak))
+                target = root / "existing.bin"
+                target.write_bytes(b"original")
+                with self.assertRaises(ModpkgError):
+                    package.write_record(package.records[0], target)
+                self.assertEqual(target.read_bytes(), b"original")
+                self.assertEqual([p.name for p in root.iterdir()], ["existing.bin"])
+
 
 if __name__ == "__main__":
     unittest.main()

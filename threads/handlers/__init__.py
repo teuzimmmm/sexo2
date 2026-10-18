@@ -14,12 +14,11 @@ from .phase_handler import PhaseHandler
 from .swiftplay_handler import SwiftplayHandler
 
 __all__ = [
-    'ChampThread',
-    'ChampionLockHandler',
-    'GameModeDetector',
-    'InjectionTrigger',
-    'LobbyProcessor',
-    'PhaseHandler',
-    'SwiftplayHandler',
+    "ChampThread",
+    "ChampionLockHandler",
+    "GameModeDetector",
+    "InjectionTrigger",
+    "LobbyProcessor",
+    "PhaseHandler",
+    "SwiftplayHandler",
 ]
-

@@ -39,7 +39,7 @@ def print_step(step_num, total_steps, description):
 def run_build_exe():
     """Run the build_pyinstaller.py script"""
     print_step(1, 3, "Building Executable with PyInstaller")
-    
+
     # Run build_pyinstaller.py as a subprocess
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "build_pyinstaller.py")],
@@ -47,17 +47,17 @@ def run_build_exe():
         text=True,
         cwd=ROOT,
     )
-    
+
     if result.returncode != 0:
         print("\n[ERROR] Executable build failed!")
         return False
-    
+
     # Verify the executable was created
     exe_path = ROOT / "dist/Rose/Rose.exe"
     if not exe_path.exists():
         print("\n[ERROR] Executable not found at expected location!")
         return False
-    
+
     print("\n[OK] Executable build completed successfully!")
     return True
 
@@ -65,7 +65,7 @@ def run_build_exe():
 def run_create_installer():
     """Run the create_installer.py script"""
     print_step(2, 3, "Creating Windows Installer with Inno Setup")
-    
+
     # Run create_installer.py as a subprocess
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "create_installer.py")],
@@ -73,18 +73,18 @@ def run_create_installer():
         text=True,
         cwd=ROOT,
     )
-    
+
     if result.returncode != 0:
         print("\n[ERROR] Installer creation failed!")
         return False
-    
+
     # Verify the installer was created
     installer_dir = ROOT / "installer"
     installer_files = list(installer_dir.glob("Rose_Setup*.exe"))
     if not installer_files:
         print("\n[ERROR] Installer not found at expected location!")
         return False
-    
+
     print("\n[OK] Installer creation completed successfully!")
     return True
 
@@ -92,9 +92,10 @@ def run_create_installer():
 def check_dependencies():
     """Check if required dependencies are installed"""
     print_step(0, 3, "Verifying Dependencies")
-    
+
     try:
         import requests
+
         print(f"\n[OK] Core dependencies detected")
         print("[INFO] Core dependencies ready")
         return True
@@ -107,11 +108,11 @@ def check_dependencies():
 
 def build_all():
     """Complete build process: executable + installer"""
-    
+
     print_header("Rose - Complete Build Process")
-    
+
     start_time = time.time()
-    
+
     # Step 0: Check dependencies are installed
     if not check_dependencies():
         print_header("[FAILED] BUILD FAILED AT STEP 0/3")
@@ -144,33 +145,33 @@ def build_all():
         print("1. Install Inno Setup from: https://jrsoftware.org/isdl.php")
         print("2. Run: python scripts/create_installer.py")
         return False
-    
+
     # Success!
     elapsed_time = time.time() - start_time
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
-    
+
     print_header("[SUCCESS] BUILD COMPLETED SUCCESSFULLY!")
-    
+
     # Get file information
     exe_path = ROOT / "dist/Rose/Rose.exe"
     installer_files = list((ROOT / "installer").glob("Rose_Setup*.exe"))
     installer_path = installer_files[0] if installer_files else None
-    
+
     exe_size_mb = exe_path.stat().st_size / (1024 * 1024)
-    
+
     print("Build Summary:")
     print(f"  Time elapsed: {minutes}m {seconds}s")
     print()
     print("Generated Files:")
     print(f"  [OK] Executable:  {exe_path}")
     print(f"    Size: {exe_size_mb:.1f} MB")
-    
+
     if installer_path:
         installer_size_mb = installer_path.stat().st_size / (1024 * 1024)
         print(f"  [OK] Installer:   {installer_path}")
         print(f"    Size: {installer_size_mb:.1f} MB")
-    
+
     print("\nNext Steps:")
     print("  • For development/testing:")
     print("    Run: dist\\Rose\\Rose.exe")
@@ -180,39 +181,37 @@ def build_all():
     print()
     print("  • For portable version:")
     print("    Zip: dist\\Rose\\ folder")
-    
+
     print("\n" + "=" * 70)
-    
+
     return True
 
 
 def main():
     """Main entry point"""
-    
+
     # Check if we're in the right directory
     if not (ROOT / "main.py").exists():
         print("ERROR: main.py not found!")
         print("Please run this script from the Rose root directory.")
         sys.exit(1)
-    
+
     # Check if build_pyinstaller.py exists
     if not (ROOT / "scripts" / "build_pyinstaller.py").exists():
         print("ERROR: build_pyinstaller.py not found!")
         sys.exit(1)
-    
+
     # Check if create_installer.py exists
     if not (ROOT / "scripts" / "create_installer.py").exists():
         print("ERROR: create_installer.py not found!")
         sys.exit(1)
-    
+
     # Run the complete build
     success = build_all()
-    
+
     if not success:
         sys.exit(1)
-    
 
 
 if __name__ == "__main__":
     main()
-

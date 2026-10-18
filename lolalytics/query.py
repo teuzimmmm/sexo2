@@ -1,4 +1,5 @@
 """Conservative, explicit queries for the HTTP-confirmed page routes."""
+
 from dataclasses import asdict, dataclass
 import re
 from urllib.parse import urlencode
@@ -31,8 +32,7 @@ class Query:
             if getattr(self, name) not in values:
                 raise QueryError(f"unsupported {name}; accepted values: {', '.join(values)}")
         if self.opponent is not None and (
-            not isinstance(self.opponent, str)
-            or not re.fullmatch(r"[a-z][a-z0-9-]{0,39}", self.opponent)
+            not isinstance(self.opponent, str) or not re.fullmatch(r"[a-z][a-z0-9-]{0,39}", self.opponent)
         ):
             raise QueryError("opponent must be an explicit lowercase LoLalytics slug")
         if self.opponent_lane not in LANES:
@@ -57,7 +57,9 @@ class Query:
             raise QueryError("non-ranked modes currently support only tier emerald_plus/all and region all")
         if self.mode == "swift" and self.tier != "emerald_plus":
             raise QueryError("Swiftplay currently supports only tier emerald_plus")
-        if self.patch is not None and (not isinstance(self.patch, str) or not re.fullmatch(r"\d{2}\.\d{1,2}", self.patch)):
+        if self.patch is not None and (
+            not isinstance(self.patch, str) or not re.fullmatch(r"\d{2}\.\d{1,2}", self.patch)
+        ):
             raise QueryError("patch must have the observed format, e.g. 16.20")
 
     @property
@@ -67,13 +69,12 @@ class Query:
             if self.patch is not None:
                 params["patch"] = self.patch
             return (
-                f"https://lolalytics.com/lol/{self.champion}/vs/{self.opponent}/build/q-data.json?"
-                f"{urlencode(params)}"
+                f"https://lolalytics.com/lol/{self.champion}/vs/{self.opponent}/build/q-data.json?{urlencode(params)}"
             )
         mode = "" if self.mode == "ranked" else f"{self.mode}/"
         # ARAM rejects even lane=all with HTTP 404. Modes have separate query
         # contracts although their resolved navigation still reports lane=all.
-        params = ({"lane": self.lane} if self.mode == "ranked" else {})
+        params = {"lane": self.lane} if self.mode == "ranked" else {}
         params.update({"tier": self.tier, "region": self.region})
         if self.patch is not None:
             params["patch"] = self.patch

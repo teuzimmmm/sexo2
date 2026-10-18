@@ -1,4 +1,5 @@
 """Contracts for explicit ranked matchup queries and resolved navigation."""
+
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -82,28 +83,45 @@ class MatchupParsingTests(unittest.TestCase):
         query = Query(**entry["filters"])
         nav, payload = decode_page((FIXTURES / entry["fixture"]).read_bytes())
         cases = []
-        wrong_nav = deepcopy(nav); wrong_nav["vs"] = "ryze"; cases.append((wrong_nav, deepcopy(payload)))
-        wrong_nav = deepcopy(nav); wrong_nav["vsCid"] = True; cases.append((wrong_nav, deepcopy(payload)))
-        wrong_header = deepcopy(payload); wrong_header["header"]["vs"] = 13; cases.append((deepcopy(nav), wrong_header))
-        wrong_header = deepcopy(payload); wrong_header["header"]["vs"] = True; cases.append((deepcopy(nav), wrong_header))
+        wrong_nav = deepcopy(nav)
+        wrong_nav["vs"] = "ryze"
+        cases.append((wrong_nav, deepcopy(payload)))
+        wrong_nav = deepcopy(nav)
+        wrong_nav["vsCid"] = True
+        cases.append((wrong_nav, deepcopy(payload)))
+        wrong_header = deepcopy(payload)
+        wrong_header["header"]["vs"] = 13
+        cases.append((deepcopy(nav), wrong_header))
+        wrong_header = deepcopy(payload)
+        wrong_header["header"]["vs"] = True
+        cases.append((deepcopy(nav), wrong_header))
         for bad_nav, bad_payload in cases:
-            with self.subTest(vs=bad_nav.get("vs"), vsCid=bad_nav.get("vsCid"), header_vs=bad_payload["header"].get("vs")), self.assertRaises(SchemaError):
+            with (
+                self.subTest(
+                    vs=bad_nav.get("vs"), vsCid=bad_nav.get("vsCid"), header_vs=bad_payload["header"].get("vs")
+                ),
+                self.assertRaises(SchemaError),
+            ):
                 parse_payload(bad_nav, bad_payload, query, entry["source_url"], entry["collected_on"])
 
     def test_rejects_ignored_or_mismatched_opponent_lane(self):
         entry = MANIFEST[0]
         query = Query(**entry["filters"])
         nav, payload = decode_page((FIXTURES / entry["fixture"]).read_bytes())
-        bad_nav = deepcopy(nav); bad_nav["vsLane"] = "top"
+        bad_nav = deepcopy(nav)
+        bad_nav["vsLane"] = "top"
         with self.assertRaises(SchemaError):
             parse_payload(bad_nav, payload, query, entry["source_url"], entry["collected_on"])
-        bad_payload = deepcopy(payload); bad_payload["header"]["vsLane"] = "top"
+        bad_payload = deepcopy(payload)
+        bad_payload["header"]["vsLane"] = "top"
         with self.assertRaises(SchemaError):
             parse_payload(nav, bad_payload, query, entry["source_url"], entry["collected_on"])
-        bad_payload = deepcopy(payload); bad_payload["header"]["vsLane"] = "middle-ish"
+        bad_payload = deepcopy(payload)
+        bad_payload["header"]["vsLane"] = "middle-ish"
         with self.assertRaises(SchemaError):
             parse_payload(nav, bad_payload, query, entry["source_url"], entry["collected_on"])
-        missing_payload = deepcopy(payload); del missing_payload["header"]["vsLane"]
+        missing_payload = deepcopy(payload)
+        del missing_payload["header"]["vsLane"]
         with self.assertRaises(SchemaError):
             parse_payload(nav, missing_payload, query, entry["source_url"], entry["collected_on"])
 
@@ -130,8 +148,14 @@ class MatchupParsingTests(unittest.TestCase):
             parse_payload(nav, bad_payload, query, entry["source_url"], entry["collected_on"])
 
     def test_no_opponent_rejects_unexpected_matchup_and_lane_is_not_inferred(self):
-        base_entry = next(x for x in json.loads((Path(__file__).parent / "fixtures/lolalytics/manifest.json").read_text()) if x["fixture"] == "ahri-ranked.json")
-        base_nav, base_payload = decode_page((Path(__file__).parent / "fixtures/lolalytics" / base_entry["fixture"]).read_bytes())
+        base_entry = next(
+            x
+            for x in json.loads((Path(__file__).parent / "fixtures/lolalytics/manifest.json").read_text())
+            if x["fixture"] == "ahri-ranked.json"
+        )
+        base_nav, base_payload = decode_page(
+            (Path(__file__).parent / "fixtures/lolalytics" / base_entry["fixture"]).read_bytes()
+        )
         query = Query(**base_entry["filters"])
         base_nav["vs"] = "annie"
         with self.assertRaises(SchemaError):

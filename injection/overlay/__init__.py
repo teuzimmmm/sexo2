@@ -9,7 +9,6 @@ from .overlay_manager import OverlayManager
 from .process_manager import ProcessManager
 
 __all__ = [
-    'OverlayManager',
-    'ProcessManager',
+    "OverlayManager",
+    "ProcessManager",
 ]
-

@@ -10,8 +10,7 @@ from .websocket_server import WebSocketServer
 from .http_handler import HTTPHandler
 
 __all__ = [
-    'PenguSkinMonitorThread',
-    'WebSocketServer',
-    'HTTPHandler',
+    "PenguSkinMonitorThread",
+    "WebSocketServer",
+    "HTTPHandler",
 ]
-

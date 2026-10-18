@@ -25,9 +25,12 @@ class BackgroundMessageTests(unittest.TestCase):
             self.release.wait(5)  # the user choosing a file
             self.done.append("import")
 
-        with patch.object(MessageHandler, "_handle_add_custom_mods_skin_selected", side_effect=pick_file), \
-                patch.object(MessageHandler, "_handle_request_skin_mods",
-                             side_effect=lambda payload: self.done.append("skin mods")):
+        with (
+            patch.object(MessageHandler, "_handle_add_custom_mods_skin_selected", side_effect=pick_file),
+            patch.object(
+                MessageHandler, "_handle_request_skin_mods", side_effect=lambda payload: self.done.append("skin mods")
+            ),
+        ):
             self._send("add-custom-mods-skin-selected", action="create")
             self._send("request-skin-mods", skinId=11000)
             self.assertEqual(self.done, ["skin mods"])
@@ -47,10 +50,13 @@ class BackgroundMessageTests(unittest.TestCase):
                 self.done.append(name)
                 if name == "champions":
                     finished.set()
+
             return handle
 
-        with patch.object(MessageHandler, "_handle_add_custom_mods_skin_selected", side_effect=record("import")), \
-                patch.object(MessageHandler, "_handle_add_custom_mods_champion_selected", side_effect=record("champions")):
+        with (
+            patch.object(MessageHandler, "_handle_add_custom_mods_skin_selected", side_effect=record("import")),
+            patch.object(MessageHandler, "_handle_add_custom_mods_champion_selected", side_effect=record("champions")),
+        ):
             self._send("add-custom-mods-skin-selected", action="create")
             self._send("add-custom-mods-champion-selected", action="list")
             self.assertTrue(finished.wait(5))

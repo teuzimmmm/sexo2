@@ -43,17 +43,20 @@ def _get_desktop_user_info() -> Tuple[Optional[str], Optional[str]]:
 
         # Find explorer.exe - it always runs as the desktop user
         import subprocess
+
         result = subprocess.run(
-            ['tasklist', '/FI', 'IMAGENAME eq explorer.exe', '/FO', 'CSV', '/NH'],
-            capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW
+            ["tasklist", "/FI", "IMAGENAME eq explorer.exe", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW,
         )
 
         if result.returncode != 0 or not result.stdout.strip():
             return None, None
 
         # Parse PID from CSV output: "explorer.exe","1234",...
-        line = result.stdout.strip().split('\n')[0]
-        parts = line.split(',')
+        line = result.stdout.strip().split("\n")[0]
+        parts = line.split(",")
         if len(parts) < 2:
             return None, None
 
@@ -93,8 +96,13 @@ def _get_desktop_user_info() -> Tuple[Optional[str], Optional[str]]:
                 sid_type = wintypes.DWORD()
 
                 if not advapi32.LookupAccountSidW(
-                    None, sid_ptr, name, ctypes.byref(name_size),
-                    domain, ctypes.byref(domain_size), ctypes.byref(sid_type)
+                    None,
+                    sid_ptr,
+                    name,
+                    ctypes.byref(name_size),
+                    domain,
+                    ctypes.byref(domain_size),
+                    ctypes.byref(sid_type),
                 ):
                     return None, None
 
@@ -135,6 +143,33 @@ def _get_localappdata_for_user(profile_path: str) -> Optional[Path]:
     return None
 
 
+DATA_FOLDER = "SEXO2"
+LEGACY_DATA_FOLDER = "Rose"
+
+
+def _data_dir_in(parent: Path) -> Path:
+    """The SEXO2 data folder under ``parent``, moving the inherited Rose folder there once.
+
+    Up to 1.6.4 the data lived in ``Rose``. On the first start without a ``SEXO2`` data
+    folder the ``Rose`` folder is renamed (same disk: instant, no copy of the mod library).
+    When the rename is refused (a file in use, e.g. the League client holding the Pengu
+    Loader files), this start keeps using ``Rose`` and the next one tries again. A
+    ``SEXO2`` folder holding the program itself (an older installer's default) is not
+    used for data; ``Rose`` stays in use until the program is reinstalled elsewhere.
+    """
+    new = parent / DATA_FOLDER
+    old = parent / LEGACY_DATA_FOLDER
+    if (new / "SEXO2.exe").exists():
+        return old
+    if new.exists() or not old.is_dir():
+        return new
+    try:
+        old.rename(new)
+    except OSError:
+        return old
+    return new
+
+
 def get_user_data_dir() -> Path:
     """
     Get the user data directory where the application can write files.
@@ -166,7 +201,7 @@ def get_user_data_dir() -> Path:
                 # User mismatch detected! Use the desktop user's AppData
                 desktop_localappdata = _get_localappdata_for_user(desktop_profile)
                 if desktop_localappdata:
-                    _cached_user_data_dir = desktop_localappdata / "Rose"
+                    _cached_user_data_dir = _data_dir_in(desktop_localappdata)
                     # Ensure the directory exists with proper permissions
                     try:
                         _cached_user_data_dir.mkdir(parents=True, exist_ok=True)
@@ -177,13 +212,13 @@ def get_user_data_dir() -> Path:
         # No mismatch or detection failed - use current user's LOCALAPPDATA
         localappdata = os.environ.get("LOCALAPPDATA")
         if localappdata:
-            _cached_user_data_dir = Path(localappdata) / "Rose"
+            _cached_user_data_dir = _data_dir_in(Path(localappdata))
             return _cached_user_data_dir
 
         # Fallback to user profile
         userprofile = os.environ.get("USERPROFILE")
         if userprofile:
-            _cached_user_data_dir = Path(userprofile) / "AppData" / "Local" / "Rose"
+            _cached_user_data_dir = _data_dir_in(Path(userprofile) / "AppData" / "Local")
             return _cached_user_data_dir
 
         # Last resort: current directory
@@ -194,9 +229,9 @@ def get_user_data_dir() -> Path:
         # Use XDG_DATA_HOME or fallback to ~/.local/share
         xdg_data_home = os.environ.get("XDG_DATA_HOME")
         if xdg_data_home:
-            _cached_user_data_dir = Path(xdg_data_home) / "Rose"
+            _cached_user_data_dir = _data_dir_in(Path(xdg_data_home))
         else:
-            _cached_user_data_dir = Path.home() / ".local" / "share" / "Rose"
+            _cached_user_data_dir = _data_dir_in(Path.home() / ".local" / "share")
         return _cached_user_data_dir
 
 
@@ -265,7 +300,7 @@ def get_app_dir() -> Path:
     Get the main application directory (where the exe is located).
     This is read-only for installed applications.
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Running as compiled executable
         return Path(sys.executable).parent
     else:
@@ -278,10 +313,10 @@ def get_assets_dir() -> Path:
     """
     Get the base assets directory.
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Running as compiled executable
         # PyInstaller extracts data files to _MEIPASS (onefile) or _internal (onedir)
-        if hasattr(sys, '_MEIPASS'):
+        if hasattr(sys, "_MEIPASS"):
             # One-file mode: use _MEIPASS
             base_path = Path(sys._MEIPASS)
         else:

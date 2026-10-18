@@ -55,7 +55,8 @@ class MatchContext:
                 self._warned.add(name)
                 log.warning(
                     "[INJECT] InjectionManager sem '%s'; o overlay vai seguir sem esse "
-                    "recurso. Se isso não for intencional, a interface quebrou.", name
+                    "recurso. Se isso não for intencional, a interface quebrou.",
+                    name,
                 )
             return default
 

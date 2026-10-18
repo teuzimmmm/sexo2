@@ -10,8 +10,7 @@ from ui.core.user_interface import UserInterface, get_user_interface
 from ui.core.lifecycle_manager import UILifecycleManager
 
 __all__ = [
-    'UserInterface',
-    'get_user_interface',
-    'UILifecycleManager',
+    "UserInterface",
+    "get_user_interface",
+    "UILifecycleManager",
 ]
-

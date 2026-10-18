@@ -40,6 +40,7 @@ STUN_SERVERS = [
 @dataclass
 class StunResult:
     """Result of STUN discovery"""
+
     external_ip: str
     external_port: int
     local_ip: str
@@ -78,9 +79,7 @@ class StunClient:
         message = header + transaction_id
         return message, transaction_id
 
-    def _parse_binding_response(
-        self, data: bytes, transaction_id: bytes
-    ) -> Optional[Tuple[str, int]]:
+    def _parse_binding_response(self, data: bytes, transaction_id: bytes) -> Optional[Tuple[str, int]]:
         """Parse a STUN Binding Response
 
         Args:
@@ -145,9 +144,7 @@ class StunClient:
         log.debug("[STUN] No mapped address found in response")
         return None
 
-    def _parse_xor_mapped_address(
-        self, data: bytes, transaction_id: bytes
-    ) -> Optional[Tuple[str, int]]:
+    def _parse_xor_mapped_address(self, data: bytes, transaction_id: bytes) -> Optional[Tuple[str, int]]:
         """Parse XOR-MAPPED-ADDRESS attribute"""
         if len(data) < 8:
             return None
@@ -212,9 +209,7 @@ class StunClient:
             local_ip = self._get_local_ip()
             for server_host, server_port in STUN_SERVERS:
                 try:
-                    result = await self._query_stun_server(
-                        None, server_host, server_port
-                    )
+                    result = await self._query_stun_server(None, server_host, server_port)
                     if result:
                         external_ip, external_port = result
                         log.info(
@@ -251,9 +246,7 @@ class StunClient:
 
         for server_host, server_port in STUN_SERVERS:
             try:
-                addr_info = socket.getaddrinfo(
-                    server_host, server_port, socket.AF_INET, socket.SOCK_DGRAM
-                )
+                addr_info = socket.getaddrinfo(server_host, server_port, socket.AF_INET, socket.SOCK_DGRAM)
                 if not addr_info:
                     continue
                 server_addr = addr_info[0][4]
@@ -287,9 +280,7 @@ class StunClient:
         log.warning("[STUN] All STUN servers failed (with socket)")
         return None
 
-    async def _query_stun_server(
-        self, sock: socket.socket, host: str, port: int
-    ) -> Optional[Tuple[str, int]]:
+    async def _query_stun_server(self, sock: socket.socket, host: str, port: int) -> Optional[Tuple[str, int]]:
         """Query a single STUN server
 
         Args:

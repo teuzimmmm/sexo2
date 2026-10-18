@@ -1,4 +1,5 @@
 """Pure packing of build suggestions into explicitly budgeted item pages."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -6,7 +7,7 @@ from dataclasses import asdict, dataclass
 import math
 from typing import Any
 
-from .builds import BuildPage, ItemBlock
+from .builds import BuildPage, ItemBlock, ItemChoice
 from .errors import QueryError
 
 
@@ -147,8 +148,11 @@ def plan_item_pages(
         raise QueryError("at most 20 suggestions can be planned at once")
     if isinstance(max_pages, bool) or not isinstance(max_pages, int) or not 1 <= max_pages <= 20:
         raise QueryError("max_pages must be an integer from 1 to 20")
-    if (isinstance(max_blocks_per_page, bool) or not isinstance(max_blocks_per_page, int)
-            or not 1 <= max_blocks_per_page <= 100):
+    if (
+        isinstance(max_blocks_per_page, bool)
+        or not isinstance(max_blocks_per_page, int)
+        or not 1 <= max_blocks_per_page <= 100
+    ):
         raise QueryError("max_blocks_per_page must be an integer from 1 to 100")
 
     identity = None
@@ -164,7 +168,9 @@ def plan_item_pages(
             identity = current
             champion = current[0]
             display = page.resolved.get("champion_name")
-            champion_title = display.strip() if isinstance(display, str) and display.strip() else champion.replace("-", " ").title()
+            champion_title = (
+                display.strip() if isinstance(display, str) and display.strip() else champion.replace("-", " ").title()
+            )
         elif current != identity:
             fields = ("champion", "mode", "patch", "tier", "region", "effective lane")
             different = next(name for name, left, right in zip(fields, identity, current) if left != right)
@@ -188,9 +194,7 @@ def plan_item_pages(
         raise QueryError("build suggestions contain no item blocks")
     required_pages = math.ceil(total_blocks / max_blocks_per_page)
     if required_pages > max_pages:
-        raise QueryError(
-            f"item blocks require {required_pages} pages, exceeding max_pages={max_pages}"
-        )
+        raise QueryError(f"item blocks require {required_pages} pages, exceeding max_pages={max_pages}")
 
     entries: list[PreparedItemBlock] = []
     for page, _suggestion, labels in validated:
@@ -202,9 +206,167 @@ def plan_item_pages(
 
     result = []
     for page_index, start in enumerate(range(0, len(entries), max_blocks_per_page), start=1):
-        page_blocks = entries[start:start + max_blocks_per_page]
+        page_blocks = entries[start : start + max_blocks_per_page]
         title = f"Builds de {champion_title}"
         if required_pages > 1:
             title += f" · {page_index}/{required_pages}"
         result.append(PreparedItemPage(title=title, blocks=page_blocks))
     return result
+
+
+# --------------------------------------------------------------------------
+# Assistant page: one page, up to three groups of three sections each.
+#
+# For each recommendation the first section is the purchase sequence: the
+# observed core trio in its observed order (for the matchup recommendation,
+# the item1-3 picks of that summary), then one item for each of the later
+# slots 4, 5 and 6. Those slots only have per-slot (marginal) observations,
+# so each slot is chosen by the recommendation's own criterion among the
+# choices with at least ``min_games`` games: highest win rate for the "win"
+# and matchup recommendations, most games for "pick". When no choice reaches
+# the minimum, the slot's most played choice is used. Items already in the
+# sequence are skipped. The sequence is never a six-item build observed as a
+# whole; its block keeps the metrics of every pick in ``source``.
+#
+# Titles are the approved ones (docs/produto/decisoes.md): the general
+# recommendations show the win rate and games of the core trio, the matchup
+# recommendation those of the champion against the opponent.
+
+STARTING_TITLE = "Itens iniciais"
+ALTERNATIVES_TITLE = "Alternativas"
+
+
+def format_rate(value: float, decimals: int) -> str:
+    return f"{value:.{decimals}f}".replace(".", ",") + "%"
+
+
+def format_games(value: int) -> str:
+    return f"{value:,}".replace(",", ".") + " partidas"
+
+
+def _metrics_title(metrics: dict | None, decimals: int) -> str:
+    metrics = metrics or {}
+    parts = []
+    if isinstance(metrics.get("win_rate"), (int, float)):
+        parts.append(format_rate(metrics["win_rate"], decimals))
+    if isinstance(metrics.get("games"), int):
+        parts.append(format_games(metrics["games"]))
+    return " — ".join(parts)
+
+
+def _slot_pick(block: ItemBlock, taken: set[str], criterion: str, min_games: int) -> ItemChoice | None:
+    free = [choice for choice in block.choices if choice.identifier not in taken]
+    if not free:
+        return None
+
+    def games(choice: ItemChoice) -> int:
+        value = choice.metrics.get("games")
+        return value if isinstance(value, int) else -1
+
+    eligible = [choice for choice in free if games(choice) >= min_games]
+    if not eligible:
+        return max(free, key=games)
+    if criterion == "pick":
+        return max(eligible, key=games)
+    return max(
+        eligible, key=lambda c: (c.metrics.get("win_rate") is not None, c.metrics.get("win_rate") or 0, games(c))
+    )
+
+
+def _group(page: BuildPage, title: str, min_games: int) -> list[PreparedItemBlock]:
+    by_kind = {block.kind: block for block in page.blocks}
+    criterion = "pick" if page.selection == "pick" else "win"
+    head_kinds = ("item1", "item2", "item3") if page.selection == "vs" else ("core",)
+    sequence: list[ItemChoice] = []
+    picks: list[dict] = []
+    for kind in head_kinds:
+        block = by_kind.get(kind)
+        for choice in block.choices if block else []:
+            if choice.identifier not in {c.identifier for c in sequence}:
+                sequence.append(choice)
+                picks.append({"slot": kind, "id": choice.identifier, "metrics": deepcopy(choice.metrics)})
+    for kind in ("item4", "item5", "item6"):
+        block = by_kind.get(kind)
+        if block is None:
+            continue
+        choice = _slot_pick(block, {c.identifier for c in sequence}, criterion, min_games)
+        if choice is not None:
+            sequence.append(choice)
+            picks.append({"slot": kind, "id": choice.identifier, "metrics": deepcopy(choice.metrics)})
+    if not sequence:
+        return []
+    source = _source(page)
+    source["sequence_rule"] = {
+        "head": list(head_kinds),
+        "later_slots": criterion,
+        "min_games": min_games,
+        "picks": picks,
+    }
+    blocks = [
+        PreparedItemBlock(
+            label=title,
+            block=ItemBlock("sequence", [ItemChoice(c.identifier, 1, {}, {}) for c in sequence], {}, "", True),
+            source=deepcopy(source),
+        )
+    ]
+    starting = by_kind.get("starting")
+    if starting is not None and starting.choices:
+        blocks.append(PreparedItemBlock(label=STARTING_TITLE, block=deepcopy(starting), source=deepcopy(source)))
+    used = {c.identifier for c in sequence}
+    alternatives: list[ItemChoice] = []
+    for kind in ("item4", "item5", "item6"):
+        for choice in by_kind[kind].choices if kind in by_kind else []:
+            if choice.identifier not in used:
+                used.add(choice.identifier)
+                alternatives.append(ItemChoice(choice.identifier, 1, deepcopy(choice.metrics), {}))
+    if alternatives:
+        blocks.append(
+            PreparedItemBlock(
+                label=ALTERNATIVES_TITLE,
+                block=ItemBlock("alternatives", alternatives, {}, "", False),
+                source=deepcopy(source),
+            )
+        )
+    return blocks
+
+
+def _display_name(resolved: dict, key: str, slug: str) -> str:
+    name = resolved.get(key)
+    return name.strip() if isinstance(name, str) and name.strip() else slug.replace("-", " ").title()
+
+
+def plan_assistant_page(
+    win: BuildPage | None,
+    pick: BuildPage | None,
+    matchup: BuildPage | None = None,
+    *,
+    min_games: int = 100,
+) -> PreparedItemPage:
+    """The single assistant page: highest win rate, most played, then the matchup group."""
+    groups = [(page, kind) for page, kind in ((win, "win"), (pick, "pick"), (matchup, "vs")) if page is not None]
+    if not groups:
+        raise QueryError("at least one build suggestion is required")
+    champion = None
+    for page, kind in groups:
+        if not isinstance(page, BuildPage) or page.selection != kind:
+            raise QueryError(f"expected a {kind!r} build suggestion")
+        identity = _identity(page)
+        if champion is None:
+            champion = identity[0]
+            champion_title = _display_name(page.resolved, "champion_name", champion)
+        elif identity[0] != champion:
+            raise QueryError("cannot combine build suggestions of different champions")
+
+    blocks: list[PreparedItemBlock] = []
+    if win is not None:
+        blocks += _group(win, _metrics_title(win.core_metrics, 1), min_games)
+    if pick is not None:
+        blocks += _group(pick, _metrics_title(pick.core_metrics, 1), min_games)
+    if matchup is not None:
+        opponent = _display_name(matchup.resolved, "opponent_name", str(matchup.query.get("opponent") or ""))
+        metrics = _metrics_title(matchup.matchup_metrics, 2)
+        title = f"Counter {opponent}" + (f" — {metrics}" if metrics else "")
+        blocks += _group(matchup, title, min_games)
+    if not blocks:
+        raise QueryError("build suggestions contain no items")
+    return PreparedItemPage(title=champion_title, blocks=blocks)

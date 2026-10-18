@@ -12,6 +12,7 @@ function client() {
   const sandbox = {
     console: { log() {}, error() {} },
     document: { getElementById: () => null, querySelector: () => null },
+    window: { addEventListener() {}, removeEventListener() {} },
     WebSocket: { OPEN: 1 },
     setTimeout(fn) { timers.set(++timerId, fn); return timerId; },
     clearTimeout(id) { timers.delete(id); },
@@ -52,7 +53,7 @@ test('reconnect button does not create invitation or switch rooms', () => {
   c.reconnect(); assert.deepEqual(c.sent, [{type: 'party-reconnect'}]);
 });
 test('bridge offline is not shown as connected', () => {
-  const c = client(); c.offline(); assert.equal(c.health().status, 'ROSE SEM RESPOSTA');
+  const c = client(); c.offline(); assert.equal(c.health().status, 'SEXO2 SEM RESPOSTA');
 });
 test('relay offline/reconnecting statuses are explicit', () => {
   const c = client(); c.receive({type: 'party-state', enabled: true});

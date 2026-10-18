@@ -17,26 +17,26 @@ class RetryLoggingTests(unittest.TestCase):
         self.connection._stop_event = threading.Event()
         self.connection._retry_attempt = 0
         self.connection._warned_retry_reason = None
-        wait = patch.object(self.connection._stop_event, 'wait', return_value=False)
+        wait = patch.object(self.connection._stop_event, "wait", return_value=False)
         wait.start()
         self.addCleanup(wait.stop)
-        log = patch.object(websocket_connection, 'log')
+        log = patch.object(websocket_connection, "log")
         self.log = log.start()
         self.addCleanup(log.stop)
 
     def test_a_repeated_reason_is_warned_once(self):
         for _ in range(5):
-            self.connection._wait_before_retry('LCU lockfile is not ready')
+            self.connection._wait_before_retry("LCU lockfile is not ready")
 
         self.assertEqual(self.log.warning.call_count, 1)
         self.assertEqual(self.log.debug.call_count, 4)
 
     def test_a_new_reason_is_warned_again(self):
-        self.connection._wait_before_retry('LCU lockfile is not ready')
-        self.connection._wait_before_retry('LCU WebSocket unavailable on port 5000')
+        self.connection._wait_before_retry("LCU lockfile is not ready")
+        self.connection._wait_before_retry("LCU WebSocket unavailable on port 5000")
 
         self.assertEqual(self.log.warning.call_count, 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

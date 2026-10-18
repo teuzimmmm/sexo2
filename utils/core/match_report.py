@@ -71,11 +71,13 @@ class MatchReport:
         """Anota um acontecimento com o instante relativo ao início."""
         try:
             with self._lock:
-                self.eventos.append({
-                    "t": round(time.monotonic() - self.iniciado_em, 3),
-                    "evento": nome,
-                    **dados,
-                })
+                self.eventos.append(
+                    {
+                        "t": round(time.monotonic() - self.iniciado_em, 3),
+                        "evento": nome,
+                        **dados,
+                    }
+                )
         except Exception:
             pass
 
@@ -146,10 +148,15 @@ class MatchReport:
             skins = ",".join(self.skins) or "n/d"
             avisos = ",".join(self.avisos) or "nenhum"
             log.info(
-                "[MATCH] skin=%s resultado=%s (%s) preparo=%s total=%ss "
-                "tentativas=%d jogo=%s avisos=%s",
-                skins, codigo, descricao or "sem descrição", preparo, total,
-                self.tentativas, self._estado_do_jogo, avisos,
+                "[MATCH] skin=%s resultado=%s (%s) preparo=%s total=%ss tentativas=%d jogo=%s avisos=%s",
+                skins,
+                codigo,
+                descricao or "sem descrição",
+                preparo,
+                total,
+                self.tentativas,
+                self._estado_do_jogo,
+                avisos,
             )
             self._gravar(codigo, descricao, total)
         except Exception as exc:
@@ -176,14 +183,14 @@ class MatchReport:
     def _gravar(self, codigo: int, descricao: str, total: float) -> None:
         try:
             from utils.core.paths import get_user_data_dir
+
             pasta = get_user_data_dir() / "logs" / "matches"
             pasta.mkdir(parents=True, exist_ok=True)
             etiqueta = (self.skins[0] if self.skins else "sem-skin").replace("/", "_")[:40]
             nome = f"{self.iniciado_relogio:%Y%m%d-%H%M%S}-{etiqueta}.json"
             caminho = pasta / nome
             caminho.write_text(
-                json.dumps(self.como_dicionario(codigo, descricao, total),
-                           ensure_ascii=False, indent=2),
+                json.dumps(self.como_dicionario(codigo, descricao, total), ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
             self._podar(pasta)

@@ -1,4 +1,5 @@
 """Offline integration tests for keystone conditioned build collection."""
+
 import json
 import contextlib
 import io
@@ -49,16 +50,14 @@ class BuildClientTests(unittest.TestCase):
 
     def test_same_keystone_reuses_filtered_response_with_zero_ttl(self):
         transport = FixtureTransport(("jinx-aram-base.json", "jinx-aram-filtered.json"))
-        result = Client(transport=transport, ttl=0).collect_builds(
-            Query("jinx", mode="aram", tier="all"))
+        result = Client(transport=transport, ttl=0).collect_builds(Query("jinx", mode="aram", tier="all"))
         self.assertEqual(len(transport.calls), 2)
         self.assertEqual([p.keystone for p in result.pages], [8008, 8008])
         self.assertEqual([p.source_url for p in result.pages], [transport.calls[1], transport.calls[1]])
 
     def test_explicit_keystone_is_one_filtered_request(self):
         transport = FixtureTransport(("ahri-ranked-win.json",))
-        result = Client(transport=transport, ttl=0).collect_builds(
-            Query("ahri", lane="middle", keystone=8992))
+        result = Client(transport=transport, ttl=0).collect_builds(Query("ahri", lane="middle", keystone=8992))
         self.assertEqual(len(transport.calls), 1)
         self.assertEqual(len(result.pages), 2)
 
@@ -82,8 +81,9 @@ class BuildClientTests(unittest.TestCase):
 
         def collect_with_all_lane_snapshot(query):
             if query.lane == "all":
-                snapshot = collect(Query(query.champion, mode=query.mode, lane="middle", tier=query.tier,
-                                         region=query.region))
+                snapshot = collect(
+                    Query(query.champion, mode=query.mode, lane="middle", tier=query.tier, region=query.region)
+                )
                 snapshot.query = query.to_dict()
                 snapshot.resolved["lane"] = "all"
                 snapshot.resolved["effective_lane"] = "middle"
@@ -108,6 +108,7 @@ class BuildClientTests(unittest.TestCase):
 class BuildCliTests(unittest.TestCase):
     def test_incompatible_builds_and_item_sets_rejected_before_client(self):
         from lolalytics.__main__ import main
+
         with patch("lolalytics.__main__.Client") as client_class:
             with self.assertRaises(SystemExit):
                 main(["ahri", "--builds", "--item-sets"])
@@ -115,6 +116,7 @@ class BuildCliTests(unittest.TestCase):
 
     def test_arena_builds_rejected_before_client(self):
         from lolalytics.__main__ import main
+
         with patch("lolalytics.__main__.Client") as client_class:
             with self.assertRaises(SystemExit):
                 main(["jinx", "--mode", "arena", "--builds"])
@@ -148,6 +150,7 @@ class BuildCliTests(unittest.TestCase):
 
     def test_keystone_item_sets_rejected_before_client(self):
         from lolalytics.__main__ import main
+
         with patch("lolalytics.__main__.Client") as client_class:
             with self.assertRaises(SystemExit):
                 main(["ahri", "--keystone", "8112", "--item-sets"])
@@ -155,6 +158,7 @@ class BuildCliTests(unittest.TestCase):
 
     def test_builds_flag_emits_two_page_json(self):
         from lolalytics.__main__ import main
+
         transport = FixtureTransport(("ahri-ranked-base.json", "ahri-ranked-pick.json", "ahri-ranked-win.json"))
         output = io.StringIO()
         with patch("lolalytics.__main__.Client", lambda **_kwargs: Client(transport=transport, ttl=0)):

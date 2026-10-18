@@ -7,9 +7,4 @@ Contains UI components for the launcher
 
 from .update_dialog import UpdateDialog
 
-__all__ = ['UpdateDialog']
-
-
-
-
-
+__all__ = ["UpdateDialog"]

@@ -98,7 +98,7 @@ def read_dll_eol(dll_path: Path) -> Optional[int]:
         return None
 
     _, text_rva, text_size, text_raw = text
-    code = data[text_raw:text_raw + text_size]
+    code = data[text_raw : text_raw + text_size]
     for i in range(len(code) - 7):
         # lea r64, [rip + disp32]
         if code[i] not in (0x48, 0x4C) or code[i + 1] != 0x8D or (code[i + 2] & 0xC7) != 0x05:
@@ -127,7 +127,7 @@ def read_game_build(game_dir: Path) -> Optional[int]:
             continue
         try:
             pe = struct.unpack_from("<I", header, 0x3C)[0]
-            if header[:2] == b"MZ" and header[pe:pe + 4] == b"PE\0\0":
+            if header[:2] == b"MZ" and header[pe : pe + 4] == b"PE\0\0":
                 return struct.unpack_from("<I", header, pe + 8)[0]
         except struct.error:
             pass
@@ -148,7 +148,7 @@ def _parse_sections(data: bytes):
     if data[:2] != b"MZ":
         raise ValueError("not a PE file")
     pe = struct.unpack_from("<I", data, 0x3C)[0]
-    if data[pe:pe + 4] != b"PE\0\0":
+    if data[pe : pe + 4] != b"PE\0\0":
         raise ValueError("not a PE file")
     count = struct.unpack_from("<H", data, pe + 6)[0]
     opt_size = struct.unpack_from("<H", data, pe + 20)[0]
@@ -156,7 +156,7 @@ def _parse_sections(data: bytes):
     sections = []
     for k in range(count):
         entry = table + k * 40
-        name = data[entry:entry + 8].rstrip(b"\0")
+        name = data[entry : entry + 8].rstrip(b"\0")
         rva, raw_size, raw_offset = struct.unpack_from("<III", data, entry + 12)
         sections.append((name, rva, raw_size, raw_offset))
     return sections
