@@ -191,7 +191,7 @@ class FixedPartyPackagingTests(unittest.TestCase):
             self.assertIn(name, spec)
 
     def test_plugin_is_automatic_fixed_room(self):
-        plugin = (Path(__file__).resolve().parents[1] / "Pengu Loader/plugins/ROSE-PartyMode/index.js").read_text(
+        plugin = (Path(__file__).resolve().parents[1] / "Pengu Loader/plugins/SEXO2-PartyMode/index.js").read_text(
             encoding="utf-8"
         )
         for name in ["SEXO2", "scheduleAutomaticEnable", "party-reconnect", "rose-party-champ-status"]:

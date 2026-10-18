@@ -33,7 +33,7 @@ from utils.core.logging import get_logger
 
 log = get_logger()
 
-MOD_FOLDER = "ROSE-LoadingName"
+MOD_FOLDER = "SEXO2-LoadingName"
 TABLE_PATH = Path("RAW") / "DATA" / "Menu" / "en_US" / "lol.stringtable"
 TABLE_HASH = 0x062D6ED714BFF7DF  # xxh64("data/menu/en_us/lol.stringtable"), fixed for every language
 RST_MASK = (1 << 38) - 1

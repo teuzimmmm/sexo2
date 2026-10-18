@@ -20,17 +20,17 @@ class RestoreBuildBinariesTests(unittest.TestCase):
                 "Pengu Loader/core.dll",
                 "injection/tools/mod-tools.exe",
                 "hosting-tools/cloudflared.exe",
-                "Pengu Loader/plugins/ROSE-UI/index.js",
+                "Pengu Loader/plugins/SEXO2-UI/index.js",
             ):
                 (internal / rel).parent.mkdir(parents=True, exist_ok=True)
                 (internal / rel).write_text(rel)
             target = root / "repo"
-            (target / "Pengu Loader/plugins/ROSE-UI").mkdir(parents=True)
-            (target / "Pengu Loader/plugins/ROSE-UI/index.js").write_text("source")
+            (target / "Pengu Loader/plugins/SEXO2-UI").mkdir(parents=True)
+            (target / "Pengu Loader/plugins/SEXO2-UI/index.js").write_text("source")
             copied = restore(root / "baseline", target)
             self.assertEqual(len(copied), 4)
             self.assertTrue((target / "injection/tools/mod-tools.exe").is_file())
-            self.assertEqual((target / "Pengu Loader/plugins/ROSE-UI/index.js").read_text(), "source")
+            self.assertEqual((target / "Pengu Loader/plugins/SEXO2-UI/index.js").read_text(), "source")
 
     def test_missing_baseline_fails(self):
         with tempfile.TemporaryDirectory() as temp, self.assertRaises(SystemExit):

@@ -38,6 +38,7 @@ Type: files; Name: "{autodesktop}\Rose dos Amigos.lnk"
 Type: files; Name: "{userprograms}\Rose dos Amigos\Rose dos Amigos.lnk"
 Type: files; Name: "{group}\Rose Sala - hospedar ou entrar.lnk"
 Type: files; Name: "{autodesktop}\Rose Sala.lnk"
+Type: filesandordirs; Name: "{app}\_internal\Pengu Loader\plugins\ROSE-*"
 [Run]
 Filename: "{app}\SEXO2.exe"; Description: "Abrir SEXO2"; Flags: nowait postinstall skipifsilent shellexec unchecked; Verb: runas
 [UninstallRun]
@@ -156,7 +157,7 @@ begin
   if BackupComplete and not Finished then begin
     if not CopyTree(BackupDir, ExpandConstant('{app}')) then
       MsgBox('A instalacao foi interrompida. A versao anterior esta preservada em: ' + BackupDir, mbError, MB_OK)
-    else if not FileExists(BackupDir + '\_internal\Pengu Loader\plugins\ROSE-Hub\index.js') then
-      DeleteFile(ExpandConstant('{app}\_internal\Pengu Loader\plugins\ROSE-Hub\index.js'));
+    else if not FileExists(BackupDir + '\_internal\Pengu Loader\plugins\SEXO2-Hub\index.js') then
+      DeleteFile(ExpandConstant('{app}\_internal\Pengu Loader\plugins\SEXO2-Hub\index.js'));
   end;
 end;

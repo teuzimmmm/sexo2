@@ -50,6 +50,29 @@ _LEGACY_PENGU_LOGS = (
     "rose.log.old",
     "crash.log",
 )
+# The bundled plugins were named ROSE-<name> before the rename. Pengu keeps whether a
+# plugin is enabled in the folder itself (index.js or index.js_), so the folder moves
+# to its new name with that state; a user's own ROSE-* plugin is not on this list.
+PLUGIN_PREFIX = "SEXO2-"
+LEGACY_PLUGIN_PREFIX = "ROSE-"
+RENAMED_PLUGINS = (
+    "Amigos",
+    "ChromaWheel",
+    "CustomSkinSelector",
+    "CustomWheel",
+    "FormsWheel",
+    "HistoricMode",
+    "Hub",
+    "I18n",
+    "Jade",
+    "PartyMode",
+    "RandomSkin",
+    "SettingsPanel",
+    "SkinMonitor",
+    "SwiftplayPins",
+    "UI",
+)
+LEGACY_PLUGIN_NAMES = frozenset((LEGACY_PLUGIN_PREFIX + name).casefold() for name in RENAMED_PLUGINS)
 _PLUGIN_ENTRYPOINT = "index.js"
 _PLUGIN_ENTRYPOINT_DISABLED = "index.js_"
 _PLUGIN_ENTRYPOINT_BUNDLED_BACKUP = "index.js.bundled"
@@ -123,6 +146,52 @@ def _sanitize_plugin_entrypoints(pengu_dir: Path) -> None:
     except Exception as exc:
         # Non-fatal: never block Rose launch for a best-effort cleanup.
         log.warning("Failed to sanitize plugin entrypoints: %s", exc)
+
+
+def _migrate_renamed_plugins(pengu_dir: Path) -> None:
+    """
+    Give the plugins of an earlier version their SEXO2 folder name, keeping their state.
+
+    Run before the bundled files are laid over the runtime folder, so the enabled or
+    disabled state (index.js or index.js_) travels with the folder. When the new folder
+    already exists, the old one is a leftover: its disabled state is carried over and it
+    is removed. Safe to run any number of times; a failure leaves the old folder for
+    the next start.
+    """
+    try:
+        plugins_dir = pengu_dir / "plugins"
+        if not plugins_dir.is_dir():
+            return
+        present = {entry.name.casefold(): entry for entry in plugins_dir.iterdir() if entry.is_dir()}
+        for name in RENAMED_PLUGINS:
+            old = present.get((LEGACY_PLUGIN_PREFIX + name).casefold())
+            if old is None:
+                continue
+            new = plugins_dir / (PLUGIN_PREFIX + name)
+            try:
+                if not (PLUGIN_PREFIX + name).casefold() in present:
+                    old.rename(new)
+                    log.info("Renamed plugin folder %s -> %s", old.name, new.name)
+                    continue
+                if (old / _PLUGIN_ENTRYPOINT_DISABLED).exists():
+                    entry = new / _PLUGIN_ENTRYPOINT
+                    if entry.exists() and not (new / _PLUGIN_ENTRYPOINT_DISABLED).exists():
+                        entry.rename(new / _PLUGIN_ENTRYPOINT_DISABLED)
+                shutil.rmtree(old)
+                log.info("Removed the old plugin folder %s (%s exists)", old.name, new.name)
+            except OSError as exc:
+                log.warning("Could not move plugin %s to the new name (retried at the next start): %s", old.name, exc)
+    except Exception as exc:
+        log.warning("Failed to rename the plugins of an earlier version: %s", exc)
+
+
+def _runtime_sync_ignore(directory: str, names: list[str]) -> set[str]:
+    """What the bundle must not copy to the runtime folder: the datastore, and the old plugin
+    folders an installation over an earlier version may have left in the bundle."""
+    ignored = set(shutil.ignore_patterns("datastore")(directory, names))
+    if Path(directory).name == "plugins":
+        ignored.update(name for name in names if name.casefold() in LEGACY_PLUGIN_NAMES)
+    return ignored
 
 
 def _snapshot_plugin_enable_state(pengu_dir: Path) -> tuple[set[str], set[str]]:
@@ -271,6 +340,9 @@ def _resolve_pengu_dir() -> Path:
         # Deleting the runtime directory on each launch wipes those user-installed plugins.
         runtime_dir.mkdir(parents=True, exist_ok=True)
 
+        # Plugins renamed since the version that created this folder move first, with their state.
+        _migrate_renamed_plugins(runtime_dir)
+
         # Snapshot plugin enabled/disabled state BEFORE overlaying bundled files.
         enabled_plugins, disabled_plugins = _snapshot_plugin_enable_state(runtime_dir)
 
@@ -283,7 +355,7 @@ def _resolve_pengu_dir() -> Path:
             bundled_dir,
             runtime_dir,
             dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns("datastore"),
+            ignore=_runtime_sync_ignore,
         )
 
         # If this is a fresh runtime directory (no datastore yet), seed it once from bundled.
@@ -790,18 +862,20 @@ def _hook_of_another_loader() -> Optional[Path]:
     return core
 
 
-def _external_pengu_with_rose_plugins() -> Optional[Path]:
+def _external_pengu_with_app_plugins() -> Optional[Path]:
     """Keep an already configured standalone Pengu installation in place."""
     core = _hook_of_another_loader()
     if core is None:
         return None
     external = core.parent
-    if (
-        (external / "Pengu Loader.exe").is_file()
-        and (external / "plugins" / "ROSE-SkinMonitor" / "index.js").is_file()
-        and (external / "plugins" / "ROSE-UI" / "index.js").is_file()
-    ):
-        return external
+    if not (external / "Pengu Loader.exe").is_file():
+        return None
+    # A set installed before the rename counts too: it talks to the same bridge
+    for prefix in (PLUGIN_PREFIX, LEGACY_PLUGIN_PREFIX):
+        if (external / "plugins" / f"{prefix}SkinMonitor" / "index.js").is_file() and (
+            external / "plugins" / f"{prefix}UI" / "index.js"
+        ).is_file():
+            return external
     return None
 
 
@@ -809,7 +883,7 @@ def ensure_active_for_client() -> None:
     """The client just started: enable Rose's loader if none is active any more
     (a standalone Pengu disabled while Rose runs). Runs on that event, no polling."""
     with _operation_lock:
-        if _external_pengu_with_rose_plugins() is not None:
+        if _external_pengu_with_app_plugins() is not None:
             return
         core = _registered_pengu_core()
         if core is not None and core.parent.resolve() == PENGU_DIR.resolve():
@@ -852,7 +926,7 @@ def retry_deferred_restart() -> None:
 def activate_on_start(league_path: Optional[str] = None) -> bool:
     global _restart_pending
     with _operation_lock:
-        external = _external_pengu_with_rose_plugins()
+        external = _external_pengu_with_app_plugins()
         if external is not None:
             log.info("Using existing external Pengu Loader with Rose plugins: %s", external)
             # This activation belongs to the user, so Rose must not remove it

@@ -15,7 +15,7 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | ID | Decisão | Origem |
 |---|---|---|
 | D-001 | O núcleo continua em Python e evolui por marcos, sem reescrita. | plano-mestre, ADR-1 |
-| D-002 | O assistente de seleção roda no Pengu e substitui o botão de mods da seleção (`ROSE-CustomWheel`). | plano-mestre, ADR-2 |
+| D-002 | O assistente de seleção roda no Pengu e substitui o botão de mods da seleção (`SEXO2-CustomWheel`). | plano-mestre, ADR-2 |
 | D-003 | Dados estatísticos, cache e escritas no LCU ficam só no Python; o Pengu exibe e envia intenções. | ADR-3 |
 | D-004 | Cloudflare Tunnel, relay e chave da sala ficam como estão. | ajuste A1 |
 | D-005 | A telemetria herdada do Rose foi removida. | ajuste A1 |
@@ -49,8 +49,8 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-112 | Papel do Galo e do BORK na nova identidade | com D-102 |
 | D-113 | Nome da página de runas gerenciada e prefixo dos títulos dos conjuntos de itens (provisório: “SEXO2”; rótulos de bloco reaproveitam os de `lolalytics/item_pages.py`) | antes do M8 |
 | D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
-| D-115 | Painel SEXO2: cantos retos, cabeçalho só "SEXO2" (Oswald), menus Sala, Favoritas, Configurações, Suporte e Swiftplay (só no Swiftplay); abre em Sala. Implementado em `ROSE-Hub`. Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
-| D-116 | Favoritas: todos os campeões, busca por campeão e por skin, skins com imagem do cliente, cromas favoritáveis separadamente, só o botão "Favoritar". Implementado em `ROSE-Amigos` (e `skin-index` em `friends/service.py`). Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
+| D-115 | Painel SEXO2: cantos retos, cabeçalho só "SEXO2" (Oswald), menus Sala, Favoritas, Configurações, Suporte e Swiftplay (só no Swiftplay); abre em Sala. Implementado em `SEXO2-Hub`. Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
+| D-116 | Favoritas: todos os campeões, busca por campeão e por skin, skins com imagem do cliente, cromas favoritáveis separadamente, só o botão "Favoritar". Implementado em `SEXO2-Amigos` (e `skin-index` em `friends/service.py`). Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
 | D-117 | Assistente da seleção 452×492 (plugin `SEXO2-Assistant`): Rota, Confronto e Fonte no topo; abas Runas, Itens, Mods, Preferências rápidas e Todas as configurações; sem aba Skins; biblioteca de mods na aba Mods. Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
 | D-119 | Remover Conjuntos (perfis) e Sorteio como funções: apenas retirados da UI. O código e os testes ficam (o sorteio serve à Bravura). Remoção de código só com testes que provem equivalência. Nota para a equipe. | proposta A |
 | D-120 | Swiftplay: o campeão sem escolha (nem pin do SEXO2 nem skin no cliente) recebe sorteio ponderado, favoritas primeiro; o sorteado nunca é gravado como escolha. Implementado; proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |

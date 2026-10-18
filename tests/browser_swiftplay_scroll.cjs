@@ -12,7 +12,7 @@ const path=require('node:path'),assert=require('node:assert/strict');
   window.__roseBridge={ready:true,subscribe(t,cb){window.callbacks[t]=cb;},send(p){window.pendingRequest=p;}};
   window.reply=()=>{const p=window.pendingRequest;window.pendingRequest=null;if(p)window.callbacks['swiftplay-pins-state']({...structuredClone(window.sample),requestId:p.requestId});};
  });
- await page.addScriptTag({path:path.resolve('Pengu Loader/plugins/ROSE-SwiftplayPins/index.js')});
+ await page.addScriptTag({path:path.resolve('Pengu Loader/plugins/SEXO2-SwiftplayPins/index.js')});
  await page.evaluate(()=>window.reply());
  await page.getByRole('button',{name:'SEXO2 · Fixar skins',exact:true}).click();
  await page.getByRole('button',{name:'Escolher',exact:true}).first().click();

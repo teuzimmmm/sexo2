@@ -51,7 +51,7 @@ primeiro uso permanece guiado; atualização de dados não mistura versões.
 
 ## 3. Abertura SEXO2 + escudo do Galo
 
-Confirmado: launcher/ui/update_dialog.py já usa SEXO2 e galo.png. ROSE-UI corrige
+Confirmado: launcher/ui/update_dialog.py já usa SEXO2 e galo.png. SEXO2-UI corrige
 um welcome modal no shadowRoot de pengu-root. A screenshot é uma tela fullscreen;
 a origem exata dessa superfície ainda não foi localizada. Não considerar a troca
 do modal como correção comprovada da screenshot.

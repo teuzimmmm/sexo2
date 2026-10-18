@@ -156,10 +156,10 @@ class UpdateInstaller:
                     'robocopy "%SOURCE%" "%DEST%" /MIR /NFL /NDL /NJH /NJS /XD __pycache__ "Pengu Loader\\plugins" /XF config.ini ltk_patcher_host.exe ltk_patcher_dll.dll hashes.game.txt >> "%LOG%" 2>&1\n'
                 )
                 batch.write("if %ERRORLEVEL% GEQ 8 goto :robofail\n")
-                batch.write('echo [%date% %time%] Updating ROSE plugins (preserving user-installed) >> "%LOG%"\n')
+                batch.write('echo [%date% %time%] Updating SEXO2 plugins (preserving user-installed) >> "%LOG%"\n')
                 batch.write('if exist "%SOURCE%\\Pengu Loader\\plugins" (\n')
                 batch.write('    if not exist "%DEST%\\Pengu Loader\\plugins" mkdir "%DEST%\\Pengu Loader\\plugins"\n')
-                batch.write('    for /d %%D in ("%SOURCE%\\Pengu Loader\\plugins\\ROSE-*") do (\n')
+                batch.write('    for /d %%D in ("%SOURCE%\\Pengu Loader\\plugins\\SEXO2-*") do (\n')
                 batch.write('        echo [%date% %time%]   Sync plugin %%~nxD >> "%LOG%"\n')
                 batch.write(
                     '        robocopy "%%D" "%DEST%\\Pengu Loader\\plugins\\%%~nxD" /MIR /NFL /NDL /NJH /NJS /XD __pycache__ >> "%LOG%" 2>&1\n'

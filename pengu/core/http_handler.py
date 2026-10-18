@@ -103,7 +103,7 @@ class HTTPHandler:
                 # Fallback to current port if file doesn't exist
                 return (200, {"Content-Type": "text/plain", **cors_headers}, str(self.port).encode("utf-8"))
 
-            # The language of Rose's menus and its texts (ROSE-I18n)
+            # The language of Rose's menus and its texts (SEXO2-I18n)
             if path_clean == "/i18n":
                 import json
                 from utils.core.i18n import i18n_payload

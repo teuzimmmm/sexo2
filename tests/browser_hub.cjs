@@ -19,7 +19,7 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
   class FakeSocket{static OPEN=1;constructor(){this.readyState=1;setTimeout(()=>this.onopen?.(),0);}send(text){window.sent.push(JSON.parse(text));}close(){this.readyState=3;}}
   window.WebSocket=FakeSocket;
  });
- for(const name of ['ROSE-Amigos','ROSE-SwiftplayPins','ROSE-PartyMode','ROSE-SettingsPanel','SEXO2-ModLibrary','SEXO2-Settings','ROSE-Hub','ROSE-UI'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',name,'index.js')});
+ for(const name of ['SEXO2-Amigos','SEXO2-SwiftplayPins','SEXO2-PartyMode','SEXO2-SettingsPanel','SEXO2-ModLibrary','SEXO2-Settings','SEXO2-Hub','SEXO2-UI'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',name,'index.js')});
  await page.waitForTimeout(200);
  await page.locator('.menu_item_Golden').last().click();
  await page.getByRole('button',{name:'Criar sala',exact:true}).waitFor();

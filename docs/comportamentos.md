@@ -17,7 +17,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Autoaceite opcional | `friends/auto_accept.py` | `test_r6_protections` |
 | Sala privada (relay, túnel, reconexão) | `party/`, `friends/room.py` | `party/tests`, `test_private_relay`, `test_tunnel_dns`, `test_fixed_party`, `test_party_ui.cjs`, `test_friends_ui.cjs` |
 | Biblioteca de mods, importação e exportação | `sexo2/services/mod_library.py` | `test_mod_library`, `test_mod_library_bridge`, `test_modpkg`, `test_safe_extract_limits` |
-| Seleção de mods na seleção de campeões | `pengu/communication/message_handler.py`, `ROSE-CustomWheel` | `test_custom_mod_monitor`, `test_mod_manifest`; **sem teste** por mensagem `mod-*` |
+| Seleção de mods na seleção de campeões | `pengu/communication/message_handler.py`, `SEXO2-CustomWheel` | `test_custom_mod_monitor`, `test_mod_manifest`; **sem teste** por mensagem `mod-*` |
 | Swiftplay e fixados | `threads/handlers/swiftplay_handler.py`, `pengu/processing/swiftplay_pins.py` | `test_quickplay`, `test_swiftplay_historic`, `test_swiftplay_pins`, `test_swiftplay_draw` (sorteio só para quem não escolheu, nunca gravado), `test_swiftplay_pins_ui.cjs` |
 | Arena Bravura | `friends/arena_bravery.py` | `test_arena_bravery` |
 | Ponte Pengu ↔ backend e reconexão | `pengu/core/`, `pengu/communication/` | `pengu/tests` (porta, watchdog, isolamento de mensagens) |

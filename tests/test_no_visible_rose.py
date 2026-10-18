@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PLUGINS = ROOT / "Pengu Loader" / "plugins"
-LOCALES = PLUGINS / "ROSE-I18n" / "locales"
+LOCALES = PLUGINS / "SEXO2-I18n" / "locales"
 
 # The brand as a word: not inside identifiers such as rose_i18n or __roseBridge
 BRAND = re.compile(r"(?<![A-Za-z_])(?:Rose|ROSE)(?![A-Za-z0-9_])")
@@ -68,7 +68,7 @@ PYTHON_SOURCES = [
 ]
 
 # Disabled plugin (index.js_), never loaded by Pengu
-SKIPPED_PLUGINS = {"ROSE-Jade"}
+SKIPPED_PLUGINS = {"SEXO2-Jade"}
 
 JS_STRING = re.compile(r"""(["'`])((?:\\.|(?!\1)[^\\\n])*)\1""")
 

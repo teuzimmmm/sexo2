@@ -8,7 +8,7 @@ Cada ADR traz a decisão, o motivo, as consequências e quando revisitar.
 - **Revisitar:** se, depois das otimizações medidas (M6b), a CPU ociosa ou a RAM continuarem acima do limite D-108 por causa do interpretador.
 
 ## ADR-2: o assistente de seleção roda no Pengu
-- **Motivo:** não cria processo; o ponto de entrada já existe (`ROSE-CustomWheel`: `createButton`, `attachToChampionSelect`, `handleChampionLocked`).
+- **Motivo:** não cria processo; o ponto de entrada já existe (`SEXO2-CustomWheel`: `createButton`, `attachToChampionSelect`, `handleChampionLocked`).
 - **Consequência:** os seletores do cliente ficam centralizados num módulo, porque o cliente muda.
 - **Revisitar:** se o espaço ou a estabilidade dos seletores impedirem informação essencial, comprovado no cliente real.
 

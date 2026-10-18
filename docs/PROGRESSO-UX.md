@@ -27,12 +27,12 @@ Nada foi validado no cliente real do LoL, no Windows nem em partida. Sem bump de
 - Sorteio ponderado (`friends/skin_selector.py`, de /skins): usado em seleção automática, sorteio temático, "sortear agora",
   Bravura e Swiftplay; histórico só em memória; `eligible` agora inclui cromas; catálogo expõe `rarity`/`chromaRarity`.
 - Item 5: Onetricks removido (sem como funcionar); a Fonte mostra só Lolalytics. Rota só exibe a rota do cliente (sem seletor).
-  A aba Mods embute a biblioteca existente; a seleção de mod por skin segue no `ROSE-CustomWheel`
+  A aba Mods embute a biblioteca existente; a seleção de mod por skin segue no `SEXO2-CustomWheel`
   (não removido). "Todas as configurações" abre o painel em Configurações, sem restaurar rascunho.
   A geometria (botão 36 px, painel 8 px acima, à direita) não foi medida no cliente.
 - Item 3: busca por skin depende de `/lol-game-data/assets/v1/skins.json` (não confirmado no cliente real).
   Imagens usam `tilePath` do cliente; se faltar, fica o espaço vazio.
 - Item 1: as fontes são servidas por `/asset/fonts/` (cópia dos WOFF2 de `design/fonts` em `assets/fonts`).
 - Conjuntos e Sorteio saíram só da UI (código e testes mantidos). Sala, chave e sincronização não foram alteradas.
-- `ROSE-Amigos` ainda tem as abas Perfis/Sorteio no código, ocultas pelo painel; o botão legado "Ferramentas" segue oculto.
+- `SEXO2-Amigos` ainda tem as abas Perfis/Sorteio no código, ocultas pelo painel; o botão legado "Ferramentas" segue oculto.
 - Não validado: CI Windows, ruff, `node --test`, cliente real, partida.

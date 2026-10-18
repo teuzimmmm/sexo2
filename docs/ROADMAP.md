@@ -32,7 +32,7 @@ linguagem continua em D-107).
   sala, título do seletor de mods, faixa de início do log. O diagnóstico agora sai como
   `SEXO2-diagnostico-*.zip`.
 - **Plugins:** textos do painel de configurações e da sala; as chaves em inglês e os 21 arquivos de
-  `ROSE-I18n/locales` mudaram juntos, para os textos manterem a tradução.
+  `SEXO2-I18n/locales` mudaram juntos, para os textos manterem a tradução.
 - **Links do Rose:** Discord, Ko-fi e GitHub saíram do painel de configurações e do diálogo do
   patcher. O crédito fica em "Créditos da base" (`SEXO2-Settings`) e no `LICENSE`.
 - **Instalador:** pede para fechar o SEXO2 (a verificação continua cobrindo `Rose.exe` e
@@ -54,7 +54,7 @@ Mantidos de propósito (compatibilidade ou crédito; lista viva em `tests/test_n
   do relay (`rose-host-readiness`, `rose-friends-relay`), `ROSE_RELAY_URL`;
 - `Rose.spec` (usado por `scripts/build_pyinstaller.py` e por teste) e os scripts de build;
 - `AppPublisher` do instalador ("baseado em Rose") e o texto de créditos;
-- plugin desativado `ROSE-Jade` (`index.js_`, não carrega).
+- plugin desativado `SEXO2-Jade` (`index.js_`, não carrega).
 
 **Migrações arriscadas** (M13, exigem validação real no Windows e teste do formato antigo):
 renomear a pasta de dados, o mutex (instalador e app juntos), a tarefa agendada, as pastas `ROSE-*`
@@ -65,7 +65,7 @@ renomear a pasta de dados, o mutex (instalador e app juntos), a tarefa agendada,
 - **Remoção de código morto ainda não feita**, por risco ou uso parcial:
   - `launcher/update/*` (no bundle, desativado por `FORK_BUILD`);
   - `party` STUN/UDP (exportado em `__init__`);
-  - plugin `ROSE-PartyMode` (tem teste e rotas no backend);
+  - plugin `SEXO2-PartyMode` (tem teste e rotas no backend);
   - `Rose.spec` (usado por `scripts/build_pyinstaller.py` e por um teste);
   - ramo `mayhem` em `lolalytics/item_pages.py`.
 - **Respostas da ponte direcionadas ao solicitante:** depende de teste de contrato por mensagem (M6a).
