@@ -35,6 +35,36 @@ editor. Feito por delegação ("faça do seu jeito"); confirme os nomes e o luga
 Visual do Blitz (D-119, já aprovado) com a seta centralizada. A queda de FPS ao apertar Tab
 continua em aberto: falta o teste com o VSync desligado no LoL (ver "Para testar").
 
+### 6. Ícone, rodada 3
+Atende ao "da esquerda mais sério e menacing" e ao "da direita mais simples":
+`design/propostas/icone/rodada3.html` (oito de traço, quatro angulares). **Recomendação: L7
+(traço, crista simples)**; da família angular, R1 (silhueta com olho vermelho). Escolha uma letra
+e eu troco o ícone da versão de teste.
+
+### 7. Padrão visual (auditoria em `docs/organizacao/design.md`, seção 7)
+1. Cores de estado: ok `#7bd5a7` e erro `#f3a090`/`#d9a796` ainda sem token aprovado (D-102).
+2. Painéis herdados (Automático/Pins, PartyMode, SettingsPanel) e as rodas sobre a seleção
+   (Chromas, Formas, Skin personalizada, Aleatória, Histórico): migram para o visual neutro do
+   SEXO2 ou mantêm o visual do cliente de propósito?
+3. Tokens novos: linha suave, sombra, sobreposição, selo, foco visível e os tamanhos 22/13/11.
+4. Overlay de aprimoramentos: trocar Segoe UI por Inter (como o ouro) e o amarelo `#f2d27a` por um
+   token de destaque.
+5. Ordem da migração (seção 6 do documento).
+
+### 8. Código compartilhado dos plugins (`docs/organizacao/plugins.md`)
+`waitForBridge`, `injectCSS` e `escapeHtml` estão copiados em vários plugins. Juntar num só lugar
+(SEXO2-Style ou um plugin utilitário)? Muda comportamento de carga; só com teste e medição.
+
+## Feito nesta rodada (sem mudar comportamento)
+
+- Menus do SEXO2 com as fontes e cores aprovadas (Inter/Oswald, tokens `--s2-*`): Amigos,
+  Configurações, Biblioteca de mods e a tela de carregamento (fundo `#0d0e10`). Inventário em
+  `docs/organizacao/menus.md`.
+- Plugins Hub, Amigos, Biblioteca de mods, Configurações e Startup deixaram de ser uma linha só:
+  código legível, provado idêntico pela árvore sintática (`scripts/js_ast_equal.cjs`).
+- Python: imports sem uso removidos (`docs/organizacao/python.md`).
+- Documentação: índice em `docs/README.md`, antigos em `docs/arquivo/`, verificador de links.
+
 ## Sem decisão sua (correções)
 
 - Campeões repetidos nas Favoritas: os IDs 60000+ (cópias de modos especiais) saíram da lista.
