@@ -725,6 +725,14 @@ class OverlayManager:
                 "The patcher could not attach to the game this time. Retry the next game; "
                 f"if it fails every game, report it with sexo2_*.log and sexo2_runoverlay_*.log. {logs}"
             )
+        if "never attached" in reason:
+            # The host waited for its DLL inside the game and it never arrived: the DLL is
+            # usually blocked by an antivirus, or the LTK files no longer match the game.
+            return (
+                "The patcher's DLL did not reach the game. Check that your antivirus did not block or "
+                "remove ltk_patcher_dll.dll (allow SEXO2's tools folder), then update the LTK files "
+                f"from LTK Manager if it keeps happening. {logs}"
+            )
         if reason == LATE_JOIN_ERROR:
             return f"The game started before the patcher was ready. Retry the next game. {logs}"
         if "disabling overlay" in reason:
