@@ -21,7 +21,7 @@ Python 3.14; dependências em `requirements.txt`. Binários Pengu/LTK/mod-tools 
 cloudflared são recursos de build/distribuição, não segredos ou fontes próprias.
 Builds seguintes recuperam esses binários da baseline anterior do projeto.
 
-`python -m unittest discover -s tests -q` valida serviços e recuperação.
+`python scripts/run_tests.py -q` (Python) e `node --test tests/test_*.cjs` (plugins) validam serviços e recuperação.
 Os testes de navegador usam cliente e servidor simulados. A aparência e o uso
 real ainda precisam ser observados no cliente LoL.
 

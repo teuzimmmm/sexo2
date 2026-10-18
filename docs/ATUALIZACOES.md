@@ -8,7 +8,7 @@ assinados para r2/r3. Extraia, feche apenas SEXO2, execute o helper novo. Ele te
 a instalação pelo cadastro existente e o pacote pelo hash do executável. Nada é
 reinstalado ou registrado novamente. Se precisar, escolha a pasta instalada.
 
-Dados continuam em LocalAppData/Rose. O helper nunca inclui essas preferências
+Dados ficam em `%LOCALAPPDATA%\SEXO2` (movidos de `%LOCALAPPDATA%\Rose` na primeira abertura; nas entregas antigas ainda eram `Rose`). O helper nunca inclui essas preferências
 nem as skins pessoais nos arquivos de atualização. Um backup da última troca é
 mantido em `.sexo2-update/rollback`; backups antigos dos instaladores não são
 apagados automaticamente.

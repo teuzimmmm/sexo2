@@ -5,7 +5,7 @@ Cada ADR traz a decisão, o motivo, as consequências e quando revisitar.
 ## ADR-1: o núcleo continua em Python
 - **Motivo:** injeção, atualização, sala e biblioteca funcionam e têm testes. Os custos suspeitos são polling e trabalho redundante, não a linguagem.
 - **Consequência:** o empacotamento continua com PyInstaller.
-- **Revisitar:** se, depois das otimizações medidas (M6b), a CPU ociosa ou a RAM continuarem acima do limite D-108 por causa do interpretador.
+- **Revisitar:** se, depois das otimizações medidas (M13), a CPU ociosa ou a RAM continuarem acima do limite D-108 por causa do interpretador.
 
 ## ADR-2: o assistente de seleção roda no Pengu
 - **Motivo:** não cria processo; o ponto de entrada já existe (`ROSE-CustomWheel`: `createButton`, `attachToChampionSelect`, `handleChampionLocked`).
@@ -26,7 +26,7 @@ Cada ADR traz a decisão, o motivo, as consequências e quando revisitar.
   - manter o filtro de `Origin`;
   - não adotar um token entregue aos plugins (D-201);
   - não direcionar as respostas agora, porque os plugins podem depender do broadcast.
-- **Revisitar:** quando a ponte ganhar uma tabela de despacho (M6a) e houver teste de contrato por mensagem.
+- **Revisitar:** quando a ponte ganhar uma tabela de despacho (M6, antigo M6a) e houver teste de contrato por mensagem.
 
 ## ADR-5: tecnologia do overlay escolhida por experimento
 - **Candidatos, do mais simples ao mais complexo:**
@@ -39,6 +39,6 @@ Cada ADR traz a decisão, o motivo, as consequências e quando revisitar.
   - tenha texto legível.
 - WebView2 está fora (D-202).
 
-## ADR-6: um único cliente WebSocket (M6b)
+## ADR-6: um único cliente WebSocket (M13)
 - **Motivo:** hoje há `websocket-client` (LCU) e `websockets` (ponte, sala).
 - **Revisitar:** se a migração ameaçar a reconexão do LCU. Nesse caso, mantêm-se os dois, documentado.

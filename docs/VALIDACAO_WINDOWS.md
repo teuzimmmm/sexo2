@@ -49,7 +49,7 @@ atualiza sozinha para a 1.6.4.
    anote as erradas e "Não reconhecida", e a resolução e a escala do HUD. Confirme também que o
    cliente responde `/lol-game-data/assets/v1/cherry-augments.json` e `augment-lists.json` (o log
    mostra quantos aprimoramentos e ícones foram carregados) e as filas 1700 (Arena) e 2400 (Mayhem).
-9. **Valor dos itens no placar:** acrescente em `%LOCALAPPDATA%\Rose\config.ini`:
+9. **Valor dos itens no placar:** acrescente em `%LOCALAPPDATA%\SEXO2\config.ini`:
    ```
    [Overlay]
    gold_enabled = true

@@ -43,4 +43,4 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Outras builds e outras runas (D-120): listas do LoLalytics, build escolhida no topo do conjunto SEXO2 e volta ao padrão, página da runa-chave escolhida no editor | `sexo2/services/stats.py`, `sexo2/services/assistant.py`, `SEXO2-Assistant` | `test_stats_service`, `test_assistant_service` (`AlternativeChoicesTests`), `test_assistant_plugin.cjs`; **sem teste** no cliente real |
 
 Lacunas que os marcos devem cobrir antes de mexer na área: precisão do disparo
-da injeção (M6b), mensagens `mod-*` (M7), instância única e caminhos de dados (M13).
+da injeção (M13), mensagens `mod-*` (M7) e instância única (M5b).

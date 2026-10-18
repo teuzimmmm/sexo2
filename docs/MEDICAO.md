@@ -31,4 +31,4 @@ diferença supera esse ruído.
 | 5 | Inicialização: abrir o SEXO2 com o cliente aberto | 120 s | anotar fria (após reiniciar o PC) ou quente |
 
 Os cenários 4 (Practice Tool com PresentMon) e 6 (tempo de jogo suspenso na injeção)
-dependem de autorização própria e ficam para os marcos M6b e M11.
+dependem de autorização própria e ficam para os marcos M13 e M11.
