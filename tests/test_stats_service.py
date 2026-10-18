@@ -120,6 +120,42 @@ class BuildStatsTests(unittest.TestCase):
         self.assertEqual(result.warnings, ())
 
 
+class AlternativesTests(unittest.TestCase):
+    def test_other_builds_are_the_observed_trios_most_played_first(self):
+        stats, _ = service()
+        found = stats.alternatives(103, "ranked", "middle", frozenset({8112, 8992}))
+        self.assertEqual([c.items for c in found.builds][0], (3118, 3020, 4645))
+        self.assertEqual([c.games for c in found.builds], sorted((c.games for c in found.builds), reverse=True))
+        self.assertTrue(all(len(c.items) == 3 for c in found.builds))
+        # The trimmed fixture keeps only stat shard rows: no keystone among them.
+        self.assertEqual(found.keystones, ())
+
+    def test_keystones_come_from_the_rune_rows_of_the_first_slot(self):
+        from types import SimpleNamespace
+
+        from sexo2.services.stats import alternatives_from
+
+        def row(rune, slot, games, wr=50.0):
+            return SimpleNamespace(
+                category="rune_statistics",
+                identifiers=[str(rune), str(slot)],
+                metrics={"win_rate": wr, "pick_rate": 1.0, "games": games},
+                source_path="payload.runes.stats",
+            )
+
+        snapshot = SimpleNamespace(records=[row(8112, 0, 900), row(8128, 0, 4000), row(8139, 0, 9999), row(8112, 1, 5)])
+        found = alternatives_from(snapshot, frozenset({8112, 8128}))
+        self.assertEqual([(k.keystone, k.games) for k in found.keystones], [(8128, 4000), (8112, 900)])
+
+    def test_page_with_a_chosen_keystone_is_its_most_played_one(self):
+        stats, transport = service()
+        layout = stats.keystone_layout(103, "ranked", "middle", 8112)
+        self.assertEqual((layout.selection, layout.keystone, layout.primary[0]), ("keystone", 8112, 8112))
+        self.assertTrue(any("keystone=8112" in url for url in transport.calls))
+        with self.assertRaises(StatsError):
+            stats.keystone_layout(103, "swift", "all", 8112)
+
+
 class DefaultCacheTests(unittest.TestCase):
     def test_default_cache_lives_in_the_user_data_dir(self):
         with tempfile.TemporaryDirectory() as folder:

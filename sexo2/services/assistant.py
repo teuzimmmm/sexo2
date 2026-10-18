@@ -22,10 +22,11 @@ from typing import Any, Callable
 from lcu.features.lcu_item_sets import LCUItemSets
 from lcu.features.lcu_perks import LCUPerks
 from lolalytics.errors import QueryError
+from lolalytics.item_pages import format_games, format_rate
 from sexo2.services.item_sets import build_item_set, import_item_set
 from sexo2.services.rune_import import RuneImportController, RuneImportSnapshot, SessionKey
 from sexo2.services.rune_rules import PageSpec, StyleCatalog
-from sexo2.services.stats import ChampionDirectory, RuneLayout, StatsError, StatsService
+from sexo2.services.stats import Alternatives, ChampionDirectory, ItemCombo, RuneLayout, StatsError, StatsService
 from sexo2.services.work_queue import SerialWorker
 
 log = logging.getLogger(__name__)
@@ -153,6 +154,9 @@ class AssistantService:
         self._auto_generation = 0
         self._auto_target: tuple[int, bool] | None = None
         self._items_key: tuple | None = None
+        self._alternatives: Alternatives | None = None
+        self._chosen_build: ItemCombo | None = None  # the player's own pick in "Outras builds"
+        self._keystone_pending: int | None = None
 
     # Bridge entry points (return quickly; work goes to the worker) ----------
 
@@ -184,6 +188,22 @@ class AssistantService:
             self._controller.back()
         elif kind == "assistant-items-import":
             self._submit(self._import_items)
+        elif kind == "assistant-items-choose":
+            items = payload.get("items")
+            if not isinstance(items, list) or not 1 <= len(items) <= 6:
+                raise ValueError("items must be a list of one to six item ids")
+            if any(isinstance(i, bool) or not isinstance(i, int) or i <= 0 for i in items):
+                raise ValueError("item ids must be positive integers")
+            self._submit(lambda: self._choose_build(tuple(items)))
+        elif kind == "assistant-items-default":
+            self._submit(self._default_build)
+        elif kind == "assistant-runes-keystone":
+            keystone = payload.get("keystone")
+            if isinstance(keystone, bool) or not isinstance(keystone, int) or keystone <= 0:
+                raise ValueError("keystone must be a positive integer")
+            self._keystone_pending = keystone
+            self._publish_state()
+            self._submit(lambda: self._load_keystone(keystone))
 
     def champion_confirmed(self, champion_id: int, *, swiftplay: bool = False) -> None:
         """The local player's champion is confirmed: import its item set (debounced).
@@ -265,19 +285,63 @@ class AssistantService:
             return
         general = [(layout, layout.to_page(self._catalog)) for layout in stats.layouts]
         matchup = [(layout, layout.to_page(self._catalog)) for layout in stats.matchup]
+        keystone = self._runes.get("keystone", []) if self._runes.get("champion") == context.champion_id else []
         self._runes = {
+            "champion": context.champion_id,
             "patch": stats.patch,
             "lane": stats.lane,
             "opponent": stats.opponent,
             "general": general,
             "matchup": matchup,
+            "keystone": keystone,
             "warnings": list(stats.warnings),
         }
-        self._controller.display([page for _, page in general + matchup])
+        try:
+            self._alternatives = self._stats.alternatives(
+                context.champion_id, context.mode, context.lane, self._keystone_ids()
+            )
+        except Exception as error:
+            log.info("[ASSISTANT] no alternatives for champion %s: %s", context.champion_id, error)
+            self._alternatives = None
+        self._controller.display([page for _, page in general + matchup + keystone])
+        self._publish_state()
+
+    def _keystone_ids(self) -> frozenset[int]:
+        """Keystones: the first slot of every rune tree."""
+        return frozenset(
+            perk
+            for style in self._catalog.styles
+            if style.slots and style.slots[0].kind != "kStatMod"
+            for perk in style.slots[0].perks
+        )
+
+    def _load_keystone(self, keystone: int) -> None:
+        """Fetch the most played page with this keystone for "Outras runas"."""
+        context = self._context
+        try:
+            if context is None or context.mode is None or self._catalog is None:
+                raise StatsError("no_session", "no champion select")
+            layout = self._ensure_stats().keystone_layout(context.champion_id, context.mode, context.lane, keystone)
+            page = layout.to_page(self._catalog)
+        except Exception as error:
+            log.info("[ASSISTANT] no page with keystone %s: %s", keystone, error)
+            if self._keystone_pending == keystone:
+                self._keystone_pending = None
+                self._error = "keystone_unavailable"
+                self._publish_state()
+            return
+        if self._keystone_pending != keystone:
+            return  # the player asked for another keystone meanwhile
+        self._keystone_pending = None
+        self._error = None
+        self._runes["keystone"] = [(layout, page)]
+        displayed = [page for _, page in self._runes.get("general", []) + self._runes.get("matchup", [])]
+        self._controller.display([*displayed, page])
         self._publish_state()
 
     def _choose(self, selection: str, matchup: bool) -> None:
-        candidates = self._runes.get("matchup" if matchup else "general") or []
+        group = "matchup" if matchup else "keystone" if selection == "keystone" else "general"
+        candidates = self._runes.get(group) or []
         page = next((page for layout, page in candidates if layout.selection == selection), None)
         if page is None:
             self._error = "unknown_recommendation"
@@ -322,6 +386,21 @@ class AssistantService:
             return
         self._write_items(context, None)
 
+    def _choose_build(self, items: tuple[int, ...]) -> None:
+        """The player picked a build in "Outras builds": it heads the SEXO2 set."""
+        alternatives = self._alternatives
+        combo = next((c for c in alternatives.builds if c.items == items), None) if alternatives else None
+        if combo is None:
+            self._items = {**self._items, "error": "unknown_build"}
+            self._publish_state()
+            return
+        self._chosen_build = combo
+        self._import_items()
+
+    def _default_build(self) -> None:
+        self._chosen_build = None
+        self._import_items()
+
     def _write_items(self, context: ChampSelectContext, generation: int | None) -> None:
         self._items = {"pending": True, "championId": context.champion_id}
         self._publish_state()
@@ -353,6 +432,15 @@ class AssistantService:
             self._items = {"error": "no_builds"}
             self._publish_state()
             return
+        chosen = self._chosen_build
+        if chosen is not None and self._alternatives is not None and chosen in self._alternatives.builds:
+            label = format_games(chosen.games)
+            if chosen.win_rate is not None:
+                label = f"{format_rate(chosen.win_rate, 1)} — {label}"  # as the other sections (D-018)
+            block = {"type": label, "items": [{"id": str(i), "count": 1} for i in chosen.items]}
+            item_set = {**item_set, "blocks": [block, *item_set["blocks"]]}
+        else:
+            chosen = self._chosen_build = None
         result = import_item_set(LCUItemSets(self._lcu), item_set)
         if result.confirmed:
             self._items_key = (context.session_id, context.champion_id, self._opponent)
@@ -361,6 +449,7 @@ class AssistantService:
             "championId": context.champion_id,
             "title": item_set["title"],
             "blocks": item_set["blocks"],
+            "chosen": list(chosen.items) if chosen else None,
             "error": result.error,
         }
         self._publish_state()
@@ -398,13 +487,31 @@ class AssistantService:
                 "patch": runes.get("patch"),
                 "general": [layout_json(layout, page) for layout, page in runes.get("general", [])],
                 "matchup": [layout_json(layout, page) for layout, page in runes.get("matchup", [])],
+                "keystone": [layout_json(layout, page) for layout, page in runes.get("keystone", [])],
+                "keystonePending": self._keystone_pending,
                 "chosen": page_json(snapshot.chosen),
                 "applied": page_json(snapshot.applied),
                 "pending": snapshot.pending,
                 "error": snapshot.error,
             },
             "items": dict(self._items),
+            "options": _options_json(self._alternatives),
         }
+
+
+def _options_json(alternatives: Alternatives | None) -> dict:
+    if alternatives is None:
+        return {"builds": [], "keystones": []}
+    return {
+        "builds": [
+            {"items": list(c.items), "winRate": c.win_rate, "pickRate": c.pick_rate, "games": c.games}
+            for c in alternatives.builds
+        ],
+        "keystones": [
+            {"id": k.keystone, "winRate": k.win_rate, "pickRate": k.pick_rate, "games": k.games}
+            for k in alternatives.keystones
+        ],
+    }
 
 
 def _timer(delay: float, action: Callable[[], None]) -> None:
