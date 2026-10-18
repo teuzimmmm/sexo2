@@ -8,3 +8,5 @@
 São fontes variáveis com subconjunto latino, que inclui os acentos do português. Cada família cabe num
 único arquivo com todos os pesos (Inter 100–900, Oswald 200–700), e o app só carrega esses dois
 arquivos. Os textos de licença acompanham qualquer distribuição das fontes.
+
+`assets/fonts/inter-bold.ttf`: instância estática peso 700 da Inter variável acima (fontTools `varLib.instancer`), em TTF porque o Pillow não lê WOFF2; usada no overlay de ouro. Mesma licença (OFL-Inter.txt).
