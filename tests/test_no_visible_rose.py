@@ -149,7 +149,7 @@ class NoVisibleRoseTests(unittest.TestCase):
         self.assertTrue(offending("Restart Rose."))
         self.assertTrue(offending("Reinicie o ROSE"))
         self.assertFalse(offending("window.__roseBridge"))
-        self.assertFalse(offending("rose_runoverlay_*.log"))
+        self.assertFalse(offending("sexo2_runoverlay_*.log"))
         self.assertFalse(offending("It starts with ROSE:"))
 
 

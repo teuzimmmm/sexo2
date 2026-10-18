@@ -4827,7 +4827,7 @@
             title: t('LTK patcher failed during injection'),
             details: [
               detail ? t('What happened: {detail}', { detail }) : t('What happened: the LTK patcher reported an error.'),
-              t('Fix: make sure your LTK patcher files are up to date, then retry. Full output is in rose_runoverlay_*.log in the SEXO2 logs folder.'),
+              t('Fix: make sure your LTK patcher files are up to date, then retry. Full output is in sexo2_runoverlay_*.log in the SEXO2 logs folder.'),
             ],
           };
         }

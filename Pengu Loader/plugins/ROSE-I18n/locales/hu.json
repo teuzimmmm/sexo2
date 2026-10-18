@@ -154,7 +154,7 @@
   "LTK patcher failed during injection": "Az LTK patcher hibát jelzett injektálás közben",
   "What happened: {detail}": "Mi történt: {detail}",
   "What happened: the LTK patcher reported an error.": "Mi történt: az LTK patcher hibát jelzett.",
-  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in rose_runoverlay_*.log in the SEXO2 logs folder.": "Megoldás: ellenőrizd, hogy az LTK patcher fájljai naprakészek-e, majd próbáld újra. A teljes kimenet a rose_runoverlay_*.log fájlban van, a SEXO2 naplómappájában.",
+  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in sexo2_runoverlay_*.log in the SEXO2 logs folder.": "Megoldás: ellenőrizd, hogy az LTK patcher fájljai naprakészek-e, majd próbáld újra. A teljes kimenet a sexo2_runoverlay_*.log fájlban van, a SEXO2 naplómappájában.",
   "(unknown error)": "(ismeretlen hiba)",
   "Errors (most recent first)": "Hibák (a legújabb elöl)",
   "Tip: after changing a setting, click {save}, then retry.": "Tipp: egy beállítás módosítása után kattints a(z) {save} gombra, majd próbáld újra.",

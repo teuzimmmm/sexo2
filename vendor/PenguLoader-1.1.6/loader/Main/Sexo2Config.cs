@@ -5,20 +5,22 @@ using System.Runtime.InteropServices;
 
 namespace PenguLoader.Main
 {
-    // Rose-only adapter: the loader remains official, but Rose needs the core
-    // activation state mirrored into its existing config.ini.
-    internal static class RoseConfig
+    // SEXO2-only adapter (inherited from the Rose fork): the loader remains official, but the
+    // app needs the core activation state mirrored into its existing config.ini.
+    internal static class Sexo2Config
     {
-        // Rose passes its config.ini: the desktop user's, which core.dll reads in
-        // the League client. This process runs elevated, and when Rose was
+        // The app passes its config.ini: the desktop user's, which core.dll reads in
+        // the League client. This process runs elevated, and when the app was
         // elevated with another account, LocalApplicationData is that account's.
         private static string ConfigPath
         {
             get
             {
-                var fromRose = Environment.GetEnvironmentVariable("ROSE_CONFIG_PATH");
-                if (!string.IsNullOrWhiteSpace(fromRose))
-                    return fromRose;
+                // ROSE_CONFIG_PATH is the name older builds of the app set
+                var fromApp = Environment.GetEnvironmentVariable("SEXO2_CONFIG_PATH")
+                    ?? Environment.GetEnvironmentVariable("ROSE_CONFIG_PATH");
+                if (!string.IsNullOrWhiteSpace(fromApp))
+                    return fromApp;
 
                 return Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -47,7 +49,7 @@ namespace PenguLoader.Main
             if (!WritePrivateProfileString("General", "disabled", active ? "0" : "1", ConfigPath) ||
                 !WritePrivateProfileString("General", "loaderpath", loaderPath, ConfigPath))
             {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not update Rose config.ini.");
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not update config.ini.");
             }
         }
     }

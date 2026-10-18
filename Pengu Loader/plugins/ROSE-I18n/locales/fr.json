@@ -154,7 +154,7 @@
   "LTK patcher failed during injection": "Le patcher LTK a échoué pendant l'injection",
   "What happened: {detail}": "Ce qui s'est passé : {detail}",
   "What happened: the LTK patcher reported an error.": "Ce qui s'est passé : le patcher LTK a signalé une erreur.",
-  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in rose_runoverlay_*.log in the SEXO2 logs folder.": "Solution : vérifiez que vos fichiers du patcher LTK sont à jour, puis réessayez. La sortie complète se trouve dans rose_runoverlay_*.log, dans le dossier des logs de SEXO2.",
+  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in sexo2_runoverlay_*.log in the SEXO2 logs folder.": "Solution : vérifiez que vos fichiers du patcher LTK sont à jour, puis réessayez. La sortie complète se trouve dans sexo2_runoverlay_*.log, dans le dossier des logs de SEXO2.",
   "(unknown error)": "(erreur inconnue)",
   "Errors (most recent first)": "Erreurs (les plus récentes en premier)",
   "Tip: after changing a setting, click {save}, then retry.": "Astuce : après avoir modifié un paramètre, cliquez sur {save}, puis réessayez.",

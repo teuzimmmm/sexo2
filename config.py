@@ -377,17 +377,22 @@ WINDOWS_DPI_AWARENESS_SYSTEM = 1  # PROCESS_SYSTEM_DPI_AWARE
 # FILE AND DIRECTORY PATHS
 # =============================================================================
 
-# Lock file name
-LOCK_FILE_NAME = "rose.lock"
+# Lock file name (non-Windows fallback); the name older versions used is only cleaned up
+LOCK_FILE_NAME = "sexo2.lock"
+LEGACY_LOCK_FILE_NAME = "rose.lock"
 
 # NEW: Windows named mutex for single-instance (per-user/session)
 _IS_DEV_BUILD = bool(getattr(sys, "frozen", False)) and (
     "rosedev" in Path(sys.executable).stem.lower() or "rose-dev" in Path(sys.executable).stem.lower()
 )
-SINGLE_INSTANCE_MUTEX_NAME = r"Local\RoseDevSingleInstance" if _IS_DEV_BUILD else r"Local\RoseSingleInstance"
+SINGLE_INSTANCE_MUTEX_NAME = r"Local\SEXO2DevSingleInstance" if _IS_DEV_BUILD else r"Local\SEXO2SingleInstance"
+# The name versions before the rename held: both are taken, so a new and an old
+# version never run side by side (the installer's AppMutex lists both too)
+LEGACY_SINGLE_INSTANCE_MUTEX_NAME = r"Local\RoseDevSingleInstance" if _IS_DEV_BUILD else r"Local\RoseSingleInstance"
 
 # Log file patterns (handles .log files)
-LOG_FILE_PATTERN = "rose_*.log*"
+LOG_FILE_PATTERN = "sexo2_*.log*"
+LEGACY_LOG_FILE_PATTERN = "rose_*.log*"
 UPDATER_LOG_FILE_PATTERN = "log_updater_*.log*"
 LOG_TIMESTAMP_FORMAT = "%d-%m-%Y_%H-%M-%S"  # European format, Windows-compatible
 

@@ -10,10 +10,16 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 from utils.core.logging import get_logger
 from utils.core.paths import get_state_dir
-from config import SINGLE_INSTANCE_MUTEX_NAME, LOCK_FILE_NAME
+from config import (
+    LEGACY_LOCK_FILE_NAME,
+    LEGACY_SINGLE_INSTANCE_MUTEX_NAME,
+    LOCK_FILE_NAME,
+    SINGLE_INSTANCE_MUTEX_NAME,
+)
 
 from .state import get_app_state
 
@@ -95,7 +101,7 @@ def create_lock_file() -> bool:
         state_dir = get_state_dir()
         state_dir.mkdir(parents=True, exist_ok=True)
 
-        lock_file_path = state_dir / "rose.lock"
+        lock_file_path = state_dir / LOCK_FILE_NAME
         app_state = get_app_state()
         app_state.lock_file_path = lock_file_path
 
@@ -166,6 +172,22 @@ def create_lock_file() -> bool:
         return False
 
 
+def acquire_instance_mutexes(kernel32, names) -> Optional[list]:
+    """Take every named mutex. None when one already exists (another instance runs);
+    an empty list when the system refused to create them (the caller falls back to the lock file)."""
+    handles = []
+    for name in names:
+        handle = kernel32.CreateMutexW(None, False, name)
+        if not handle:
+            continue
+        if kernel32.GetLastError() == ERROR_ALREADY_EXISTS:
+            for taken in handles + [handle]:
+                kernel32.CloseHandle(taken)
+            return None
+        handles.append(handle)
+    return handles
+
+
 def create_single_instance_mutex() -> bool:
     """Create a Windows named mutex (kernel-managed) to enforce single instance."""
     if sys.platform != "win32":
@@ -174,27 +196,25 @@ def create_single_instance_mutex() -> bool:
     app_state = get_app_state()
 
     try:
-        handle = ctypes.windll.kernel32.CreateMutexW(None, False, SINGLE_INSTANCE_MUTEX_NAME)
-        if not handle:
+        kernel32 = ctypes.windll.kernel32
+        handles = acquire_instance_mutexes(kernel32, (SINGLE_INSTANCE_MUTEX_NAME, LEGACY_SINGLE_INSTANCE_MUTEX_NAME))
+        if handles is None:
+            return False  # another instance (of this or an older version) holds one of the names
+        if not handles:
             log.error("CreateMutexW failed; falling back to lock file.")
             return True  # allow fallback path to decide
 
-        last_error = ctypes.windll.kernel32.GetLastError()
-        if last_error == ERROR_ALREADY_EXISTS:
-            # Another instance already created it
-            ctypes.windll.kernel32.CloseHandle(handle)
-            return False
+        # Keep the handles alive for the process lifetime
+        app_state.mutex_handle = handles
 
-        # Keep handle alive for process lifetime
-        app_state.mutex_handle = handle
-
-        # Optional: clean up old stale lock file left from previous versions
-        try:
-            stale_lock_path = get_state_dir() / LOCK_FILE_NAME
-            if stale_lock_path.exists():
-                stale_lock_path.unlink()
-        except Exception as e:
-            log.debug("Could not remove legacy lock file: %s", e)
+        # Optional: clean up old stale lock files left from previous versions
+        for name in (LOCK_FILE_NAME, LEGACY_LOCK_FILE_NAME):
+            try:
+                stale_lock_path = get_state_dir() / name
+                if stale_lock_path.exists():
+                    stale_lock_path.unlink()
+            except Exception as e:
+                log.debug("Could not remove legacy lock file: %s", e)
 
         atexit.register(cleanup_lock_file)  # reuse existing cleanup hook
         return True
@@ -210,10 +230,11 @@ def cleanup_lock_file() -> None:
 
         # release mutex handle if we own it
         if sys.platform == "win32" and app_state.mutex_handle:
-            try:
-                ctypes.windll.kernel32.CloseHandle(app_state.mutex_handle)
-            except Exception as e:
-                log.debug("Could not close single-instance mutex handle: %s", e)
+            for handle in app_state.mutex_handle:
+                try:
+                    ctypes.windll.kernel32.CloseHandle(handle)
+                except Exception as e:
+                    log.debug("Could not close single-instance mutex handle: %s", e)
             app_state.mutex_handle = None
 
         if app_state.lock_file:

@@ -154,7 +154,7 @@
   "LTK patcher failed during injection": "인젝션 중 LTK patcher 실패",
   "What happened: {detail}": "발생한 문제: {detail}",
   "What happened: the LTK patcher reported an error.": "발생한 문제: LTK patcher가 오류를 보고했습니다.",
-  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in rose_runoverlay_*.log in the SEXO2 logs folder.": "해결 방법: LTK patcher 파일이 최신인지 확인한 뒤 다시 시도하세요. 전체 출력은 SEXO2 로그 폴더의 rose_runoverlay_*.log에 있습니다.",
+  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in sexo2_runoverlay_*.log in the SEXO2 logs folder.": "해결 방법: LTK patcher 파일이 최신인지 확인한 뒤 다시 시도하세요. 전체 출력은 SEXO2 로그 폴더의 sexo2_runoverlay_*.log에 있습니다.",
   "(unknown error)": "(알 수 없는 오류)",
   "Errors (most recent first)": "오류 (최신순)",
   "Tip: after changing a setting, click {save}, then retry.": "팁: 설정을 바꾼 뒤 {save}을 클릭하고 다시 시도하세요.",

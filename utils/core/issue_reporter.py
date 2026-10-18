@@ -6,7 +6,7 @@ Issue Reporter
 Writes a small, human-friendly diagnostics file that summarizes important
 errors and "non-error failure reasons" (e.g., timeouts, settings mismatches).
 
-File: %LOCALAPPDATA%\\Rose\\rose_diagnostics.txt
+File: %LOCALAPPDATA%\\Rose\\sexo2_diagnostics.txt (rose_diagnostics.txt before the rename)
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ import threading
 import time
 from typing import Any, Callable, Dict, Optional
 
+from utils.core.legacy_names import migrate_file
 from utils.core.logging import get_logger
 from utils.core.paths import get_user_data_dir
 
@@ -23,7 +24,7 @@ log = get_logger()
 _LOCK = threading.Lock()
 _LAST: Dict[str, float] = {}  # naive dedupe: key -> last timestamp
 
-# Keep rose_diagnostics.txt focused on actionable tuning problems and critical
+# Keep sexo2_diagnostics.txt focused on actionable tuning problems and critical
 # resource failures that commonly confuse users. Everything else should go to
 # the normal logs.
 _ALLOWED_CODES = {
@@ -38,10 +39,10 @@ _ALLOWED_CODES = {
 }
 
 
-def _issues_path():
+def issues_path():
     base_dir = get_user_data_dir()
     base_dir.mkdir(parents=True, exist_ok=True)
-    return base_dir / "rose_diagnostics.txt"
+    return migrate_file(base_dir, "rose_diagnostics.txt", "sexo2_diagnostics.txt")
 
 
 def report_issue(
@@ -84,7 +85,7 @@ def report_issue(
         line = "\n".join(lines) + "\n"
 
         with _LOCK:
-            p = _issues_path()
+            p = issues_path()
 
             # Lightweight size cap (~1.5MB): keep last ~4000 lines
             try:
@@ -101,9 +102,9 @@ def report_issue(
 
 
 def read_issues_tail(*, max_lines: int = 60) -> list[str]:
-    """Read the last N lines from rose_diagnostics.txt (safe, never raises)."""
+    """Read the last N lines from sexo2_diagnostics.txt (safe, never raises)."""
     try:
-        p = _issues_path()
+        p = issues_path()
         if not p.exists():
             return []
         with _LOCK:
@@ -120,7 +121,7 @@ def remove_issues(should_remove: Callable[[str, str], bool]) -> bool:
     """Remove the reports for which should_remove(message_line, fix_line) is true (safe, never raises)."""
     try:
         with _LOCK:
-            p = _issues_path()
+            p = issues_path()
             if not p.exists():
                 return True
             lines = p.read_text(encoding="utf-8", errors="ignore").splitlines()
@@ -146,10 +147,10 @@ def remove_issues(should_remove: Callable[[str, str], bool]) -> bool:
 
 
 def clear_issues() -> bool:
-    """Clear rose_diagnostics.txt (safe, never raises). Returns True if cleared."""
+    """Clear sexo2_diagnostics.txt (safe, never raises). Returns True if cleared."""
     try:
         with _LOCK:
-            p = _issues_path()
+            p = issues_path()
             p.write_text("", encoding="utf-8", errors="ignore")
         return True
     except Exception as e:

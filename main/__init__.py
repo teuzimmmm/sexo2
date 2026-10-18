@@ -462,25 +462,6 @@ def _setup_pengu_and_injection(lcu, injection_manager, activate_pengu: bool = Tr
     injection_manager.initialize_when_ready()
 
 
-def _update_registry_version() -> None:
-    """Update the DisplayVersion in Windows registry to match the current app version.
-
-    After an auto-update the Inno Setup registry entry still shows the version
-    that was originally installed.  Writing the current ``APP_VERSION`` on every
-    startup keeps "Apps & features" in sync.
-    """
-    if FORK_BUILD or sys.platform != "win32" or not getattr(sys, "frozen", False):
-        return
-    try:
-        import winreg
-
-        key_path = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Rose"
-        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path, 0, winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "DisplayVersion", 0, winreg.REG_SZ, APP_VERSION)
-    except Exception:
-        pass
-
-
 def _schedule_restart() -> bool:
     """Spawn a detached helper that relaunches Rose after this process exits.
 
@@ -540,7 +521,6 @@ def run_league_unlock(args: Optional[argparse.Namespace] = None, injection_thres
     check_single_instance()
 
     # Keep the Windows "Apps & features" version in sync after auto-updates
-    _update_registry_version()
 
     # Safety net: recover a previous session before startup. If League still owns
     # the loaded module, cleanup_if_dirty adopts the active session instead.

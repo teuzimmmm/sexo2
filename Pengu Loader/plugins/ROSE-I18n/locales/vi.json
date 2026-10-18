@@ -154,7 +154,7 @@
   "LTK patcher failed during injection": "LTK patcher gặp lỗi khi tiêm",
   "What happened: {detail}": "Chuyện gì đã xảy ra: {detail}",
   "What happened: the LTK patcher reported an error.": "Chuyện gì đã xảy ra: LTK patcher đã báo lỗi.",
-  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in rose_runoverlay_*.log in the SEXO2 logs folder.": "Cách khắc phục: hãy đảm bảo các tệp LTK patcher là bản mới nhất rồi thử lại. Toàn bộ đầu ra nằm trong rose_runoverlay_*.log trong thư mục nhật ký của SEXO2.",
+  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in sexo2_runoverlay_*.log in the SEXO2 logs folder.": "Cách khắc phục: hãy đảm bảo các tệp LTK patcher là bản mới nhất rồi thử lại. Toàn bộ đầu ra nằm trong sexo2_runoverlay_*.log trong thư mục nhật ký của SEXO2.",
   "(unknown error)": "(lỗi không xác định)",
   "Errors (most recent first)": "Lỗi (mới nhất trước)",
   "Tip: after changing a setting, click {save}, then retry.": "Mẹo: sau khi thay đổi cài đặt, hãy bấm {save} rồi thử lại.",

@@ -6,6 +6,12 @@ from urllib.parse import urlsplit, urlunsplit, parse_qs
 from config import get_config_option, set_config_option
 from .relay_config import RELAY_URL
 
+
+def relay_url_from_environment():
+    """The relay address set in the environment (ROSE_RELAY_URL is the name older versions read)"""
+    return os.environ.get("SEXO2_RELAY_URL") or os.environ.get("ROSE_RELAY_URL") or None
+
+
 TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,128}$")
 
 
@@ -38,6 +44,6 @@ def save_server_link(link):
 
 
 def relay_settings():
-    endpoint = os.environ.get("ROSE_RELAY_URL") or get_config_option("Party", "relay_url", RELAY_URL) or RELAY_URL
+    endpoint = relay_url_from_environment() or get_config_option("Party", "relay_url", RELAY_URL) or RELAY_URL
     token = get_config_option("Party", "relay_access", "") or ""
     return endpoint.rstrip("/"), token

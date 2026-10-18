@@ -154,7 +154,7 @@
   "LTK patcher failed during injection": "LTK patcher ล้มเหลวระหว่างการอินเจกต์",
   "What happened: {detail}": "สิ่งที่เกิดขึ้น: {detail}",
   "What happened: the LTK patcher reported an error.": "สิ่งที่เกิดขึ้น: LTK patcher รายงานข้อผิดพลาด",
-  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in rose_runoverlay_*.log in the SEXO2 logs folder.": "วิธีแก้: ตรวจสอบว่าไฟล์ LTK patcher เป็นเวอร์ชันล่าสุด แล้วลองอีกครั้ง เอาต์พุตทั้งหมดอยู่ใน rose_runoverlay_*.log ในโฟลเดอร์ล็อกของ SEXO2",
+  "Fix: make sure your LTK patcher files are up to date, then retry. Full output is in sexo2_runoverlay_*.log in the SEXO2 logs folder.": "วิธีแก้: ตรวจสอบว่าไฟล์ LTK patcher เป็นเวอร์ชันล่าสุด แล้วลองอีกครั้ง เอาต์พุตทั้งหมดอยู่ใน sexo2_runoverlay_*.log ในโฟลเดอร์ล็อกของ SEXO2",
   "(unknown error)": "(ข้อผิดพลาดที่ไม่รู้จัก)",
   "Errors (most recent first)": "ข้อผิดพลาด (ล่าสุดก่อน)",
   "Tip: after changing a setting, click {save}, then retry.": "เคล็ดลับ: หลังเปลี่ยนการตั้งค่า ให้คลิก {save} แล้วลองอีกครั้ง",

@@ -94,7 +94,7 @@ namespace PenguLoader.Main
                     return false;
             }
 
-            RoseConfig.SetLoaderState(active);
+            Sexo2Config.SetLoaderState(active);
             return true;
         }
     }

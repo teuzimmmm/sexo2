@@ -23,7 +23,7 @@ from urllib.parse import quote
 from config import get_config_float, get_config_option, set_config_option
 from injection.mods.storage import ModStorageService
 from utils.core.paths import get_user_data_dir, get_asset_path, get_injection_dir, open_folder_in_explorer
-from utils.core.issue_reporter import clear_issues, read_issues_tail, remove_issues
+from utils.core.issue_reporter import clear_issues, issues_path, read_issues_tail, remove_issues
 from utils.core.junction import is_junction, safe_remove_entry, link_or_extract
 from utils.core.utilities import get_base_skin_id_for_chroma
 from ui.handlers.randomization_handler import cancel_random_mode_for_selection
@@ -829,7 +829,7 @@ class MessageHandler:
         self._send_response(json.dumps(response, ensure_ascii=False))
 
     def _handle_diagnostics_clear(self, payload: dict) -> None:
-        """Clear rose_diagnostics.txt (Diagnostics)"""
+        """Clear sexo2_diagnostics.txt (Diagnostics)"""
         try:
             ok = clear_issues()
             response_payload = {
@@ -864,7 +864,7 @@ class MessageHandler:
 
     def _handle_diagnostics_clear_category(self, payload: dict) -> None:
         """
-        Clear only a diagnostics category from rose_diagnostics.txt.
+        Clear only a diagnostics category from sexo2_diagnostics.txt.
         Categories:
           - injection_threshold
           - monitor_timeout
@@ -968,11 +968,11 @@ class MessageHandler:
                 log.debug("[SkinMonitor] Could not send diagnostics failure response: %s", send_error)
 
     def _clear_issues_categories(self, categories: set[str]) -> bool:
-        """Remove matching diagnostics entries from rose_diagnostics.txt (best-effort)."""
+        """Remove matching diagnostics entries from sexo2_diagnostics.txt (best-effort)."""
         try:
             if not categories:
                 return False
-            p = get_user_data_dir() / "rose_diagnostics.txt"
+            p = issues_path()
             if not p.exists():
                 return True
 
@@ -1031,7 +1031,7 @@ class MessageHandler:
 
     def _handle_diagnostics_request(self, payload: dict) -> None:
         """
-        Return a compact, user-friendly list of recent errors, derived from rose_diagnostics.txt.
+        Return a compact, user-friendly list of recent errors, derived from sexo2_diagnostics.txt.
         Also includes base skin confirmation stats from the tracker.
         The goal is "what to change" rather than raw logs.
         """
@@ -1050,7 +1050,7 @@ class MessageHandler:
             response_payload = {
                 "type": "diagnostics-data",
                 "errors": out,
-                "path": str(get_user_data_dir() / "rose_diagnostics.txt"),
+                "path": str(issues_path()),
                 "baseSkinStats": tracker_stats,
             }
             self._send_response(json.dumps(response_payload))
@@ -1062,7 +1062,7 @@ class MessageHandler:
                 log.debug("[SkinMonitor] Could not send diagnostics failure response: %s", send_error)
 
     def _compute_diagnostics_errors(self, delete_keys: Optional[set[str]] = None) -> list[dict]:
-        """Compute compact diagnostics error list from rose_diagnostics.txt (never raises).
+        """Compute compact diagnostics error list from sexo2_diagnostics.txt (never raises).
 
         With delete_keys, first removes every report whose summary key is in it.
         """

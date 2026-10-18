@@ -18,7 +18,7 @@ import websockets
 from websockets.exceptions import ConnectionClosed
 
 from config import APP_VERSION
-from .private_server_config import relay_settings
+from .private_server_config import relay_settings, relay_url_from_environment
 from .tunnel_connection import connect_with_dns_fallback
 from urllib.parse import urlencode
 from utils.core.logging import get_logger
@@ -30,7 +30,7 @@ try:
 except ImportError:
     _CONFIGURED_URL = ""
 
-RELAY_URL = os.environ.get("ROSE_RELAY_URL", _CONFIGURED_URL)
+RELAY_URL = relay_url_from_environment() or _CONFIGURED_URL
 PING_INTERVAL = 25.0
 CONNECT_TIMEOUT = 15.0
 # Wait before each reconnect attempt, in seconds

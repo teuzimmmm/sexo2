@@ -40,6 +40,8 @@ _SESSION_FILE = get_state_dir() / "pengu_session.json"
 _CONFIG_FILE = get_config_file_path()
 # The loader runs elevated: when Rose was elevated with another account's
 # credentials, its own LocalApplicationData isn't the desktop user's config.ini
+os.environ["SEXO2_CONFIG_PATH"] = str(_CONFIG_FILE)
+# The loader executable built before the rename reads this older name
 os.environ["ROSE_CONFIG_PATH"] = str(_CONFIG_FILE)
 
 _ACTIVE_FLAG = get_state_dir() / "pengu_active.flag"

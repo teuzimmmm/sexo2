@@ -43,7 +43,7 @@ linguagem continua em D-107).
 Mantidos de propósito (compatibilidade ou crédito; lista viva em `tests/test_no_visible_rose.py`):
 
 - pasta de dados `%LOCALAPPDATA%\Rose` e os nomes de arquivo dentro dela (`rose_*.log`,
-  `rose_runoverlay_*.log`, `rose_diagnostics.txt`, `rose.lock`, metadados `rose_*.json` dos mods);
+  `sexo2_runoverlay_*.log`, `rose_diagnostics.txt`, `rose.lock`, metadados `rose_*.json` dos mods);
 - mutex `Local\RoseSingleInstance` e `AppMutex` do instalador; tarefa agendada `Rose`; chave de
   desinstalação `Uninstall\Rose`;
 - `Rose.exe` e `Rose Sala.exe` nas listas do atualizador e do instalador;

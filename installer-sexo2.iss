@@ -20,7 +20,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\SEXO2.exe
-AppMutex=Local\RoseSingleInstance
+AppMutex=Local\SEXO2SingleInstance,Local\RoseSingleInstance
 VersionInfoVersion={#MyAppVersion}
 [Languages]
 Name: "brazilian"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
