@@ -1,0 +1,22 @@
+{
+  "base_branch": "sexoatividade",
+  "base_commit": "aa558147cc7db74daae6b4c12ce7f5623dcc7739",
+  "merge_commit": "b9e445cdd28e512c8b482f205435f1138993be43",
+  "plugins": {
+    "ROSE-Hub": "bb81015ff029279139631989f0309fa9884cdc79",
+    "SEXO2-Assistant": "f9d0ccc6e95d1547866bb29ea2ac6515071aeba2",
+    "SEXO2-Settings": "e929aa019a827b4294a9ceffcac00d2039655445",
+    "SEXO2-Style": "3809044ff2b13697bc4e5a15fd1897245c59d88d",
+    "ROSE-Amigos": "590a56fc0f65d109a5d913df3ca2b43d8f943a39",
+    "SEXO2-ModLibrary": "3375d1861adfdba0c7dffb820eb53f627efdd471",
+    "ROSE-SwiftplayPins": "0e1ef9a0d0f76d57a5a0f34368045eb70a587a7b",
+    "ROSE-CustomWheel": "95c90ebb4db2139d993e1e011bb6a2a9dfc0394d"
+  },
+  "adaptations": [
+    "Fontes WOFF2 e ícones incorporados como data URLs; fontes da ponte removidas na cópia offline.",
+    "Retrato do campeão redirecionado ao ícone incorporado.",
+    "Botão nativo lol-uikit-flat-button recebe role e tabindex no ambiente sem UIKit.",
+    "Ponte e fetch substituídos por respostas em memória; CSP impede conexões."
+  ],
+  "assets_source": "design/propostas/sexo2-v1/assets e design/fonts, reaproveitados da cópia local; não validados contra screenshots do cliente."
+}
