@@ -301,6 +301,13 @@ def _sync_cslol_stub(tools_dir: Path) -> None:
         pass  # The tools check reports a missing DLL when injection needs it
 
 
+def _recover_ltk_patcher(tools_dir: Path) -> None:
+    from injection.tools.patcher import previous_install_tools, recover_ltk_patcher
+    from utils.core.paths import get_user_data_dir
+
+    recover_ltk_patcher(tools_dir, get_user_data_dir() / "tools", previous_install_tools())
+
+
 def _check_dll_present() -> bool:
     """Check that the user-provided LTK patcher is present and supports the installed game."""
     import sys
@@ -314,6 +321,7 @@ def _check_dll_present() -> bool:
 
     tools_dir = _get_tools_dir()
     _sync_cslol_stub(tools_dir)
+    _recover_ltk_patcher(tools_dir)
     status = check_ltk_patcher(tools_dir)
     if status.missing:
         return _show_dll_dialog(tools_dir, reason="missing", detail=" and ".join(status.missing))

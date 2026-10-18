@@ -11,6 +11,7 @@ until League itself updates.
 """
 
 import hashlib
+import shutil
 import struct
 import time
 from dataclasses import dataclass
@@ -54,6 +55,69 @@ def check_ltk_patcher(tools_dir: Path) -> LtkPatcherStatus:
     missing = [p.name for p in (host, dll) if not p.is_file()]
     eol = read_dll_eol(dll) if dll.is_file() else None
     return LtkPatcherStatus(host=host, dll=dll, missing=missing, eol=eol)
+
+
+def find_ltk_patcher(folders) -> Optional[Path]:
+    """The first folder holding both patcher files, among ``folders``."""
+    for folder in folders:
+        folder = Path(folder)
+        if (folder / LTK_PATCHER_HOST).is_file() and (folder / LTK_PATCHER_DLL).is_file():
+            return folder
+    return None
+
+
+def copy_ltk_patcher(source: Path, target: Path) -> bool:
+    """Copy both files from ``source`` to ``target``; False when it could not be done."""
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        for name in (LTK_PATCHER_HOST, LTK_PATCHER_DLL):
+            shutil.copy2(source / name, target / name)
+        return True
+    except OSError:
+        return False
+
+
+def previous_install_tools() -> list:
+    """Tools folders of earlier SEXO2 installations: the installer's recorded folder and its defaults."""
+    import os
+
+    folders = []
+    try:
+        import winreg
+
+        key = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\{B876AA51-DB38-448E-BD13-716F1C9DE750}_is1"
+        for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+            try:
+                with winreg.OpenKey(hive, key) as reg:
+                    folders.append(Path(winreg.QueryValueEx(reg, "Inno Setup: App Path")[0]))
+            except OSError:
+                pass
+    except ImportError:
+        pass
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        folders += [Path(local) / "SEXO2", Path(local) / "Programs" / "SEXO2"]
+    return [folder / "_internal" / "injection" / "tools" for folder in folders]
+
+
+def recover_ltk_patcher(tools_dir: Path, kept: Path, previous) -> None:
+    """Bring the user's own LTK patcher files along between versions.
+
+    SEXO2 cannot ship them. When ``tools_dir`` lacks them they are taken from the copy
+    ``kept`` in the data folder or from an earlier installation (``previous``); the newest
+    files in ``tools_dir`` are then kept for the next version.
+    """
+    import filecmp
+
+    if find_ltk_patcher([tools_dir]) is None:
+        source = find_ltk_patcher([kept, *previous])
+        if source is None or not copy_ltk_patcher(source, tools_dir):
+            return
+    same = find_ltk_patcher([kept]) is not None and all(
+        filecmp.cmp(tools_dir / name, kept / name, shallow=False) for name in (LTK_PATCHER_HOST, LTK_PATCHER_DLL)
+    )
+    if not same:
+        copy_ltk_patcher(tools_dir, kept)
 
 
 def describe_ltk_patcher_files(tools_dir: Path) -> str:
