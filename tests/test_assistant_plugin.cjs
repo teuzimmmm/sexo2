@@ -69,3 +69,14 @@ test('error codes become the approved texts', () => {
   assert.equal(A.itemError('no_builds', 'Ahri'), 'Sem dados para Ahri.');
   assert.equal(A.itemError('concurrent_edit', 'Ahri'), 'O cliente recusou o conjunto.');
 });
+
+test('a button that measures 0x0 anchors by its content, else the panel stays on screen', () => {
+  const box = (width, height) => ({ getBoundingClientRect: () => ({ left: 1150, right: 1150 + width, top: 660, bottom: 660 + height, width, height }) });
+  const inner = box(106, 34);
+  const button = { ...box(0, 0), children: [inner], parentElement: box(300, 40) };
+  assert.equal(A.anchorRect(button).width, 106);
+  assert.equal(A.anchorRect({ ...box(0, 0), children: [], parentElement: box(0, 0) }), null);
+  const pos = A.fallbackAnchor({ width: 1280, height: 720 }, { width: 452, height: 492 });
+  assert.ok(pos.left >= 0 && pos.left + 452 <= 1280);
+  assert.ok(pos.top >= 0 && pos.top + pos.maxHeight <= 720);
+});

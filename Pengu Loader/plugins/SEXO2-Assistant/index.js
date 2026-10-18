@@ -131,6 +131,29 @@
     return { left: Math.round(left), top: Math.round(buttonRect.top - gap - height), maxHeight: Math.floor(room) };
   }
 
+  // The client's lol-uikit-flat-button can measure 0x0 itself while its content is visible:
+  // the first box with a size among the button, its children and its parent anchors the panel.
+  function anchorRect(button) {
+    if (!button) return null;
+    const candidates = [button, ...Array.from(button.children || []), button.parentElement];
+    for (const el of candidates) {
+      if (!el || typeof el.getBoundingClientRect !== "function") continue;
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) return r;
+    }
+    return null;
+  }
+
+  // Without a usable button the panel sits at the bottom right, where the button is.
+  function fallbackAnchor(viewport, panelSize, margin = 16) {
+    const height = Math.min(panelSize.height, viewport.height - 2 * margin);
+    return {
+      left: Math.max(margin, viewport.width - margin - panelSize.width),
+      top: Math.max(margin, viewport.height - 80 - height),
+      maxHeight: height,
+    };
+  }
+
   const RUNE_ERRORS = {
     cannot_edit: "A seleção terminou antes da confirmação.",
     no_free_page: "Sem espaço para a página do SEXO2. Apague uma página no cliente.",
@@ -146,7 +169,7 @@
   }
 
   if (typeof window === "undefined" && typeof module !== "undefined" && module.exports) {
-    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, runeError, itemError, LANES };
+    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, runeError, itemError, LANES };
     return;
   }
 
@@ -406,6 +429,15 @@
 
     // ----------------------------------------------------------- painel
     function render() {
+      try {
+        draw();
+      } catch (error) {
+        console.error("[SEXO2-Assistant] render failed", error);
+      }
+      place();
+    }
+
+    function draw() {
       if (panel.hidden) return;
       const st = S.state;
       const cid = st && st.championId;
@@ -427,14 +459,15 @@
         ${S.tab === "runes" ? runesFoot() : itemsFoot()}`;
       const fresh = panel.querySelector(".asst-body");
       if (fresh) fresh.scrollTop = scroll;
-      place();
     }
 
     function place() {
-      if (panel.hidden || !button || !button.isConnected) return;
-      const r = button.getBoundingClientRect();
-      if (!r.width) return;
-      const pos = computeAnchor(r, { width: PANEL_WIDTH, height: PANEL_HEIGHT }, { width: window.innerWidth, height: window.innerHeight });
+      if (panel.hidden) return;
+      const size = { width: PANEL_WIDTH, height: PANEL_HEIGHT };
+      const viewport = { width: window.innerWidth, height: window.innerHeight };
+      const r = button && button.isConnected ? anchorRect(button) : null;
+      const pos = r ? computeAnchor(r, size, viewport) : fallbackAnchor(viewport, size);
+      if (!r) console.log("[SEXO2-Assistant] button not measurable; panel at the bottom right");
       panel.style.left = pos.left + "px";
       panel.style.top = pos.top + "px";
       panel.style.height = Math.min(PANEL_HEIGHT, pos.maxHeight) + "px";
