@@ -1,10 +1,11 @@
 /** SEXO2 loading surface. Independent of the Python bridge and network. */
-(()=>{
- const id='sexo2-startup-style';
- function mount(){
-  if(document.getElementById(id))return;
-  const style=document.createElement('style');style.id=id;
-  style.textContent=`
+(() => {
+  const id = 'sexo2-startup-style';
+  function mount() {
+    if (document.getElementById(id)) return;
+    const style = document.createElement('style');
+    style.id = id;
+    style.textContent = `
    div[id^="index_loading_div"]{background-color:#0d0e10!important}
    div[id^="index_loading_div"]>img{display:none!important}
    div[id^="index_loading_div"]::before{
@@ -17,7 +18,8 @@
     content:"SEXO2"!important;color:#ececec!important;margin-top:24px!important;
     font-family:Inter,sans-serif!important;font-size:1rem!important;
    }`;
-  (document.head||document.documentElement).appendChild(style);
- }
- mount();document.addEventListener('DOMContentLoaded',mount,{once:true});
+    (document.head || document.documentElement).appendChild(style);
+  }
+  mount();
+  document.addEventListener('DOMContentLoaded', mount, { once: true });
 })();
