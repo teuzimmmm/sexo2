@@ -19,7 +19,7 @@
       const interval = 50;
       let elapsed = 0;
       const check = () => {
-        if (window.__roseBridge) return resolve(window.__roseBridge);
+        if (window.__sexo2Bridge) return resolve(window.__sexo2Bridge);
         elapsed += interval;
         if (elapsed >= timeout) return reject(new Error("Bridge not available"));
         setTimeout(check, interval);
@@ -56,7 +56,7 @@
   let historicBaseSkinId = null;
 
   function getCurrentEffectiveSkinId() {
-    const skinState = window.__roseSkinState || {};
+    const skinState = window.__sexo2SkinState || {};
     const baseSkinId = Number(skinState.skinId);
     const chromaState = pythonChromaState || {};
     const selectedChromaId = Number(chromaState.selectedChromaId);
@@ -90,7 +90,7 @@
       return false;
     }
 
-    const currentBaseSkinId = Number((window.__roseSkinState || {}).skinId);
+    const currentBaseSkinId = Number((window.__sexo2SkinState || {}).skinId);
     return currentBaseSkinId === historicBaseSkinId;
   }
 
@@ -271,7 +271,7 @@
 
   // Inject CSS styles for lol-uikit-dialog-frame
   function injectDialogFrameStyles() {
-    const styleId = "rose-historic-mode-dialog-frame-styles";
+    const styleId = "sexo2-historic-mode-dialog-frame-styles";
     if (document.getElementById(styleId)) {
       return; // Styles already injected
     }

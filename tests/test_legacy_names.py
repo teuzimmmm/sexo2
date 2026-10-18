@@ -186,5 +186,43 @@ class RelayEnvironmentTests(unittest.TestCase):
             self.assertEqual(relay_url_from_environment(), "wss://new")
 
 
+class RoomCodeFormatTests(unittest.TestCase):
+    """Codes and links friends on older versions produce and read."""
+
+    def test_written_code_keeps_the_prefix_older_versions_expect(self):
+        from party.protocol.token_codec import create_token
+
+        self.assertTrue(create_token(1234).encode().startswith("ROSE:"))
+
+    def test_code_is_read_with_either_prefix_or_none(self):
+        from party.protocol.token_codec import create_token, PartyToken
+
+        token = create_token(1234)
+        body = token.encode()[len("ROSE:") :]
+        for text in ("ROSE:" + body, "SEXO2:" + body, body):
+            decoded = PartyToken.decode(text)
+            self.assertEqual(decoded.summoner_id, 1234)
+            self.assertEqual(decoded.encryption_key, token.encryption_key)
+
+    def test_room_link_is_read_with_either_fragment(self):
+        from party.network.private_server_config import parse_server_link
+
+        key = "A" * 43
+        old = parse_server_link(f"https://sala.example/#rose={key}")
+        new = parse_server_link(f"https://sala.example/#sexo2={key}")
+        self.assertEqual(old, new)
+        self.assertEqual(old[1], key)
+
+    def test_room_link_written_by_the_host_keeps_the_old_fragment(self):
+        source = (Path(config.__file__).parent / "party" / "hosting" / "controller.py").read_text(encoding="utf-8")
+        self.assertIn('"/#rose=" + token', source)
+
+    def test_diagnostic_hides_both_fragments(self):
+        from friends.diagnostics import sanitize
+
+        for name in ("rose", "sexo2"):
+            self.assertNotIn("AAAA", sanitize(f"link #{name}=AAAAAAAA"))
+
+
 if __name__ == "__main__":
     unittest.main()

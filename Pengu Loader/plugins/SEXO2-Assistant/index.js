@@ -48,7 +48,7 @@ async function loadData(){
 }
 function build(){
  const style=el('style',css);document.head.append(style);
- const base='http://127.0.0.1:'+(window.__roseBridge?.port||50000)+'/asset/fonts/';
+ const base='http://127.0.0.1:'+(window.__sexo2Bridge?.port||50000)+'/asset/fonts/';
  document.head.append(el('style',`@font-face{font-family:Oswald;font-weight:200 700;font-display:swap;src:url(${base}oswald-latin-wght-normal.woff2) format('woff2')}@font-face{font-family:Inter;font-weight:100 900;font-display:swap;src:url(${base}inter-latin-wght-normal.woff2) format('woff2')}`));
  btn=el('button','SEXO2');btn.id='sexo2-assistant-btn';btn.type='button';btn.hidden=true;btn.setAttribute('aria-haspopup','dialog');btn.onclick=()=>toggle();
  panel=el('section');panel.id='sexo2-assistant';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Assistente de seleção');
@@ -68,7 +68,7 @@ function toggle(force){
  if(!panel.hidden){loadData();send({type:'assistant-request'});requestFriends();render();}
 }
 function selectTab(t){
- if(t==='Todas as configurações'){toggle(false);window.__roseHub?.show?.('Configurações');return;}
+ if(t==='Todas as configurações'){toggle(false);window.__sexo2Hub?.show?.('Configurações');return;}
  tab=t;if(t==='Itens'&&state&&state.builds==null)send({type:'assistant-items-request'});
  if(t==='Preferências rápidas')requestFriends();
  render();
@@ -165,8 +165,8 @@ function start(){
  build();
  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&open){toggle(false);btn.focus();}});
  const attach=()=>{
-  if(bridge||!window.__roseBridge)return false;
-  bridge=window.__roseBridge;
+  if(bridge||!window.__sexo2Bridge)return false;
+  bridge=window.__sexo2Bridge;
   bridge.subscribe('assistant-state',receive);
   bridge.subscribe('friends-state',d=>{if(String(d.requestId||'').startsWith('assistant-')){friends=d;if(phase===null&&d.phase){phase=d.phase;btn.hidden=!inSelect();}if(!panel.hidden&&tab==='Preferências rápidas')render();}});
   bridge.subscribe('phase-change',d=>{phase=d.phase;btn.hidden=!inSelect();if(!inSelect()){open=false;panel.hidden=true;state=null;}else if(open){panel.hidden=false;send({type:'assistant-request'});}});

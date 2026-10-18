@@ -47,7 +47,7 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Shared bridge API (provided by ROSE-Bridge plugin)
+  // Shared bridge API (provided by SEXO2-SkinMonitor)
   let bridge = null;
 
   function waitForBridge() {
@@ -56,7 +56,7 @@
       const interval = 50;
       let elapsed = 0;
       const check = () => {
-        if (window.__roseBridge) return resolve(window.__roseBridge);
+        if (window.__sexo2Bridge) return resolve(window.__sexo2Bridge);
         elapsed += interval;
         if (elapsed >= timeout) return reject(new Error("Bridge not available"));
         setTimeout(check, interval);
@@ -3845,8 +3845,8 @@
       return;
     }
 
-    if (window.__roseSkinState) {
-      skinMonitorState = window.__roseSkinState;
+    if (window.__sexo2SkinState) {
+      skinMonitorState = window.__sexo2SkinState;
       maybeInferChampionLockedFromSkinState(skinMonitorState);
 
       // Warm champion data up front so button visibility can recover even if

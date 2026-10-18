@@ -8,10 +8,10 @@
   const REQUEST_TYPE = "request-skin-mods";
   const BUTTON_ICON_ASSET_PATH = "button-skin.png";
 
-  // Rose's menu language (SEXO2-I18n); English until it has loaded
+  // SEXO2's menu language (SEXO2-I18n); English until it has loaded
   const t = (text, vars) =>
-    window.RoseI18n
-      ? window.RoseI18n.t(text, vars)
+    window.Sexo2I18n
+      ? window.Sexo2I18n.t(text, vars)
       : text.replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars ? String(vars[k]) : m));
 
   let bridge = null;
@@ -67,8 +67,8 @@
       let elapsed = 0;
 
       const check = () => {
-        if (window.__roseBridge) {
-          resolve(window.__roseBridge);
+        if (window.__sexo2Bridge) {
+          resolve(window.__sexo2Bridge);
           return;
         }
         elapsed += interval;
@@ -765,7 +765,7 @@
     if (!skinItem) return;
 
     // Some League builds nest the thumbnail wrapper inside the selection
-    // item. Keep one Rose button per item instead of attaching two buttons to
+    // item. Keep one SEXO2 button per item instead of attaching two buttons to
     // the same skin during a mutation-observer scan.
     if (skinItem.classList.contains("thumbnail-wrapper")) {
       const parentItem = skinItem.closest(".skin-selection-item");
@@ -890,7 +890,7 @@
     try { bridge = await waitForBridge(); logInfo("Bridge connected"); }
     catch (error) { console.error(`${LOG_PREFIX} Bridge connection failed`, error); }
 
-    if (window.__roseSkinState) skinMonitorState = window.__roseSkinState;
+    if (window.__sexo2SkinState) skinMonitorState = window.__sexo2SkinState;
 
     if (bridge) {
       bridge.subscribe("skin-mods-response", (data) => handleModsResponse({ detail: data }));

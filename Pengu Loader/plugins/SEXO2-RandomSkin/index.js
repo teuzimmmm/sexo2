@@ -20,7 +20,7 @@
       const interval = 50;
       let elapsed = 0;
       const check = () => {
-        if (window.__roseBridge) return resolve(window.__roseBridge);
+        if (window.__sexo2Bridge) return resolve(window.__sexo2Bridge);
         elapsed += interval;
         if (elapsed >= timeout) return reject(new Error("Bridge not available"));
         setTimeout(check, interval);

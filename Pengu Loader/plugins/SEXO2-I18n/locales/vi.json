@@ -171,7 +171,7 @@
   "Connected to {name}": "Đã kết nối với {name}",
   "Couldn't read your summoner ID - is the League client running?": "Không đọc được ID người chơi của bạn. Client League có đang chạy không?",
   "Party mode is not enabled": "Chế độ nhóm chưa được bật",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "Đây không phải mã nhóm hợp lệ. Hãy sao chép toàn bộ mã (bắt đầu bằng ROSE:).",
+  "That's not a valid party token. Copy the whole token.": "Đây không phải mã nhóm hợp lệ. Hãy sao chép toàn bộ mã.",
   "That's your own token - send it to your friends instead": "Đây là mã của chính bạn, hãy gửi nó cho bạn bè",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "Bạn đang liên kết với quá nhiều nhóm. Hãy tắt rồi bật lại chế độ nhóm, sau đó thử lại.",
   "This friend removed you from their party - they need to add your token back": "Người bạn này đã xóa bạn khỏi nhóm của họ, họ cần thêm lại mã của bạn",

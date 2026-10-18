@@ -90,5 +90,5 @@ function skins(data){
 }
 window.__sexo2ModLibrary={open(target,selected='all',add=false){if(!root)build();target.append(root);root.hidden=false;category.value=selected;send('list');if(add)send('inbox',{category:selected==='all'?'skins':selected});root.scrollIntoView({block:'nearest'});}};
 window.addEventListener('sexo2-mod-library-open',event=>window.__sexo2ModLibrary.open(event.detail.target,event.detail.category,event.detail.add));
-const timer=setInterval(()=>{if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('sexo2-library-state',receive);bridge.subscribe('sexo2-library-skins',skins);bridge.onReady(()=>{if(root)send('list');});clearInterval(timer);}},100);
+const timer=setInterval(()=>{if(!bridge&&window.__sexo2Bridge){bridge=window.__sexo2Bridge;bridge.subscribe('sexo2-library-state',receive);bridge.subscribe('sexo2-library-skins',skins);bridge.onReady(()=>{if(root)send('list');});clearInterval(timer);}},100);
 })();

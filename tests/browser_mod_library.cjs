@@ -10,7 +10,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    window.sent=[];window.handlers={};window.confirm=()=>true;
    window.sample={type:'sexo2-library-state',message:'Biblioteca carregada.',champions:[{id:11,name:'Master Yi'},{id:22,name:'Ashe'}],mods:[{id:'known',name:'Meu mod',category:'skins',championId:22,targets:[22000]}],incoming:[{id:'unknown',file:'Outfit.fantome',category:'skins',status:'revisar'}]};
    window.emit=(type,data)=>{for(const handler of window.handlers[type]||[])handler(data);};
-   window.__roseBridge={ready:true,subscribe(type,callback){(window.handlers[type]??=[]).push(callback);},onReady(callback){callback();},send(data){window.sent.push(data);
+   window.__sexo2Bridge={ready:true,subscribe(type,callback){(window.handlers[type]??=[]).push(callback);},onReady(callback){callback();},send(data){window.sent.push(data);
     if(data.type==='settings-request')setTimeout(()=>window.emit('settings-data',{requestId:data.requestId,threshold:.5,monitorAutoResumeTimeout:60,autostart:false,hideEmptyCategories:false,gamePath:''}),0);
     if(data.type==='sexo2-library-request'){
      if(data.action==='resolve'){window.sample.incoming[0].status='importado';window.sample.mods.push({id:'new',name:'Outfit',category:'skins',championId:data.championId,targets:data.targets});}
@@ -22,7 +22,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   });
   for(const plugin of ['SEXO2-ModLibrary','SEXO2-Settings'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',plugin,'index.js')});
   await page.waitForTimeout(150);
-  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('rose-hub-settings',{detail:{target:document.getElementById('target')}})));
+  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('sexo2-hub-settings',{detail:{target:document.getElementById('target')}})));
   await page.getByLabel('Pasta do LoL (Game)').fill('C:/rascunho preservado');
   await page.getByRole('button',{name:'Biblioteca de mods',exact:true}).click();
   const library=page.locator('#sexo2-mod-library');await library.waitFor();

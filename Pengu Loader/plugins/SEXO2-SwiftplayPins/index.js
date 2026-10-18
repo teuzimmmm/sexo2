@@ -27,56 +27,56 @@
     setTimeout(start, 100);
     return;
   }
-  if (window.__roseSwiftplayPinsLoaded) return;
-  window.__roseSwiftplayPinsLoaded = true;
+  if (window.__sexo2SwiftplayPinsLoaded) return;
+  window.__sexo2SwiftplayPinsLoaded = true;
   let bridge, state = null, draft = {}, dirty = false, open = false, chooser = null;
   let pending = null, saving = false, lastState = 0, message = "", sequence = 0, transportHidden = false, hubActive = null;
   const prefix = `swiftplay-r2-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const root = document.createElement("div");
-  root.id = "rose-swiftplay-pins";
+  root.id = "sexo2-swiftplay-pins";
   root.hidden = true;
   const style = document.createElement("style");
   style.textContent = `
-#rose-swiftplay-pins {position:fixed;left:2.5%;bottom:110px;z-index:10001;width:min(32vw,410px);color:#f0e6d2;font:13px Arial,sans-serif;pointer-events:none}
-#rose-swiftplay-pins[hidden] {display:none!important}
-#rose-swiftplay-pins * {box-sizing:border-box}
-#rose-swiftplay-pins button,#rose-swiftplay-pins input {font:inherit}
-#rose-swiftplay-pins button {cursor:pointer;color:#f0e6d2;border:1px solid #c89b3c;background:#07151d;padding:8px 12px}
-#rose-swiftplay-pins button:hover {border-color:#f0e6d2;background:#12333c}
-#rose-swiftplay-pins button:disabled {cursor:default;opacity:.5}
-#rose-swiftplay-pins .rsp-launch {pointer-events:auto;font-weight:bold;color:#cdbe91}
-#rose-swiftplay-pins .rsp-panel {pointer-events:auto;background:linear-gradient(145deg,#081e29,#010a10);border:1px solid #c89b3c;border-radius:8px;padding:16px;margin-bottom:14px;box-shadow:0 8px 30px #000a;max-height:calc(100vh - 280px);overflow:auto}
-#rose-swiftplay-pins header {display:flex;align-items:center;justify-content:space-between;gap:8px}
-#rose-swiftplay-pins h3 {font: bold 16px Georgia,serif;margin:0;color:#f0e6d2}
-#rose-swiftplay-pins .rsp-close {border:0;padding:3px 5px;font-size:20px}
-#rose-swiftplay-pins .rsp-muted {color:#a09b8c;font-size:12px;margin:8px 0 12px}
-#rose-swiftplay-pins .rsp-row {display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1px solid #463e2c}
-#rose-swiftplay-pins .rsp-portrait {width:60px;height:60px;border:1px solid #a88948;object-fit:cover;background:#0c2834;flex-shrink:0}
-#rose-swiftplay-pins .rsp-info {flex:1;min-width:0;overflow-wrap:anywhere}
-#rose-swiftplay-pins .rsp-name {font:bold 16px Georgia,serif;margin-bottom:5px}
-#rose-swiftplay-pins .rsp-skin {color:#cdbe91;font-size:12px}
-#rose-swiftplay-pins .rsp-status {font-size:11px;color:#0ac8b9;margin-top:6px}
-#rose-swiftplay-pins .rsp-error {color:#f4a58a}
-#rose-swiftplay-pins .rsp-actions {display:flex;flex-direction:column;gap:6px}
-#rose-swiftplay-pins .rsp-remove {border:0;color:#a09b8c;padding:2px 0;font-size:11px}
-#rose-swiftplay-pins .rsp-save {width:100%;background:linear-gradient(#095264,#06252f);font-weight:bold;margin-top:10px}
-#rose-swiftplay-pins .rsp-message {font-size:12px;line-height:1.4;color:#cdbe91;margin-top:10px}
-#rose-swiftplay-pins .rsp-search {width:100%;background:#010a10;color:#f0e6d2;border:1px solid #66542d;padding:9px;margin:10px 0}
-#rose-swiftplay-pins .rsp-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:240px;overflow:auto}
-#rose-swiftplay-pins .rsp-tile {text-align:left;padding:6px;min-height:68px;font-size:12px}
-#rose-swiftplay-pins .rsp-tile img {width:100%;height:70px;object-fit:cover;margin-bottom:5px}
-#rose-swiftplay-pins .rsp-tile[aria-pressed=true] {border:2px solid #0ac8b9}
+#sexo2-swiftplay-pins {position:fixed;left:2.5%;bottom:110px;z-index:10001;width:min(32vw,410px);color:#f0e6d2;font:13px Arial,sans-serif;pointer-events:none}
+#sexo2-swiftplay-pins[hidden] {display:none!important}
+#sexo2-swiftplay-pins * {box-sizing:border-box}
+#sexo2-swiftplay-pins button,#sexo2-swiftplay-pins input {font:inherit}
+#sexo2-swiftplay-pins button {cursor:pointer;color:#f0e6d2;border:1px solid #c89b3c;background:#07151d;padding:8px 12px}
+#sexo2-swiftplay-pins button:hover {border-color:#f0e6d2;background:#12333c}
+#sexo2-swiftplay-pins button:disabled {cursor:default;opacity:.5}
+#sexo2-swiftplay-pins .rsp-launch {pointer-events:auto;font-weight:bold;color:#cdbe91}
+#sexo2-swiftplay-pins .rsp-panel {pointer-events:auto;background:linear-gradient(145deg,#081e29,#010a10);border:1px solid #c89b3c;border-radius:8px;padding:16px;margin-bottom:14px;box-shadow:0 8px 30px #000a;max-height:calc(100vh - 280px);overflow:auto}
+#sexo2-swiftplay-pins header {display:flex;align-items:center;justify-content:space-between;gap:8px}
+#sexo2-swiftplay-pins h3 {font: bold 16px Georgia,serif;margin:0;color:#f0e6d2}
+#sexo2-swiftplay-pins .rsp-close {border:0;padding:3px 5px;font-size:20px}
+#sexo2-swiftplay-pins .rsp-muted {color:#a09b8c;font-size:12px;margin:8px 0 12px}
+#sexo2-swiftplay-pins .rsp-row {display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1px solid #463e2c}
+#sexo2-swiftplay-pins .rsp-portrait {width:60px;height:60px;border:1px solid #a88948;object-fit:cover;background:#0c2834;flex-shrink:0}
+#sexo2-swiftplay-pins .rsp-info {flex:1;min-width:0;overflow-wrap:anywhere}
+#sexo2-swiftplay-pins .rsp-name {font:bold 16px Georgia,serif;margin-bottom:5px}
+#sexo2-swiftplay-pins .rsp-skin {color:#cdbe91;font-size:12px}
+#sexo2-swiftplay-pins .rsp-status {font-size:11px;color:#0ac8b9;margin-top:6px}
+#sexo2-swiftplay-pins .rsp-error {color:#f4a58a}
+#sexo2-swiftplay-pins .rsp-actions {display:flex;flex-direction:column;gap:6px}
+#sexo2-swiftplay-pins .rsp-remove {border:0;color:#a09b8c;padding:2px 0;font-size:11px}
+#sexo2-swiftplay-pins .rsp-save {width:100%;background:linear-gradient(#095264,#06252f);font-weight:bold;margin-top:10px}
+#sexo2-swiftplay-pins .rsp-message {font-size:12px;line-height:1.4;color:#cdbe91;margin-top:10px}
+#sexo2-swiftplay-pins .rsp-search {width:100%;background:#010a10;color:#f0e6d2;border:1px solid #66542d;padding:9px;margin:10px 0}
+#sexo2-swiftplay-pins .rsp-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:240px;overflow:auto}
+#sexo2-swiftplay-pins .rsp-tile {text-align:left;padding:6px;min-height:68px;font-size:12px}
+#sexo2-swiftplay-pins .rsp-tile img {width:100%;height:70px;object-fit:cover;margin-bottom:5px}
+#sexo2-swiftplay-pins .rsp-tile[aria-pressed=true] {border:2px solid #0ac8b9}
 `;
   document.head.appendChild(style);
   document.body.appendChild(root);
-  window.addEventListener('rose-hub-friends',e=>{if(root.closest('#rose-hub')){hubActive=e.detail.tab==='Swiftplay';if(!hubActive)root.hidden=true;}});
-  window.addEventListener('rose-hub-swiftplay',e=>{hubActive=true;e.detail.target.appendChild(root);open=true;render();});
+  window.addEventListener('sexo2-hub-friends',e=>{if(root.closest('#sexo2-hub')){hubActive=e.detail.tab==='Swiftplay';if(!hubActive)root.hidden=true;}});
+  window.addEventListener('sexo2-hub-swiftplay',e=>{hubActive=true;e.detail.target.appendChild(root);open=true;render();});
   let announced = null;
   function announce() {
     const active = state?.active === true;
     if (active === announced) return;
     announced = active;
-    window.dispatchEvent(new CustomEvent('rose-swiftplay-state', {detail: {active}}));
+    window.dispatchEvent(new CustomEvent('sexo2-swiftplay-state', {detail: {active}}));
   }
   const el = (tag, cls, text) => {
     const node = document.createElement(tag);
@@ -241,7 +241,7 @@
   function tick() {
     if (!root.isConnected && document.body) document.body.appendChild(root);
     if (!bridge) {
-      bridge=window.__roseBridge;
+      bridge=window.__sexo2Bridge;
       if (!bridge) return;
       bridge.subscribe("swiftplay-pins-state",receive);
       bridge.subscribe("swiftplay-pins-error",receive);

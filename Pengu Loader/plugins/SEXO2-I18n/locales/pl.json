@@ -171,7 +171,7 @@
   "Connected to {name}": "Połączono z: {name}",
   "Couldn't read your summoner ID - is the League client running?": "Nie udało się odczytać twojego ID przywoływacza. Czy klient League jest uruchomiony?",
   "Party mode is not enabled": "Tryb drużyny nie jest włączony",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "To nie jest prawidłowy kod drużyny. Skopiuj cały kod (zaczyna się od ROSE:).",
+  "That's not a valid party token. Copy the whole token.": "To nie jest prawidłowy kod drużyny. Skopiuj cały kod.",
   "That's your own token - send it to your friends instead": "To twój własny kod – wyślij go znajomym",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "Jesteś połączony ze zbyt wieloma drużynami. Wyłącz i ponownie włącz tryb drużyny, a potem spróbuj jeszcze raz.",
   "This friend removed you from their party - they need to add your token back": "Ten znajomy usunął cię ze swojej drużyny – musi ponownie dodać twój kod",

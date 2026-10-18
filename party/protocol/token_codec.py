@@ -17,8 +17,12 @@ from utils.core.logging import get_logger
 
 log = get_logger()
 
-# Token prefix for identification
+# Token prefix for identification. It stays the one versions already distributed
+# expect: they strip only this prefix, so a code written with another one would be
+# refused by a friend on an older version. Reading accepts the SEXO2 prefix too, ready
+# for the day every friend is on a version that does.
 TOKEN_PREFIX = "ROSE:"
+ACCEPTED_PREFIXES = (TOKEN_PREFIX, "SEXO2:")
 # Token version (v2 = WebSocket relay, no IP/port needed)
 TOKEN_VERSION = 2
 # Rose 1.3.1 and older reject tokens older than this, so tokens are
@@ -81,7 +85,7 @@ class PartyToken:
         Supports both v1 (legacy P2P with IP/port) and v2 (relay-only) tokens.
 
         Args:
-            token_str: Token string (with or without ROSE: prefix)
+            token_str: Token string (with or without a ROSE: or SEXO2: prefix)
 
         Returns:
             PartyToken instance
@@ -90,8 +94,10 @@ class PartyToken:
             ValueError: If token is invalid
         """
         try:
-            if token_str.startswith(TOKEN_PREFIX):
-                token_str = token_str[len(TOKEN_PREFIX) :]
+            for prefix in ACCEPTED_PREFIXES:
+                if token_str.startswith(prefix):
+                    token_str = token_str[len(prefix) :]
+                    break
 
             padding = 4 - (len(token_str) % 4)
             if padding != 4:

@@ -171,7 +171,7 @@
   "Connected to {name}": "เชื่อมต่อกับ {name} แล้ว",
   "Couldn't read your summoner ID - is the League client running?": "อ่าน ID ซัมมอนเนอร์ของคุณไม่ได้ ไคลเอนต์ League เปิดอยู่หรือไม่?",
   "Party mode is not enabled": "ยังไม่ได้เปิดโหมดปาร์ตี้",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "นี่ไม่ใช่โทเค็นปาร์ตี้ที่ถูกต้อง โปรดคัดลอกโทเค็นทั้งหมด (ขึ้นต้นด้วย ROSE:)",
+  "That's not a valid party token. Copy the whole token.": "นี่ไม่ใช่โทเค็นปาร์ตี้ที่ถูกต้อง โปรดคัดลอกโทเค็นทั้งหมด",
   "That's your own token - send it to your friends instead": "นี่คือโทเค็นของคุณเอง ส่งให้เพื่อนของคุณแทน",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "คุณเชื่อมกับปาร์ตี้มากเกินไป ปิดแล้วเปิดโหมดปาร์ตี้ใหม่ จากนั้นลองอีกครั้ง",
   "This friend removed you from their party - they need to add your token back": "เพื่อนคนนี้ลบคุณออกจากปาร์ตี้ของเขา เขาต้องเพิ่มโทเค็นของคุณอีกครั้ง",

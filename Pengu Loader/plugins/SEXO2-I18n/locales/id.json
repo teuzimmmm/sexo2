@@ -171,7 +171,7 @@
   "Connected to {name}": "Terhubung ke {name}",
   "Couldn't read your summoner ID - is the League client running?": "Tidak bisa membaca ID summoner-mu. Apakah klien League sedang berjalan?",
   "Party mode is not enabled": "Mode party belum diaktifkan",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "Itu bukan token party yang valid. Salin seluruh token (diawali ROSE:).",
+  "That's not a valid party token. Copy the whole token.": "Itu bukan token party yang valid. Salin seluruh token.",
   "That's your own token - send it to your friends instead": "Itu token milikmu sendiri, kirimkan ke temanmu saja",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "Kamu terhubung ke terlalu banyak party. Nonaktifkan lalu aktifkan lagi mode party, kemudian coba lagi.",
   "This friend removed you from their party - they need to add your token back": "Teman ini mengeluarkanmu dari party-nya, dia perlu menambahkan token-mu lagi",

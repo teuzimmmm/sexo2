@@ -171,7 +171,7 @@
   "Connected to {name}": "{name} 님과 연결됨",
   "Couldn't read your summoner ID - is the League client running?": "소환사 ID를 읽지 못했습니다. League 클라이언트가 실행 중인가요?",
   "Party mode is not enabled": "파티 모드가 켜져 있지 않습니다",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "올바른 파티 토큰이 아닙니다. 토큰 전체를 복사하세요 (ROSE:로 시작합니다).",
+  "That's not a valid party token. Copy the whole token.": "올바른 파티 토큰이 아닙니다. 토큰 전체를 복사하세요.",
   "That's your own token - send it to your friends instead": "내 토큰입니다. 대신 친구들에게 보내세요",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "너무 많은 파티에 연결되어 있습니다. 파티 모드를 껐다가 다시 켠 뒤 다시 시도하세요.",
   "This friend removed you from their party - they need to add your token back": "이 친구가 파티에서 나를 제거했습니다. 친구가 내 토큰을 다시 추가해야 합니다",

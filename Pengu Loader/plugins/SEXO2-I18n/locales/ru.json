@@ -171,7 +171,7 @@
   "Connected to {name}": "Подключено: {name}",
   "Couldn't read your summoner ID - is the League client running?": "Не удалось получить ваш ID призывателя. Клиент League запущен?",
   "Party mode is not enabled": "Режим группы не включён",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "Это недействительный код группы. Скопируйте код целиком (он начинается с ROSE:).",
+  "That's not a valid party token. Copy the whole token.": "Это недействительный код группы. Скопируйте код целиком.",
   "That's your own token - send it to your friends instead": "Это ваш собственный код — отправьте его друзьям",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "Вы подключены к слишком многим группам. Отключите и снова включите режим группы, затем попробуйте ещё раз.",
   "This friend removed you from their party - they need to add your token back": "Этот друг удалил вас из своей группы — ему нужно снова добавить ваш код",

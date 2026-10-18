@@ -171,7 +171,7 @@
   "Connected to {name}": "{name}と接続しました",
   "Couldn't read your summoner ID - is the League client running?": "サモナーIDを読み取れませんでした。Leagueクライアントは起動していますか?",
   "Party mode is not enabled": "パーティーモードが有効になっていません",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "有効なパーティートークンではありません。トークン全体をコピーしてください(ROSE:で始まります)。",
+  "That's not a valid party token. Copy the whole token.": "有効なパーティートークンではありません。トークン全体をコピーしてください。",
   "That's your own token - send it to your friends instead": "これはあなた自身のトークンです。フレンドに送ってください",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "接続しているパーティーが多すぎます。パーティーモードを無効にしてから再度有効にし、もう一度お試しください。",
   "This friend removed you from their party - they need to add your token back": "このフレンドはあなたをパーティーから削除しました。あなたのトークンをもう一度追加してもらう必要があります",

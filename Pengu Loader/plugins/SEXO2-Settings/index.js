@@ -43,16 +43,16 @@ function build(){
  const help=el('p','Deixe em branco para usar a detecção automática.');help.className='s2-help';form.append(help);
  const language=el('label');language.className='s2-setting';language.append(el('span','Idioma dos menus'));
  const select=el('select');select.setAttribute('aria-label','Idioma dos menus');
- const languages={auto:'Automático (cliente)',...(window.RoseI18n?.languages||{pt_BR:'Português',en:'English'})};
- for(const [value,name] of Object.entries(languages)){const option=el('option',name);option.value=value;select.append(option);}select.value=window.RoseI18n?.setting||'auto';
+ const languages={auto:'Automático (cliente)',...(window.Sexo2I18n?.languages||{pt_BR:'Português',en:'English'})};
+ for(const [value,name] of Object.entries(languages)){const option=el('option',name);option.value=value;select.append(option);}select.value=window.Sexo2I18n?.setting||'auto';
  select.onchange=()=>bridge?.send({type:'language-save',language:select.value});language.append(select);form.append(language);
  status=el('p','Conectando ao aplicativo…');status.setAttribute('role','status');form.append(status);
  const actions=el('div');actions.className='s2-actions';const save=button('Salvar alterações',saveSettings);save.id='sexo2-settings-save';actions.append(save,button('Descartar alterações',()=>{dirty=false;if(settings)populate(settings);message('Alterações descartadas.');}));form.append(actions);
  form.addEventListener('submit',e=>{e.preventDefault();saveSettings();});
  root.append(el('h3','Mods personalizados'));const tools=el('div');tools.className='s2-actions';const libraryHost=el('div');
  let configHidden=[];
- function openLibrary(){root.dataset.libraryOpen='true';const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;configHidden=[...root.children].filter(node=>node!==libraryHost&&node.tagName!=='STYLE').map(node=>[node,node.hidden]);for(const[node]of configHidden)node.hidden=true;libraryHost.hidden=false;window.dispatchEvent(new CustomEvent('sexo2-mod-library-open',{detail:{target:libraryHost,category:'all',add:false}}));}
- window.addEventListener('sexo2-mod-library-close',()=>{for(const[node,hidden]of configHidden)node.hidden=hidden;configHidden=[];delete root.dataset.libraryOpen;const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=false;libraryHost.hidden=true;});
+ function openLibrary(){root.dataset.libraryOpen='true';const subnav=root.closest('#sexo2-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;configHidden=[...root.children].filter(node=>node!==libraryHost&&node.tagName!=='STYLE').map(node=>[node,node.hidden]);for(const[node]of configHidden)node.hidden=true;libraryHost.hidden=false;window.dispatchEvent(new CustomEvent('sexo2-mod-library-open',{detail:{target:libraryHost,category:'all',add:false}}));}
+ window.addEventListener('sexo2-mod-library-close',()=>{for(const[node,hidden]of configHidden)node.hidden=hidden;configHidden=[];delete root.dataset.libraryOpen;const subnav=root.closest('#sexo2-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=false;libraryHost.hidden=true;});
  tools.append(button('Diagnóstico detalhado',()=>window.dispatchEvent(new CustomEvent('sexo2-settings-tool',{detail:{action:'diagnostics',category:'skins'}}))));root.append(tools,libraryHost);
  root.append(el('h3','Atualizações'));updateStatus=el('p','Verificando atualizações…');updateStatus.setAttribute('role','status');root.append(updateStatus);
  const updates=el('div');updates.className='s2-actions';updates.append(button('Verificar atualização',()=>checkUpdate()));
@@ -74,7 +74,7 @@ function checkUpdate(){if(bridge?.ready){updateStatus.textContent='Verificando a
 function updateReceived(data){
  updateStatus.textContent=data.message||'';updateButton.disabled=!data.available;
  if(data.github&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(data.github)){github.href=data.github;github.removeAttribute('aria-disabled');}
- for(const item of document.querySelectorAll('.menu_item_Golden.Rose')){item.toggleAttribute('data-sexo2-update',data.available===true);item.title=data.available?'SEXO2: atualização disponível':'SEXO2';}
+ for(const item of document.querySelectorAll('.menu_item_SEXO2')){item.toggleAttribute('data-sexo2-update',data.available===true);item.title=data.available?'SEXO2: atualização disponível':'SEXO2';}
 }
 function receive(data){
  if(!pending||data.requestId!==pending.id)return;const saving=pending.saving;pending=null;lock(false);
@@ -82,8 +82,8 @@ function receive(data){
  if(saving){dirty=false;populate(data.settings);message('Configurações salvas.');}
  else{populate(data);if(!dirty)message('');}
 }
-window.addEventListener('rose-hub-settings',e=>{if(!root)build();root.hidden=false;e.detail.target.append(root);if(root.dataset.libraryOpen==='true'){const subnav=root.closest('#rose-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;}request();});
-window.addEventListener('rose-hub-settings-close',()=>{if(root)root.hidden=true;});
-const timer=setInterval(()=>{if(!root)build();if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('settings-data',receive);bridge.subscribe('settings-saved',receive);bridge.subscribe('sexo2-update-state',updateReceived);bridge.onReady(()=>{pending=null;lock(false);request();checkUpdate();});clearInterval(timer);}},100);
+window.addEventListener('sexo2-hub-settings',e=>{if(!root)build();root.hidden=false;e.detail.target.append(root);if(root.dataset.libraryOpen==='true'){const subnav=root.closest('#sexo2-hub-content')?.querySelector('.hub-subnav');if(subnav)subnav.hidden=true;}request();});
+window.addEventListener('sexo2-hub-settings-close',()=>{if(root)root.hidden=true;});
+const timer=setInterval(()=>{if(!root)build();if(!bridge&&window.__sexo2Bridge){bridge=window.__sexo2Bridge;bridge.subscribe('settings-data',receive);bridge.subscribe('settings-saved',receive);bridge.subscribe('sexo2-update-state',updateReceived);bridge.onReady(()=>{pending=null;lock(false);request();checkUpdate();});clearInterval(timer);}},100);
 setInterval(()=>{if(pending&&Date.now()-pending.at>15000){pending=null;lock(false);message('Não houve confirmação. Confira a conexão; suas alterações foram mantidas.',true);}},1000);
 })();

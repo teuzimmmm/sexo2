@@ -171,7 +171,7 @@
   "Connected to {name}": "Conectat la {name}",
   "Couldn't read your summoner ID - is the League client running?": "ID-ul tău de invocator nu a putut fi citit. Clientul League este deschis?",
   "Party mode is not enabled": "Modul grup nu este activat",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "Acesta nu este un cod de grup valid. Copiază tot codul (începe cu ROSE:).",
+  "That's not a valid party token. Copy the whole token.": "Acesta nu este un cod de grup valid. Copiază tot codul.",
   "That's your own token - send it to your friends instead": "Acesta este propriul tău cod – trimite-l prietenilor tăi",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "Ești conectat la prea multe grupuri. Dezactivează și reactivează modul grup, apoi încearcă din nou.",
   "This friend removed you from their party - they need to add your token back": "Acest prieten te-a eliminat din grupul lui – trebuie să îți adauge din nou codul",

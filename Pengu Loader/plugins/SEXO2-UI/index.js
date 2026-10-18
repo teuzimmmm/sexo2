@@ -24,7 +24,7 @@
     for(const logo of shadowRoot.querySelectorAll('img')){
       const source=logo.getAttribute('src')||'',alt=logo.getAttribute('alt')||'';
       if(/rose|logo/i.test(source+' '+alt)&&!source.includes('shields.io')){
-        logo.src=`http://127.0.0.1:${window.__roseBridge?.port||50000}/asset/galo.png`;
+        logo.src=`http://127.0.0.1:${window.__sexo2Bridge?.port||50000}/asset/galo.png`;
         logo.alt='SEXO2';logo.style.objectFit='contain';
       }
     }
@@ -78,7 +78,7 @@
       const interval = 50;
       let elapsed = 0;
       const check = () => {
-        if (window.__roseBridge) return resolve(window.__roseBridge);
+        if (window.__sexo2Bridge) return resolve(window.__sexo2Bridge);
         elapsed += interval;
         if (elapsed >= timeout) return reject(new Error("Bridge not available"));
         setTimeout(check, interval);
@@ -92,10 +92,10 @@
 
   function handleSkipBaseSkin(payload) {
     lastBaseSkinSkipRequest = Date.now();
-    log.info("received base skin skip request from rose");
+    log.info("received base skin skip request from the app");
   }
 
-  // TODO Preferably move bridge communication logic and websocket interception to a separate Pengu plugin like ROSE-CORE,
+  // TODO Preferably move bridge communication logic and websocket interception to a separate Pengu plugin like SEXO2-CORE,
   // which provides a simple interface for adding custom observers for bridge and socket instead of duplicating this kind
   // of code over all the plugins; this will do for now though
   function interceptChampSelectWebsocket() {
@@ -129,7 +129,7 @@
                     // skip delegation
                     return;
                   } else {
-                    log.info("not skipping base skin: no request received from rose (in time)");
+                    log.info("not skipping base skin: no request received from the app (in time)");
                   }
                 }
               }
@@ -148,23 +148,23 @@
   }
 
   const INLINE_RULES = `
-    lol-uikit-navigation-item.menu_item_Golden\\ Rose {
+    lol-uikit-navigation-item.menu_item_SEXO2 {
       position: relative;
     }
 
-    /* Prevent active state styling for Golden Rose */
-    lol-uikit-navigation-item.menu_item_Golden\\ Rose .section.active::before,
-    lol-uikit-navigation-item.menu_item_Golden\\ Rose .section.active::after,
-    lol-uikit-navigation-item.menu_item_Golden\\ Rose .section.active,
-    lol-uikit-navigation-item.menu_item_Golden\\ Rose .section.active .section-glow,
-    lol-uikit-navigation-item.menu_item_Golden\\ Rose .section.active .section-glow-container {
+    /* Prevent active state styling for SEXO2 */
+    lol-uikit-navigation-item.menu_item_SEXO2 .section.active::before,
+    lol-uikit-navigation-item.menu_item_SEXO2 .section.active::after,
+    lol-uikit-navigation-item.menu_item_SEXO2 .section.active,
+    lol-uikit-navigation-item.menu_item_SEXO2 .section.active .section-glow,
+    lol-uikit-navigation-item.menu_item_SEXO2 .section.active .section-glow-container {
       display: none !important;
       background: none !important;
       background-image: none !important;
     }
 
     /* Prevent hover state from showing navigation pointer */
-    lol-uikit-navigation-item.menu_item_Golden\\ Rose .section:hover::after {
+    lol-uikit-navigation-item.menu_item_SEXO2 .section:hover::after {
       opacity: 0 !important;
       background: none !important;
       background-image: none !important;
@@ -301,7 +301,7 @@
       display: none !important;
       pointer-events: none !important;
     }
-    /* Rose owns chroma selection; keep the native client flyout closed. */
+    /* SEXO2 owns chroma selection; keep the native client flyout closed. */
     .shared-skin-chroma-modal {
       display: none !important;
       pointer-events: none !important;
@@ -509,7 +509,7 @@
   // The splash the client itself set, even after we replaced it
   function clientSplash(img) {
     const src = img.getAttribute("src");
-    return img.dataset.roseBanner && src === img.dataset.roseBanner ? img.dataset.roseOriginal : src;
+    return img.dataset.sexo2Banner && src === img.dataset.sexo2Banner ? img.dataset.sexo2Original : src;
   }
 
   function syncSwiftplayBanners() {
@@ -529,15 +529,15 @@
 
     document.querySelectorAll('img[src*="_splash_centered_"]').forEach((img) => {
       const src = img.getAttribute("src");
-      if (src !== img.dataset.roseBanner) {
-        img.dataset.roseOriginal = src; // the client set a new splash
+      if (src !== img.dataset.sexo2Banner) {
+        img.dataset.sexo2Original = src; // the client set a new splash
       }
-      const picked = swiftplayBanners.get(img.dataset.roseOriginal);
+      const picked = swiftplayBanners.get(img.dataset.sexo2Original);
       if (picked && src !== picked) {
-        img.dataset.roseBanner = picked;
+        img.dataset.sexo2Banner = picked;
         img.setAttribute("src", picked);
-      } else if (!picked && img.dataset.roseBanner && src === img.dataset.roseBanner) {
-        img.setAttribute("src", img.dataset.roseOriginal);
+      } else if (!picked && img.dataset.sexo2Banner && src === img.dataset.sexo2Banner) {
+        img.setAttribute("src", img.dataset.sexo2Original);
       }
     });
   }
@@ -550,7 +550,7 @@
     document.querySelectorAll(".vng-age-rating-container").forEach((el) => el.remove());
   }
 
-  // Rift Classic shows the client's "Disabled" subtitle for unowned skins even after Rose unlocks them.
+  // Rift Classic shows the client's "Disabled" subtitle for unowned skins even after SEXO2 unlocks them.
   const CLASSIC_ENABLED_LABELS = {
     pt: "Habilitada",
     es: "Habilitada",
@@ -679,7 +679,7 @@
     }
   }
 
-  function attachGoldenRoseListeners(navItem) {
+  function attachNavItemListeners(navItem) {
     // Check if listeners already attached
     if (navItem.dataset.lppDiscordAttached === "true") {
       return;
@@ -689,20 +689,20 @@
     navItem.addEventListener(
       "click",
       (e) => {
-        if(window.__roseHub){e.preventDefault();e.stopImmediatePropagation();window.__roseHub.open(navItem);return;}
+        if(window.__sexo2Hub){e.preventDefault();e.stopImmediatePropagation();window.__sexo2Hub.open(navItem);return;}
         const lastActiveNavItem = document.querySelector(".main-nav-bar > * > lol-uikit-navigation-item[active]");
         if (lastActiveNavItem) {
-          lastActiveNavItem.setAttribute("roseLastActive", true);
+          lastActiveNavItem.setAttribute("sexo2LastActive", true);
         }
 
         // Dispatch event to open settings panel
-        const event = new CustomEvent("rose-open-settings", {
+        const event = new CustomEvent("sexo2-open-settings", {
           detail: { navItem: navItem },
           bubbles: true,
           cancelable: true,
         });
         window.dispatchEvent(event);
-        log.info("Dispatched rose-open-settings event from the SEXO2 nav button");
+        log.info("Dispatched sexo2-open-settings event from the SEXO2 nav button");
       },
       true
     ); // Use capture phase to intercept early
@@ -720,14 +720,14 @@
             e.preventDefault();
 
             // Dispatch event to open settings panel
-            const event = new CustomEvent("rose-open-settings", {
+            const event = new CustomEvent("sexo2-open-settings", {
               detail: { navItem: navItem },
               bubbles: true,
               cancelable: true,
             });
             window.dispatchEvent(event);
             log.info(
-              "Dispatched rose-open-settings event from the SEXO2 nav section"
+              "Dispatched sexo2-open-settings event from the SEXO2 nav section"
             );
 
             // Prevent active class
@@ -786,20 +786,20 @@
     navItem.dataset.lppDiscordAttached = "true";
   }
 
-  function injectGoldenRoseNavItem() {
+  function injectNavItem() {
     const rightNavMenu = document.querySelector(".right-nav-menu");
     if (!rightNavMenu) {
       return false;
     }
 
-    // Check if Golden Rose item already exists by checking for the golden_rose.png image
+    // Check if SEXO2 item already exists by checking for the hub_icon.png image
     const existingItem = rightNavMenu.querySelector(
-      'lol-uikit-navigation-item .menu-item-icon[style*="golden_rose.png"]'
+      'lol-uikit-navigation-item .menu-item-icon[style*="hub_icon.png"]'
     );
     if (existingItem) {
       const navItem = existingItem.closest("lol-uikit-navigation-item");
       if (navItem) {
-        attachGoldenRoseListeners(navItem);
+        attachNavItemListeners(navItem);
       }
       return true;
     }
@@ -808,7 +808,7 @@
     const navItem = document.createElement("lol-uikit-navigation-item");
     navItem.id = `ember${Date.now()}`;
     navItem.className =
-      "main-navigation-menu-item menu_item_Golden Rose ember-view";
+      "main-navigation-menu-item menu_item_SEXO2 ember-view";
 
     // Create icon wrapper structure
     const iconWrapper = document.createElement("div");
@@ -822,7 +822,7 @@
     icon.style.webkitMaskSize = "contain";
     icon.style.webkitMaskRepeat = "no-repeat";
     icon.style.webkitMaskPosition = "center";
-    icon.style.webkitMaskImage = `url(http://127.0.0.1:${window.__roseBridge ? window.__roseBridge.port : 50000}/asset/golden_rose.png)`;
+    icon.style.webkitMaskImage = `url(http://127.0.0.1:${window.__sexo2Bridge ? window.__sexo2Bridge.port : 50000}/asset/hub_icon.png)`;
 
     iconWrapper.appendChild(glow);
     iconWrapper.appendChild(icon);
@@ -836,13 +836,13 @@
       rightNavMenu.appendChild(navItem);
     }
 
-    // Add separator after the Golden Rose item
+    // Add separator after the SEXO2 item
     const separator = document.createElement("div");
     separator.className = "right-nav-vertical-rule";
     rightNavMenu.insertBefore(separator, navItem.nextSibling);
 
     // Attach Discord click listeners
-    attachGoldenRoseListeners(navItem);
+    attachNavItemListeners(navItem);
 
     log.info("SEXO2 navigation item injected");
     return true;
@@ -850,13 +850,13 @@
 
   function setupNavObserver() {
     // Try to inject immediately
-    if (injectGoldenRoseNavItem()) {
+    if (injectNavItem()) {
       return;
     }
 
     // If not found, observe for nav menu creation
     const observer = new MutationObserver(() => {
-      if (injectGoldenRoseNavItem()) {
+      if (injectNavItem()) {
         observer.disconnect();
       }
     });
@@ -868,7 +868,7 @@
 
     // Also check periodically as a safety net
     const intervalId = setInterval(() => {
-      if (injectGoldenRoseNavItem()) {
+      if (injectNavItem()) {
         clearInterval(intervalId);
         observer.disconnect();
       }

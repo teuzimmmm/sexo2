@@ -3,10 +3,10 @@
  * @author Rose Team
  * @description Language of SEXO2's menus: the one picked in Settings, else the League client's, else English
  */
-(function initRoseI18n() {
+(function initSexo2I18n() {
   const LOG_PREFIX = "[SEXO2-I18n]";
-  const CACHE_KEY = "rose_i18n";
-  const EVENT_CHANGED = "rose-i18n-changed";
+  const CACHE_KEY = "sexo2_i18n";
+  const EVENT_CHANGED = "sexo2-i18n-changed";
 
   // Texts are keyed by their English version, which is also the fallback
   let state = { language: "en", setting: "auto", direction: "ltr", languages: { en: "English" }, strings: {} };
@@ -23,7 +23,7 @@
   }
 
   // Templated texts ("Connected to {name}") as regexes, to translate finished
-  // English texts from Rose (error messages). Short ones ("Skin {id}") would
+  // English texts from SEXO2 (error messages). Short ones ("Skin {id}") would
   // match about anything, so they are left out.
   let templates = [];
 
@@ -79,7 +79,7 @@
     }
   }
 
-  // Last loaded texts, so menus built before Rose answers already speak the language
+  // Last loaded texts, so menus built before SEXO2 answers already speak the language
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
     if (cached) apply(cached, false);
@@ -88,7 +88,7 @@
   }
 
   async function load() {
-    const bridge = window.__roseBridge;
+    const bridge = window.__sexo2Bridge;
     if (!bridge || !bridge.port) return;
     try {
       const response = await fetch(`http://127.0.0.1:${bridge.port}/i18n`, { cache: "no-store" });
@@ -101,7 +101,7 @@
     }
   }
 
-  window.RoseI18n = Object.freeze({
+  window.Sexo2I18n = Object.freeze({
     t,
     tAny,
     get language() { return state.language; },
@@ -119,7 +119,7 @@
   // Load once the bridge is up, again whenever it reconnects or the language changes
   let attached = false;
   const attach = () => {
-    const bridge = window.__roseBridge;
+    const bridge = window.__sexo2Bridge;
     if (!bridge) {
       setTimeout(attach, 250);
       return;

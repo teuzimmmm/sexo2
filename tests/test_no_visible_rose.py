@@ -1,4 +1,4 @@
-"""No visible text names Rose (milestone M5).
+"""No visible text names Rose (milestones M5 and M5b).
 
 Scans what the user reads: the locale files, the string literals of the
 enabled plugins, the texts of the Python dialogs, hints and banners, and the
@@ -27,8 +27,6 @@ ALLOWED = {
     "%LOCALAPPDATA%\\Rose": "real data folder, kept until the M13 migration",
     "LocalAppData\\Rose": "real data folder, kept until the M13 migration",
     "{localappdata}\\Rose": "real data folder, kept until the M13 migration",
-    "menu_item_Golden Rose": "class of the nav item, selected by ROSE-UI, ROSE-Hub, ROSE-SettingsPanel and SEXO2-Settings",
-    "menu_item_Golden\\\\ Rose": "same nav item class, escaped in CSS",
     "SEXO2 utiliza componentes de Rose": "credit to the base project (LICENSE, MIT)",
     "Código e licença da base Rose": "credit to the base project (LICENSE, MIT)",
     "github.com/Alban1911/Rose": "credit link, and the selector that hides upstream links in the Pengu welcome screen",
@@ -108,6 +106,15 @@ def js_texts(path):
             yield number, match.group(2)
 
 
+# Identifiers the plugins and their tests shared under the old name (events, globals, CSS ids and
+# classes, storage keys, the nav item class). They moved to SEXO2 together in M5b.
+LEGACY_IDENTIFIER = re.compile(
+    r"__rose|Rose[A-Z]|(?<![A-Za-z0-9_])rose[-_]|(?<![A-Za-z])rose[A-Z]|menu_item_Golden|golden_rose"
+)
+# Lines that are credits or the filters that hide the base project's own links
+CREDIT_LINE = re.compile(r"@link|@author|github\.com|roseskins|roseapp")
+
+
 class NoVisibleRoseTests(unittest.TestCase):
     def test_locales(self):
         offenders = []
@@ -145,10 +152,27 @@ class NoVisibleRoseTests(unittest.TestCase):
                     offenders.append(f"installer-sexo2.iss:{number}: {literal[:80]}")
         self.assertEqual(offenders, [])
 
+    def test_plugins_and_browser_tests_use_the_sexo2_identifiers(self):
+        offenders = []
+        paths = [p for p in PLUGINS.glob("*/index.js") if p.parent.name not in SKIPPED_PLUGINS]
+        paths += sorted((ROOT / "tests").glob("*.cjs"))
+        for path in paths:
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if LEGACY_IDENTIFIER.search(line) and not CREDIT_LINE.search(line):
+                    offenders.append(f"{path.name}:{number}: {line.strip()[:80]}")
+        self.assertEqual(offenders, [])
+
+    def test_plugin_folders_carry_the_new_name(self):
+        legacy = [p.name for p in PLUGINS.iterdir() if p.is_dir() and p.name.upper().startswith("ROSE-")]
+        self.assertEqual(legacy, [])
+
     def test_the_scanner_still_sees_the_brand(self):
         self.assertTrue(offending("Restart Rose."))
         self.assertTrue(offending("Reinicie o ROSE"))
-        self.assertFalse(offending("window.__roseBridge"))
+        self.assertFalse(offending("window.__sexo2Bridge"))
+        self.assertTrue(LEGACY_IDENTIFIER.search("window.__roseBridge"))
+        self.assertTrue(LEGACY_IDENTIFIER.search("#rose-hub"))
+        self.assertIsNone(LEGACY_IDENTIFIER.search("#sexo2-hub"))
         self.assertFalse(offending("sexo2_runoverlay_*.log"))
         self.assertFalse(offending("It starts with ROSE:"))
 

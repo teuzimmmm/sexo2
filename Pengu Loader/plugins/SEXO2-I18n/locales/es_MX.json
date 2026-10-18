@@ -171,7 +171,7 @@
   "Connected to {name}": "Conectado con {name}",
   "Couldn't read your summoner ID - is the League client running?": "No se pudo leer tu ID de invocador. ¿Está abierto el cliente de League?",
   "Party mode is not enabled": "El modo grupo no está activado",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "Ese código de grupo no es válido. Copia el código completo (empieza con ROSE:).",
+  "That's not a valid party token. Copy the whole token.": "Ese código de grupo no es válido. Copia el código completo.",
   "That's your own token - send it to your friends instead": "Ese es tu propio código: envíaselo a tus amigos",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "Estás vinculado a demasiados grupos. Desactiva y vuelve a activar el modo grupo e inténtalo de nuevo.",
   "This friend removed you from their party - they need to add your token back": "Este amigo te quitó de su grupo: tiene que volver a agregar tu código",

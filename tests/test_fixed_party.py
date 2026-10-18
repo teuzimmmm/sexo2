@@ -186,7 +186,7 @@ class FixedPartyTests(unittest.IsolatedAsyncioTestCase):
 class FixedPartyPackagingTests(unittest.TestCase):
     def test_endpoint_and_modules_are_packaged(self):
         self.assertTrue(RELAY_URL.startswith("wss://"))
-        spec = (Path(__file__).resolve().parents[1] / "Rose.spec").read_text(encoding="utf-8")
+        spec = (Path(__file__).resolve().parents[1] / "SEXO2.spec").read_text(encoding="utf-8")
         for name in ["party.network.relay_config", "pengu.processing.swiftplay_pins"]:
             self.assertIn(name, spec)
 
@@ -194,7 +194,7 @@ class FixedPartyPackagingTests(unittest.TestCase):
         plugin = (Path(__file__).resolve().parents[1] / "Pengu Loader/plugins/SEXO2-PartyMode/index.js").read_text(
             encoding="utf-8"
         )
-        for name in ["SEXO2", "scheduleAutomaticEnable", "party-reconnect", "rose-party-champ-status"]:
+        for name in ["SEXO2", "scheduleAutomaticEnable", "party-reconnect", "sexo2-party-champ-status"]:
             self.assertIn(name, plugin)
         self.assertNotIn("party-add-peer", plugin)
 

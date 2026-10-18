@@ -26,7 +26,9 @@ def parse_server_link(link):
         raise ValueError("Use o endereço completo da sala, copiado pelo anfitrião.")
     if parts.port not in (None, 443):
         raise ValueError("O endereço da sala deve usar a conexão segura padrão.")
-    token = parse_qs(parts.fragment).get("rose", [""])[0]
+    # "rose" is the fragment links already shared carry, and the one written; "sexo2" is also read
+    fragment = parse_qs(parts.fragment)
+    token = (fragment.get("rose") or fragment.get("sexo2") or [""])[0]
     if parts.fragment and not TOKEN_PATTERN.fullmatch(token):
         raise ValueError("A chave da sala está incompleta. Copie o endereço novamente.")
     endpoint = urlunsplit(("wss", parts.netloc.lower(), "", "", ""))

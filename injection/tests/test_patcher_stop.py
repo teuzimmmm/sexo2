@@ -13,7 +13,7 @@ from injection.overlay.process_manager import ProcessManager
 from injection.tools.patcher import LTK_PATCHER_HOST
 
 
-class RoseStoppedPatcherTests(unittest.TestCase):
+class StoppedPatcherTests(unittest.TestCase):
     """Rose's cleanup kills the patcher with exit code 1 (Popen) or 15 (psutil)"""
 
     def setUp(self):

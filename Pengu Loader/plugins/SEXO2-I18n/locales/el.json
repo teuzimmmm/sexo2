@@ -171,7 +171,7 @@
   "Connected to {name}": "Συνδέθηκε με {name}",
   "Couldn't read your summoner ID - is the League client running?": "Δεν ήταν δυνατή η ανάγνωση του ID επικαλεστή σας. Είναι ανοιχτός ο client του League;",
   "Party mode is not enabled": "Η λειτουργία ομάδας δεν είναι ενεργοποιημένη",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "Αυτός δεν είναι έγκυρος κωδικός ομάδας. Αντιγράψτε ολόκληρο τον κωδικό (ξεκινά με ROSE:).",
+  "That's not a valid party token. Copy the whole token.": "Αυτός δεν είναι έγκυρος κωδικός ομάδας. Αντιγράψτε ολόκληρο τον κωδικό.",
   "That's your own token - send it to your friends instead": "Αυτός είναι ο δικός σας κωδικός. Στείλτε τον στους φίλους σας",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "Είστε συνδεδεμένοι σε πάρα πολλές ομάδες. Απενεργοποιήστε και ενεργοποιήστε ξανά τη λειτουργία ομάδας και δοκιμάστε ξανά.",
   "This friend removed you from their party - they need to add your token back": "Αυτός ο φίλος σάς αφαίρεσε από την ομάδα του. Πρέπει να προσθέσει ξανά τον κωδικό σας",

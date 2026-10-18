@@ -14,25 +14,25 @@
   if(typeof window==='undefined'&&typeof module!=='undefined'&&module.exports){module.exports={memberStatus,profileSelections};return;}
   function start(){
     if(!document.body||!document.head){setTimeout(start,100);return;}
-    if(window.__roseAmigosLoaded)return;window.__roseAmigosLoaded=true;
+    if(window.__sexo2AmigosLoaded)return;window.__sexo2AmigosLoaded=true;
     const style=document.createElement('style');style.textContent=`
-#rose-amigos-launch{position:fixed;left:2.5%;bottom:65px;z-index:10002;padding:9px 14px;background:#071d25;color:#f0e6d2;border:1px solid #c89b3c;border-radius:5px;font:13px Arial;cursor:pointer}
-#rose-amigos-backdrop{position:fixed;inset:0;z-index:10009;background:#0008}#rose-amigos-backdrop[hidden]{display:none!important}
-#rose-amigos-panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10010;width:min(840px,88vw);max-height:82vh;overflow:auto;background:#07151d;color:#f0e6d2;border:1px solid #c89b3c;border-radius:10px;padding:20px;box-shadow:0 15px 50px #000a;font:13px Arial,sans-serif}
-#rose-amigos-panel[hidden],#rose-amigos-launch[hidden]{display:none!important}#rose-amigos-panel *{box-sizing:border-box}
-#rose-amigos-panel h2{font:21px Georgia;margin:0}#rose-amigos-panel h3{font:16px Georgia;margin:14px 0 8px}#rose-amigos-panel button,#rose-amigos-panel input,#rose-amigos-panel select{font:inherit;border:1px solid #725f32;border-radius:4px;color:#f0e6d2;background:#10252e;padding:8px;margin:3px}
-#rose-amigos-panel button{cursor:pointer}#rose-amigos-panel button:hover{border-color:#d8b764}#rose-amigos-panel button:disabled{opacity:.45;cursor:default}#rose-amigos-panel input[type=checkbox]{width:16px;height:16px;vertical-align:middle}
-#rose-amigos-panel .fav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;max-height:340px;overflow:auto}#rose-amigos-panel .fav-champ{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;margin:0;padding:6px}#rose-amigos-panel .fav-portrait{width:48px;height:48px;object-fit:cover;background:#0c2834}#rose-amigos-panel .fav-hits{max-height:160px;overflow:auto}#rose-amigos-panel .fav-hit{display:block;width:100%;text-align:left}#rose-amigos-panel .fav-skins{max-height:380px;overflow:auto}#rose-amigos-panel .fav-skin{border-bottom:1px solid #25343d;padding:4px 0}#rose-amigos-panel .fav-skin>.ra-row{cursor:pointer}#rose-amigos-panel .fav-open{background:#10252e}#rose-amigos-panel .fav-tile{width:72px;height:42px;object-fit:cover;background:#0c2834}#rose-amigos-panel .fav-chroma{padding:4px 0 4px 24px}#rose-amigos-panel .fav-dot{width:22px;height:22px;object-fit:cover;border-radius:50%}#rose-amigos-panel button.fav-on,#rose-amigos-panel button[aria-pressed=true]{border-color:#c8aa6e;color:#c8aa6e}
-#rose-amigos-panel .ra-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}#rose-amigos-panel .ra-between{justify-content:space-between}#rose-amigos-panel .ra-muted{color:#a8aaa2;font-size:12px;line-height:1.5}#rose-amigos-panel .ra-card{padding:12px;margin:8px 0;border:1px solid #36474b;border-radius:6px}#rose-amigos-panel .ra-ok{color:#7bd5a7}#rose-amigos-panel .ra-error{color:#f3a090}#rose-amigos-panel .ra-tabs{margin:14px 0;border-bottom:1px solid #534a30;padding-bottom:10px}#rose-amigos-panel .ra-active{border-color:#c89b3c;background:#29413d}#rose-amigos-panel .ra-notice{white-space:pre-wrap;padding:9px;border-left:3px solid #c89b3c;color:#e4d3a2}#rose-amigos-panel .ra-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}#rose-amigos-panel .ra-skins{max-height:190px;overflow:auto}#rose-amigos-panel footer{margin-top:16px;border-top:1px solid #4c4430;padding-top:10px}#rose-amigos-panel select{max-width:100%}
+#sexo2-amigos-launch{position:fixed;left:2.5%;bottom:65px;z-index:10002;padding:9px 14px;background:#071d25;color:#f0e6d2;border:1px solid #c89b3c;border-radius:5px;font:13px Arial;cursor:pointer}
+#sexo2-amigos-backdrop{position:fixed;inset:0;z-index:10009;background:#0008}#sexo2-amigos-backdrop[hidden]{display:none!important}
+#sexo2-amigos-panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10010;width:min(840px,88vw);max-height:82vh;overflow:auto;background:#07151d;color:#f0e6d2;border:1px solid #c89b3c;border-radius:10px;padding:20px;box-shadow:0 15px 50px #000a;font:13px Arial,sans-serif}
+#sexo2-amigos-panel[hidden],#sexo2-amigos-launch[hidden]{display:none!important}#sexo2-amigos-panel *{box-sizing:border-box}
+#sexo2-amigos-panel h2{font:21px Georgia;margin:0}#sexo2-amigos-panel h3{font:16px Georgia;margin:14px 0 8px}#sexo2-amigos-panel button,#sexo2-amigos-panel input,#sexo2-amigos-panel select{font:inherit;border:1px solid #725f32;border-radius:4px;color:#f0e6d2;background:#10252e;padding:8px;margin:3px}
+#sexo2-amigos-panel button{cursor:pointer}#sexo2-amigos-panel button:hover{border-color:#d8b764}#sexo2-amigos-panel button:disabled{opacity:.45;cursor:default}#sexo2-amigos-panel input[type=checkbox]{width:16px;height:16px;vertical-align:middle}
+#sexo2-amigos-panel .fav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;max-height:340px;overflow:auto}#sexo2-amigos-panel .fav-champ{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;margin:0;padding:6px}#sexo2-amigos-panel .fav-portrait{width:48px;height:48px;object-fit:cover;background:#0c2834}#sexo2-amigos-panel .fav-hits{max-height:160px;overflow:auto}#sexo2-amigos-panel .fav-hit{display:block;width:100%;text-align:left}#sexo2-amigos-panel .fav-skins{max-height:380px;overflow:auto}#sexo2-amigos-panel .fav-skin{border-bottom:1px solid #25343d;padding:4px 0}#sexo2-amigos-panel .fav-skin>.ra-row{cursor:pointer}#sexo2-amigos-panel .fav-open{background:#10252e}#sexo2-amigos-panel .fav-tile{width:72px;height:42px;object-fit:cover;background:#0c2834}#sexo2-amigos-panel .fav-chroma{padding:4px 0 4px 24px}#sexo2-amigos-panel .fav-dot{width:22px;height:22px;object-fit:cover;border-radius:50%}#sexo2-amigos-panel button.fav-on,#sexo2-amigos-panel button[aria-pressed=true]{border-color:#c8aa6e;color:#c8aa6e}
+#sexo2-amigos-panel .ra-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}#sexo2-amigos-panel .ra-between{justify-content:space-between}#sexo2-amigos-panel .ra-muted{color:#a8aaa2;font-size:12px;line-height:1.5}#sexo2-amigos-panel .ra-card{padding:12px;margin:8px 0;border:1px solid #36474b;border-radius:6px}#sexo2-amigos-panel .ra-ok{color:#7bd5a7}#sexo2-amigos-panel .ra-error{color:#f3a090}#sexo2-amigos-panel .ra-tabs{margin:14px 0;border-bottom:1px solid #534a30;padding-bottom:10px}#sexo2-amigos-panel .ra-active{border-color:#c89b3c;background:#29413d}#sexo2-amigos-panel .ra-notice{white-space:pre-wrap;padding:9px;border-left:3px solid #c89b3c;color:#e4d3a2}#sexo2-amigos-panel .ra-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}#sexo2-amigos-panel .ra-skins{max-height:190px;overflow:auto}#sexo2-amigos-panel footer{margin-top:16px;border-top:1px solid #4c4430;padding-top:10px}#sexo2-amigos-panel select{max-width:100%}
 `;document.head.appendChild(style);
-    const launch=document.createElement('button');launch.id='rose-amigos-launch';launch.textContent='SEXO2 · verificar';document.body.appendChild(launch);
-    const panel=document.createElement('section');panel.id='rose-amigos-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','SEXO2');document.body.appendChild(panel);
-    const backdrop=document.createElement('div');backdrop.id='rose-amigos-backdrop';backdrop.hidden=true;document.body.appendChild(backdrop);
-    function close(){panel.hidden=true;backdrop.hidden=true;if(window.__roseHub)window.__roseHub.close();else launch.focus();}
+    const launch=document.createElement('button');launch.id='sexo2-amigos-launch';launch.textContent='SEXO2 · verificar';document.body.appendChild(launch);
+    const panel=document.createElement('section');panel.id='sexo2-amigos-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','SEXO2');document.body.appendChild(panel);
+    const backdrop=document.createElement('div');backdrop.id='sexo2-amigos-backdrop';backdrop.hidden=true;document.body.appendChild(backdrop);
+    function close(){panel.hidden=true;backdrop.hidden=true;if(window.__sexo2Hub)window.__sexo2Hub.close();else launch.focus();}
     backdrop.onclick=close;
     let bridge=null,state=null,pending=null,sequence=0,tab='Preparo',nameDraft='',skinDraft={},theme='Qualquer',phase=null,notice='',search='',lastSeen=0,roomDraft='',lastRender='';
     let championSearch='',skinSearch='',favChampion=null,favSkin=null,skinIndex=null,skinIndexAsked=false,skinIndexFailed=false,libraryLoaded=false,favoriteQueue=[],favoriteDraft={},transportNotice=false;
-    window.addEventListener('rose-hub-friends',e=>{tab=e.detail.tab;e.detail.target.appendChild(panel);panel.hidden=false;backdrop.hidden=true;request();render();});
+    window.addEventListener('sexo2-hub-friends',e=>{tab=e.detail.tab;e.detail.target.appendChild(panel);panel.hidden=false;backdrop.hidden=true;request();render();});
     const prefix='amigos-r5-'+Date.now()+'-'+Math.random().toString(36).slice(2);
     function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
     function button(text,fn,disabled=false){const n=node('button',text);n.type='button';n.disabled=disabled;n.onclick=fn;return n;}
@@ -89,7 +89,7 @@
       filter.oninput=()=>{skinSearch=filter.value;drawSkins();};drawSkins();
     }
     function render(){
-      const scrollParent=panel.closest('#rose-hub-content');const parentScroll=scrollParent?.scrollTop||0;
+      const scrollParent=panel.closest('#sexo2-hub-content');const parentScroll=scrollParent?.scrollTop||0;
       const scrolls=[panel,...panel.querySelectorAll('.ra-skins')].map(n=>n.scrollTop);
       const active=document.activeElement;const focused=panel.contains(active)?active.getAttribute('aria-label'):null;
       const selection=active?.selectionStart;
@@ -141,8 +141,8 @@
         panel.append(node('h3','Hospedar sala'),node('p','A hospedagem continua enquanto este aplicativo estiver aberto.','ra-muted'));
         panel.append(button(room.status==='starting'?'Criando sala…':'Criar sala',()=>request('room-host'),['starting','hosting','stopping'].includes(room.status)),button('Encerrar hospedagem',()=>request('room-stop'),!['starting','hosting'].includes(room.status)));
         if(room.link){const link=node('input');link.value=room.link;link.readOnly=true;link.setAttribute('aria-label','Endereço da sala');panel.append(link,button('Copiar link',async()=>{try{await navigator.clipboard.writeText(room.link);notice='Link copiado.';}catch{link.focus();link.select();notice='Selecione e copie o endereço completo.';}render();}));}
-        panel.append(node('h3','Entrar na sala'));const address=node('input');address.placeholder='Cole o endereço completo';address.value=roomDraft;address.setAttribute('aria-label','Endereço para entrar');address.oninput=()=>roomDraft=address.value;panel.append(address,button('Conectar',()=>{window.__roseRoomLeft=false;request('room-join',{link:roomDraft});}));
-        panel.append(button('Tentar reconectar',()=>{window.__roseRoomLeft=false;request('room-reconnect');}),button('Sair da sala',()=>{window.__roseRoomLeft=true;request('room-leave');}));
+        panel.append(node('h3','Entrar na sala'));const address=node('input');address.placeholder='Cole o endereço completo';address.value=roomDraft;address.setAttribute('aria-label','Endereço para entrar');address.oninput=()=>roomDraft=address.value;panel.append(address,button('Conectar',()=>{window.__sexo2RoomLeft=false;request('room-join',{link:roomDraft});}));
+        panel.append(button('Tentar reconectar',()=>{window.__sexo2RoomLeft=false;request('room-reconnect');}),button('Sair da sala',()=>{window.__sexo2RoomLeft=true;request('room-leave');}));
         panel.append(node('p',room.message|| (room.connected?'Conectado':'Reconectando ou aguardando endereço'),'ra-muted'));
         if(state.phase==='InProgress')panel.append(node('p','Conexão recuperada; alterações de skin ficam para a próxima partida.','ra-muted'));
         panel.append(node('p','“Pronto” é a conferência enviada pelo SEXO2 de cada participante. “Escolha recebida” significa sincronização, não aplicação em partida.','ra-muted'));
@@ -176,7 +176,7 @@
     document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
     function tick(){
       if(!launch.isConnected)document.body.appendChild(launch);if(!panel.isConnected)document.body.appendChild(panel);if(!backdrop.isConnected)document.body.appendChild(backdrop);
-      if(!bridge&&window.__roseBridge){bridge=window.__roseBridge;bridge.subscribe('friends-state',receive);bridge.subscribe('friends-error',receive);bridge.subscribe('phase-change',data=>{phase=data.phase;if(phase==='InProgress'){close();launch.hidden=true;}else request();});}
+      if(!bridge&&window.__sexo2Bridge){bridge=window.__sexo2Bridge;bridge.subscribe('friends-state',receive);bridge.subscribe('friends-error',receive);bridge.subscribe('phase-change',data=>{phase=data.phase;if(phase==='InProgress'){close();launch.hidden=true;}else request();});}
       if(pending&&Date.now()-pending.since>15000){pending=null;favoriteQueue=[];favoriteDraft={};transportNotice=true;notice='O SEXO2 demorou a responder. Tente novamente.';if(!panel.hidden)render();}
       if(bridge&&!bridge.ready){
         if(pending?.action==='snapshot')pending=null;

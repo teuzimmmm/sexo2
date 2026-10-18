@@ -494,5 +494,5 @@ class GameMonitor:
     def _report_issue_async(self, code, summary, detail):
         if self.issue_callback:
             threading.Thread(
-                target=self.issue_callback, args=(code, summary, detail), daemon=True, name="RoseIssue"
+                target=self.issue_callback, args=(code, summary, detail), daemon=True, name="SEXO2Issue"
             ).start()

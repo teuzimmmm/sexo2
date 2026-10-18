@@ -171,7 +171,7 @@
   "Connected to {name}": "已连接到 {name}",
   "Couldn't read your summoner ID - is the League client running?": "无法读取你的召唤师 ID。英雄联盟客户端是否正在运行？",
   "Party mode is not enabled": "组队模式未开启",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "这不是有效的组队令牌。请复制完整的令牌（以 ROSE: 开头）。",
+  "That's not a valid party token. Copy the whole token.": "这不是有效的组队令牌。请复制完整的令牌。",
   "That's your own token - send it to your friends instead": "这是你自己的令牌，请把它发给你的好友",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "你连接的队伍太多了。请关闭再重新开启组队模式，然后重试。",
   "This friend removed you from their party - they need to add your token back": "这位好友已将你移出他的队伍，他需要重新添加你的令牌",

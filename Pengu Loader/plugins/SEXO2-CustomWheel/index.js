@@ -10,10 +10,10 @@
   // Keep the custom wheel fully namespaced. The official chroma wheel uses
   // the lu-chroma-* selectors, and sharing them makes the two panels style
   // and interfere with one another.
-  const BUTTON_CLASS = "rose-custom-wheel-button";
+  const BUTTON_CLASS = "sexo2-custom-wheel-button";
   const BUTTON_SELECTOR = `.${BUTTON_CLASS}`;
-  const PANEL_CLASS = "rose-custom-wheel-panel";
-  const PANEL_ID = "rose-custom-wheel-panel-container";
+  const PANEL_CLASS = "sexo2-custom-wheel-panel";
+  const PANEL_ID = "sexo2-custom-wheel-panel-container";
   const REQUEST_TYPE = "request-skin-mods";
   const EVENT_SKIN_STATE = "lu-skin-monitor-state";
 
@@ -45,7 +45,7 @@
   let selectedCategoryIds = Object.create(null);
 
   function getCurrentSkinContext() {
-    const state = window.__roseSkinState || {};
+    const state = window.__sexo2SkinState || {};
     const championId = Number(state.championId);
     let skinId = Number(state.skinId);
     const selectedChromaId = Number(pythonChromaState?.selectedChromaId);
@@ -138,10 +138,10 @@
   let emittedHistoricSelectionKeys = new Set(); // Avoid re-emitting historic selections across category responses
   let rightPaneMode = "summary"; // "summary" | "picker"
 
-  // Rose's menu language (SEXO2-I18n); English until it has loaded
+  // SEXO2's menu language (SEXO2-I18n); English until it has loaded
   const tr = (text, vars) =>
-    window.RoseI18n
-      ? window.RoseI18n.t(text, vars)
+    window.Sexo2I18n
+      ? window.Sexo2I18n.t(text, vars)
       : text.replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars ? String(vars[k]) : m));
   // A category name inside a sentence: lowercase in English ("Loading voiceover…"), as translated otherwise
   const categoryInSentence = (label) => {
@@ -383,7 +383,7 @@
     if (panel._rightTitle) {
       if (mode === "picker") {
         const icon = SUMMARY_ICONS[activeTab] || "";
-        panel._rightTitle.innerHTML = `<span class="rose-wheel-title-icon">${icon}</span> ${escapeHtml(tr("Choose • {category}", { category: getTabLabel(activeTab) }))}`;
+        panel._rightTitle.innerHTML = `<span class="sexo2-wheel-title-icon">${icon}</span> ${escapeHtml(tr("Choose • {category}", { category: getTabLabel(activeTab) }))}`;
       } else {
         panel._rightTitle.textContent = tr("Custom Mods");
       }
@@ -399,7 +399,7 @@
       const interval = 50;
       let elapsed = 0;
       const check = () => {
-        if (window.__roseBridge) return resolve(window.__roseBridge);
+        if (window.__sexo2Bridge) return resolve(window.__sexo2Bridge);
         elapsed += interval;
         if (elapsed >= timeout) return reject(new Error("Bridge not available"));
         setTimeout(check, interval);
@@ -436,23 +436,23 @@
     }
 
     /* Button and Badge Styles */
-    lol-uikit-flat-button.rose-custom-wheel-button,
-    .rose-custom-wheel-button {
+    lol-uikit-flat-button.sexo2-custom-wheel-button,
+    .sexo2-custom-wheel-button {
       display: inline-block !important;
       white-space: nowrap !important;
       /* Keep badge stacking self-contained (prevents weird overlap with other UI) */
       isolation: isolate !important;
     }
 
-    .rose-custom-wheel-button .count-badge.social-count-badge,
-    lol-uikit-flat-button.rose-custom-wheel-button .count-badge.social-count-badge,
-    .rose-custom-wheel-button > .count-badge.social-count-badge,
-    lol-uikit-flat-button.rose-custom-wheel-button > .count-badge.social-count-badge {
+    .sexo2-custom-wheel-button .count-badge.social-count-badge,
+    lol-uikit-flat-button.sexo2-custom-wheel-button .count-badge.social-count-badge,
+    .sexo2-custom-wheel-button > .count-badge.social-count-badge,
+    lol-uikit-flat-button.sexo2-custom-wheel-button > .count-badge.social-count-badge {
       position: absolute !important;
       /* Positioning: edit these via CSS variables on the element (DevTools-friendly) */
-      top: var(--rose-badge-top, -4px) !important;
-      right: var(--rose-badge-right, -17px) !important;
-      left: var(--rose-badge-left, auto) !important;
+      top: var(--sexo2-badge-top, -4px) !important;
+      right: var(--sexo2-badge-right, -17px) !important;
+      left: var(--sexo2-badge-left, auto) !important;
       min-width: 18px !important;
       height: 18px !important;
       padding: 0 5px !important;
@@ -470,8 +470,8 @@
       /* Above button contents, but not globally "high" */
       z-index: 1 !important;
       transform: translate(
-        var(--rose-badge-translate-x, 60%),
-        var(--rose-badge-translate-y, -60%)
+        var(--sexo2-badge-translate-x, 60%),
+        var(--sexo2-badge-translate-y, -60%)
       ) !important;
       margin: 0 !important;
       bottom: auto !important;
@@ -552,7 +552,7 @@
       max-height: calc(100vh - 120px) !important;
     }
     
-    .${PANEL_CLASS} .chroma-modal.rose-custom-wheel-modal {
+    .${PANEL_CLASS} .chroma-modal.sexo2-custom-wheel-modal {
       /* Height handled in base class to ensure consistency */
       overflow: hidden;
     }
@@ -593,7 +593,7 @@
     /* Tab Navigation */
     /* ===== Unified Summary rows (category + status + change in one row) ===== */
 
-    .${PANEL_CLASS} .rose-wheel-right-header {
+    .${PANEL_CLASS} .sexo2-wheel-right-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -604,7 +604,7 @@
       flex-shrink: 0;
     }
 
-    .${PANEL_CLASS} .rose-wheel-right-title {
+    .${PANEL_CLASS} .sexo2-wheel-right-title {
       font-weight: 700;
       color: #f0e6d2;
       font-size: 13px;
@@ -617,13 +617,13 @@
       gap: 6px;
     }
 
-    .${PANEL_CLASS} .rose-wheel-right-title .rose-wheel-title-icon {
+    .${PANEL_CLASS} .sexo2-wheel-right-title .sexo2-wheel-title-icon {
       width: 18px;
       height: 18px;
       flex-shrink: 0;
     }
 
-    .${PANEL_CLASS} .rose-wheel-right-title .rose-wheel-title-icon svg {
+    .${PANEL_CLASS} .sexo2-wheel-right-title .sexo2-wheel-title-icon svg {
       width: 18px;
       height: 18px;
       fill: none;
@@ -633,7 +633,7 @@
       stroke-linejoin: round;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary {
+    .${PANEL_CLASS} .sexo2-wheel-summary {
       flex: 1;
       min-height: 0;
       display: flex;
@@ -644,11 +644,11 @@
       overflow-y: auto;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary::-webkit-scrollbar { width: 6px; }
-    .${PANEL_CLASS} .rose-wheel-summary::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
-    .${PANEL_CLASS} .rose-wheel-summary::-webkit-scrollbar-thumb { background: #5b5a56; border-radius: 3px; }
+    .${PANEL_CLASS} .sexo2-wheel-summary::-webkit-scrollbar { width: 6px; }
+    .${PANEL_CLASS} .sexo2-wheel-summary::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    .${PANEL_CLASS} .sexo2-wheel-summary::-webkit-scrollbar-thumb { background: #5b5a56; border-radius: 3px; }
 
-    .${PANEL_CLASS} .rose-wheel-summary-row {
+    .${PANEL_CLASS} .sexo2-wheel-summary-row {
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
@@ -661,27 +661,27 @@
       transition: all 0.2s ease;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-row:hover {
+    .${PANEL_CLASS} .sexo2-wheel-summary-row:hover {
       background: linear-gradient(to right, rgba(40, 45, 50, 0.9), rgba(40, 45, 50, 0.7));
       border-color: #5c5c61;
       border-left-color: #c8aa6e;
       transform: translateX(2px);
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-row:active {
+    .${PANEL_CLASS} .sexo2-wheel-summary-row:active {
       transform: scale(0.98);
       transition: transform 0.1s ease;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-row.active {
+    .${PANEL_CLASS} .sexo2-wheel-summary-row.active {
       border-left: 3px solid #c8aa6e;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-row:hover .rose-wheel-summary-icon {
+    .${PANEL_CLASS} .sexo2-wheel-summary-row:hover .sexo2-wheel-summary-icon {
       color: #c8aa6e;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-icon {
+    .${PANEL_CLASS} .sexo2-wheel-summary-icon {
       width: 18px;
       height: 18px;
       flex-shrink: 0;
@@ -689,7 +689,7 @@
       transition: color 0.2s ease;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-icon svg {
+    .${PANEL_CLASS} .sexo2-wheel-summary-icon svg {
       width: 18px;
       height: 18px;
       fill: none;
@@ -699,7 +699,7 @@
       stroke-linejoin: round;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-left {
+    .${PANEL_CLASS} .sexo2-wheel-summary-left {
       flex: 1;
       min-width: 0;
       display: flex;
@@ -707,7 +707,7 @@
       gap: 6px;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-label {
+    .${PANEL_CLASS} .sexo2-wheel-summary-label {
       color: #a09b8c;
       font-size: 12px;
       font-weight: 700;
@@ -715,20 +715,20 @@
       letter-spacing: 0.5px;
     }
 
-    .${PANEL_CLASS} .rose-wheel-summary-value {
+    .${PANEL_CLASS} .sexo2-wheel-summary-value {
       color: #f0e6d2;
       font-size: 13px;
       font-weight: 700;
       word-break: break-word;
     }
 
-    .${PANEL_CLASS} .rose-wheel-picker {
+    .${PANEL_CLASS} .sexo2-wheel-picker {
       flex: 1;
       min-height: 0;
       display: none;
     }
 
-    .${PANEL_CLASS} .rose-wheel-picker.active {
+    .${PANEL_CLASS} .sexo2-wheel-picker.active {
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -853,7 +853,7 @@
       font-style: italic;
     }
 
-    .${PANEL_CLASS} .rose-wheel-back-button {
+    .${PANEL_CLASS} .sexo2-wheel-back-button {
       background: transparent;
       border: 1px solid #c8aa6e;
       color: #c8aa6e;
@@ -867,14 +867,14 @@
       border-radius: 0;
     }
 
-    .${PANEL_CLASS} .rose-wheel-back-button:hover {
+    .${PANEL_CLASS} .sexo2-wheel-back-button:hover {
       background: rgba(200, 170, 110, 0.1);
       box-shadow: 0 0 8px rgba(200, 170, 110, 0.2);
     }
   `;
 
   function injectCSS() {
-    const styleId = "rose-custom-wheel-css";
+    const styleId = "sexo2-custom-wheel-css";
     if (document.getElementById(styleId)) {
       return;
     }
@@ -895,7 +895,7 @@
     } catch (e) {
       button = document.createElement("div");
     }
-    button.className = "lol-uikit-flat-button idle rose-custom-wheel-button";
+    button.className = "lol-uikit-flat-button idle sexo2-custom-wheel-button";
     button.textContent = tr("Custom mods");
 
     // Ensure button has relative positioning for badge (only if not already positioned)
@@ -910,11 +910,11 @@
     countBadge.textContent = "0";
     countBadge.style.display = "none"; // Hidden by default
     // Defaults (can be overridden live in DevTools on the element via CSS variables)
-    countBadge.style.setProperty("--rose-badge-top", "-4px");
-    countBadge.style.setProperty("--rose-badge-right", "-17px");
-    countBadge.style.setProperty("--rose-badge-left", "auto");
-    countBadge.style.setProperty("--rose-badge-translate-x", "60%");
-    countBadge.style.setProperty("--rose-badge-translate-y", "-60%");
+    countBadge.style.setProperty("--sexo2-badge-top", "-4px");
+    countBadge.style.setProperty("--sexo2-badge-right", "-17px");
+    countBadge.style.setProperty("--sexo2-badge-left", "auto");
+    countBadge.style.setProperty("--sexo2-badge-translate-x", "60%");
+    countBadge.style.setProperty("--sexo2-badge-translate-y", "-60%");
     button.appendChild(countBadge);
     button._countBadge = countBadge; // Store reference
 
@@ -977,7 +977,7 @@
     }
 
     const modal = document.createElement("div");
-    modal.className = "rose-custom-wheel-modal chroma-modal";
+    modal.className = "sexo2-custom-wheel-modal chroma-modal";
 
     // Header Decoration removed as per user request
 
@@ -1011,7 +1011,7 @@
       if (panel && panel._rightTitle) {
         if (rightPaneMode === "picker") {
           const icon = SUMMARY_ICONS[activeTab] || "";
-          panel._rightTitle.innerHTML = `<span class="rose-wheel-title-icon">${icon}</span> ${escapeHtml(tr("Choose • {category}", { category: getTabLabel(activeTab) }))}`;
+          panel._rightTitle.innerHTML = `<span class="sexo2-wheel-title-icon">${icon}</span> ${escapeHtml(tr("Choose • {category}", { category: getTabLabel(activeTab) }))}`;
         } else {
           panel._rightTitle.textContent = tr("Custom Mods");
         }
@@ -1167,10 +1167,10 @@
 
     // Header + Summary + Picker (Summary rows contain the category buttons on the left)
     const rightHeader = document.createElement("div");
-    rightHeader.className = "rose-wheel-right-header";
+    rightHeader.className = "sexo2-wheel-right-header";
 
     const rightTitle = document.createElement("div");
-    rightTitle.className = "rose-wheel-right-title";
+    rightTitle.className = "sexo2-wheel-right-title";
     rightTitle.textContent = tr("Custom Mods");
 
     const headerButtons = document.createElement("div");
@@ -1178,7 +1178,7 @@
     headerButtons.style.gap = "8px";
 
     const backBtn = document.createElement("button");
-    backBtn.className = "rose-wheel-back-button";
+    backBtn.className = "sexo2-wheel-back-button";
     backBtn.textContent = tr("Back");
     backBtn.style.display = "none";
 
@@ -1189,29 +1189,29 @@
 
     // Summary view (all categories)
     const summaryView = document.createElement("div");
-    summaryView.className = "rose-wheel-summary";
+    summaryView.className = "sexo2-wheel-summary";
 
     panel._summaryValuesByTab = {};
     panel._summaryRowsByTab = {};
 
     SUMMARY_TABS.forEach((tab) => {
       const row = document.createElement("div");
-      row.className = "rose-wheel-summary-row";
+      row.className = "sexo2-wheel-summary-row";
       row.setAttribute("role", "button");
       row.tabIndex = 0;
 
       // Left cell: value
       const left = document.createElement("div");
-      left.className = "rose-wheel-summary-left";
+      left.className = "sexo2-wheel-summary-left";
 
       const label = document.createElement("div");
-      label.className = "rose-wheel-summary-label";
+      label.className = "sexo2-wheel-summary-label";
       label.style.display = "flex";
       label.style.alignItems = "center";
       label.style.gap = "6px";
 
       const iconSpan = document.createElement("span");
-      iconSpan.className = "rose-wheel-summary-icon";
+      iconSpan.className = "sexo2-wheel-summary-icon";
       iconSpan.innerHTML = SUMMARY_ICONS[tab.id] || "";
       label.appendChild(iconSpan);
 
@@ -1220,7 +1220,7 @@
       label.appendChild(labelText);
 
       const value = document.createElement("div");
-      value.className = "rose-wheel-summary-value";
+      value.className = "sexo2-wheel-summary-value";
       value.textContent = summaryText(getSelectedSummaryForTab(tab.id));
       panel._summaryValuesByTab[tab.id] = value;
 
@@ -1249,7 +1249,7 @@
 
     // Picker view (reuses existing scrollable with tab contents)
     const pickerView = document.createElement("div");
-    pickerView.className = "rose-wheel-picker";
+    pickerView.className = "sexo2-wheel-picker";
     pickerView.appendChild(scrollable);
 
     backBtn.addEventListener("click", (e) => {
@@ -2057,7 +2057,7 @@
   }
 
   // After a language change, the button follows right away and the panel on its next opening
-  window.addEventListener("rose-i18n-changed", () => {
+  window.addEventListener("sexo2-i18n-changed", () => {
     const label = button && button.firstChild;
     if (label && label.nodeType === Node.TEXT_NODE) label.textContent = tr("Custom mods");
     if (panel && !isOpen) {

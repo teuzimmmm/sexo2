@@ -263,7 +263,7 @@ class PartyRelay:
         error: Optional[BaseException] = None
 
         for context in contexts:
-            transport_logger = logging.getLogger("rose.relay.transport")
+            transport_logger = logging.getLogger("sexo2.relay.transport")
             transport_logger.setLevel(logging.WARNING)
             kwargs = {"max_size": 65536, "logger": transport_logger}
             if context is not None:

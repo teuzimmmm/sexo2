@@ -171,7 +171,7 @@
   "Connected to {name}": "{name} ile bağlandı",
   "Couldn't read your summoner ID - is the League client running?": "Sihirdar kimliğin okunamadı. League istemcisi açık mı?",
   "Party mode is not enabled": "Grup modu açık değil",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "Bu geçerli bir grup kodu değil. Kodun tamamını kopyala (ROSE: ile başlar).",
+  "That's not a valid party token. Copy the whole token.": "Bu geçerli bir grup kodu değil. Kodun tamamını kopyala.",
   "That's your own token - send it to your friends instead": "Bu senin kendi kodun, onu arkadaşlarına gönder",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "Çok fazla gruba bağlısın. Grup modunu kapatıp yeniden aç, sonra tekrar dene.",
   "This friend removed you from their party - they need to add your token back": "Bu arkadaşın seni grubundan çıkardı, kodunu tekrar eklemesi gerekiyor",

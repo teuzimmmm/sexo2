@@ -8,14 +8,14 @@
   const LOG_PREFIX = "[SEXO2-PartyMode]";
   let BRIDGE_PORT = 50000;
   let BRIDGE_URL = `ws://127.0.0.1:${BRIDGE_PORT}`;
-  const BRIDGE_PORT_STORAGE_KEY = "rose_bridge_port";
+  const BRIDGE_PORT_STORAGE_KEY = "sexo2_bridge_port";
   const DISCOVERY_START_PORT = 50000;
   const DISCOVERY_END_PORT = 50099;
 
-  const PANEL_ID = "rose-party-panel";
-  const BUTTON_ID = "rose-party-button";
-  const LOBBY_BUTTON_ID = "rose-party-lobby-button";
-  const CHAMP_STATUS_ID = "rose-party-champ-status";
+  const PANEL_ID = "sexo2-party-panel";
+  const BUTTON_ID = "sexo2-party-button";
+  const LOBBY_BUTTON_ID = "sexo2-party-lobby-button";
+  const CHAMP_STATUS_ID = "sexo2-party-champ-status";
 
   let bridgeSocket = null;
   let bridgeReady = false;
@@ -572,10 +572,10 @@
       border: 2px solid rgba(200, 170, 110, 0.3);
       border-top-color: #c8aa6e;
       border-radius: 50%;
-      animation: rose-party-spin 0.8s linear infinite;
+      animation: sexo2-party-spin 0.8s linear infinite;
     }
 
-    @keyframes rose-party-spin {
+    @keyframes sexo2-party-spin {
       to { transform: rotate(360deg); }
     }
 
@@ -749,7 +749,7 @@
   }
 
   function injectStyles() {
-    const styleId = "rose-party-mode-styles";
+    const styleId = "sexo2-party-mode-styles";
     if (document.getElementById(styleId)) return;
 
     const style = document.createElement("style");
@@ -936,7 +936,7 @@
     partyPanel.classList.toggle("visible", isVisible);
     updatePanelState();
   }
-  window.addEventListener('rose-hub-party',e=>{
+  window.addEventListener('sexo2-hub-party',e=>{
     createPartyPanel();
     if(partyPanel){e.detail.target.appendChild(partyPanel);isVisible=true;partyPanel.classList.add('visible');updatePanelState();}
   });
@@ -1195,7 +1195,7 @@
     if (autoEnableRetryTimer) clearTimeout(autoEnableRetryTimer);
     autoEnableRetryTimer = setTimeout(() => {
       autoEnableRetryTimer = null;
-      if (!bridgeReady || partyState.enabled || autoEnableInFlight || enableFailures > 6 || window.__roseRoomLeft) return;
+      if (!bridgeReady || partyState.enabled || autoEnableInFlight || enableFailures > 6 || window.__sexo2RoomLeft) return;
       autoEnableInFlight = true;
       sendBridgeMessage({ type: "party-enable" });
     }, delayMs);
@@ -1276,7 +1276,7 @@
       return;
     }
 
-    // Rose may choose a different local port after a restart.
+    // SEXO2 may choose a different local port after a restart.
     await loadBridgePort();
 
     console.log(`${LOG_PREFIX} Connecting to bridge at ${BRIDGE_URL}`);

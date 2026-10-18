@@ -32,7 +32,7 @@ class HostController:
         if self.thread and self.thread.is_alive():
             return
         self._cancel.clear()
-        self.thread = threading.Thread(target=self._run, daemon=True, name="RoseFriendsHost")
+        self.thread = threading.Thread(target=self._run, daemon=True, name="SEXO2FriendsHost")
         self.thread.start()
 
     def _run(self):
@@ -115,9 +115,9 @@ class HostController:
             check_url = (
                 url.replace("https://", "wss://")
                 + "/room?"
-                + urlencode({"key": "rose-host-readiness", "access": token, "v": "1.4.7"})
+                + urlencode({"key": "sexo2-host-readiness", "access": token, "v": "1.4.7"})
             )
-            transport_logger = logging.getLogger("rose.tunnel.check")
+            transport_logger = logging.getLogger("sexo2.tunnel.check")
             transport_logger.setLevel(logging.WARNING)
             ready = False
             for attempt in range(35):

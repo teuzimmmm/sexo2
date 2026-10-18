@@ -188,7 +188,7 @@
   let hoverButtonNormalUrl = null;
   let hoverButtonHoverUrl = null;
 
-  // Shared bridge API (provided by ROSE-BridgeInit)
+  // Shared bridge API (provided by SEXO2-SkinMonitor)
   let bridge = null;
 
   function waitForBridge() {
@@ -197,7 +197,7 @@
       const interval = 50;
       let elapsed = 0;
       const check = () => {
-        if (window.__roseBridge) return resolve(window.__roseBridge);
+        if (window.__sexo2Bridge) return resolve(window.__sexo2Bridge);
         elapsed += interval;
         if (elapsed >= timeout) return reject(new Error("Bridge not available"));
         setTimeout(check, interval);
@@ -5304,8 +5304,8 @@
       return;
     }
 
-    if (window.__roseSkinState) {
-      skinMonitorState = window.__roseSkinState;
+    if (window.__sexo2SkinState) {
+      skinMonitorState = window.__sexo2SkinState;
 
       // Proactively fetch champion data if initial state has chromas
       if (

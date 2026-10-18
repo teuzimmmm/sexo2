@@ -171,7 +171,7 @@
   "Connected to {name}": "تم الاتصال بـ {name}",
   "Couldn't read your summoner ID - is the League client running?": "تعذّرت قراءة معرّف المستدعي الخاص بك. هل عميل League قيد التشغيل؟",
   "Party mode is not enabled": "وضع المجموعة غير مفعّل",
-  "That's not a valid party token. Copy the whole token (it starts with ROSE:).": "هذا ليس رمز مجموعة صالحًا. انسخ الرمز كاملًا (يبدأ بـ ROSE:).",
+  "That's not a valid party token. Copy the whole token.": "هذا ليس رمز مجموعة صالحًا. انسخ الرمز كاملًا.",
   "That's your own token - send it to your friends instead": "هذا رمزك أنت، أرسله إلى أصدقائك بدلًا من ذلك",
   "You're linked to too many parties. Disable and re-enable party mode, then try again.": "أنت مرتبط بعدد كبير جدًا من المجموعات. عطّل وضع المجموعة ثم فعّله مجددًا، ثم أعد المحاولة.",
   "This friend removed you from their party - they need to add your token back": "أزالك هذا الصديق من مجموعته، ويجب أن يضيف رمزك مجددًا",
