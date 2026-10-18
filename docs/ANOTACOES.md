@@ -10,10 +10,11 @@ for corrigido e verificado.
 2. **Favoritas com imagens:** ao clicar num campeão em Skins → Favoritas, abrir uma tela só
    dele com as skins em cartões com imagem (`tilePath`/`loadScreenPath` de
    `/lol-game-data/assets/v1/champions/{id}.json`, servidos pelo próprio cliente); clicar no
-   cartão marca ou desmarca a favorita; cromas como bolinhas de cor sob a skin.
+   cartão marca ou desmarca a favorita; cromas como bolinhas de cor sob a skin. Feito na versão de
+   teste: lista de campeões com retrato, tela do campeão com cartões de imagem e cromas em bolinhas.
 3. **Campeões duplicados** na lista de Favoritas (Aatrox, Ahri, Akali, Alistar… aparecem duas vezes).
    Causa vista no console: a lista traz também os IDs 60000+ (ex.: Aatrox 266 e 60266), variantes
-   de modo especial que o cliente lista junto.
+   de modo especial que o cliente lista junto. Corrigido: IDs a partir de 10000 ficam de fora.
 4. **Botão SEXO2 na seleção da Arena:** ao clicar, nada aconteceu, e o painel não abriu nem por
    um instante. Decidido: fora das filas com estatísticas, o botão abre direto o painel de mods.
    Feito, junto com o modo treino (fila 3140) usando as estatísticas das filas competitivas e o
