@@ -30,3 +30,6 @@ for corrigido e verificado.
 6. **Ícone do aplicativo:** refazer o ícone do SEXO2 (executável, atalho, bandeja, instalador)
    para ficar no estilo do programa. É identidade visual: proposta para aprovação antes de trocar
    `assets/sexo2.ico`.
+7. **Nome final:** a versão final do aplicativo vai se chamar **SEXO3**. Só anotado; nada foi
+   renomeado (nome do executável, pasta de dados, mutex e textos continuam SEXO2 até a decisão
+   de quando e como migrar, com teste do formato antigo).
