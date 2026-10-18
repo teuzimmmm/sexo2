@@ -1,4 +1,5 @@
 """Gera os SVG de cada variante e ../rodada3.html a partir de variantes.py."""
+
 import html
 from pathlib import Path
 
@@ -9,8 +10,7 @@ TOP = {"L7": "Recomendação 1", "R1": "Recomendação 2"}
 
 
 def svg(inner, size=256):
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" '
-            f'viewBox="0 0 256 256">{inner}</svg>')
+    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 256 256">{inner}</svg>'
 
 
 def card(k, nome, texto, inner):
@@ -19,11 +19,13 @@ def card(k, nome, texto, inner):
     def s(n):
         return svg(inner, n)
 
-    return (f'<div class="card{" top" if k in TOP else ""}">{tag}{s(150)}<b>{k} · {html.escape(nome)}</b>'
-            f'<span>{html.escape(texto)}</span>'
-            f'<div class="sizes">{s(48)}{s(32)}{s(16)}</div>'
-            f'<div class="light">{s(32)}{s(24)}{s(16)}</div>'
-            f'<div class="blur">{s(48)}{s(32)}{s(16)}</div></div>')
+    return (
+        f'<div class="card{" top" if k in TOP else ""}">{tag}{s(150)}<b>{k} · {html.escape(nome)}</b>'
+        f"<span>{html.escape(texto)}</span>"
+        f'<div class="sizes">{s(48)}{s(32)}{s(16)}</div>'
+        f'<div class="light">{s(32)}{s(24)}{s(16)}</div>'
+        f'<div class="blur">{s(48)}{s(32)}{s(16)}</div></div>'
+    )
 
 
 def secao(fam):
@@ -77,4 +79,5 @@ ul{margin:6px 0 0 18px}
 </html>
 """
 (AQUI.parent / "rodada3.html").write_text(
-    PAGE.replace("@@L@@", secao("traço")).replace("@@R@@", secao("angular")), encoding="utf-8")
+    PAGE.replace("@@L@@", secao("traço")).replace("@@R@@", secao("angular")), encoding="utf-8"
+)
