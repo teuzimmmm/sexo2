@@ -111,26 +111,45 @@ class GoldOverlayTests(unittest.TestCase):
         window._queue = queue.Queue()
         for item in (comparison, comparison, None, comparison, False):
             window._queue.put(item)
-        root, canvas = Mock(), Mock()
+        root, surface = Mock(), Mock()
         root.winfo_screenwidth.return_value = 1920
         root.winfo_screenheight.return_value = 1080
         callbacks = []
         root.after.side_effect = lambda delay, callback: callbacks.append(callback)
         root.mainloop.side_effect = lambda: callbacks.pop(0)()
-        tkinter = SimpleNamespace(Tk=Mock(return_value=root), Canvas=Mock(return_value=canvas))
-        with patch.dict("sys.modules", tkinter=tkinter), patch.object(_Window, "_click_through"):
+        tkinter = SimpleNamespace(Tk=Mock(return_value=root))
+        with (
+            patch.dict("sys.modules", tkinter=tkinter),
+            patch.object(_Window, "_click_through", return_value=123),
+            patch("sexo2.overlay.alpha_surface.AlphaSurface", return_value=surface),
+            patch("sexo2.overlay.gold_overlay.render", return_value="rgba"),
+        ):
             window._run()
-        # Same readings and re-opening Tab reuse the existing canvas contents.
-        canvas.delete.assert_called_once_with("all")
+        # Same readings and re-opening Tab reuse the existing native bitmap.
+        surface.update.assert_called_once_with("rgba", 832, 210)
+        surface.close.assert_called_once_with()
         self.assertEqual(root.state.call_args_list, [call("normal"), call("normal")])
         root.deiconify.assert_not_called()
         root.attributes.assert_any_call("-topmost", True)
         self.assertEqual(len([c for c in root.attributes.call_args_list if c.args == ("-topmost", True)]), 1)
-        for invocation in canvas.create_text.call_args_list:
-            size = invocation.kwargs["font"][1]
-            self.assertLess(size, 0)  # Pixel sizes, independent of Windows text scaling.
-            self.assertLessEqual(abs(size), 12)
         root.destroy.assert_called_once()
+
+    def test_text_edges_have_real_alpha_and_background_is_fully_transparent(self):
+        import os
+        from pathlib import Path
+
+        from sexo2.overlay.gold_overlay import render
+
+        if not (Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts" / "segoeuib.ttf").exists():
+            self.skipTest("Windows Segoe UI font required")
+        comparison = read_comparison(self.fetch("Eu#BR1"), PRICES)
+        image = render(comparison, 1920, 1080, Geometry())
+        self.assertEqual(image.mode, "RGBA")
+        self.assertEqual(image.size, (256, 466))
+        alpha = image.getchannel("A")
+        self.assertEqual(alpha.getpixel((0, 0)), 0)
+        self.assertTrue(any(0 < value < 255 for value in alpha.tobytes()))
+        self.assertTrue(any(value == 255 for value in alpha.tobytes()))
 
     def test_overlay_thread_can_stop_and_join_normally(self):
         from sexo2.overlay.gold_overlay import GoldOverlayThread

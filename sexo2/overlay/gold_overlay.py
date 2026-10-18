@@ -18,6 +18,8 @@ import sys
 import threading
 import time
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Callable
 
 from sexo2.services.gold import CHAOS, ORDER, Comparison, Unsupported, compare, for_player_team, item_prices
@@ -28,7 +30,6 @@ LIVE_CLIENT = "https://127.0.0.1:2999/liveclientdata"
 ALLY = "#4f8cff"
 ENEMY = "#e5484d"
 NEUTRAL = "#a4a9b0"
-TRANSPARENT = "#010203"
 
 
 @dataclass(frozen=True)
@@ -139,6 +140,55 @@ def _tab_down() -> bool:
     return bool(hwnd and user32.GetClassNameW(hwnd, name, len(name)) and name.value == "RiotWindowClass")
 
 
+@lru_cache(maxsize=8)
+def _font(size: int):
+    import os
+
+    from PIL import ImageFont
+
+    return ImageFont.truetype(str(Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts" / "segoeuib.ttf"), size * 3)
+
+
+@lru_cache(maxsize=128)
+def _label(text: str, color: str, size: int):
+    from PIL import Image, ImageDraw
+
+    font = _font(size)
+    x0, y0, x1, y1 = font.getbbox(text)
+    image = Image.new("RGBA", (x1 - x0 + 6, y1 - y0 + 6))
+    ImageDraw.Draw(image).text((3 - x0, 3 - y0), text, fill=color, font=font)
+    return image.resize((max(1, round(image.width / 3)), max(1, round(image.height / 3))), Image.Resampling.LANCZOS)
+
+
+def render(comparison: Comparison, width: int, height: int, geometry: Geometry):
+    """Grayscale antialiasing with true alpha; no color-key fringes around text."""
+    from PIL import Image, ImageDraw
+
+    left, top, right, bottom = overlay_bounds(width, height, geometry)
+    image = Image.new("RGBA", (right - left, bottom - top))
+    scale = height / 1080
+    offset, gap = round(70 * scale), max(4, round(6 * scale))
+    arrow_width, arrow_height = max(3, round(4 * scale)), max(3, round(4 * scale))
+
+    def text(x, y, value, color, size):
+        label = _label(value, color, size)
+        image.alpha_composite(label, (x - label.width // 2, y - label.height // 2))
+
+    for mark in layout(comparison, width, height, geometry):
+        x, y = mark.x - left, mark.y - top
+        size = max(10, round((14 if mark.kind == "total" else 12) * scale))
+        if mark.kind == "total":
+            text(x - offset, y, mark.left, ALLY, size)
+            text(x + offset, y, mark.right, ENEMY, size)
+        if mark.arrow:
+            w = arrow_width if mark.arrow == "left" else -arrow_width
+            ImageDraw.Draw(image).polygon(
+                [(x - w, y - gap), (x + w, y - gap - arrow_height), (x + w, y - gap + arrow_height)], fill=mark.color
+            )
+        text(x, y + gap, mark.text, mark.color, size)
+    return image
+
+
 class _Window:
     """A click-through, always-on-top transparent Tk window on its own thread."""
 
@@ -159,47 +209,21 @@ class _Window:
     def _run(self) -> None:
         import tkinter as tk
 
+        from sexo2.overlay.alpha_surface import AlphaSurface
+
         root = tk.Tk()
         root.withdraw()
         root.overrideredirect(True)
         root.attributes("-topmost", True)
-        root.configure(bg=TRANSPARENT)
-        root.attributes("-transparentcolor", TRANSPARENT)
         width, height = root.winfo_screenwidth(), root.winfo_screenheight()
         left, top, right, bottom = overlay_bounds(width, height, self._geometry)
         root.geometry(f"{right - left}x{bottom - top}+{left}+{top}")
-        canvas = tk.Canvas(root, width=right - left, height=bottom - top, bg=TRANSPARENT, highlightthickness=0)
-        canvas.pack()
         root.update_idletasks()
-        self._click_through(root)
-        scale = height / 1080
-        offset = round(70 * scale)
-        arrow_width = max(3, round(4 * scale))
-        arrow_half_height = max(3, round(4 * scale))
-        gap = max(4, round(6 * scale))
+        hwnd = self._click_through(root)
+        surface = AlphaSurface(hwnd, right - left, bottom - top)
 
         def draw(comparison: Comparison) -> None:
-            canvas.delete("all")
-            for mark in layout(comparison, width, height, self._geometry):
-                x, y = mark.x - left, mark.y - top
-                # Negative Tk font sizes are pixels, so Windows DPI does not
-                # enlarge labels a second time on top of the game resolution.
-                size = -max(8, round((12 if mark.kind == "total" else 10) * scale))
-                if mark.kind == "total":
-                    canvas.create_text(x - offset, y, text=mark.left, fill=ALLY, font=("Segoe UI", size, "bold"))
-                    canvas.create_text(x + offset, y, text=mark.right, fill=ENEMY, font=("Segoe UI", size, "bold"))
-                if mark.arrow:
-                    w = arrow_width if mark.arrow == "left" else -arrow_width
-                    canvas.create_polygon(
-                        x - w,
-                        y - gap,
-                        x + w,
-                        y - gap - arrow_half_height,
-                        x + w,
-                        y - gap + arrow_half_height,
-                        fill=mark.color,
-                    )
-                canvas.create_text(x, y + gap, text=mark.text, fill=mark.color, font=("Segoe UI", size, "bold"))
+            surface.update(render(comparison, width, height, self._geometry), left, top)
 
         visible = False
         drawn: Comparison | None = None
@@ -230,20 +254,29 @@ class _Window:
             root.after(50, poll)
 
         root.after(50, poll)
-        root.mainloop()
+        try:
+            root.mainloop()
+        finally:
+            surface.close()
 
     @staticmethod
-    def _click_through(root: Any) -> None:
+    def _click_through(root: Any) -> int | None:
         if sys.platform != "win32":
             return
         import ctypes
+        from ctypes import wintypes
 
         user32 = ctypes.windll.user32
+        user32.GetParent.argtypes = (wintypes.HWND,)
+        user32.GetParent.restype = wintypes.HWND
+        user32.GetWindowLongW.argtypes = (wintypes.HWND, ctypes.c_int)
+        user32.SetWindowLongW.argtypes = (wintypes.HWND, ctypes.c_int, ctypes.c_long)
         hwnd = user32.GetParent(root.winfo_id()) or root.winfo_id()
         GWL_EXSTYLE = -20
         style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
         # layered | transparent (click-through) | toolwindow (no taskbar) | noactivate
         user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style | 0x80000 | 0x20 | 0x80 | 0x08000000)
+        return hwnd
 
 
 class GoldOverlayThread(threading.Thread):

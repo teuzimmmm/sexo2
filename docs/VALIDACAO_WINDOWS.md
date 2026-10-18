@@ -79,4 +79,8 @@ a limpa se o LoL já estiver fechado.
    uma leitura atrasada nem reaproveitar a identidade anterior. O mostrar/ocultar
    sem `deiconify` foi conferido com Tk real em um desktop separado; o efeito na
    composição do LoL ainda depende dessa comparação de FPS no jogo.
+   O usuário confirmou FPS estáveis no pacote `36ec753`. A revisão seguinte corrige
+   a nitidez: Segoe UI em 12 px nas linhas e 14 px nos totais, suavização em escala
+   maior e transparência por pixel, sem recorte por cor. Confira as bordas dos dígitos
+   sobre o placar e repita a comparação de FPS após essa troca do bitmap.
 10. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.
