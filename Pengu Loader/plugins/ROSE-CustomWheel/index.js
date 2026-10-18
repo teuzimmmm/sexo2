@@ -916,7 +916,7 @@
       button = document.createElement("div");
     }
     button.className = "lol-uikit-flat-button idle rose-custom-wheel-button";
-    button.textContent = tr("Custom mods");
+    button.textContent = buttonLabel();
 
     // Ensure button has relative positioning for badge (only if not already positioned)
     const computedStyle = window.getComputedStyle(button);
@@ -941,6 +941,13 @@
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       event.preventDefault();
+      // The SEXO2 assistant (Runas, Itens, Mods) opens here when installed; its Mods tab
+      // brings back this mods panel through window.__sexo2Mods.
+      if (window.__sexo2Assistant) {
+        if (isOpen) closePanel();
+        window.__sexo2Assistant.toggle(button);
+        return;
+      }
       isOpen ? closePanel() : openPanel();
     });
 
@@ -2087,7 +2094,7 @@
   // After a language change, the button follows right away and the panel on its next opening
   window.addEventListener("rose-i18n-changed", () => {
     const label = button && button.firstChild;
-    if (label && label.nodeType === Node.TEXT_NODE) label.textContent = tr("Custom mods");
+    if (label && label.nodeType === Node.TEXT_NODE) label.textContent = buttonLabel();
     if (panel && !isOpen) {
       panel.remove();
       panel = null;
@@ -2211,6 +2218,13 @@
   function unwatchAnchor() {
     if (anchorObserver) anchorObserver.disconnect();
     anchorObserver = null;
+  }
+
+  window.__sexo2Mods = { open: () => openPanel() };
+
+  // With the assistant installed the button opens it (Runas, Itens, Mods), so it carries its name.
+  function buttonLabel() {
+    return window.__sexo2Assistant ? "SEXO2" : tr("Custom mods");
   }
 
   // Run from the client's DevTools console: window.__sexo2AnchorDiagnostics()

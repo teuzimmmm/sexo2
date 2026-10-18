@@ -132,6 +132,7 @@ _ROUTES = {
     "assistant-runes-confirm": "_handle_assistant",
     "assistant-runes-back": "_handle_assistant",
     "assistant-items-import": "_handle_assistant",
+    "assistant-lane": "_handle_assistant",
     "sexo2-library-request": "_handle_library",
     "sexo2-update-request": "_handle_sexo2_update",
     "sexo2-update-open": "_open_sexo2_updater",

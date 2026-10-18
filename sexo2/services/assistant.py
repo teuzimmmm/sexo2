@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Callable
 
 from lcu.features.lcu_item_sets import LCUItemSets
@@ -131,6 +131,7 @@ class AssistantService:
         self._stats: StatsService | None = None
         self._catalog: StyleCatalog | None = None
         self._opponent: int | None = None
+        self._lane: tuple[str, str] | None = None  # (session id, lane) chosen in the panel
         self._runes: dict = {}
         self._items: dict = {}
         self._error: str | None = None
@@ -156,6 +157,13 @@ class AssistantService:
             target = self._auto_target
             if target is not None:
                 self.champion_confirmed(target[0], swiftplay=target[1])
+        elif kind == "assistant-lane":
+            lane = payload.get("lane")
+            if lane not in POSITION_LANES.values():
+                raise ValueError("unknown lane")
+            context = self._context
+            self._lane = (context.session_id, lane) if context else None
+            self._submit(self._refresh)
         elif kind == "assistant-runes-choose":
             self._choose(str(payload.get("selection") or ""), bool(payload.get("matchup")))
         elif kind == "assistant-runes-edit":
@@ -201,6 +209,12 @@ class AssistantService:
         context = self._context
         return bool(context and context.can_edit and self._in_champ_select())
 
+    def _read_context(self) -> ChampSelectContext | None:
+        context = read_context(self._lcu.get("/lol-champ-select/v1/session"), self._queue_id())
+        if context is not None and self._lane is not None and self._lane[0] == context.session_id:
+            context = replace(context, lane=self._lane[1])
+        return context
+
     def _ensure_stats(self) -> StatsService:
         if self._stats is None:
             self._directory = ChampionDirectory.from_summary(
@@ -210,7 +224,7 @@ class AssistantService:
         return self._stats
 
     def _refresh(self) -> None:
-        context = read_context(self._lcu.get("/lol-champ-select/v1/session"), self._queue_id())
+        context = self._read_context()
         self._context = context
         if context is None:
             self._controller.set_session(None)
@@ -276,7 +290,7 @@ class AssistantService:
                 locked=True,
             )
         else:
-            context = read_context(self._lcu.get("/lol-champ-select/v1/session"), self._queue_id())
+            context = self._read_context()
             if context is None or not context.locked or context.champion_id != champion_id:
                 return  # provisional pick, another player's champion, or the session is gone
             self._context = context
@@ -335,7 +349,8 @@ class AssistantService:
         self._items = {
             "confirmed": result.confirmed,
             "championId": context.champion_id,
-            "sections": [block["type"] for block in item_set["blocks"]],
+            "title": item_set["title"],
+            "blocks": item_set["blocks"],
             "error": result.error,
         }
         self._publish_state()

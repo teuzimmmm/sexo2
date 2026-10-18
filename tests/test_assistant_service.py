@@ -199,6 +199,17 @@ class AssistantServiceTests(unittest.TestCase):
         self.assertEqual(self.controller.calls[-1], ("set_session", None))
         self.assertIsNone(self.published[-1]["championId"])
 
+    def test_lane_chosen_in_the_panel_holds_for_the_session(self):
+        self.service.handle({"type": "assistant-request"})
+        self.service.handle({"type": "assistant-lane", "lane": "top"})
+        self.assertEqual(self.stats.calls[-1], ("runes", 103, "ranked", "top", None))
+        self.assertEqual(self.published[-1]["lane"], "top")
+        self.lcu.session = session(session_id="cs-2")
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(self.published[-1]["lane"], "middle")
+        with self.assertRaises(ValueError):
+            self.service.handle({"type": "assistant-lane", "lane": "mid"})
+
     def test_items_without_builds_report_it(self):
         self.service.handle({"type": "assistant-request"})
         self.service.handle({"type": "assistant-items-import"})
@@ -242,6 +253,8 @@ class AutomaticItemImportTests(unittest.TestCase):
         self.assertEqual(len(item_set["blocks"]), 6)
         self.assertEqual(self.lcu.item_sets["itemSets"][0], PERSONAL)
         self.assertTrue(self.published[-1]["items"]["confirmed"])
+        self.assertEqual(self.published[-1]["items"]["title"], "SEXO2 — Ahri")
+        self.assertEqual(len(self.published[-1]["items"]["blocks"]), 6)
 
     def test_repeated_confirmation_of_the_same_champion_does_not_rewrite(self):
         self.service.champion_confirmed(103)
