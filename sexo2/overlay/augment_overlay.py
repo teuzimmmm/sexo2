@@ -7,7 +7,8 @@ nothing is injected into the game and no choice is ever made for the player.
 
 Work happens only during an Arena or Mayhem match: once a second the card area (not
 the whole screen) is captured and checked for cards; icons are matched only when the
-three cards are there, and twice a second while an offer is open to follow rerolls.
+three cards are there, and twice a second while an offer is open to follow rerolls. The
+card titles are read with the Windows OCR when available (D-115); the icons back it up.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import threading
 import time
 from typing import Any
 
+from sexo2.augments.ocr import combine, read_titles, windows_reader
 from sexo2.augments.session import QUEUE_MODES, AugmentSession, arena_stats, load_catalog, load_templates, mayhem_stats
 from sexo2.augments.view import CardView
 from sexo2.augments.vision import IconMatcher, Layout, card_area, crops, read_offer
@@ -145,6 +147,7 @@ class AugmentOverlayThread(threading.Thread):
         self._session: AugmentSession | None = None
         self._session_key: tuple | None = None
         self._failed_at = 0.0
+        self._reader = None  # Windows OCR for the card titles, created on the thread
 
     def stop(self) -> None:
         self._stop.set()
@@ -199,6 +202,8 @@ class AugmentOverlayThread(threading.Thread):
             return
         from PIL import ImageGrab
 
+        self._reader = windows_reader()
+        log.info("[AUGMENTS] title OCR %s", "available" if self._reader else "unavailable; icons only")
         shown = False
         while not self._stop.is_set():
             session = self._session_for_match()
@@ -214,6 +219,11 @@ class AugmentOverlayThread(threading.Thread):
                 area = card_area(*screen, self._layout)
                 part = ImageGrab.grab(bbox=area)
                 reading = read_offer(part, session.matcher, self._layout, screen=screen, origin=area[:2])
+                if reading and self._reader:
+                    titles = read_titles(
+                        part, self._reader, session.catalog, self._layout, screen=screen, origin=area[:2]
+                    )
+                    reading = combine(titles, reading)
                 icons = crops(part, self._layout, screen=screen, origin=area[:2]) if reading else None
                 session.observe(reading, icons)
                 cards = session.cards()

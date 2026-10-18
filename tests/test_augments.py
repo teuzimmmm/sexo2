@@ -368,5 +368,81 @@ class OverlayTextTests(unittest.TestCase):
         self.assertGreater(positions[0][1], Layout().cards(1920, 1080)[0][3])
 
 
+TITLES = {
+    "1920x1080_gold": ("Scopier Weapons", "Vulnerability", "Combusting Interest"),
+    "1920x1080_rerolls": ("Overflow", "Ravenous Bind", "Upgrade Sheen"),
+    "1280x1024_rerolls": ("Overflow", "Ravenous Bind", "Upgrade Sheen"),
+    "3440x1440_rerolls": ("Overflow", "Ravenous Bind", "Upgrade Sheen"),
+    "2000x837_prismatic": ("Ultimate Revolution", "Blade Waltz", "Overloaded"),
+    "2000x837_silver": ("Infernal Soul", "Juiced", "FireFox"),
+    "1920x1200_wrapped_fr": ("Gros cerveau", "Expertise en omnivampirisme", "Machine à rétrécir"),
+}
+TITLE_NAMES = sorted({name for names in TITLES.values() for name in names})
+
+
+def title_catalog():
+    from sexo2.augments.catalog import Augment, Catalog
+
+    return Catalog("mayhem", tuple(Augment(i, f"A{i}", name, "gold", "") for i, name in enumerate(TITLE_NAMES)))
+
+
+class TitleMatchTests(unittest.TestCase):
+    def test_close_readings_name_the_card_and_others_stay_unknown(self):
+        from sexo2.augments.ocr import match_name
+
+        catalog = title_catalog()
+        by_name = {a.name: a.id for a in catalog.augments}
+        self.assertEqual(match_name("Ravenous Bind", catalog).augment_id, by_name["Ravenous Bind"])
+        self.assertEqual(
+            match_name("Expertise en\nomnivampirisme", catalog).augment_id, by_name["Expertise en omnivampirisme"]
+        )
+        self.assertEqual(match_name("Machine a retrecir", catalog).augment_id, by_name["Machine à rétrécir"])
+        self.assertEqual(match_name("Upgrade Sheen.", catalog).augment_id, by_name["Upgrade Sheen"])
+        self.assertIsNone(match_name("Something Else", catalog).augment_id)
+        self.assertIsNone(match_name("", catalog).augment_id)
+
+    def test_title_wins_and_icon_backs_it_up(self):
+        from sexo2.augments.ocr import combine
+
+        self.assertEqual(
+            [
+                r.augment_id
+                for r in combine([CardRead(5, 0.9), CardRead(None, 0.3)], [CardRead(7, 0.8), CardRead(8, 0.8)])
+            ],
+            [5, 8],
+        )
+
+    def test_title_boxes_sit_inside_the_card_area(self):
+        from sexo2.augments.ocr import title_boxes
+
+        for size in ((1920, 1080), (1280, 1024), (3440, 1440)):
+            area = card_area(*size)
+            for left, top, right, bottom in title_boxes(*size):
+                self.assertTrue(area[0] <= left < right <= area[2] and area[1] <= top < bottom <= area[3])
+
+
+class WindowsOcrTests(unittest.TestCase):
+    """Runs where the Windows OCR exists (the Windows CI); skipped elsewhere."""
+
+    def test_titles_on_real_captures_are_read_and_named(self):
+        from sexo2.augments.ocr import read_titles, windows_reader
+
+        reader = windows_reader()
+        if reader is None:
+            self.skipTest("Windows OCR unavailable")
+        catalog = title_catalog()
+        by_name = {a.name: a.id for a in catalog.augments}
+        named = total = 0
+        for name, titles in TITLES.items():
+            reads = read_titles(capture(name), reader, catalog)
+            for read, title in zip(reads, titles):
+                total += 1
+                if read.augment_id is not None:
+                    self.assertEqual(read.augment_id, by_name[title], (name, title))  # never a wrong name
+                    named += 1
+        print(f"Windows OCR named {named} of {total} card titles")
+        self.assertGreaterEqual(named, total * 0.8)
+
+
 if __name__ == "__main__":
     unittest.main()

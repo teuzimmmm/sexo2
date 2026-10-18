@@ -33,6 +33,7 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-017 | O visual do protótipo `sexo2-v1` (tipografia, cores, componentes, ícones de runas, organização) está aprovado; só ajustes, sem novo redesenho. O assistente abre logo acima do botão SEXO2 da seleção: borda direita alinhada à do botão, 8 px de distância, abrindo para cima, sempre dentro da janela, sem cobrir o botão. | usuário, sessão 1.0b |
 | D-018 | Conjunto de itens: uma única página gerenciada “SEXO2 — {Campeão}”, reaproveitada entre campeões, com até nove seções em três grupos: `{WR}% — {N} partidas` (maior WR; WR do trio core observado), `Itens iniciais`, `Alternativas`; o mesmo para a mais jogada; `Counter {Campeão} — {WR}% — {N} partidas` (WR do confronto), `Itens iniciais`, `Alternativas`. Sem o confronto, o terceiro grupo não aparece. Conjuntos pessoais nunca são alterados nem apagados; os gerenciados são reconhecidos pelo `uid`. | usuário, sessão 1.0b |
 | D-019 | A importação do conjunto de itens é automática ao confirmar o campeão (SR, ARAM, Swiftplay), sem abrir o assistente, e se repete quando o campeão muda. Campeão provisório ou de outro jogador não importa. | usuário, sessão 1.0b |
+| D-115 | Aprimoramentos: o título de cada carta é lido com OCR (o do próprio Windows) e comparado com os nomes do modo; o ícone fica como reserva. Os textos sob as cartas seguem o protótipo (nome lido; “WR · PR · partidas”; “Sem dados”; “Não reconhecida”). | usuário, sessão 1.0b |
 | D-116 | A Arena mostra WR quando a fonte a fornece, além de PR e partidas (a supressão em `lolalytics/` foi removida). | usuário, sessão 1.0b |
 | D-020 | Aprimoramentos de Arena e ARAM Mayhem: só as cartas realmente oferecidas, com correção manual; nada é escolhido pelo SEXO2; números de Arena e Mayhem nunca se misturam; sem WR inventada; com só PR e partidas, mostram-se só esses. Destaque discreto das estatisticamente melhores. | usuário, sessão 1.0b |
 
@@ -43,7 +44,6 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-101 | Dimensionamento final da escala B compactada | protótipo `design/propostas/sexo2-v1` |
 | D-102 | Cores, incluindo a cor de sinal | proposta futura (M4) |
 | D-103 | Componentes base: botão, lista, cartão, seletor, aviso | proposta futura, com `design/wireframes.md` |
-| D-115 | Overlay dos aprimoramentos: textos sob cada carta (nome lido, “WR · PR · partidas”, “Sem dados”, “Não reconhecida”), cor do destaque e como corrigir uma carta durante a partida (a janela atual não recebe cliques) | protótipo `sexo2-v1`, aba Aprimoramentos |
 | D-104 | Navegação e menus (Hub, assistente, configurações) | antes do M7 |
 | D-105 | Destino das funções de mods (opções A, B ou C do plano) | antes do M7 |
 | D-106 | Automatismos: critério de “maior WR”, nível de risco, amostra mínima, uso do adversário inferido (a importação automática de itens foi decidida em D-019) | antes do M8 |
