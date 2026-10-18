@@ -11,7 +11,7 @@ Entradas fictícias (adversário à esquerda / aliado à direita no cenário da 
 | Zed × Ahri | 10750 | 10110 | -640 | -640 |
 | Kai'Sa × Jinx | 11200 | 11740 | +540 | +540 |
 | Lulu × Thresh | 6320 | 5780 | -540 | -540 |
-| Total | 45850 | 45640 | -210 | -210 (texto "ITENS · -210 ouro") |
+| Total | 45850 | 45640 | -210 | -210 (texto "-210"; "ITENS" e "ouro" removidos a pedido do usuário) |
 
 Outros cenários (obtido = esperado): vantagem (+300,+500,+200,+650,+420) total +2070; desvantagem simétrica -2070; empate: 0 em todas e "ITENS · empate (0 ouro)", sem barras. Preço indisponível (Zed×Ahri sem preço do aliado): d[2]=null, total=null; a rota mostra "—" (não 0), total "TOTAL INDISPONÍVEL" nos três modos, totais de equipe do Blitz também omitidos (sem total parcial).
 Observação: os números 16 e 8 do topo vêm da imagem aprovada; são fixos, fictícios, sem cálculo e seu significado não está definido no pacote. Na imagem 16 (azul) fica sobre o lado dos adversários; preservado como aprovado.

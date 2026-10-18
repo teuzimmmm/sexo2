@@ -72,3 +72,4 @@ Tudo abaixo é proposta pendente, sem alterar decisões oficiais ou produção.
 - Limitações abertas: overlays a 452×492 rola dentro do palco; A a 820×560 exige rolar para ver o botão SEXO2; seletor de fonte do overlay ainda lista Arial; recorte da comparação com a imagem aprovada estimado a olho.
 - Visual anterior rejeitado; referência aprovada: `sexo2-operacao/overlay-aprovado.png`. Nenhuma recomendação é aprovação de produto.
 - v2.2: B descartada pelo usuário. A rodada 3: 115 checagens (Chromium, file://), 24 de 171 retratos locais, imagens de skin como placeholder, Swiftplay simulado.
+- v2.3: A rodada 4 (busca de skin, Swiftplay com 2 campeões, SEXO2 em Oswald; 125 checagens). Overlays: total sem 'ITENS'/'ouro'. Bula para Claude na nuvem em sexo2-operacao/BULA-CLAUDE-NUVEM.md.

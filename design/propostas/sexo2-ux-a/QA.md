@@ -1,14 +1,16 @@
-# QA — Proposta A (rodada 3)
+# QA — Proposta A (rodada 4)
 
 `index.html` por file://. Estrutura: faixa de simulação fora do produto (Estado: Cliente / Seleção de campeões / Partida; Modo: Normal / Swiftplay; resultado da importação de runas; Onetricks; falha do cliente; fim da seleção) + palco 1280×720 que simula o client. Painel do SEXO2 820×560 abre pelo botão SEXO2 do cabeçalho (em Sala); assistente 452×492 abre pelo botão SEXO2 inferior da seleção.
-Método: Chromium headless (cache Playwright, `chromium-1228`, não o headless-shell) via CDP stdlib, viewport 1280×820. Teclas reais (Tab/Shift+Tab/Enter/Escape). `evidencias/log-t15.txt`: 115 verificações, 0 falhas. Script em `evidencias/harness/`. Capturas `evidencias/r3-*.png` (21).
+Método: Chromium headless (cache Playwright, `chromium-1228`, não o headless-shell) via CDP stdlib, viewport 1280×820. Teclas reais (Tab/Shift+Tab/Enter/Escape). `evidencias/log-t17.txt`: 125 verificações, 0 falhas (rodada 4). Script em `evidencias/harness/`. Capturas `evidencias/r3-*.png` e `r4-*.png`.
 
 ## Rodada 3: decisões do usuário
 - UI antiga resgatada: layout do assistente (Maior WR / Mais comum / Contra X / Outras runas, rodapé de estado), cena de seleção (título + contagem, listas laterais, grade 8×3, CONFIRMAR, "Runas · Feitiços"). Ver também "Trazido da B".
 - Painel abre em Sala; menus Sala, Favoritas, Configurações, Suporte (+ Swiftplay só no modo Swiftplay). Mods saiu do painel (vive na aba Mods da seleção). PASSOU.
 - Sorteio/conjuntos removidos; "elegível ao sorteio", "Conjunto ativo", "Skin aplicada" ausentes (verificado por texto). PASSOU.
 - Favoritas: 171 campeões na grade (24 retratos locais, 147 placeholders), busca por nome; página do campeão com 3 skins e snippet placeholder explícito; skin selecionada expande cromas; só "Favoritar"; favoritar a skin não favorita croma (estados separados, testado em ambas as direções). PASSOU.
-- Swiftplay: campeão travado; manual vence; nada tocado → sorteio estilo Bravura com favoritas primeiro, aleatória sem favorita; erro simulado → Suporte → retorno. PASSOU (simulação, não validado em partida real).
+- Swiftplay (rodada 4): SEMPRE 2 campeões travados (definidos na faixa de simulação, distintos). O menu mostra os dois e cada um tem sua escolha de skin/croma e "Limpar escolha". Casos testados: nenhum tocado (ambos sorteio estilo Bravura, favorita primeiro, aleatória sem favorita), só um tocado (manual no tocado, sorteio no outro), ambos tocados (dois manuais); limpar um não afeta o outro; trocar campeão reinicia só a escolha dele; erro simulado → Suporte → retorno. PASSOU (simulação, não validado em partida real).
+- Busca em Favoritas (rodada 4): acha campeões e também skins por nome da skin ("Skins encontradas"); "Ver skin" abre o campeão com a skin destacada e selecionada. Testado com skin existente (Florescer / Elementalista), campeão (lee, kai) e inexistente (mensagem "Nenhum campeão ou skin encontrado"). PASSOU. Ressalva: nomes de skin dos campeões sem dado são ilustrativos ("X Ilustrativa/Exaltada").
+- Fonte (rodada 4): "SEXO2" no botão inferior da seleção, no botão do cabeçalho e na marca do painel usa Oswald (computed style + document.fonts.check + varredura de todo texto SEXO2 do palco). Causa corrigida: a regra .btn (Inter) sobrescrevia o botão inferior. PASSOU.
 - Assistente: texto "Ver a recomendação…" removido; header Rota/Confronto/Fonte sem nome do campeão; abas Runas, Itens, Mods, Preferências rápidas, Todas as configurações (cabem em 452 px); sem aba Skins; Build padrão Inicial/Essenciais/Situacionais e trios mantidos. PASSOU.
 - Cantos: nenhum border-radius > 0 em #stage, faixa de simulação e diálogos (computed style), exceto círculos de croma. PASSOU.
 - Marca: cabeçalho do painel só "SEXO2" + Fechar; nenhum "Hub"/"Demonstração" em texto, aria-label, title ou alt do palco. PASSOU.
