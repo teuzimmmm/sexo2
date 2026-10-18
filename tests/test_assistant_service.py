@@ -181,7 +181,13 @@ class AssistantServiceTests(unittest.TestCase):
     def test_builds_are_published_for_display_only_when_requested(self):
         from lolalytics.builds import BuildPage, ItemBlock, ItemChoice
 
-        block = ItemBlock("starting", [ItemChoice("1055", 1, {"win_rate": 51.0, "games": 90}, {})], {"win_rate": 52.0, "games": 100}, "p", False)
+        block = ItemBlock(
+            "starting",
+            [ItemChoice("1055", 1, {"win_rate": 51.0, "games": 90}, {})],
+            {"win_rate": 52.0, "games": 100},
+            "p",
+            False,
+        )
         page = BuildPage("win", "WR", "t", 8112, {}, [block], {}, "u", {}, {}, "now", False, [])
         self.stats = None
         self.service.handle({"type": "assistant-request"})
@@ -190,7 +196,10 @@ class AssistantServiceTests(unittest.TestCase):
         self.service.handle({"type": "assistant-items-request"})
         build = self.published[-1]["builds"][0]
         self.assertEqual(build["selection"], "win")
-        self.assertEqual(build["blocks"][0], {"kind": "starting", "winRate": 52.0, "games": 100, "items": [{"id": "1055", "count": 1, "winRate": 51.0}]})
+        self.assertEqual(
+            build["blocks"][0],
+            {"kind": "starting", "winRate": 52.0, "games": 100, "items": [{"id": "1055", "count": 1, "winRate": 51.0}]},
+        )
 
 
 if __name__ == "__main__":
