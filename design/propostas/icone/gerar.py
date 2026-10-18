@@ -53,20 +53,37 @@ def traco(line, eye):
 
 # id: (nome, desenho, descrição)
 OPTIONS = {
-    "a": ("Galo", tile(DARK) + galo(WHITE, RED, DARK, wattle=False),
-          "Três círculos, um círculo e um triângulo. Cabeça branca, crista e bico vermelhos, fundo grafite."),
-    "b": ("Galo com barbela", tile(DARK) + galo(WHITE, RED, DARK),
-          "O mesmo, com a barbela: uma forma a mais que tira o ar de pintinho e deixa claro que é galo."),
-    "c": ("Galo no vermelho", tile(RED) + galo(WHITE, WHITE, RED, wattle=False),
-          "Uma marca branca sobre fundo vermelho, como o ícone do Claude: a cor inteira é o fundo."),
-    "d": ("Galo no vermelho com barbela", tile(RED) + galo(WHITE, WHITE, RED),
-          "O galo no vermelho, com a barbela."),
-    "e": ("Galo preto", tile(WHITE) + galo(DARK, RED, WHITE),
-          "Cabeça preta, crista vermelha, fundo claro: preto, branco e vermelho. Aparece bem em barra escura."),
-    "f": ("Cabeça", tile(DARK) + cabeca(WHITE, RED, DARK),
-          "Crista em uma peça só e cabeça branca; um pouco mais desenhado que o geométrico."),
-    "g": ("Traço", tile(DARK) + traco(WHITE, RED),
-          "O galo em uma linha contínua, com o olho vermelho. O mais leve; em 16 px perde força."),
+    "a": (
+        "Galo",
+        tile(DARK) + galo(WHITE, RED, DARK, wattle=False),
+        "Três círculos, um círculo e um triângulo. Cabeça branca, crista e bico vermelhos, fundo grafite.",
+    ),
+    "b": (
+        "Galo com barbela",
+        tile(DARK) + galo(WHITE, RED, DARK),
+        "O mesmo, com a barbela: uma forma a mais que tira o ar de pintinho e deixa claro que é galo.",
+    ),
+    "c": (
+        "Galo no vermelho",
+        tile(RED) + galo(WHITE, WHITE, RED, wattle=False),
+        "Uma marca branca sobre fundo vermelho, como o ícone do Claude: a cor inteira é o fundo.",
+    ),
+    "d": ("Galo no vermelho com barbela", tile(RED) + galo(WHITE, WHITE, RED), "O galo no vermelho, com a barbela."),
+    "e": (
+        "Galo preto",
+        tile(WHITE) + galo(DARK, RED, WHITE),
+        "Cabeça preta, crista vermelha, fundo claro: preto, branco e vermelho. Aparece bem em barra escura.",
+    ),
+    "f": (
+        "Cabeça",
+        tile(DARK) + cabeca(WHITE, RED, DARK),
+        "Crista em uma peça só e cabeça branca; um pouco mais desenhado que o geométrico.",
+    ),
+    "g": (
+        "Traço",
+        tile(DARK) + traco(WHITE, RED),
+        "O galo em uma linha contínua, com o olho vermelho. O mais leve; em 16 px perde força.",
+    ),
 }
 
 

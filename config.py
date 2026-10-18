@@ -387,7 +387,8 @@ _IS_DEV_BUILD = bool(getattr(sys, "frozen", False)) and (
 SINGLE_INSTANCE_MUTEX_NAME = r"Local\RoseDevSingleInstance" if _IS_DEV_BUILD else r"Local\RoseSingleInstance"
 
 # Log file patterns (handles .log files)
-LOG_FILE_PATTERN = "rose_*.log*"
+LOG_FILE_PATTERN = "sexo2_*.log*"
+LEGACY_LOG_FILE_PATTERN = "rose_*.log*"  # logs of earlier versions, still cleaned up
 UPDATER_LOG_FILE_PATTERN = "log_updater_*.log*"
 LOG_TIMESTAMP_FORMAT = "%d-%m-%Y_%H-%M-%S"  # European format, Windows-compatible
 

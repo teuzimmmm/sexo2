@@ -24,7 +24,8 @@ for corrigido e verificado.
 5. **Nome do log:** os arquivos de log devem se chamar `sexo2_*.log`, não `rose_*.log`
    (`utils/core/logging.py`, `LOG_FILE_PATTERN` em `config.py`, `friends/diagnostics.py`);
    junto, `rose_diagnostics.txt` vira `sexo2_diagnostics.txt`. A limpeza de logs antigos precisa
-   continuar apagando os `rose_*.log` que vieram da pasta migrada.
+   continuar apagando os `rose_*.log` que vieram da pasta migrada. Feito: `sexo2_*.log`,
+   `sexo2_runoverlay_*.log` e `sexo2_diagnostics.txt` (o arquivo antigo é renomeado uma vez).
 6. **Ícone do aplicativo:** refazer o ícone do SEXO2 (executável, atalho, bandeja, instalador)
    para ficar no estilo do programa. É identidade visual: proposta para aprovação antes de trocar
    `assets/sexo2.ico`.
