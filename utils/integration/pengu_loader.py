@@ -677,13 +677,15 @@ def _read_session() -> Optional[dict[str, object]]:
         return None
 
 
-def _write_session(was_active: bool, rose_activated: bool) -> bool:
+def _write_session(was_active: bool, rose_activated: bool, clients_with_plugins: Iterable[int] = ()) -> bool:
     record = {
         "version": 1,
         "rose_pid": os.getpid(),
         "pengu_was_active_before_rose": was_active,
         "rose_activated_pengu": rose_activated,
         "activated_at": datetime.now().astimezone().isoformat(),
+        # LeagueClientUx processes that already run SEXO2's plugins (left open when SEXO2 quit)
+        "clients_with_plugins": sorted(clients_with_plugins),
     }
     temporary = _SESSION_FILE.with_suffix(f"{_SESSION_FILE.suffix}.tmp")
     try:
@@ -861,6 +863,7 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
             return False
 
         stale_rose_owned = False
+        session = None
         if _SESSION_FILE.exists() or _ACTIVE_FLAG.exists():
             session = _read_session()
             stale_rose_owned = _session_requires_deactivation(session) if session is not None else _ACTIVE_FLAG.exists()
@@ -879,8 +882,12 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
             )
 
         # A running client loads Rose's plugins only when it starts, so it restarts
-        # whatever state an earlier Rose left the loader in
+        # whatever state an earlier Rose left the loader in, unless the previous
+        # SEXO2 left this very client running with the plugins loaded.
         restart_needed = _process_running(("LeagueClientUx.exe",))
+        if restart_needed and stale_rose_owned and _clients_still_have_plugins(session):
+            log.info("The running League client still has SEXO2's plugins; no restart needed.")
+            restart_needed = False
         activated_now = False
         if initial is PenguStatus.INACTIVE:
             log.info("Activating Pengu through official CLI (restart League: %s).", restart_needed)
@@ -944,5 +951,42 @@ def restore_after_rose() -> bool:
         return True
 
 
+def _clients_still_have_plugins(session: Optional[dict[str, object]]) -> bool:
+    recorded = (session or {}).get("clients_with_plugins")
+    if not isinstance(recorded, list) or not recorded:
+        return False
+    running = _process_ids(("LeagueClientUx.exe",))
+    return bool(running) and running <= {pid for pid in recorded if isinstance(pid, int)}
+
+
 def deactivate_on_exit() -> bool:
+    """SEXO2 quits: switch its loader off, unless a League client is running with the plugins.
+
+    Switching off with the client open means restarting it, which takes the player out of
+    the queue or champion select; reopening SEXO2 would restart it again. So the activation
+    and its recovery record stay, with the client processes that have the plugins: the next
+    start adopts them without a restart, or cleans up once League is closed.
+    """
+    global _restart_pending
+    with _operation_lock:
+        restart_was_pending = bool(_restart_pending)
+        _restart_pending = frozenset()  # a queued restart must not run after SEXO2 exits
+        session = _read_session()
+        clients = _process_ids(("LeagueClientUx.exe",))
+        if (
+            session is not None
+            and _session_requires_deactivation(session)
+            and clients
+            and not restart_was_pending  # the running client was restarted and has the plugins
+            and _hook_of_another_loader() is None
+            and get_status() is PenguStatus.ACTIVE
+        ):
+            if _write_session(was_active=False, rose_activated=True, clients_with_plugins=clients):
+                log.info("Keeping Pengu active for the running League client; recovery state retained.")
+                return True
+    return restore_after_rose()
+
+
+def end_of_windows_session() -> bool:
+    """Windows is shutting down: League goes too, so nothing is kept."""
     return restore_after_rose()

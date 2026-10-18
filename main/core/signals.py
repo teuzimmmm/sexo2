@@ -116,7 +116,7 @@ def _start_shutdown_watcher() -> None:
                 if not app_state.shutting_down:
                     app_state.shutting_down = True
                     try:
-                        pengu_loader.deactivate_on_exit()
+                        pengu_loader.end_of_windows_session()
                     except Exception:
                         log.warning("Failed to deactivate Pengu Loader on session end", exc_info=True)
             return 0

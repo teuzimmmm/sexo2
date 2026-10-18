@@ -21,6 +21,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Swiftplay e fixados | `threads/handlers/swiftplay_handler.py`, `pengu/processing/swiftplay_pins.py` | `test_quickplay`, `test_swiftplay_historic`, `test_swiftplay_pins`, `test_swiftplay_pins_ui.cjs` |
 | Arena Bravura | `friends/arena_bravery.py` | `test_arena_bravery` |
 | Ponte Pengu ↔ backend e reconexão | `pengu/core/`, `pengu/communication/` | `pengu/tests` (porta, watchdog, isolamento de mensagens) |
+| Fechar o SEXO2 com o LoL aberto deixa o Pengu ativo e anota o cliente que tem os plugins; reabrir com o mesmo cliente não o reinicia; com outro cliente, reinicia; sem LoL, ou com o Windows desligando, desativa. Pengu de outro dono nunca é desativado | `utils/integration/pengu_loader.py`, `main/core/signals.py` | `utils/tests/test_pengu_lifecycle` (ciclo simulado; **sem teste** no cliente real) |
 | Conexão e eventos do LCU | `lcu/`, `threads/websocket/` | `lcu/tests`, `test_ws_event_errors`, `test_ws_retry_logging`, `test_champ_lock_errors`, `test_late_lock_replay` |
 | Atualização assinada e restauração em falha | `sexo2/update/` | `test_patch_update`, `test_update_client`, `test_update_lifecycle`, `test_updater_transition`, `test_compatibility_packages` |
 | Inicialização rápida e verificação de hashes | `launcher/core/startup_policy.py`, `launcher/sequences/` | `test_startup_policy`, `test_startup_hash_checks` |
