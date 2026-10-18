@@ -38,7 +38,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Fachada do LCU com as chamadas do assistente (`get` sem cache, `put`, `post`) | `lcu/core/client.py` | `lcu/tests/test_lcu_facade` |
 | Painel acima do botão SEXO2 | `ROSE-CustomWheel` (`computeAnchor`), protótipo `js/anchor.js` | `test_anchor.cjs`; **sem teste** do DOM real |
 | Aprimoramentos: catálogo por modo, estatísticas, ofertas, reconhecimento | `sexo2/augments/`, `sexo2/overlay/augment_overlay.py` | `test_augments` (capturas reais MIT); **sem teste** em partida real |
-| Ouro no placar: linhas calibradas com captura real em 1920×1080, textos em pixels, janela só na coluna central; desenho reaproveitado quando os valores não mudam e preparação antes do primeiro Tab | `sexo2/overlay/gold_overlay.py` | `test_gold_overlay`, `test_gold_comparison` (coordenadas reais e janela simulada; **sem medição** de FPS no jogo) |
+| Ouro no placar: coordenadas reais em 1080p, textos em pixels e janela central; desenho reutilizado e preparação antes do Tab; conexão e identidade por partida com descarte em falha/saída; só mostra com Tab e jogo em primeiro plano, descartando leituras atrasadas | `sexo2/overlay/gold_overlay.py` | `test_gold_overlay`, `test_gold_comparison` (coordenadas, ciclo de conexão e janela simulada; janela real conferida em desktop separado; **sem medição** de FPS no jogo) |
 | Estatísticas do assistente (slug do campeão, runas por runa-chave) | `sexo2/services/stats.py` | `test_stats_service` (fixtures LoLalytics) |
 
 Lacunas que os marcos devem cobrir antes de mexer na área: precisão do disparo

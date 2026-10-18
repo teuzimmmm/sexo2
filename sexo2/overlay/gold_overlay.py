@@ -6,7 +6,8 @@ Other resolutions and HUD scales still need checking in the game. It needs the g
 in borderless or windowed mode; nothing is injected into the game.
 
 Work happens only during a match: the Tab key is sampled every 100 ms and the Live Client
-Data API is read at most once per second while Tab is held.
+Data API is read at most once per second while Tab is held over the game. The connection
+and active player's name are reused within a match and discarded on exit or read failure.
 """
 
 from __future__ import annotations
@@ -126,8 +127,16 @@ def _tab_down() -> bool:
     if sys.platform != "win32":
         return False
     import ctypes
+    from ctypes import wintypes
 
-    return bool(ctypes.windll.user32.GetAsyncKeyState(0x09) & 0x8000)
+    user32 = ctypes.windll.user32
+    if not user32.GetAsyncKeyState(0x09) & 0x8000:
+        return False
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.GetClassNameW.argtypes = (wintypes.HWND, wintypes.LPWSTR, ctypes.c_int)
+    hwnd = user32.GetForegroundWindow()
+    name = ctypes.create_unicode_buffer(64)
+    return bool(hwnd and user32.GetClassNameW(hwnd, name, len(name)) and name.value == "RiotWindowClass")
 
 
 class _Window:
@@ -212,7 +221,9 @@ class _Window:
                             draw(item)
                             drawn = item
                         if not visible:
-                            root.deiconify()
+                            # Normal state shows without activation on Windows;
+                            # deiconify additionally restacks the toplevel.
+                            root.state("normal")
                             visible = True
             except queue.Empty:
                 pass
@@ -244,6 +255,8 @@ class GoldOverlayThread(threading.Thread):
         self._stop_event = threading.Event()
         self._prices: dict[int, int] = {}
         self._window: _Window | None = None
+        self._session: Any = None
+        self._active_name: str | None = None
 
     def stop(self) -> None:
         self._stop_event.set()
@@ -253,48 +266,80 @@ class GoldOverlayThread(threading.Thread):
     def _fetch(self, path: str) -> Any:
         import requests
 
-        with requests.get(LIVE_CLIENT + path, verify=False, timeout=0.5) as response:  # Riot's local certificate
-            response.raise_for_status()
-            return response.json()
+        if path == "/activeplayername" and self._active_name is not None:
+            return self._active_name
+        if self._session is None:
+            self._session = requests.Session()
+            self._session.trust_env = False  # Loopback must not use a system proxy.
+        try:
+            with self._session.get(
+                LIVE_CLIENT + path, verify=False, timeout=0.5
+            ) as response:  # Riot's local certificate
+                response.raise_for_status()
+                data = response.json()
+        except Exception:
+            self._reset_client()
+            raise
+        if path == "/activeplayername" and isinstance(data, str) and data:
+            self._active_name = data
+        return data
+
+    def _reset_client(self) -> None:
+        session, self._session = self._session, None
+        self._active_name = None
+        if session is not None:
+            session.close()
 
     def run(self) -> None:
         shown = False
         last_read = 0.0
         last_prices = float("-inf")
-        while not self._stop_event.is_set():
-            if getattr(self._state, "phase", None) != "InProgress":
-                self._prices = {}
-                last_prices = float("-inf")
-                if shown:
-                    self._window.hide()
-                    shown = False
-                self._stop_event.wait(1.0)
-                continue
-            # Prepare once the match starts, before the first Tab press. Tk
-            # stays withdrawn and catalog retries reuse this existing loop.
-            if self._window is None:
-                self._window = _Window(self._geometry)
-            now = time.monotonic()
-            if not self._prices and now - last_prices >= 5.0:
-                last_prices = now
-                try:
-                    self._prices = item_prices(self._lcu.get("/lol-game-data/assets/v1/items.json") or [])
-                except Exception as error:
-                    log.debug("[GOLD] item catalog not ready: %s", error)
-            if not _tab_down():
-                if shown:
-                    self._window.hide()
-                    shown = False
+        try:
+            while not self._stop_event.is_set():
+                if getattr(self._state, "phase", None) != "InProgress":
+                    self._prices = {}
+                    last_prices = float("-inf")
+                    self._reset_client()
+                    if shown:
+                        self._window.hide()
+                        shown = False
+                    self._stop_event.wait(1.0)
+                    continue
+                # Prepare once the match starts, before the first Tab press. Tk
+                # stays withdrawn and catalog retries reuse this existing loop.
+                if self._window is None:
+                    self._window = _Window(self._geometry)
+                now = time.monotonic()
+                if not self._prices and now - last_prices >= 5.0:
+                    last_prices = now
+                    try:
+                        self._prices = item_prices(self._lcu.get("/lol-game-data/assets/v1/items.json") or [])
+                    except Exception as error:
+                        log.debug("[GOLD] item catalog not ready: %s", error)
+                if not _tab_down():
+                    if shown:
+                        self._window.hide()
+                        shown = False
+                    self._stop_event.wait(0.1)
+                    continue
+                if now - last_read >= 1.0:
+                    last_read = now
+                    try:
+                        comparison = read_comparison(self._fetch, self._prices)
+                        if self._stop_event.is_set():
+                            break
+                        if getattr(self._state, "phase", None) == "InProgress" and _tab_down():
+                            self._window.show(comparison)
+                            shown = True
+                        elif shown:
+                            self._window.hide()
+                            shown = False
+                    except Unsupported:
+                        # Retry the name if the game's identity changed before
+                        # the next phase event; the connection is still usable.
+                        self._active_name = None
+                    except Exception as error:
+                        log.debug("[GOLD] reading failed: %s", error)
                 self._stop_event.wait(0.1)
-                continue
-            if now - last_read >= 1.0:
-                last_read = now
-                try:
-                    comparison = read_comparison(self._fetch, self._prices)
-                    self._window.show(comparison)
-                    shown = True
-                except Unsupported:
-                    pass  # Arena and other modes without a paired scoreboard
-                except Exception as error:
-                    log.debug("[GOLD] reading failed: %s", error)
-            self._stop_event.wait(0.1)
+        finally:
+            self._reset_client()

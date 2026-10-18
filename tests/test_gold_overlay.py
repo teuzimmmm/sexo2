@@ -1,9 +1,10 @@
 """Layout and reading of the scoreboard overlay (sexo2/overlay/gold_overlay.py), without a window."""
 
 import queue
+import ctypes
 import unittest
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from sexo2.overlay.gold_overlay import ALLY, ENEMY, Geometry, layout, my_team, read_comparison
 from sexo2.services.gold import Unsupported
@@ -24,6 +25,11 @@ PLAYERS = [
 
 
 class GoldOverlayTests(unittest.TestCase):
+    def setUp(self):
+        guard = patch("requests.get", side_effect=AssertionError("Unexpected live request in overlay tests"))
+        guard.start()
+        self.addCleanup(guard.stop)
+
     def fetch(self, me):
         return lambda path: {"/playerlist": PLAYERS, "/activeplayername": me}[path]
 
@@ -116,11 +122,12 @@ class GoldOverlayTests(unittest.TestCase):
             window._run()
         # Same readings and re-opening Tab reuse the existing canvas contents.
         canvas.delete.assert_called_once_with("all")
-        self.assertEqual(root.deiconify.call_count, 2)
+        self.assertEqual(root.state.call_args_list, [call("normal"), call("normal")])
+        root.deiconify.assert_not_called()
         root.attributes.assert_any_call("-topmost", True)
         self.assertEqual(len([c for c in root.attributes.call_args_list if c.args == ("-topmost", True)]), 1)
-        for call in canvas.create_text.call_args_list:
-            size = call.kwargs["font"][1]
+        for invocation in canvas.create_text.call_args_list:
+            size = invocation.kwargs["font"][1]
             self.assertLess(size, 0)  # Pixel sizes, independent of Windows text scaling.
             self.assertLessEqual(abs(size), 12)
         root.destroy.assert_called_once()
@@ -133,6 +140,117 @@ class GoldOverlayTests(unittest.TestCase):
         thread.start()
         thread.join(timeout=2)
         self.assertFalse(thread.is_alive())
+
+    def test_live_reads_share_a_session_and_cache_the_active_name(self):
+        from sexo2.overlay.gold_overlay import LIVE_CLIENT, GoldOverlayThread
+
+        thread = GoldOverlayThread(SimpleNamespace(phase="InProgress"), Mock())
+        session = Mock()
+        response = MagicMock()
+        session.get.return_value = response
+        response.__enter__.return_value.json.side_effect = [PLAYERS, "Eu#BR1", PLAYERS]
+        with patch("requests.Session", return_value=session) as create:
+            first = read_comparison(thread._fetch, PRICES)
+            second = read_comparison(thread._fetch, PRICES)
+        self.assertEqual(first, second)
+        create.assert_called_once_with()
+        self.assertFalse(session.trust_env)
+        self.assertEqual(
+            session.get.call_args_list,
+            [
+                call(LIVE_CLIENT + "/playerlist", verify=False, timeout=0.5),
+                call(LIVE_CLIENT + "/activeplayername", verify=False, timeout=0.5),
+                call(LIVE_CLIENT + "/playerlist", verify=False, timeout=0.5),
+            ],
+        )
+        self.assertEqual(response.__exit__.call_count, 3)
+        thread._reset_client()
+        session.close.assert_called_once_with()
+        self.assertIsNone(thread._active_name)
+
+    def test_failed_read_discards_connection_and_identity_before_retry(self):
+        import requests
+        from sexo2.overlay.gold_overlay import GoldOverlayThread
+
+        thread = GoldOverlayThread(SimpleNamespace(), Mock())
+        broken, recovered = Mock(), Mock()
+        thread._session, thread._active_name = broken, "Old#BR1"
+        broken.get.side_effect = requests.ConnectionError("disconnected")
+        with self.assertRaises(requests.ConnectionError):
+            thread._fetch("/playerlist")
+        broken.close.assert_called_once_with()
+        self.assertIsNone(thread._session)
+        self.assertIsNone(thread._active_name)
+        response = MagicMock()
+        recovered.get.return_value = response
+        response.__enter__.return_value.json.return_value = "New#BR1"
+        with patch("requests.Session", return_value=recovered):
+            self.assertEqual(thread._fetch("/activeplayername"), "New#BR1")
+        thread._reset_client()
+
+    def test_leaving_the_match_closes_connection_and_clears_identity(self):
+        from sexo2.overlay.gold_overlay import GoldOverlayThread
+
+        thread = GoldOverlayThread(SimpleNamespace(phase="Lobby"), Mock())
+        session = Mock()
+        thread._session, thread._active_name = session, "Old#BR1"
+        thread._stop_event.wait = Mock(side_effect=lambda _: thread.stop())
+        thread.run()
+        session.close.assert_called_once_with()
+        self.assertIsNone(thread._session)
+        self.assertIsNone(thread._active_name)
+
+    def test_stopping_closes_connection_even_without_a_phase_transition(self):
+        from sexo2.overlay.gold_overlay import GoldOverlayThread
+
+        thread = GoldOverlayThread(SimpleNamespace(phase="InProgress"), Mock())
+        session = Mock()
+        thread._session = session
+        thread.stop()
+        thread.run()
+        session.close.assert_called_once_with()
+
+    def test_tab_released_during_a_read_does_not_show_late_results(self):
+        from sexo2.overlay.gold_overlay import GoldOverlayThread
+
+        thread = GoldOverlayThread(SimpleNamespace(phase="InProgress"), Mock())
+        window = Mock()
+        thread._stop_event.wait = Mock(side_effect=lambda _: thread.stop())
+        comparison = read_comparison(self.fetch("Eu#BR1"), PRICES)
+        with (
+            patch("sexo2.overlay.gold_overlay._Window", return_value=window),
+            patch("sexo2.overlay.gold_overlay._tab_down", side_effect=[True, False]),
+            patch("sexo2.overlay.gold_overlay.read_comparison", return_value=comparison),
+        ):
+            thread.run()
+        window.show.assert_not_called()
+
+    def test_tab_only_counts_while_the_game_is_foreground(self):
+        from sexo2.overlay.gold_overlay import _tab_down
+
+        user32 = Mock()
+        user32.GetAsyncKeyState.return_value = 0x8000
+        user32.GetForegroundWindow.return_value = 0x100000010
+
+        def window_class(value):
+            def read_class(hwnd, buffer, length):
+                buffer.value = value
+                return len(value)
+
+            return read_class
+
+        with (
+            patch("sexo2.overlay.gold_overlay.sys.platform", "win32"),
+            patch.object(ctypes, "windll", SimpleNamespace(user32=user32), create=True),
+        ):
+            user32.GetClassNameW.side_effect = window_class("RiotWindowClass")
+            self.assertTrue(_tab_down())
+            user32.GetClassNameW.side_effect = window_class("OtherWindow")
+            self.assertFalse(_tab_down())
+            user32.GetAsyncKeyState.return_value = 0
+            user32.GetForegroundWindow.reset_mock()
+            self.assertFalse(_tab_down())
+            user32.GetForegroundWindow.assert_not_called()
 
 
 if __name__ == "__main__":

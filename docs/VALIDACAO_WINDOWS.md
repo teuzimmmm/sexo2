@@ -73,4 +73,10 @@ a limpa se o LoL já estiver fechado.
    overlay desligado/ligado, segurando Tab por alguns segundos em cada caso.
    A janela foi limitada à coluna central e as leituras idênticas não redesenham
    o conteúdo; isso não substitui a medição de FPS em partida.
+   A conexão local agora é reaproveitada e o nome do jogador só é consultado uma vez
+   por partida. Confira também soltar Tab durante uma leitura, alternar para outra
+   janela segurando Tab, retornar ao jogo e iniciar outra partida: não deve aparecer
+   uma leitura atrasada nem reaproveitar a identidade anterior. O mostrar/ocultar
+   sem `deiconify` foi conferido com Tk real em um desktop separado; o efeito na
+   composição do LoL ainda depende dessa comparação de FPS no jogo.
 10. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.
