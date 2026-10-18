@@ -24,9 +24,15 @@ from sexo2.services.gold import CHAOS, ORDER, Comparison, Unsupported, compare, 
 log = logging.getLogger(__name__)
 
 LIVE_CLIENT = "https://127.0.0.1:2999/liveclientdata"
-ALLY = "#4f8cff"
-ENEMY = "#e5484d"
+ALLY = "#97d1b8"  # advantage for my team (approved overlay design, mode B)
+ENEMY = "#edaf8c"  # advantage for the other team
 NEUTRAL = "#a4a9b0"
+NUMBER = "#e4eadf"
+TRACK = "#3c494b"
+TOTAL_BG = "#253b35"
+TOTAL_FG = "#c4dfba"
+BAR_UNIT = 12  # gold per pixel of bar at 1280 px wide, as in the approved design
+BAR_MAX = 58
 TRANSPARENT = "#010203"
 
 
@@ -48,12 +54,15 @@ class Mark:
     text: str
     color: str
     arrow: str | None  # "left" (toward my team), "right" (toward theirs) or None
-    left: str = ""
-    right: str = ""
+    value: int = 0
 
 
 def _number(value: int) -> str:
     return f"{value:,}".replace(",", ".")
+
+
+def _signed(diff: int) -> str:
+    return ("+" if diff > 0 else "-" if diff < 0 else "") + _number(abs(diff))
 
 
 def _side(diff: int) -> tuple[str, str | None]:
@@ -75,11 +84,10 @@ def layout(comparison: Comparison, width: int, height: int, geometry: Geometry =
                 "total",
                 x,
                 round(height * geometry.total_y),
-                _number(abs(comparison.difference)),
+                _signed(comparison.difference),
                 color,
                 arrow,
-                _number(comparison.order_total),
-                _number(comparison.chaos_total),
+                value=comparison.difference,
             )
         )
     for index, row in enumerate(comparison.rows):
@@ -87,7 +95,7 @@ def layout(comparison: Comparison, width: int, height: int, geometry: Geometry =
             continue  # unknown price: show nothing rather than a wrong number
         color, arrow = _side(row.difference)
         y = round(height * (geometry.rows_top + index * geometry.row_step))
-        marks.append(Mark("row", x, y, _number(abs(row.difference)), color, arrow))
+        marks.append(Mark("row", x, y, _signed(row.difference), color, arrow, value=row.difference))
     return marks
 
 
@@ -150,19 +158,26 @@ class _Window:
 
         def draw(comparison: Comparison) -> None:
             canvas.delete("all")
+            scale = width / 1280
             for mark in layout(comparison, width, height, self._geometry):
-                size = 15 if mark.kind == "total" else 12
                 if mark.kind == "total":
-                    canvas.create_text(mark.x - 70, mark.y, text=mark.left, fill=ALLY, font=("Segoe UI", size, "bold"))
+                    half_w, half_h = round(130 * scale), round(17 * scale)
+                    canvas.create_rectangle(
+                        mark.x - half_w, mark.y - half_h, mark.x + half_w, mark.y + half_h, fill=TOTAL_BG, outline=""
+                    )
                     canvas.create_text(
-                        mark.x + 70, mark.y, text=mark.right, fill=ENEMY, font=("Segoe UI", size, "bold")
+                        mark.x, mark.y, text=mark.text, fill=TOTAL_FG, font=("Segoe UI", round(15 * scale), "bold")
                     )
-                if mark.arrow:
-                    w = 7 if mark.arrow == "left" else -7
-                    canvas.create_polygon(
-                        mark.x - w, mark.y - 9, mark.x + w, mark.y - 15, mark.x + w, mark.y - 3, fill=mark.color
-                    )
-                canvas.create_text(mark.x, mark.y + 9, text=mark.text, fill=mark.color, font=("Segoe UI", size, "bold"))
+                    continue
+                size = round(13 * scale)
+                canvas.create_text(mark.x, mark.y, text=mark.text, fill=NUMBER, font=("Segoe UI", size, "bold"))
+                track_y = mark.y + round(20 * scale)
+                half = round(70 * scale)
+                canvas.create_line(mark.x - half, track_y, mark.x + half, track_y, fill=TRACK, width=4)
+                if mark.value:
+                    length = round(min(BAR_MAX, abs(mark.value) / BAR_UNIT) * scale)
+                    end = mark.x - length if mark.arrow == "left" else mark.x + length
+                    canvas.create_line(mark.x, track_y, end, track_y, fill=mark.color, width=4)
 
         def poll() -> None:
             try:

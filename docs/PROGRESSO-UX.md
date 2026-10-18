@@ -10,7 +10,7 @@ Nada foi validado no cliente real do LoL, no Windows nem em partida. Sem bump de
 | 3 Favoritas (campeões, busca por skin, cromas separados, só Favoritar) | feito | ca9fccf |
 | 4 Swiftplay | parcial | ae56a8d |
 | 5 Assistente 452x492 | feito (ver limites) | b332320 |
-| 6 Overlay de ouro | sem alteração: já funcionava na sexoatividade (alteração revertida) | - |
+| 6 Overlay de ouro: design aprovado (número com sinal + barra discreta por linha, total com sinal no topo, sem totais por equipe); posições e janela inalteradas | feito | ver git log |
 
 ## Testes
 - `python scripts/run_tests.py -q`: 673 testes; as únicas falhas são as 7 da linha de base deste Mac
