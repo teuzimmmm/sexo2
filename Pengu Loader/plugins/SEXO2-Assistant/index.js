@@ -154,6 +154,16 @@
     };
   }
 
+  // "Outras builds": builds with an item whose name contains the search (accents and case ignored).
+  function fold(text) {
+    return String(text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+  function filterBuilds(builds, query, itemName) {
+    const q = fold(query);
+    if (!q) return builds;
+    return builds.filter((b) => b.items.some((id) => fold(itemName(id)).includes(q)));
+  }
+
   const RUNE_ERRORS = {
     cannot_edit: "A seleção terminou antes da confirmação.",
     no_free_page: "Sem espaço para a página do SEXO2. Apague uma página no cliente.",
@@ -169,7 +179,7 @@
   }
 
   if (typeof window === "undefined" && typeof module !== "undefined" && module.exports) {
-    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, runeError, itemError, LANES };
+    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, runeError, itemError, LANES };
     return;
   }
 
@@ -211,6 +221,13 @@
 #sexo2-assistant .rec-row .lbl{font-size:var(--t-small);color:var(--s2-fg-3);margin-left:var(--sp-1);}
 #sexo2-assistant .rec-row .wr{width:52px;text-align:right;}
 #sexo2-assistant .rec-row .n{width:56px;text-align:right;font-size:var(--t-small);color:var(--s2-fg-3);font-variant-numeric:tabular-nums;}
+#sexo2-assistant .rec-row .items{display:flex;gap:3px;}
+#sexo2-assistant .rec-row .items img{width:26px;height:26px;}
+#sexo2-assistant .rec-row .name{font-size:13px;color:var(--s2-fg);}
+#sexo2-assistant .list-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-1) 4px;font-size:var(--t-small);color:var(--s2-fg-3);}
+#sexo2-assistant .list-head .wr{width:52px;text-align:right;}
+#sexo2-assistant .list-head .n{width:56px;text-align:right;}
+#sexo2-assistant .actions{display:flex;gap:var(--sp-2);}
 #sexo2-assistant .tree-bar{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);}
 #sexo2-assistant .tree-bar .stat{display:flex;align-items:baseline;gap:6px;}
 #sexo2-assistant .tree{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);}
@@ -258,7 +275,7 @@
     panel.setAttribute("aria-label", "SEXO2");
     document.body.appendChild(panel);
 
-    const S = { tab: "runes", screen: "home", draft: null, source: null, state: null, lanePending: null };
+    const S = { tab: "runes", screen: "home", draft: null, source: null, state: null, lanePending: null, buildQuery: "", keystoneWanted: null };
     let game = null;
     let data = null;
     const names = { champions: {}, items: {} };
@@ -312,7 +329,8 @@
     }
 
     function recFor(selection, matchup) {
-      const list = (S.state.runes || {})[matchup ? "matchup" : "general"] || [];
+      const group = matchup ? "matchup" : selection === "keystone" ? "keystone" : "general";
+      const list = (S.state.runes || {})[group] || [];
       return list.find((r) => r.selection === selection);
     }
 
@@ -353,7 +371,22 @@
           <span class="t-heading">${opp ? "Contra " + esc(champName(opp)) : "Contra"}</span>
           <select class="s2-select" data-act="opponent" aria-label="Adversário">${opp ? "" : `<option value="">Escolher</option>`}${enemyOptions}</select>
         </div>
-        ${vs.length ? vs.map(row).join("") : `<div class="s2-empty">${opp ? `Sem dados suficientes contra ${esc(champName(opp))}.` : "Adversário de rota incerto."}</div>`}`;
+        ${vs.length ? vs.map(row).join("") : `<div class="s2-empty">${opp ? `Sem dados suficientes contra ${esc(champName(opp))}.` : "Adversário de rota incerto."}</div>`}
+        ${otherKeystones()}`;
+    }
+
+    // "Outras runas": every keystone with its own numbers; a click loads its most played page.
+    function otherKeystones() {
+      const keystones = ((S.state.options || {}).keystones || []).filter((k) => data.perks[k.id]);
+      if (!keystones.length) return "";
+      const pending = S.state.runes.keystonePending;
+      const row = (k) => `<button class="rec-row" data-act="keystone-open" data-id="${k.id}">
+          <img class="keystone s2-icon" src="${runeIcon(k.id)}" alt="" data-tip="${esc(perkName(k.id))}|${esc((data.styles[data.perks[k.id].style] || {}).name)}">
+          <span class="name">${esc(perkName(k.id))}</span><span class="grow"></span>
+          ${pending === k.id ? `<span class="s2-spinner"></span>` : `<span class="wr t-stat" data-tip="Win rate da runa-chave|${nf0.format(k.games)} partidas.">${k.winRate == null ? "—" : pct(k.winRate)}</span>`}
+          <span class="n">${nf0.format(k.games)}</span>
+        </button>`;
+      return `<div class="section-head"><span class="t-heading">Outras runas</span></div>${keystones.map(row).join("")}`;
     }
 
     function runeTree() {
@@ -396,6 +429,7 @@
       if (r.pending) left = `<span class="s2-spinner"></span><span>Importando…</span>`;
       else if (r.error) left = `<span class="err">${esc(runeError(r.error))}</span>`;
       else if (S.screen === "tree" && S.draft && data && validate(data, S.draft).length) left = `<span>Página incompleta</span>`;
+      else if (S.state && S.state.error === "keystone_unavailable") left = `<span class="err">Sem página com essa runa.</span>`;
       const right = r.applied && data ? `<span class="t-small">Aplicada</span>${miniPage(r.applied)}` : `<span class="t-muted">Nenhuma página aplicada</span>`;
       return `<div class="asst-foot">${left}<span class="grow"></span>${right}</div>`;
     }
@@ -413,8 +447,43 @@
         const item = names.items[id] || {};
         return `<span class="ip-item"><img class="s2-icon sq" width="34" height="34" src="${esc(item.icon || "")}" alt="${esc(item.name || id)}" data-tip="${esc(item.name || id)}|${nf0.format(item.gold || 0)} de ouro">${count > 1 ? `<span class="ip-count num">${count}</span>` : ""}</span>`;
       };
-      return `<div class="ip-page"><div class="ip-head t-heading">${esc(it.title || "")}</div>
+      if (S.screen === "builds") return otherBuilds();
+      const builds = (st.options || {}).builds || [];
+      const actions = [
+        it.chosen ? `<button class="s2-btn ghost" data-act="items-default">Voltar ao padrão</button>` : "",
+        builds.length ? `<button class="s2-btn" data-act="builds-open">Outras builds</button>` : "",
+      ].join("");
+      return `<div class="ip-page"><div class="section-head ip-head"><span class="t-heading">${esc(it.title || "")}</span><span class="actions">${actions}</span></div>
         ${it.blocks.map((b) => `<div class="ip-section"><div class="ip-title">${esc(b.type)}</div><div class="ip-items">${b.items.map((i) => icon(Number(i.id), i.count)).join("")}</div></div>`).join("")}</div>`;
+    }
+
+    // "Outras builds": the observed trios, most played first; a click puts one first in the set.
+    const itemName = (id) => (names.items[id] || {}).name || "";
+    function buildRows() {
+      const builds = filterBuilds((S.state.options || {}).builds || [], S.buildQuery, itemName).slice(0, 80);
+      if (!builds.length) return `<div class="s2-empty">Nenhuma build com esse item.</div>`;
+      const chosen = ((S.state.items || {}).chosen || []).join();
+      return builds
+        .map((b) => {
+          const icons = b.items
+            .map((id) => {
+              const item = names.items[id] || {};
+              return `<img class="s2-icon sq" src="${esc(item.icon || "")}" alt="${esc(item.name || id)}" data-tip="${esc(item.name || id)}|${nf0.format(item.gold || 0)} de ouro">`;
+            })
+            .join("");
+          return `<button class="rec-row" data-act="build-pick" data-items="${b.items.join(",")}" aria-pressed="${b.items.join() === chosen}">
+          <span class="items">${icons}</span><span class="grow"></span>
+          <span class="wr t-stat" data-tip="Win rate dos três itens juntos|${nf0.format(b.games)} partidas.">${b.winRate == null ? "—" : pct(b.winRate)}</span>
+          <span class="n">${nf0.format(b.games)}</span>
+        </button>`;
+        })
+        .join("");
+    }
+    function otherBuilds() {
+      return `<div class="tree-bar"><button class="s2-btn ghost" data-act="builds-back">← Voltar</button><span class="t-small">Outras builds</span><span class="grow"></span></div>
+        <input class="s2-input" data-act="builds-search" type="text" placeholder="Buscar item" aria-label="Buscar item" value="${esc(S.buildQuery)}">
+        <div class="list-head"><span>Itens</span><span class="grow"></span><span class="wr">WR</span><span class="n">Partidas</span></div>
+        <div class="builds-list">${buildRows()}</div>`;
     }
 
     function itemsFoot() {
@@ -517,6 +586,7 @@
             return;
           }
           S.tab = el.dataset.tab;
+          S.screen = "home";
           break;
         case "retry": send({ type: "assistant-request" }); break;
         case "rune-open": {
@@ -538,6 +608,17 @@
         case "s-rune": S.draft = edit.secondaryRune(data, S.draft, +el.dataset.row, +el.dataset.id); sendEdit(); break;
         case "shard": S.draft = edit.shard(data, S.draft, +el.dataset.row, +el.dataset.id); sendEdit(); break;
         case "items-import": send({ type: "assistant-items-import" }); break;
+        case "items-default": send({ type: "assistant-items-default" }); break;
+        case "builds-open": S.screen = "builds"; break;
+        case "builds-back": S.screen = "home"; break;
+        case "build-pick":
+          send({ type: "assistant-items-choose", items: el.dataset.items.split(",").map(Number) });
+          S.screen = "home";
+          break;
+        case "keystone-open":
+          S.keystoneWanted = Number(el.dataset.id);
+          send({ type: "assistant-runes-keystone", keystone: S.keystoneWanted });
+          break;
         default: return;
       }
       render();
@@ -554,6 +635,12 @@
       if (!el || el.disabled || el.tagName === "SELECT") return;
       e.stopPropagation();
       act(el.dataset.act, el);
+    });
+    panel.addEventListener("input", (e) => {
+      if (e.target.dataset.act !== "builds-search") return;
+      S.buildQuery = e.target.value;
+      const list = panel.querySelector(".builds-list");
+      if (list) list.innerHTML = buildRows();
     });
     panel.addEventListener("change", (e) => {
       const t = e.target;
@@ -581,7 +668,26 @@
         return openMods();
       }
       S.justOpened = false;
+      openWantedKeystone(state);
       render();
+    }
+
+    // The page for the keystone clicked in "Outras runas" arrived: open it like the others.
+    function openWantedKeystone(state) {
+      const wanted = S.keystoneWanted;
+      if (!wanted || !data) return;
+      if (state.error === "keystone_unavailable") {
+        S.keystoneWanted = null;
+        return;
+      }
+      const rec = ((state.runes || {}).keystone || []).find((r) => r.page.perks[0] === wanted);
+      if (!rec) return;
+      S.keystoneWanted = null;
+      S.tab = "runes";
+      S.source = { ...rec, label: perkName(wanted) };
+      S.draft = fromPerks(data, rec.page);
+      S.screen = "tree";
+      send({ type: "assistant-runes-choose", selection: "keystone", matchup: false }); // importação antecipada
     }
 
     // In queues without statistics (Arena and others) the button opens the mods panel directly.

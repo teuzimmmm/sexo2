@@ -80,3 +80,14 @@ test('a button that measures 0x0 anchors by its content, else the panel stays on
   assert.ok(pos.left >= 0 && pos.left + 452 <= 1280);
   assert.ok(pos.top >= 0 && pos.top + pos.maxHeight <= 720);
 });
+
+test('other builds are filtered by item name, ignoring accents and case', () => {
+  const names = { 3118: 'Chama Sombria', 3020: 'Sapatos do Feiticeiro', 6653: 'Tormento de Liandry' };
+  const builds = [{ items: [3118, 3020, 6653] }, { items: [6653, 3020, 3157] }];
+  const name = (id) => names[id] || '';
+  assert.equal(A.filterBuilds(builds, '', name).length, 2);
+  assert.deepEqual(A.filterBuilds(builds, 'chama', name), [builds[0]]);
+  assert.deepEqual(A.filterBuilds(builds, 'FEITICEIRO', name).length, 2);
+  assert.deepEqual(A.filterBuilds(builds, 'liándry', name).length, 2);
+  assert.deepEqual(A.filterBuilds(builds, 'zzz', name), []);
+});
