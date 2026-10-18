@@ -55,7 +55,7 @@ function build(){
  const head=el('header');
  const lane=el('label','Rota');laneText=el('span','—','a-lane');lane.append(laneText);
  const opp=el('label','Confronto');selOpp=el('select');selOpp.setAttribute('aria-label','Confronto');selOpp.onchange=()=>send({type:'assistant-opponent',championId:Number(selOpp.value)||null});opp.append(selOpp);
- const src=el('label','Fonte');const sel=el('select');sel.setAttribute('aria-label','Fonte');const a=el('option','Lolalytics');a.value='lolalytics';const b=el('option','Onetricks (indisponível)');b.value='onetricks';b.disabled=true;sel.append(a,b);src.append(sel);
+ const src=el('label','Fonte');const sel=el('select');sel.setAttribute('aria-label','Fonte');const a=el('option','Lolalytics');a.value='lolalytics';sel.append(a);src.append(sel);
  head.append(lane,opp,src);
  const nav=el('nav');nav.setAttribute('role','tablist');
  for(const t of TABS){const x=el('button',t);x.type='button';x.setAttribute('role','tab');x.dataset.tab=t;x.onclick=()=>selectTab(t);nav.append(x);}

@@ -24,7 +24,7 @@ Nada foi validado no cliente real do LoL, no Windows nem em partida. Sem bump de
   NÃO foi feito o sorteio dos não tocados: as fixações são persistentes por campeão e `FriendsService.apply`
   grava fixações; sem distinguir "escolhido pelo usuário" de "sorteado" o sorteio viraria fixação permanente.
   Exige mudança no comportamento protegido de Swiftplay e teste próprio.
-- Item 5: Onetricks não tem provedor (indisponível). Rota só exibe a rota do cliente (sem seletor).
+- Item 5: Onetricks removido (sem como funcionar); a Fonte mostra só Lolalytics. Rota só exibe a rota do cliente (sem seletor).
   A aba Mods embute a biblioteca existente; a seleção de mod por skin segue no `ROSE-CustomWheel`
   (não removido). "Todas as configurações" abre o painel em Configurações, sem restaurar rascunho.
   A geometria (botão 36 px, painel 8 px acima, à direita) não foi medida no cliente.
