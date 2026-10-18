@@ -368,6 +368,63 @@ class OverlayTextTests(unittest.TestCase):
         self.assertGreater(positions[0][1], Layout().cards(1920, 1080)[0][3])
 
 
+class ArenaMatchTests(unittest.TestCase):
+    def test_arena_layout_matches_a_1920x1080_arena_offer(self):
+        from sexo2.augments.vision import ARENA_LAYOUT
+
+        measured = [(447, 181, 763, 693), (801, 181, 1118, 693), (1155, 181, 1472, 693)]
+        for box, expected in zip(ARENA_LAYOUT.cards(1920, 1080), measured):
+            for got, want in zip(box, expected):
+                self.assertLessEqual(abs(got - want), 3)
+        for left, top, right, bottom in ARENA_LAYOUT.icons(1920, 1080):
+            self.assertLessEqual(top, 250)
+            self.assertGreaterEqual(bottom, 380)
+
+    def test_queue_and_champion_when_sexo2_joins_a_running_game(self):
+        from sexo2.overlay.augment_overlay import champion_from_live, queue_from_gameflow
+
+        self.assertEqual(queue_from_gameflow({"gameData": {"queue": {"id": 1700}}}), 1700)
+        self.assertIsNone(queue_from_gameflow({"gameData": {}}))
+        self.assertIsNone(queue_from_gameflow(None))
+        players = [
+            {"riotId": "Outro#BR1", "rawChampionName": "game_character_displayname_Annie"},
+            {"riotId": "Eu#BR1", "rawChampionName": "game_character_displayname_MonkeyKing"},
+        ]
+        summary = [{"id": -1, "alias": "None"}, {"id": 1, "alias": "Annie"}, {"id": 62, "alias": "MonkeyKing"}]
+        self.assertEqual(champion_from_live(players, "Eu#BR1", summary), 62)
+        self.assertIsNone(champion_from_live(players, "Ninguém#BR1", summary))
+        self.assertIsNone(champion_from_live(players, "", summary))
+
+    def test_the_overlay_finds_the_match_from_the_clients(self):
+        from types import SimpleNamespace
+        from unittest import mock
+
+        from sexo2.augments.vision import ARENA_LAYOUT
+        from sexo2.overlay.augment_overlay import AugmentOverlayThread
+
+        class Lcu:
+            def get(self, path, **_):
+                if path == "/lol-gameflow/v1/session":
+                    return {"gameData": {"queue": {"id": 1700}}}
+                return [{"id": 62, "alias": "MonkeyKing"}]
+
+        live = {
+            "/playerlist": [{"riotId": "Eu#BR1", "rawChampionName": "game_character_displayname_MonkeyKing"}],
+            "/activeplayername": "Eu#BR1",
+        }
+        state = SimpleNamespace(phase="InProgress", current_queue_id=None, locked_champ_id=None)
+        overlay = AugmentOverlayThread(state, Lcu())
+        with (
+            mock.patch.object(overlay, "_live", side_effect=live.__getitem__),
+            mock.patch.object(overlay, "_prepare", return_value="session") as prepare,
+        ):
+            self.assertEqual(overlay._session_for_match(), "session")
+            self.assertEqual(overlay._session_for_match(), "session")
+        prepare.assert_called_once_with("arena", 62)
+        self.assertIs(overlay.layout_for("arena"), ARENA_LAYOUT)
+        self.assertEqual(overlay.layout_for("mayhem"), Layout())
+
+
 TITLES = {
     "1920x1080_gold": ("Scopier Weapons", "Vulnerability", "Combusting Interest"),
     "1920x1080_rerolls": ("Overflow", "Ravenous Bind", "Upgrade Sheen"),

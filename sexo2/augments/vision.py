@@ -54,6 +54,19 @@ class Layout:
         return boxes
 
 
+# Arena cards sit slightly higher and closer together; measured on a 1920x1080
+# capture of an Arena offer (cards at x 447-763, 801-1118, 1155-1472, y 181-693;
+# icon at y 250-380).
+ARENA_LAYOUT = Layout(
+    centres=(-0.3287, 0.0, 0.3273),
+    card_top=0.1676,
+    card_width=0.2935,
+    card_height=0.4741,
+    icon_top=0.060,
+    icon_height=0.125,
+)
+
+
 SIZE = 32
 
 
