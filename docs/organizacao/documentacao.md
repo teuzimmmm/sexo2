@@ -89,10 +89,10 @@ arquivá-los é decisão de quem o mantém (ver pendências).
 | `DECISOES.md` e `produto/decisoes.md` | O primeiro era o histórico da entrega r6; não é registro de decisões do projeto atual | Arquivado; `produto/decisoes.md` já apontava para ele e foi atualizado. Nenhuma linha de decisão mudou |
 | `ROADMAP.md`, `PROJETO_SEXO2.md`, `PLANO_CINCO_TAREFAS.md` | Três planos sobrepostos, os dois últimos de 13/10/2026 | Vale o `ROADMAP.md`; os outros foram arquivados |
 | Pasta de dados | `ROADMAP.md`, `ATUALIZACOES.md` e `VALIDACAO_WINDOWS.md` diziam `%LOCALAPPDATA%\Rose`; o código usa `SEXO2` e move a `Rose` uma vez (`utils/core/paths.py`, `test_data_folder_migration`) | Corrigido |
-| Nomes de arquivo `rose_*.log`, `rose_diagnostics.txt`, `rose.lock` | Continuam com o prefixo `rose_` no código (`utils/core/logging.py`, `config.py`, `utils/core/issue_reporter.py`). Não viraram `sexo2_*` | Documentação mantida; só a pasta mudou |
+| Nomes de arquivo de log | Viraram `sexo2_*.log`, `sexo2_runoverlay_*.log` e `sexo2_diagnostics.txt` (`config.py`, `utils/core/logging.py`, `utils/core/issue_reporter.py`); os `rose_*.log` antigos continuam sendo limpos e o `rose_diagnostics.txt` é renomeado uma vez. `rose.lock` mantém o nome | Documentação atualizada |
 | Rótulos de marco | `ROADMAP.md` renomeou M6b para M13 e M13 para M5b; `MEDICAO.md`, `adr/README.md` e `comportamentos.md` usavam os antigos | Corrigidos para os novos |
 | Comando de testes do README | Citava `unittest discover`; as regras pedem `scripts/run_tests.py` | Corrigido |
-| `PREPROJETO` e `ANOTACOES` | Não existem no repositório | Nada a fazer |
+| `PREPROJETO.md` e `ANOTACOES.md` | Pré-projeto em aprovação e anotações do usuário, ambos vivos | Listados no índice |
 
 ## Comportamentos protegidos: conferência de caminhos
 

@@ -24,6 +24,9 @@
 | Documento | Para quê |
 |---|---|
 | [produto/decisoes.md](produto/decisoes.md) | Decisões aprovadas, pendentes e rejeitadas. |
+| [PREPROJETO.md](PREPROJETO.md) | O que está na versão de teste esperando aprovação, e o que testar. |
+| [ANOTACOES.md](ANOTACOES.md) | Anotações do usuário e o estado de cada uma. |
+| [organizacao/](organizacao/documentacao.md) | Inventários e padrões: [documentação](organizacao/documentacao.md), [Python](organizacao/python.md). |
 | [produto/glossario.md](produto/glossario.md) | Termos da interface e identificador interno. |
 | [comportamentos.md](comportamentos.md) | Funções protegidas, onde estão e qual teste as cobre. |
 | [ROADMAP.md](ROADMAP.md) | Marcos, estado de cada um e pendências técnicas. |
