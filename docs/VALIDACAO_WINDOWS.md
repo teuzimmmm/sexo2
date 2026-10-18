@@ -57,7 +57,7 @@ a limpa se o LoL já estiver fechado.
    anote as erradas e "Não reconhecida", e a resolução e a escala do HUD. Confirme também que o
    cliente responde `/lol-game-data/assets/v1/cherry-augments.json` e `augment-lists.json` (o log
    mostra quantos aprimoramentos e ícones foram carregados) e as filas 1700 (Arena) e 2400 (Mayhem).
-9. **Valor dos itens no placar:** acrescente em `%LOCALAPPDATA%\Rose\config.ini`:
+9. **Valor dos itens no placar:** acrescente em `%LOCALAPPDATA%\SEXO2\config.ini`:
    ```
    [Overlay]
    gold_enabled = true
@@ -67,4 +67,10 @@ a limpa se o LoL já estiver fechado.
      `gold_row_step`, frações da altura da tela);
    - se a ordem das linhas corresponde à do placar;
    - se o modo tela cheia também mostra o overlay.
+   As coordenadas padrão foram calibradas com uma captura real em 1920×1080:
+   primeira linha em y=346, passo de 76,5 px e totais em y=234. Outras escalas de
+   HUD e resoluções ainda precisam de conferência. Compare também os FPS com o
+   overlay desligado/ligado, segurando Tab por alguns segundos em cada caso.
+   A janela foi limitada à coluna central e as leituras idênticas não redesenham
+   o conteúdo; isso não substitui a medição de FPS em partida.
 10. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.

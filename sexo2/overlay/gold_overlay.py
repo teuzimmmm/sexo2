@@ -1,8 +1,8 @@
 """Item value comparison drawn over the scoreboard while Tab is held (decision D-009).
 
-Off unless ``[Overlay] gold_enabled = true`` in config.ini: the row positions below are
-estimates for a 16:9 game at the default HUD scale and still need calibrating against the
-real scoreboard (``gold_rows_top`` / ``gold_row_step`` override them). It needs the game
+Off unless ``[Overlay] gold_enabled = true`` in config.ini. Row positions are calibrated
+against a real 1920x1080 scoreboard (``gold_rows_top`` / ``gold_row_step`` override them).
+Other resolutions and HUD scales still need checking in the game. It needs the game
 in borderless or windowed mode; nothing is injected into the game.
 
 Work happens only during a match: the Tab key is sampled every 100 ms and the Live Client
@@ -32,12 +32,12 @@ TRANSPARENT = "#010203"
 
 @dataclass(frozen=True)
 class Geometry:
-    """Positions as fractions of the screen; estimates pending calibration."""
+    """Positions measured on the 1080p scoreboard, expressed as screen fractions."""
 
     center_x: float = 0.5
-    total_y: float = 0.155
-    rows_top: float = 0.245
-    row_step: float = 0.0865
+    total_y: float = 234 / 1080
+    rows_top: float = 346 / 1080
+    row_step: float = 76.5 / 1080
 
 
 @dataclass(frozen=True)
@@ -91,6 +91,21 @@ def layout(comparison: Comparison, width: int, height: int, geometry: Geometry =
     return marks
 
 
+def overlay_bounds(width: int, height: int, geometry: Geometry) -> tuple[int, int, int, int]:
+    """Only the central gold column needs a transparent window, not the whole screen."""
+    scale = height / 1080
+    half_width = max(96, round(128 * scale))
+    padding = max(18, round(24 * scale))
+    center = round(width * geometry.center_x)
+    ys = (geometry.total_y, geometry.rows_top, geometry.rows_top + 4 * geometry.row_step)
+    return (
+        max(0, center - half_width),
+        max(0, round(height * min(ys)) - padding),
+        min(width, center + half_width),
+        min(height, round(height * max(ys)) + padding),
+    )
+
+
 def my_team(playerlist: list[dict], active_name: str) -> str:
     for player in playerlist:
         if active_name and active_name in (player.get("riotId"), player.get("summonerName")):
@@ -136,35 +151,52 @@ class _Window:
         import tkinter as tk
 
         root = tk.Tk()
+        root.withdraw()
         root.overrideredirect(True)
         root.attributes("-topmost", True)
         root.configure(bg=TRANSPARENT)
         root.attributes("-transparentcolor", TRANSPARENT)
         width, height = root.winfo_screenwidth(), root.winfo_screenheight()
-        root.geometry(f"{width}x{height}+0+0")
-        canvas = tk.Canvas(root, width=width, height=height, bg=TRANSPARENT, highlightthickness=0)
+        left, top, right, bottom = overlay_bounds(width, height, self._geometry)
+        root.geometry(f"{right - left}x{bottom - top}+{left}+{top}")
+        canvas = tk.Canvas(root, width=right - left, height=bottom - top, bg=TRANSPARENT, highlightthickness=0)
         canvas.pack()
-        root.withdraw()
         root.update_idletasks()
         self._click_through(root)
+        scale = height / 1080
+        offset = round(70 * scale)
+        arrow_width = max(3, round(4 * scale))
+        arrow_half_height = max(3, round(4 * scale))
+        gap = max(4, round(6 * scale))
 
         def draw(comparison: Comparison) -> None:
             canvas.delete("all")
             for mark in layout(comparison, width, height, self._geometry):
-                size = 15 if mark.kind == "total" else 12
+                x, y = mark.x - left, mark.y - top
+                # Negative Tk font sizes are pixels, so Windows DPI does not
+                # enlarge labels a second time on top of the game resolution.
+                size = -max(8, round((12 if mark.kind == "total" else 10) * scale))
                 if mark.kind == "total":
-                    canvas.create_text(mark.x - 70, mark.y, text=mark.left, fill=ALLY, font=("Segoe UI", size, "bold"))
-                    canvas.create_text(
-                        mark.x + 70, mark.y, text=mark.right, fill=ENEMY, font=("Segoe UI", size, "bold")
-                    )
+                    canvas.create_text(x - offset, y, text=mark.left, fill=ALLY, font=("Segoe UI", size, "bold"))
+                    canvas.create_text(x + offset, y, text=mark.right, fill=ENEMY, font=("Segoe UI", size, "bold"))
                 if mark.arrow:
-                    w = 7 if mark.arrow == "left" else -7
+                    w = arrow_width if mark.arrow == "left" else -arrow_width
                     canvas.create_polygon(
-                        mark.x - w, mark.y - 9, mark.x + w, mark.y - 15, mark.x + w, mark.y - 3, fill=mark.color
+                        x - w,
+                        y - gap,
+                        x + w,
+                        y - gap - arrow_half_height,
+                        x + w,
+                        y - gap + arrow_half_height,
+                        fill=mark.color,
                     )
-                canvas.create_text(mark.x, mark.y + 9, text=mark.text, fill=mark.color, font=("Segoe UI", size, "bold"))
+                canvas.create_text(x, y + gap, text=mark.text, fill=mark.color, font=("Segoe UI", size, "bold"))
+
+        visible = False
+        drawn: Comparison | None = None
 
         def poll() -> None:
+            nonlocal visible, drawn
             try:
                 while True:
                     item = self._queue.get_nowait()
@@ -172,11 +204,16 @@ class _Window:
                         root.destroy()
                         return
                     if item is None:
-                        root.withdraw()
+                        if visible:
+                            root.withdraw()
+                            visible = False
                     else:
-                        draw(item)
-                        root.deiconify()
-                        root.attributes("-topmost", True)
+                        if item != drawn:
+                            draw(item)
+                            drawn = item
+                        if not visible:
+                            root.deiconify()
+                            visible = True
             except queue.Empty:
                 pass
             root.after(50, poll)
@@ -204,12 +241,12 @@ class GoldOverlayThread(threading.Thread):
         self._state = state
         self._lcu = lcu
         self._geometry = geometry
-        self._stop = threading.Event()
+        self._stop_event = threading.Event()
         self._prices: dict[int, int] = {}
         self._window: _Window | None = None
 
     def stop(self) -> None:
-        self._stop.set()
+        self._stop_event.set()
         if self._window is not None:
             self._window.close()
 
@@ -223,33 +260,41 @@ class GoldOverlayThread(threading.Thread):
     def run(self) -> None:
         shown = False
         last_read = 0.0
-        while not self._stop.is_set():
+        last_prices = float("-inf")
+        while not self._stop_event.is_set():
             if getattr(self._state, "phase", None) != "InProgress":
                 self._prices = {}
+                last_prices = float("-inf")
                 if shown:
                     self._window.hide()
                     shown = False
-                self._stop.wait(1.0)
+                self._stop_event.wait(1.0)
                 continue
+            # Prepare once the match starts, before the first Tab press. Tk
+            # stays withdrawn and catalog retries reuse this existing loop.
+            if self._window is None:
+                self._window = _Window(self._geometry)
+            now = time.monotonic()
+            if not self._prices and now - last_prices >= 5.0:
+                last_prices = now
+                try:
+                    self._prices = item_prices(self._lcu.get("/lol-game-data/assets/v1/items.json") or [])
+                except Exception as error:
+                    log.debug("[GOLD] item catalog not ready: %s", error)
             if not _tab_down():
                 if shown:
                     self._window.hide()
                     shown = False
-                self._stop.wait(0.1)
+                self._stop_event.wait(0.1)
                 continue
-            now = time.monotonic()
             if now - last_read >= 1.0:
                 last_read = now
                 try:
-                    if not self._prices:
-                        self._prices = item_prices(self._lcu.get("/lol-game-data/assets/v1/items.json") or [])
                     comparison = read_comparison(self._fetch, self._prices)
-                    if self._window is None:
-                        self._window = _Window(self._geometry)
                     self._window.show(comparison)
                     shown = True
                 except Unsupported:
                     pass  # Arena and other modes without a paired scoreboard
                 except Exception as error:
                     log.debug("[GOLD] reading failed: %s", error)
-            self._stop.wait(0.1)
+            self._stop_event.wait(0.1)
