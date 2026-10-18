@@ -26,8 +26,8 @@ from sexo2.services.gold import CHAOS, ORDER, Comparison, Unsupported, compare, 
 log = logging.getLogger(__name__)
 
 LIVE_CLIENT = "https://127.0.0.1:2999/liveclientdata"
-ALLY = "#4f8cff"
-ENEMY = "#e5484d"
+ALLY = "#4db0fc"
+ENEMY = "#e8404f"
 NEUTRAL = "#a4a9b0"
 
 
@@ -96,7 +96,7 @@ def overlay_bounds(width: int, height: int, geometry: Geometry) -> tuple[int, in
     """Only the central gold column needs a transparent window, not the whole screen."""
     scale = height / 1080
     half_width = max(96, round(128 * scale))
-    padding = max(18, round(24 * scale))
+    padding = max(30, round(40 * scale))
     center = round(width * geometry.center_x)
     ys = (geometry.total_y, geometry.rows_top, geometry.rows_top + 4 * geometry.row_step)
     return (
@@ -140,13 +140,17 @@ def _tab_down() -> bool:
 
 
 SUPERSAMPLE = 4  # drawn at 4x and reduced: smooth digits, edges and arrows
-SURFACE = (21, 23, 26, 235)  # --s2-surface, nearly opaque so the numbers read over the map
-LINE = (42, 45, 50, 255)  # --s2-line
-OUTLINE = (0, 0, 0, 150)  # thin dark edge on the totals' digits
-
-
-def _rgba(color: str, alpha: int = 255) -> tuple[int, int, int, int]:
-    return int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16), alpha
+# Look of the scoreboard comparison made popular by Blitz, drawn here: dark diamonds with
+# a bronze edge on the seam between the players, the arrow inside, the number below.
+FRAME = (58, 56, 47, 255)
+FRAME_LIGHT = (96, 88, 62, 255)
+ALLY_FILL = (13, 30, 43, 240)
+ENEMY_FILL = (42, 14, 18, 240)
+NEUTRAL_FILL = (24, 26, 29, 240)
+BAR_FILL = (14, 30, 38, 235)
+COIN = (201, 164, 92, 255)
+COIN_DARK = (120, 92, 44, 255)
+SHADOW = (0, 0, 0, 160)
 
 
 @lru_cache(maxsize=8)
@@ -160,12 +164,7 @@ def _font(size: int):
 
 
 def render(comparison: Comparison, width: int, height: int, geometry: Geometry):
-    """The overlay bitmap with true alpha, in the SEXO2 style (dark surfaces, ally blue, enemy red).
-
-    Each scoreboard row gets a small chip on the seam between the two players: the arrow
-    points to the side ahead and the difference sits under it. The totals sit in a bar
-    above the scoreboard with the same chip in the middle.
-    """
+    """The overlay bitmap with true alpha: diamonds on the scoreboard seam and a totals bar."""
     from PIL import Image, ImageDraw
 
     left, top, right, bottom = overlay_bounds(width, height, geometry)
@@ -174,48 +173,54 @@ def render(comparison: Comparison, width: int, height: int, geometry: Geometry):
     image = Image.new("RGBA", ((right - left) * k, (bottom - top) * k))
     draw = ImageDraw.Draw(image)
 
-    def chip(x: float, y: float, mark: Mark) -> None:
-        font = _font(max(10, round(12 * height / 1080)))
-        text_width = draw.textlength(mark.text, font=font)
-        half_w, half_h = max(text_width / 2 + 7 * s, 19 * s), 15 * s
-        border = _rgba(mark.color, 200)
-        draw.rounded_rectangle(
-            (x - half_w, y - half_h, x + half_w, y + half_h), radius=3 * s, fill=SURFACE, outline=border, width=round(s)
-        )
-        number_y = y + 6 * s
+    def font(size: int):
+        return _font(max(9, round(size * height / 1080)))
+
+    def text(x: float, y: float, value: str, color: str, size: int) -> None:
+        value = value.replace(".", "")  # 1928, as the scoreboard writes numbers
+        draw.text((x, y), value, fill=color, font=font(size), anchor="mm", stroke_width=round(s), stroke_fill=SHADOW)
+
+    def diamond(x: float, y: float, radius: float, mark: Mark) -> None:
+        def shape(r: float) -> list[tuple[float, float]]:
+            return [(x, y - r), (x + r, y), (x, y + r), (x - r, y)]
+
+        fill = {"left": ALLY_FILL, "right": ENEMY_FILL}.get(mark.arrow, NEUTRAL_FILL)
+        draw.polygon(shape(radius), fill=FRAME)
+        draw.polygon(shape(radius - 1.2 * s), fill=FRAME_LIGHT)
+        draw.polygon(shape(radius - 2.4 * s), fill=FRAME)
+        draw.polygon(shape(radius - 3.6 * s), fill=fill)
         if mark.arrow:
-            tip = -4.5 * s if mark.arrow == "left" else 4.5 * s
-            arrow_y = y - 6.5 * s
-            draw.polygon(
-                [(x + tip, arrow_y), (x - tip, arrow_y - 4.5 * s), (x - tip, arrow_y + 4.5 * s)], fill=mark.color
-            )
-        else:
-            number_y = y
-        draw.text((x, number_y), mark.text, fill=mark.color, font=font, anchor="mm")
+            tip = -5 * s if mark.arrow == "left" else 5 * s
+            x0 = x - tip * 0.25
+            draw.polygon([(x0 + tip, y), (x0 - tip, y - 6 * s), (x0 - tip, y + 6 * s)], fill=mark.color)
+
+    def coin(x: float, y: float) -> None:
+        for dx, dy in ((-1.5, 2), (1.5, -1.5)):
+            box = (x + (dx - 6) * s, y + (dy - 4) * s, x + (dx + 6) * s, y + (dy + 4) * s)
+            draw.ellipse(box, fill=COIN, outline=COIN_DARK, width=round(s))
 
     for mark in layout(comparison, width, height, geometry):
         x, y = (mark.x - left) * k, (mark.y - top) * k
         if mark.kind == "total":
-            half_w, half_h = 116 * s, 16 * s
-            draw.rounded_rectangle(
-                (x - half_w, y - half_h, x + half_w, y + half_h),
-                radius=3 * s,
-                fill=SURFACE,
-                outline=LINE,
+            half_w, half_h = 111 * s, 12 * s
+            draw.rectangle(
+                (x - half_w, y - half_h, x + half_w, y + half_h), fill=BAR_FILL, outline=FRAME_LIGHT, width=round(s)
+            )
+            draw.rectangle(
+                (x - half_w + 2 * s, y - half_h + 2 * s, x + half_w - 2 * s, y + half_h - 2 * s),
+                outline=FRAME,
                 width=round(s),
             )
-            font = _font(max(11, round(15 * height / 1080)))
-            for text, color, side in ((mark.left, ALLY, -1), (mark.right, ENEMY, 1)):
-                draw.text(
-                    (x + side * 70 * s, y),
-                    text,
-                    fill=color,
-                    font=font,
-                    anchor="mm",
-                    stroke_width=round(s),
-                    stroke_fill=OUTLINE,
-                )
-        chip(x, y, mark)
+            # Coin before each total, as the scoreboard shows gold.
+            coin(x - 95 * s, y)
+            text(x - 57 * s, y, mark.left, ALLY, 16)
+            coin(x + 42 * s, y)
+            text(x + 81 * s, y, mark.right, ENEMY, 16)
+            diamond(x, y, 20 * s, mark)
+            text(x, y + 17 * s, mark.text, mark.color, 13)
+        else:
+            diamond(x, y, 17.5 * s, mark)
+            text(x, y + 25 * s, mark.text, mark.color, 12)
     return image.resize((right - left, bottom - top), Image.Resampling.LANCZOS)
 
 

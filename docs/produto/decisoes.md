@@ -37,6 +37,7 @@ O histórico anterior está em `docs/DECISOES.md` (entrega r6) e no plano-mestre
 | D-116 | A Arena mostra WR quando a fonte a fornece, além de PR e partidas (a supressão em `lolalytics/` foi removida). | usuário, sessão 1.0b |
 | D-020 | Aprimoramentos de Arena e ARAM Mayhem: só as cartas realmente oferecidas, com correção manual; nada é escolhido pelo SEXO2; números de Arena e Mayhem nunca se misturam; sem WR inventada; com só PR e partidas, mostram-se só esses. Destaque discreto das estatisticamente melhores. | usuário, sessão 1.0b |
 | D-117 | Seção “Overlays” em Configurações: caixas “Ouro no placar (Tab)” e “Aprimoramentos na Arena e no Mayhem”, que gravam `[Overlay] gold_enabled`/`augments_enabled` e ligam ou desligam ao salvar, sem reiniciar; abaixo, “O jogo precisa estar em tela sem bordas.” | usuário, sessão 1.0b |
+| D-119 | Ouro no placar com o visual do Blitz, desenhado pelo SEXO2 (sem arquivos do Blitz): losango escuro com borda bronze na divisa das linhas, seta azul ou vermelha dentro e a diferença embaixo; barra dos totais com moeda antes de cada total e o losango da diferença no meio; números sem separador de milhar, como o placar. Fica fora do estilo do app por pedido do usuário (“mais natural in-game”). | usuário, sessão 1.0b |
 
 ## Pendentes
 
