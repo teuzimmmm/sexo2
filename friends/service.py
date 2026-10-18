@@ -41,6 +41,7 @@ class FriendsService:
         self._automatic_context = None
         self._crc_cache = {}
         self.library = []
+        self.skin_index = None
         self.browse_id = None
         self.auto_accept = getattr(state, "auto_accept_controller", None) or AutoAccept(lcu)
         state.auto_accept_controller = self.auto_accept
@@ -126,6 +127,28 @@ class FriendsService:
             ][:700]
             self.library.sort(key=lambda c: c["name"].casefold())
         return self.library
+
+    def load_skin_index(self):
+        """Read-only index [skinId, name] of every non-base, non-chroma skin, for local search."""
+        if self.skin_index is None:
+            if not self.lcu or not self.lcu.ok:
+                raise ValueError("Abra o cliente LoL para buscar skins.")
+            raw = self.lcu.get("/lol-game-data/assets/v1/skins.json")
+            rows = list(raw.values()) if isinstance(raw, dict) else raw
+            if not isinstance(rows, list):
+                raise ValueError("Não foi possível carregar as skins. Tente novamente.")
+            index = []
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                sid = row.get("id")
+                if type(sid) is int and sid >= 1000 and sid % 1000 != 0 and row.get("name"):
+                    index.append([sid, str(row["name"])])
+            if not index:
+                raise ValueError("Não foi possível carregar as skins. Tente novamente.")
+            index.sort()
+            self.skin_index = index[:6000]
+        return self.skin_index
 
     def browsed_catalog(self):
         if self.browse_id is None:
@@ -669,6 +692,8 @@ class FriendsService:
                 self.last_message = "Favoritas salvas."
             elif action == "library-list":
                 self.load_library()
+            elif action == "skin-index":
+                self.load_skin_index()
             elif action == "library-open":
                 cid = payload.get("championId")
                 if type(cid) is not int or not any(c["championId"] == cid for c in self.load_library()):
@@ -816,6 +841,8 @@ class FriendsService:
             elif action != "snapshot":
                 raise ValueError("Operação desconhecida")
             result = self.snapshot()
+            if action == "skin-index":
+                result["skinIndex"] = self.skin_index
             if self.last_export:
                 result["diagnostic"] = {"name": self.last_export.name, "path": str(self.last_export)}
             return result

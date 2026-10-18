@@ -188,6 +188,39 @@ class ServiceTests(unittest.TestCase):
                 ],
             }
 
+    def test_skin_index_serves_local_search_only_when_asked(self):
+        base = self.get
+
+        def get(path):
+            if path.endswith("/skins.json"):
+                return {
+                    "11000": {"id": 11000, "name": "Base"},
+                    "11001": {"id": 11001, "name": "Mestre Yi Arcane"},
+                    "22003": {"id": 22003, "name": "Ashe PROJETO"},
+                }
+            return base(path)
+
+        self.lcu.get.side_effect = get
+        result = self.service.handle({"action": "skin-index"})
+        self.assertEqual(result["skinIndex"], [[11001, "Mestre Yi Arcane"], [22003, "Ashe PROJETO"]])
+        self.assertNotIn("skinIndex", self.service.handle({"action": "snapshot"}))
+
+    def test_favoriting_a_skin_does_not_favorite_its_chroma(self):
+        base = self.get
+
+        def get(path):
+            data = base(path)
+            if path.endswith("/champions/11.json"):
+                data["skins"][1]["chromas"] = [{"id": 11010, "name": "Rubi"}]
+            return data
+
+        self.lcu.get.side_effect = get
+        self.service.handle({"action": "favorite", "championId": 11, "skinId": 11001, "enabled": True})
+        self.assertEqual(self.service.preferences.snapshot()["favorites"], {"11": [11001]})
+        self.service.handle({"action": "favorite", "championId": 11, "skinId": 11010, "enabled": True})
+        self.service.handle({"action": "favorite", "championId": 11, "skinId": 11001, "enabled": False})
+        self.assertEqual(self.service.preferences.snapshot()["favorites"], {"11": [11010]})
+
     def test_readiness_detects_missing_archive_and_tools(self):
         self.assertTrue(self.service.readiness()["localReady"])
         self.state.last_hovered_skin_id = 11003

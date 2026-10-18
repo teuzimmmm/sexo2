@@ -22,19 +22,22 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  for(const name of ['ROSE-Amigos','ROSE-SwiftplayPins','ROSE-PartyMode','ROSE-SettingsPanel','SEXO2-ModLibrary','SEXO2-Settings','ROSE-Hub','ROSE-UI'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',name,'index.js')});
  await page.waitForTimeout(200);
  await page.locator('.menu_item_Golden').last().click();
- await page.getByRole('combobox',{name:'Skin automática'}).waitFor();
+ await page.getByRole('button',{name:'Criar sala',exact:true}).waitFor();
+ assert.equal(await page.locator('#rose-hub>header .hub-brand').textContent(),'SEXO2');
+ assert.deepEqual(await page.locator('#rose-hub>nav button').allTextContents(),['Sala','Favoritas','Configurações','Suporte','Swiftplay']);
+ assert.equal(await page.locator('#rose-hub').evaluate(e=>getComputedStyle(e).borderRadius),'0px');
  await page.evaluate(()=>window.__roseBridge.ready=false);
  await page.getByText('Reconectando ao SEXO2…',{exact:true}).waitFor();
  assert.equal(await page.locator('#rose-hub').getByText(/O Rose/).count(),0);
  await page.evaluate(()=>window.__roseBridge.ready=true);
  await page.waitForFunction(()=>!document.querySelector('#rose-hub')?.textContent.includes('Reconectando ao SEXO2…'));
- await page.getByRole('combobox',{name:'Skin automática'}).waitFor();
+ await page.getByRole('button',{name:'Criar sala',exact:true}).waitFor();
 
  const icon=await page.locator('.menu_item_Golden .menu-item-icon').last().evaluate(e=>({width:e.clientWidth,height:e.clientHeight,color:getComputedStyle(e).backgroundColor}));
  assert.deepEqual(icon,{width:20,height:20,color:'rgb(205, 190, 145)'});
  assert.equal(await page.locator('#rose-amigos-launch').isVisible(),false);
  assert.equal(await page.locator('.rsp-launch').isVisible(),false);
- await page.getByRole('button',{name:'Sortear agora',exact:true}).waitFor();
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Swiftplay',exact:true}).click();
  await page.getByRole('button',{name:'Escolher',exact:true}).click();
  await page.locator('.rsp-grid').evaluate(e=>e.scrollTop=e.scrollHeight);
  const scroll=await page.locator('.rsp-grid').evaluate(e=>e.scrollTop);assert.ok(scroll>0);
@@ -45,21 +48,19 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
    window.__roseBridge.send=p=>{
      if(p.action==='library-open')window.sample.browseChampion={championId:p.championId,name:'Ashe',skins:[{skinId:22001,name:'Ashe Freljord',favorite:false},{skinId:22002,name:'Ashe PROJETO',favorite:false}]};
      if(p.action==='favorite'){window.sample.browseChampion.skins.find(s=>s.skinId===p.skinId).favorite=p.enabled;}
+     if(p.action==='skin-index')window.sample.skinIndex=[[22001,'Ashe Freljord']];
      original(p);
    };
  });
- await page.getByRole('button',{name:'Favoritas',exact:true}).click();
- await page.getByRole('searchbox',{name:'Buscar campeão',exact:true}).fill('Ashe');
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Favoritas',exact:true}).click();
+ await page.getByRole('searchbox',{name:'Buscar campeão ou skin',exact:true}).fill('Ashe');
  await page.getByRole('button',{name:'Ashe',exact:true}).click();
- await page.getByRole('checkbox',{name:'Favorita Ashe Freljord',exact:true}).check();
- await page.getByRole('checkbox',{name:'Favorita Ashe PROJETO',exact:true}).check();
+ await page.getByRole('button',{name:'Favoritar Ashe Freljord',exact:true}).click();
+ await page.getByRole('button',{name:'Favoritar Ashe PROJETO',exact:true}).click();
  await page.waitForTimeout(100);
- assert.equal(await page.getByRole('checkbox',{name:'Favorita Ashe Freljord',exact:true}).isChecked(),true);
- assert.equal(await page.getByRole('checkbox',{name:'Favorita Ashe PROJETO',exact:true}).isChecked(),true);
+ assert.equal(await page.getByRole('button',{name:'Favoritar Ashe Freljord',exact:true}).getAttribute('aria-pressed'),'true');
+ assert.equal(await page.getByRole('button',{name:'Favoritar Ashe PROJETO',exact:true}).getAttribute('aria-pressed'),'true');
  fs.mkdirSync('preview-r6',{recursive:true});await page.screenshot({path:'preview-r6/favorites-editor.png'});
- await page.locator('#rose-hub>nav').getByRole('button',{name:'Perfis',exact:true}).click();
- await page.getByRole('button',{name:'Usar perfil'}).waitFor();
- await page.getByRole('button',{name:'Sorteio temático'}).click();await page.getByRole('button',{name:'Sortear só para mim'}).waitFor();
  await page.locator('#rose-hub>nav').getByRole('button',{name:'Sala',exact:true}).click();
  await page.getByRole('button',{name:'Criar sala',exact:true}).click();await page.getByRole('button',{name:'Copiar link',exact:true}).waitFor();
  assert.equal(await page.locator('#rose-hub #rose-party-panel').count(),0);
@@ -81,7 +82,7 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  await page.getByRole('button',{name:'Salvar alterações',exact:true}).click();
  await page.getByText('Pasta inválida',{exact:true}).waitFor();
  assert.equal(await page.getByRole('spinbutton',{name:'Limite de pausa do jogo (s)'}).inputValue(),'75');
- await page.locator('#rose-hub>nav').getByRole('button',{name:'Perfis',exact:true}).click();
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Sala',exact:true}).click();
  await page.locator('#rose-hub>nav').getByRole('button',{name:'Configurações',exact:true}).click();
  assert.equal(await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).inputValue(),'invalid');
  await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).fill('C:/Riot/Game');
@@ -109,7 +110,7 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  await page.waitForTimeout(50);await page.screenshot({path:'preview-r6/mod-library-in-hud.png'});
  await page.getByRole('button',{name:'← Configurações',exact:true}).click();
 
- await page.getByRole('button',{name:'Verificação e diagnóstico',exact:true}).click();
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Suporte',exact:true}).click();
  await page.getByText('Aceitar partidas automaticamente',{exact:true}).waitFor();
  assert.equal(await page.locator('#rose-hub #rose-settings-panel').count(),0);
  const box=await page.locator('#rose-hub').boundingBox();assert.ok(box.x>=0&&box.y>=0&&box.x+box.width<=1280&&box.y+box.height<=720);
