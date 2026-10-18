@@ -6,7 +6,7 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName=SEXO2
 AppPublisher=Projeto personalizado baseado em Rose
-DefaultDirName={localappdata}\SEXO2
+DefaultDirName={localappdata}\Programs\SEXO2
 DefaultGroupName=SEXO2
 UsePreviousGroup=no
 DisableProgramGroupPage=yes
@@ -109,7 +109,8 @@ begin
   Result := '';
   AppDir := RemoveBackslashUnlessRoot(ExpandConstant('{app}'));
   if (AppDir = ExtractFileDrive(AppDir) + '\') or
-     (CompareText(AppDir, ExpandConstant('{localappdata}\Rose')) = 0) then begin
+     (CompareText(AppDir, ExpandConstant('{localappdata}\Rose')) = 0) or
+     (CompareText(AppDir, ExpandConstant('{localappdata}\SEXO2')) = 0) then begin
     Result := 'Escolha uma pasta para o programa, separada dos dados pessoais.'; exit;
   end;
   try
@@ -147,7 +148,7 @@ begin
     if BackupComplete then
       SaveStringToFile(ExpandConstant('{app}\VERSAO-ANTERIOR.txt'),
         'A versao anterior foi preservada em:' + #13#10 + BackupDir + #13#10 +
-        'Suas skins e preferencias continuam em LocalAppData\Rose.' + #13#10, False);
+        'Suas skins e preferencias continuam em LocalAppData\SEXO2.' + #13#10, False);
   end;
 end;
 

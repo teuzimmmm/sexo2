@@ -64,7 +64,7 @@ def installed_default():
                     return winreg.QueryValueEx(reg, "Inno Setup: App Path")[0]
             except OSError:
                 pass
-    return str(Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "SEXO2")
+    return str(Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "Programs" / "SEXO2")
 
 
 def local_package(installation, folder=None):

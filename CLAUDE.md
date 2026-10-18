@@ -6,7 +6,7 @@ App privado para League of Legends: núcleo Python + plugins Pengu no cliente. F
 - **Decisões:** `docs/produto/decisoes.md` é a fonte única. Respeite as aprovadas. Nomes, menus, layout, cores, componentes, textos visíveis e automatismos novos exigem aprovação do usuário: registre como pendente e não implemente.
 - **Interface:** antes de qualquer mudança de UI, use a skill `sexo2-ui`. Sem imagens geradas; propostas em ASCII ou HTML estático.
 - **Compatibilidade:** preserve
-  - os dados em `%LOCALAPPDATA%\Rose`;
+  - os dados em `%LOCALAPPDATA%\SEXO2` (migrados de `%LOCALAPPDATA%\Rose` na primeira abertura);
   - o formato de patch e assinatura e as baselines de `scripts/compatibility_bases.json`;
   - o mutex de instância única;
   - as mensagens da ponte usadas pelos plugins.

@@ -6,8 +6,9 @@ cliente e dados simulados.
 ## Executável de teste
 
 O CI gera a build sem assinatura `SEXO2-teste-<commit>` (aba Actions, run da `sexoatividade`,
-seção Artifacts). Feche o SEXO2 instalado, extraia a pasta e rode `SEXO2.exe`. A build usa os mesmos
-dados em `%LOCALAPPDATA%\Rose`, então suas preferências e mods continuam valendo. Ela não se
+seção Artifacts). Feche o SEXO2 instalado, extraia a pasta e rode `SEXO2.exe`. Na primeira abertura, a pasta
+`%LOCALAPPDATA%\Rose` é movida para `%LOCALAPPDATA%\SEXO2` (com o cliente do LoL fechado), com
+preferências e mods. Ela não se
 atualiza sozinha para a 1.6.4.
 
 ## Roteiro

@@ -143,6 +143,33 @@ def _get_localappdata_for_user(profile_path: str) -> Optional[Path]:
     return None
 
 
+DATA_FOLDER = "SEXO2"
+LEGACY_DATA_FOLDER = "Rose"
+
+
+def _data_dir_in(parent: Path) -> Path:
+    """The SEXO2 data folder under ``parent``, moving the inherited Rose folder there once.
+
+    Up to 1.6.4 the data lived in ``Rose``. On the first start without a ``SEXO2`` data
+    folder the ``Rose`` folder is renamed (same disk: instant, no copy of the mod library).
+    When the rename is refused (a file in use, e.g. the League client holding the Pengu
+    Loader files), this start keeps using ``Rose`` and the next one tries again. A
+    ``SEXO2`` folder holding the program itself (an older installer's default) is not
+    used for data; ``Rose`` stays in use until the program is reinstalled elsewhere.
+    """
+    new = parent / DATA_FOLDER
+    old = parent / LEGACY_DATA_FOLDER
+    if (new / "SEXO2.exe").exists():
+        return old
+    if new.exists() or not old.is_dir():
+        return new
+    try:
+        old.rename(new)
+    except OSError:
+        return old
+    return new
+
+
 def get_user_data_dir() -> Path:
     """
     Get the user data directory where the application can write files.
@@ -174,7 +201,7 @@ def get_user_data_dir() -> Path:
                 # User mismatch detected! Use the desktop user's AppData
                 desktop_localappdata = _get_localappdata_for_user(desktop_profile)
                 if desktop_localappdata:
-                    _cached_user_data_dir = desktop_localappdata / "Rose"
+                    _cached_user_data_dir = _data_dir_in(desktop_localappdata)
                     # Ensure the directory exists with proper permissions
                     try:
                         _cached_user_data_dir.mkdir(parents=True, exist_ok=True)
@@ -185,13 +212,13 @@ def get_user_data_dir() -> Path:
         # No mismatch or detection failed - use current user's LOCALAPPDATA
         localappdata = os.environ.get("LOCALAPPDATA")
         if localappdata:
-            _cached_user_data_dir = Path(localappdata) / "Rose"
+            _cached_user_data_dir = _data_dir_in(Path(localappdata))
             return _cached_user_data_dir
 
         # Fallback to user profile
         userprofile = os.environ.get("USERPROFILE")
         if userprofile:
-            _cached_user_data_dir = Path(userprofile) / "AppData" / "Local" / "Rose"
+            _cached_user_data_dir = _data_dir_in(Path(userprofile) / "AppData" / "Local")
             return _cached_user_data_dir
 
         # Last resort: current directory
@@ -202,9 +229,9 @@ def get_user_data_dir() -> Path:
         # Use XDG_DATA_HOME or fallback to ~/.local/share
         xdg_data_home = os.environ.get("XDG_DATA_HOME")
         if xdg_data_home:
-            _cached_user_data_dir = Path(xdg_data_home) / "Rose"
+            _cached_user_data_dir = _data_dir_in(Path(xdg_data_home))
         else:
-            _cached_user_data_dir = Path.home() / ".local" / "share" / "Rose"
+            _cached_user_data_dir = _data_dir_in(Path.home() / ".local" / "share")
         return _cached_user_data_dir
 
 

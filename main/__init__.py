@@ -390,7 +390,7 @@ def _warn_pengu_activation_failed() -> None:
                 "SEXO2 could not activate Pengu Loader, so it will not appear in the League client.\n\n"
                 "Close the League client, then restart SEXO2.\n"
                 "If it happens again, make sure your antivirus is not blocking Pengu Loader.\n\n"
-                "Details are in %LOCALAPPDATA%\\Rose\\logs\\",
+                "Details are in %LOCALAPPDATA%\\SEXO2\\logs\\",
                 "SEXO2 - Pengu Loader",
                 0x50030,  # MB_OK | MB_ICONWARNING | MB_SETFOREGROUND | MB_TOPMOST
             )
@@ -781,7 +781,7 @@ if __name__ == "__main__":
                 "error",
                 "SEXO2 crashed unexpectedly.",
                 details={"type": type(e).__name__, "error": str(e)},
-                hint="Check %LOCALAPPDATA%\\Rose\\logs\\ for details.",
+                hint="Check %LOCALAPPDATA%\\SEXO2\\logs\\ for details.",
             )
         except Exception:
             pass
@@ -798,7 +798,7 @@ Traceback:
 ================================================================================
 
 This error has been logged. Please report this issue with the log file.
-Log location: Check %LOCALAPPDATA%\\Rose\\logs\\
+Log location: Check %LOCALAPPDATA%\\SEXO2\\logs\\
 ================================================================================
 """
 
@@ -816,7 +816,7 @@ Log location: Check %LOCALAPPDATA%\\Rose\\logs\\
             try:
                 ctypes.windll.user32.MessageBoxW(
                     0,
-                    f"SEXO2 crashed with an unhandled error:\n\n{str(e)}\n\nError type: {type(e).__name__}\n\nPlease check the log file in:\n%LOCALAPPDATA%\\Rose\\logs\\",
+                    f"SEXO2 crashed with an unhandled error:\n\n{str(e)}\n\nError type: {type(e).__name__}\n\nPlease check the log file in:\n%LOCALAPPDATA%\\SEXO2\\logs\\",
                     "SEXO2 - Fatal Error",
                     0x50010,  # MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST
                 )

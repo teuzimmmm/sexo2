@@ -27,7 +27,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Configurações e início com o Windows | `sexo2/services/settings.py`, `utils/integration/tray_settings.py` | `test_settings_service`, `test_config_consistency` |
 | Bandeja | `utils/integration/tray_manager.py` | `test_tray_lifecycle` |
 | Instância única | `main/core/lockfile.py` (mutex `RoseSingleInstance`) | **sem teste** |
-| Dados do usuário em `%LOCALAPPDATA%\Rose` | `utils/core/paths.py` | **sem teste** de caminho; só de conteúdo |
+| Dados do usuário em `%LOCALAPPDATA%\SEXO2`, movidos uma vez de `%LOCALAPPDATA%\Rose` | `utils/core/paths.py` (`_data_dir_in`) | `test_data_folder_migration` |
 | Diagnóstico sem segredos | `friends/diagnostics.py` | `test_friends_features` (sanitização) |
 | Biblioteca LoLalytics | `lolalytics/` | `tests/test_lolalytics_*` (fixtures reais) |
 | Importação de runas: só a página gerenciada, confirmação por leitura, sessão e campeão invalidam o pendente | `sexo2/services/rune_import.py`, `sexo2/services/rune_rules.py`, `lcu/features/lcu_perks.py` | `test_rune_import`, `test_rune_rules`, `lcu/tests/test_lcu_perks` (cliente simulado; **sem teste** no cliente real) |

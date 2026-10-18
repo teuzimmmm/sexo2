@@ -265,7 +265,7 @@ def _resolve_pengu_dir() -> Path:
         # Keep the runtime directory and overlay updates on top of it.
         #
         # IMPORTANT: users can add custom plugins under:
-        #   %LOCALAPPDATA%\Rose\Pengu Loader\plugins
+        #   %LOCALAPPDATA%\SEXO2\Pengu Loader\plugins
         # Deleting the runtime directory on each launch wipes those user-installed plugins.
         runtime_dir.mkdir(parents=True, exist_ok=True)
 

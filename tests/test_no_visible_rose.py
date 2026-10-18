@@ -24,9 +24,7 @@ BRAND = re.compile(r"(?<![A-Za-z_])(?:Rose|ROSE)(?![A-Za-z0-9_])")
 # Substring -> reason. Removed from a text before it is checked.
 ALLOWED = {
     "ROSE:": "prefix of the party tokens already shared between friends (party/protocol/token_codec.py)",
-    "%LOCALAPPDATA%\\Rose": "real data folder, kept until the M13 migration",
-    "LocalAppData\\Rose": "real data folder, kept until the M13 migration",
-    "{localappdata}\\Rose": "real data folder, kept until the M13 migration",
+    "{localappdata}\\Rose": "old data folder, refused as program folder by the installer",
     "menu_item_Golden Rose": "class of the nav item, selected by ROSE-UI, ROSE-Hub, ROSE-SettingsPanel and SEXO2-Settings",
     "menu_item_Golden\\\\ Rose": "same nav item class, escaped in CSS",
     "SEXO2 utiliza componentes de Rose": "credit to the base project (LICENSE, MIT)",
