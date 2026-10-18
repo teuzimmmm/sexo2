@@ -4,6 +4,7 @@ import copy
 import json
 import re
 import unittest
+from unittest import mock
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -203,6 +204,39 @@ class FakeClientApi:
 class ImportTests(unittest.TestCase):
     def setUp(self):
         self.new_set = ahri_set()
+        patcher = mock.patch("sexo2.services.item_sets.sleep")
+        self.sleep = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_defaults_the_client_adds_on_storing_still_confirm(self):
+        api = FakeClientApi(document(PERSONAL))
+
+        def client_defaults(stored):
+            for item_set in stored["itemSets"]:
+                for block in item_set["blocks"]:
+                    block.setdefault("hideIfSummonerSpell", "")
+                    block.setdefault("showIfSummonerSpell", "")
+                    for item in block["items"]:
+                        item["id"] = str(item["id"])
+                item_set["associatedChampions"] = [int(c) for c in item_set["associatedChampions"]]
+
+        api.mutate = client_defaults
+        result = import_item_set(LCUItemSets(api), self.new_set)
+        self.assertEqual((result.confirmed, result.error), (True, None))
+
+    def test_a_stale_read_right_after_the_write_is_read_again(self):
+        api = FakeClientApi(document(PERSONAL))
+
+        def stale_once(fake):
+            if fake.puts and fake.reads == 3:  # first read after the write
+                fake.stale, fake.stored = fake.stored, document(PERSONAL)
+            elif getattr(fake, "stale", None):
+                fake.stored, fake.stale = fake.stale, None
+
+        api.on_read = stale_once
+        result = import_item_set(LCUItemSets(api), self.new_set)
+        self.assertTrue(result.confirmed)
+        self.sleep.assert_called_once()
 
     def test_import_writes_merge_and_confirms_by_read_back(self):
         api = FakeClientApi(document(PERSONAL))
