@@ -2,6 +2,7 @@
 
 These executables are not kept in Git. Both the local release (prepare_release.py) and the CI
 test build copy them from an earlier SEXO2 folder; source plugins are never overwritten.
+The inherited core.dll is then made to read SEXO2's data folder (patch_core_dll.py).
 
     python scripts/restore_build_binaries.py --base <folder containing _internal>
 """
@@ -37,6 +38,14 @@ def restore(base: Path, target: Path = Path(".")) -> list[Path]:
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(file, dest)
                 copied.append(dest)
+    core = target / "Pengu Loader" / "core.dll"
+    if core.is_file():
+        from patch_core_dll import PatchError, patch
+
+        try:
+            core.write_bytes(patch(core.read_bytes()))
+        except PatchError as error:
+            raise SystemExit(f"core.dll could not be made to read %LOCALAPPDATA%\\SEXO2: {error}") from None
     return copied
 
 
