@@ -1,3 +1,7 @@
+/**
+ * @name ROSE-CustomSkinSelector
+ * @description Custom skin selector for Pengu Loader
+ */
 (function createCustomSkinSelector() {
   const LOG_PREFIX = "[ROSE-CustomSkinSelector]";
   const BUTTON_CLASS = "lu-custom-skin-button";
