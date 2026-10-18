@@ -40,6 +40,7 @@ class BraveryTests(unittest.TestCase):
         self.service.load_library.return_value = [{"championId": 11}]
         self.service.catalogs.catalog.return_value = {"skins": [{"skinId": 11001, "name": "Test"}]}
         self.service.archive.return_value = True
+        self.service.recents.return_value = []
         self.state.friends_service = self.service
         self.game = {
             "gameData": {

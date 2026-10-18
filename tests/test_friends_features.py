@@ -370,7 +370,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn("readiness", received[0])
         self.assertIn("profiles", received[0])
 
-    def test_profile_preserves_chroma_and_draw_uses_base_skins(self):
+    def test_profile_preserves_chroma_and_draw_includes_chromas(self):
         original = self.get
 
         def data(path):
@@ -390,7 +390,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.state.historic_skin_id, 11011)
         self.assertEqual(self.service.preferences.snapshot()["profiles"]["Azul"]["11"]["skinId"], 11011)
         candidates = eligible(self.service.catalogs.catalog(11)["skins"], "Arcane", set(), lambda sid: True)
-        self.assertEqual([p["skinId"] for p in candidates], [11001])
+        self.assertEqual([p["skinId"] for p in candidates], [11001, 11011])
 
     def test_corrupt_preferences_block_draw_and_preserve_choice(self):
         self.service.preferences.error = "Arquivo ilegível"

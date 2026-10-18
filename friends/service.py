@@ -1,6 +1,6 @@
 """Serialized local operations. Network callbacks only read a prepared metadata snapshot."""
 
-import asyncio, copy, json, secrets, sys, threading, time, zipfile
+import asyncio, copy, json, random, secrets, sys, threading, time, zipfile
 from pathlib import Path
 from config import get_config_option
 from sexo2.version import RELEASE_VERSION
@@ -11,7 +11,8 @@ from injection.tools.patcher import check_ltk_patcher, read_game_build
 from injection.mods.zip_resolver import ZipResolver
 from injection.classic import is_classic_game_mode, to_classic_champion_id, to_library_skin_name
 from .preferences import Preferences
-from .lottery import THEMES, eligible, draw
+from .lottery import THEMES, eligible
+from .skin_selector import RECENT_WINDOW, select_skin
 from .diagnostics import export_report
 from .selection_guard import is_manual, release, mark_manual
 from .room import RoomService
@@ -40,6 +41,7 @@ class FriendsService:
         self.room = RoomService(state)
         self._automatic_context = None
         self._crc_cache = {}
+        self.recent = {}  # championId -> latest chosen skin ids, in memory only
         self.library = []
         self.skin_index = None
         self.browse_id = None
@@ -127,6 +129,13 @@ class FriendsService:
             ][:700]
             self.library.sort(key=lambda c: c["name"].casefold())
         return self.library
+
+    def record(self, cid, sid):
+        """Remember a skin that was actually chosen, newest first (memory only; lost on restart)."""
+        self.recent[cid] = [sid, *[x for x in self.recent.get(cid, []) if x != sid]][:RECENT_WINDOW]
+
+    def recents(self, cid):
+        return list(self.recent.get(cid, []))
 
     def load_skin_index(self):
         """Read-only index [skinId, name] of every non-base, non-chroma skin, for local search."""
@@ -536,13 +545,14 @@ class FriendsService:
                             raise ValueError("Este campeão não tem uma favorita disponível.")
                         selected[str(cid)] = favorites[0]
                     else:
-                        selected[str(cid)] = draw(
+                        selected[str(cid)] = select_skin(
                             favorites if mode == "favorites" and favorites else skins,
-                            secrets.token_hex(16),
-                            self.my_id() or 0,
-                            cid,
+                            favorites={s["skinId"] for s in favorites},
+                            recent=self.recents(cid),
                         )
                 self.apply(selected)
+                for cid in ids:
+                    self.record(cid, selected[str(cid)]["skinId"])
                 self._automatic_context = context
                 self.last_message = "Skin automática escolhida."
             except ValueError as e:
@@ -593,8 +603,14 @@ class FriendsService:
                                 set(data["excluded"]),
                                 lambda sid: self.available(cid, sid),
                             )
-                            selected[str(cid)] = draw(candidates, r["seed"], myid, cid)
+                            selected[str(cid)] = select_skin(
+                                candidates,
+                                recent=self.recents(cid),
+                                rng=random.Random(f"{r['seed']}:{myid}:{cid}"),
+                            )
                         self.apply(selected)
+                        for cid in ids:
+                            self.record(cid, selected[str(cid)]["skinId"])
                         self.draw_result = {"theme": r["theme"], "choices": selected, "success": True}
                         self.last_message = "Sorteio aplicado aos seus campeões."
                     except ValueError as e:
@@ -718,8 +734,11 @@ class FriendsService:
                         set(self.preferences.snapshot()["excluded"]),
                         lambda sid: self.available(cid, sid),
                     )
-                    selected[str(cid)] = draw(skins, secrets.token_hex(16), self.my_id() or 0, cid)
+                    favorite_ids = set(self.preferences.snapshot()["favorites"].get(str(cid), []))
+                    selected[str(cid)] = select_skin(skins, favorites=favorite_ids, recent=self.recents(cid))
                 self.apply(selected, automatic=False)
+                for cid in self.local_ids():
+                    self.record(cid, selected[str(cid)]["skinId"])
                 mark_manual(self.state)
                 self.last_message = "Skin sorteada para esta seleção."
             elif action == "save-profile":
