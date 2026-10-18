@@ -83,4 +83,6 @@ a limpa se o LoL já estiver fechado.
    a nitidez: Segoe UI em 12 px nas linhas e 14 px nos totais, suavização em escala
    maior e transparência por pixel, sem recorte por cor. Confira as bordas dos dígitos
    sobre o placar e repita a comparação de FPS após essa troca do bitmap.
+   A [prévia para aprovação visual](../design/propostas/ouro-placar.html) usa o bitmap
+   real do renderizador com valores demonstrativos, em tamanho natural e ampliado 3×.
 10. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.
