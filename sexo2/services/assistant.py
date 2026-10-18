@@ -30,9 +30,19 @@ from sexo2.services.work_queue import SerialWorker
 
 log = logging.getLogger(__name__)
 
-# Queues whose statistics exist on LoLalytics. Normal draft, quickplay and the
-# other summoner's rift queues use ranked data; anything else is unsupported.
-QUEUE_MODES = {400: "ranked", 420: "ranked", 430: "ranked", 440: "ranked", 490: "ranked", 480: "swift", 450: "aram"}
+# Queues whose statistics exist on LoLalytics. Normal draft, quickplay, the
+# other summoner's rift queues and the Practice Tool (3140, to test the assistant
+# without a full match) use ranked data; anything else is unsupported.
+QUEUE_MODES = {
+    400: "ranked",
+    420: "ranked",
+    430: "ranked",
+    440: "ranked",
+    490: "ranked",
+    3140: "ranked",
+    480: "swift",
+    450: "aram",
+}
 POSITION_LANES = {"top": "top", "jungle": "jungle", "middle": "middle", "bottom": "bottom", "utility": "support"}
 
 
@@ -373,8 +383,11 @@ class AssistantService:
         snapshot = snapshot or self._controller.snapshot()
         context = self._context
         runes = self._runes
+        queue_id = self._queue_id()
         return {
             "type": "assistant-state",
+            # False in queues without statistics: the panel then opens the mods directly
+            "supported": isinstance(queue_id, int) and queue_id in QUEUE_MODES,
             "championId": context.champion_id if context else None,
             "lane": context.lane if context else None,
             "mode": context.mode if context else None,

@@ -185,6 +185,11 @@ class AssistantServiceTests(unittest.TestCase):
         self.queue = 1700
         self.service.handle({"type": "assistant-request"})
         self.assertEqual(self.published[-1]["error"], "unsupported_mode")
+        self.assertFalse(self.published[-1]["supported"])
+        self.queue = 3140  # Practice Tool uses the ranked statistics
+        self.service.handle({"type": "assistant-request"})
+        self.assertTrue(self.published[-1]["supported"])
+        self.assertEqual(self.stats.calls[-1][2], "ranked")
         self.queue = 420
         self.service.handle({"type": "assistant-request"})
         self.stats.fail = StatsError("unknown_champion", "x")

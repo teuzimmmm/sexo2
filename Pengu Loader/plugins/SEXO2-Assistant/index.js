@@ -529,17 +529,33 @@
       }
       S.lanePending = null;
       S.state = state;
+      if (S.justOpened && state.supported === false && !panel.hidden) {
+        S.justOpened = false;
+        return openMods();
+      }
+      S.justOpened = false;
       render();
+    }
+
+    // In queues without statistics (Arena and others) the button opens the mods panel directly.
+    function openMods() {
+      close();
+      if (window.__sexo2Mods) window.__sexo2Mods.open();
     }
 
     window.__sexo2Assistant = {
       toggle(anchor) {
-        if (panel.hidden) open(anchor);
-        else close();
+        console.log("[SEXO2-Assistant] toggle", { open: !panel.hidden, supported: S.state ? S.state.supported : null });
+        if (!panel.hidden) return close();
+        if (S.state && S.state.supported === false) return openMods();
+        S.justOpened = true;
+        open(anchor);
       },
       close,
       isOpen: () => !panel.hidden,
     };
+    console.log("[SEXO2-Assistant] ready");
+    window.dispatchEvent(new Event("sexo2-assistant-ready"));
 
     const attach = setInterval(() => {
       const b = window.__roseBridge;
@@ -550,7 +566,8 @@
       bridge.subscribe("assistant-error", () => render());
       bridge.subscribe("champion-locked", () => !panel.hidden && send({ type: "assistant-request" }));
       bridge.subscribe("phase-change", (d) => {
-        if (d && d.phase !== "ChampSelect" && d.phase !== "FINALIZATION") close();
+        if (d && d.phase === "ChampSelect") send({ type: "assistant-request" }); // know the queue before a click
+        else if (d && d.phase !== "FINALIZATION") close();
       });
     }, 250);
     setTimeout(() => clearInterval(attach), 30000);

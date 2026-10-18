@@ -2226,6 +2226,11 @@
   function buttonLabel() {
     return window.__sexo2Assistant ? "SEXO2" : tr("Custom mods");
   }
+  // The assistant plugin may load after this one: relabel the button when it arrives.
+  window.addEventListener("sexo2-assistant-ready", () => {
+    const label = button && button.firstChild;
+    if (label && label.nodeType === Node.TEXT_NODE) label.textContent = buttonLabel();
+  });
 
   // Run from the client's DevTools console: window.__sexo2AnchorDiagnostics()
   function anchorDiagnostics() {
