@@ -18,21 +18,21 @@ function field(key,label,type,min,max,step){
 function build(){
  root=el('section');root.id='sexo2-settings-panel';root.setAttribute('aria-label','Configurações SEXO2');
  const style=el('style');style.textContent=`
- #sexo2-settings-panel{font:13px 'Spiegel',Arial,sans-serif;color:#a09b8c}
- #sexo2-settings-panel h2,#sexo2-settings-panel h3{font-family:'Beaufort for LOL',Georgia,serif;color:#cdbe91;font-weight:500;letter-spacing:.06em;margin:4px 0 14px}
+ #sexo2-settings-panel{font:13px var(--s2-font-text);color:var(--s2-fg-2)}
+ #sexo2-settings-panel h2,#sexo2-settings-panel h3{font-family:var(--s2-font-display);text-transform:uppercase;color:var(--s2-fg-2);font-weight:500;letter-spacing:.06em;margin:4px 0 14px}
  #sexo2-settings-panel h2{font-size:18px}#sexo2-settings-panel h3{font-size:13px;margin-top:18px}
- #sexo2-settings-panel .s2-setting{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;border-bottom:1px solid #1e282d;padding:8px 0}
- #sexo2-settings-panel .s2-setting span{color:#a09b8c;max-width:68%}
+ #sexo2-settings-panel .s2-setting{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;border-bottom:1px solid var(--s2-line);padding:8px 0}
+ #sexo2-settings-panel .s2-setting span{color:var(--s2-fg-2);max-width:68%}
  #sexo2-settings-panel input[type=number]{width:90px;text-align:right}
  #sexo2-settings-panel input[type=text]{width:100%;font-size:12px;margin-top:6px}
- #sexo2-settings-panel input[type=checkbox]{accent-color:#c8aa6e}
+ #sexo2-settings-panel input[type=checkbox]{accent-color:var(--s2-fg)}
  #sexo2-settings-panel .s2-path{display:block}#sexo2-settings-panel .s2-path span{max-width:none}
- #sexo2-settings-panel .s2-help{font-size:11px;line-height:1.5;color:#78796d;margin:8px 0 12px}
+ #sexo2-settings-panel .s2-help{font-size:11px;line-height:1.5;color:var(--s2-fg-3);margin:8px 0 12px}
  #sexo2-settings-panel .s2-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
- #sexo2-settings-panel [role=status]{font-size:12px;line-height:1.5;min-height:20px;margin:10px 0;color:#a09b8c}
+ #sexo2-settings-panel [role=status]{font-size:12px;line-height:1.5;min-height:20px;margin:10px 0;color:var(--s2-fg-2)}
  #sexo2-settings-panel [data-error=true]{color:#d9a796}
- #sexo2-settings-panel details{border-top:1px solid #1e282d;margin-top:16px;padding-top:12px;font-size:11px}
- #sexo2-settings-panel a{color:#c8aa6e}#sexo2-settings-panel summary{cursor:pointer}
+ #sexo2-settings-panel details{border-top:1px solid var(--s2-line);margin-top:16px;padding-top:12px;font-size:11px}
+ #sexo2-settings-panel a{color:var(--s2-fg)}#sexo2-settings-panel summary{cursor:pointer}
  `;root.append(style,el('h2','Configurações'));
  form=el('form');form.noValidate=true;root.append(form);
  field('threshold','Espera após o fim da seleção (s)','number',.3,2,.05);
