@@ -59,6 +59,7 @@ O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plan
 | D-113 | Nome da página de runas gerenciada (provisório: “SEXO2”). O conjunto de itens foi decidido em D-018 | antes do M8 |
 | D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
 | D-121 | Ícone do aplicativo: galo vermelho e branco minimalista, sem azul; sete opções (A a G) com o mesmo desenho em todos os tamanhos e `.ico` prontos. Recomendação: B (galo com barbela, fundo grafite) | `design/propostas/icone/index.html` |
+| D-122 | Nova abertura animada do SEXO2 (`[ícone] SEXO 2` → `[ícone] 2`, 2,55 s, uma vez; fundo `#0d0e10`, Oswald 600, ícone aprovado). Implementada no plugin `SEXO2-Startup` conforme `skins/identidade/animacao-abertura/HANDOFF.md`; validação em `docs/ABERTURA-QA.md`. Pendente de confirmação formal do usuário (visual, duração e identidade) e de teste no cliente real | confirmação do usuário |
 
 ## Rejeitadas
 

@@ -24,7 +24,7 @@ Contagens por `grep` (aproximadas). `ROSE-Jade` está desativado (`index.js_`) e
 | SEXO2-Assistant | Assistente da seleção (Runas, Itens, Mods) | 734 | formatado | `__roseBridge` | 1 interval, 2 timeouts |
 | SEXO2-ModLibrary | Biblioteca de mods no painel | 356 | formatado (era 1 linha) | `__roseBridge` | 1 interval |
 | SEXO2-Settings | Configurações próprias no HUD | 326 | formatado (era 1 linha) | `__roseBridge` | 2 intervals |
-| SEXO2-Startup | Tela de carregamento | 25 | formatado; CSS inline com PNG base64 | nenhuma (independente) | nenhum |
+| SEXO2-Startup | Abertura animada sobre a tela de carregamento (D-122) | ~330 | assets locais: ícone SVG e dois woff2 | nenhuma (independente) | 1 rAF durante 2,55 s; observadores só até achar/ver sair o loading |
 | SEXO2-Style | Tokens, fontes e componentes compartilhados | 123 | formatado | `__roseBridge` (1 uso) | 1 interval, 2 timeouts |
 
 Globais `window.__sexo2*` existentes: `__sexo2Style`, `__sexo2Assistant`, `__sexo2Mods`, `__sexo2AnchorDiagnostics`, `__sexo2ModLibrary`, `__sexo2Settings`. Não renomear.
