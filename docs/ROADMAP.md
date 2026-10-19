@@ -37,8 +37,8 @@ linguagem continua em D-107).
   patcher. O crédito fica em "Créditos da base" (`SEXO2-Settings`) e no `LICENSE`.
 - **Instalador:** pede para fechar o SEXO2 (a verificação continua cobrindo `Rose.exe` e
   `Rose Sala.exe`).
-- **Ativos:** `assets/rose_without_bg.png` removido (sem referência). `golden_rose.png` fica: é a
-  máscara do ícone do Hub.
+- **Ativos:** `assets/rose_without_bg.png` removido (sem referência). `golden_rose.png` fica (listado em
+  `audit_frozen.py`), mas o item de menu do Hub agora usa `icon.png` (D-122).
 
 Mantidos de propósito (compatibilidade ou crédito; lista viva em `tests/test_no_visible_rose.py`):
 

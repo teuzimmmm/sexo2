@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="SEXO2 — 2 · Degrau">
+  <title>SEXO2 · 2 · Degrau</title>
+  <!-- SEXO2 · forma escolhida. Fresta de 16 unidades com parede vertical; crista do R4 escalada 1,35x na largura e 1,45x na altura. -->
+  <g id="tile">
+    <rect width="256" height="256" fill="#15171a"/><rect x="3" y="3" width="250" height="250" fill="none" stroke="#2a2d32" stroke-width="6"/>
+  </g>
+  <g id="symbol">
+    <path d="M58 118 L68 108 L72 48 L104 88 L132 32 L156 88 L184 64 L180 120 L210 144 L162 162 L154 208 L106 226 L58 204 L44 164 Z" fill="#ececec"/><path d="M36 122 L180 137 L180 153 L36 138 Z" fill="#15171a"/><path d="M108 165 L168 157 L132 183 Z" fill="#d2412f"/>
+  </g>
+</svg>

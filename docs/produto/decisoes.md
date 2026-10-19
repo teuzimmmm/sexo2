@@ -59,6 +59,7 @@ O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plan
 | D-113 | Nome da página de runas gerenciada (provisório: “SEXO2”). O conjunto de itens foi decidido em D-018 | antes do M8 |
 | D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
 | D-121 | Ícone do aplicativo: galo vermelho e branco minimalista, sem azul; sete opções (A a G) com o mesmo desenho em todos os tamanhos e `.ico` prontos. Recomendação: B (galo com barbela, fundo grafite) | `design/propostas/icone/index.html` |
+| D-122 | Novo ícone do aplicativo (SEXO2 · “2 · Degrau”, `assets/sexo2.svg`) aplicado no executável, atalhos, instalador, atualizador, janelas, bandeja, aviso do Pengu e item de menu do cliente, no lugar do galo. Pendente de confirmação formal. Papel do Galo/BORK segue em D-112 | `docs/ICONE-NOVO.md` |
 
 ## Rejeitadas
 

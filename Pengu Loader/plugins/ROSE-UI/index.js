@@ -792,9 +792,9 @@
       return false;
     }
 
-    // Check if Golden Rose item already exists by checking for the golden_rose.png image
+    // Check if Golden Rose item already exists by checking for the SEXO2 icon image
     const existingItem = rightNavMenu.querySelector(
-      'lol-uikit-navigation-item .menu-item-icon[style*="golden_rose.png"]'
+      'lol-uikit-navigation-item .menu-item-icon[style*="/asset/icon.png"]'
     );
     if (existingItem) {
       const navItem = existingItem.closest("lol-uikit-navigation-item");
@@ -819,10 +819,12 @@
 
     const icon = document.createElement("div");
     icon.className = "menu-item-icon";
-    icon.style.webkitMaskSize = "contain";
-    icon.style.webkitMaskRepeat = "no-repeat";
-    icon.style.webkitMaskPosition = "center";
-    icon.style.webkitMaskImage = `url(http://127.0.0.1:${window.__roseBridge ? window.__roseBridge.port : 50000}/asset/golden_rose.png)`;
+    // The icon is an opaque tile: shown as a picture, not as a mask (a mask would be a solid square).
+    icon.style.backgroundColor = "transparent";
+    icon.style.backgroundSize = "contain";
+    icon.style.backgroundRepeat = "no-repeat";
+    icon.style.backgroundPosition = "center";
+    icon.style.backgroundImage = `url(http://127.0.0.1:${window.__roseBridge ? window.__roseBridge.port : 50000}/asset/icon.png)`;
 
     iconWrapper.appendChild(glow);
     iconWrapper.appendChild(icon);
