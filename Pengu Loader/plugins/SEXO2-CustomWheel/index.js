@@ -462,6 +462,8 @@
       white-space: nowrap !important;
       /* Keep badge stacking self-contained (prevents weird overlap with other UI) */
       isolation: isolate !important;
+      font-family: var(--s2-font-display, Oswald), "Segoe UI", sans-serif !important;
+      border-radius: 0 !important;
     }
 
     .sexo2-custom-wheel-button .count-badge.social-count-badge,
