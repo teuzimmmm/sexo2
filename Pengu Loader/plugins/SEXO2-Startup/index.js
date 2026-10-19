@@ -181,14 +181,18 @@
 
   // ---- clock: one timeline, one rAF ----
   var el = 0, playing = false, raf = 0, last = 0, ended = false, loadingGone = false, booted = false, resizeTimer = 0;
-  var holdTimer = 0, loadingObs = null;
+  var holdTimer = 0, loadingObs = null, killTimer = 0;
   // Longest the final frame waits for the client after the animation, whatever the client does
   var MAX_HOLD_MS = 3000;
+  // Longest the opening stays at all, by the plain timer clock: even if animation frames never
+  // run or stall in the client's browser, the client is never left covered
+  var MAX_ON_SCREEN_MS = 8000;
 
   function unmount() {
     cancelAnimationFrame(raf); raf = 0; playing = false;
     clearTimeout(resizeTimer);
     clearTimeout(holdTimer);
+    clearTimeout(killTimer);
     if (loadingObs) { loadingObs.disconnect(); loadingObs = null; }
     window.removeEventListener("resize", onResize);
     if (root && root.parentNode) root.parentNode.removeChild(root);
@@ -210,13 +214,19 @@
     else if (!holdTimer) holdTimer = setTimeout(unmount, MAX_HOLD_MS);
   }
 
-  function tick(now) {
+  // The time comes from performance.now(), not the frame timestamp: in the client's off-screen
+  // browser the two clocks can differ, and the animation then never left its first frame.
+  function tick() {
     if (!playing) return;
-    var dt = (now - last) / 1000;
-    if (dt > 0.06) dt = 0.06;
+    var now = performance.now();
+    var dt = clamp((now - last) / 1000, 0, 0.06);
     last = now; el += dt;
-    if (el >= G.dur) { el = G.dur; render(G.dur); playing = false; raf = 0; finish(); return; }
-    render(el);
+    try {
+      if (el >= G.dur) { el = G.dur; render(G.dur); playing = false; raf = 0; finish(); return; }
+      render(el);
+    } catch (e) {
+      playing = false; raf = 0; finish(); return;
+    }
     raf = requestAnimationFrame(tick);
   }
 
@@ -277,6 +287,7 @@
     root.appendChild(scene);
     root.appendChild(probe);
     document.body.appendChild(root);
+    killTimer = setTimeout(unmount, MAX_ON_SCREEN_MS);
     window.addEventListener("resize", onResize);
 
     // measure only after Oswald is loaded; a late font re-measures, a missing one never blocks
