@@ -200,8 +200,14 @@
     return "O cliente recusou o conjunto.";
   }
 
+  // Sem estatísticas (Arena e outras filas) só Mods e as configurações fazem sentido (decisão de 19/10/2026).
+  function visibleTabs(noStats) {
+    const all = [["runes", "Runas"], ["items", "Itens"], ["mods", "Mods"], ["settings", "Todas as configurações"]];
+    return noStats ? all.filter(([k]) => k === "mods" || k === "settings") : all;
+  }
+
   if (typeof window === "undefined" && typeof module !== "undefined" && module.exports) {
-    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, runeError, itemError, LANES };
+    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, visibleTabs, runeError, itemError, LANES };
     return;
   }
 
@@ -223,7 +229,6 @@
 #sexo2-assistant #sexo2-mod-library{margin-top:0;border-top:0;padding-top:0;}
 #sexo2-assistant #sexo2-mod-library>button:nth-child(2){display:none;}
 #sexo2-assistant .ip-sub{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-2);}
-#sexo2-assistant .pref-row{display:flex;align-items:center;gap:var(--sp-2);font-size:13px;}
 #sexo2-assistant .grow{flex:1;}
 #sexo2-assistant .asst-body{flex:1;overflow-y:auto;padding:var(--sp-3);}
 #sexo2-assistant .asst-foot{height:36px;border-top:1px solid var(--s2-line);display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-3);font-size:12px;color:var(--s2-fg-2);}
@@ -302,9 +307,8 @@
     panel.setAttribute("aria-label", "SEXO2");
     document.body.appendChild(panel);
 
-    const S = { tab: "runes", screen: "home", draft: null, source: null, state: null, lanePending: null, buildQuery: "", keystoneWanted: null, friends: null };
+    const S = { tab: "runes", screen: "home", draft: null, source: null, state: null, lanePending: null, buildQuery: "", keystoneWanted: null, noStats: false };
     const modsHost = document.createElement("div");
-    let friendsSeq = 0;
     let game = null;
     let data = null;
     const names = { champions: {}, items: {} };
@@ -526,13 +530,6 @@
       return `<div class="asst-foot">${left}<span class="grow"></span>${retry}</div>`;
     }
 
-    // ----------------------------------------------------------- preferências rápidas
-    function prefsTab() {
-      const on = S.friends && S.friends.autoAccept === true;
-      return `<label class="pref-row"><input type="checkbox" data-act="auto-accept" ${on ? "checked" : ""}><span>Aceitar partidas automaticamente</span></label>`;
-    }
-    const requestFriends = () => send({ type: "friends-request", action: "snapshot", requestId: "assistant-" + ++friendsSeq });
-
     // ----------------------------------------------------------- painel
     function render() {
       try {
@@ -546,7 +543,7 @@
     function draw() {
       if (panel.hidden) return;
       const st = S.state;
-      const tabs = [["runes", "Runas"], ["items", "Itens"], ["mods", "Mods"], ["settings", "Todas as configurações"]];
+      const tabs = visibleTabs(S.noStats);
       const lane = S.lanePending || (st && st.lane);
       const opp = st && st.opponentId;
       const laneOptions = (LANES[lane] ? "" : `<option value="" selected disabled>—</option>`) + Object.entries(LANES).map(([k, v]) => `<option value="${k}" ${k === lane ? "selected" : ""}>${v}</option>`).join("");
@@ -554,13 +551,13 @@
       const keep = panel.querySelector(".asst-body");
       const scroll = keep ? keep.scrollTop : 0;
       const modsShown = modsHost.isConnected; // the library keeps its own state: reopen it only when it was not shown
-      const body = S.tab === "runes" ? runesTab() : S.tab === "items" ? itemsTab() : S.tab === "prefs" ? prefsTab() : "";
+      const body = S.tab === "runes" ? runesTab() : S.tab === "items" ? itemsTab() : "";
       const foot = S.tab === "runes" ? runesFoot() : S.tab === "items" ? itemsFoot() : "";
       panel.innerHTML = `
         <div class="asst-head">
-          <label>Rota<select class="s2-select" data-act="lane" aria-label="Rota">${laneOptions}</select></label>
+          ${S.noStats ? `<span class="grow"></span>` : `<label>Rota<select class="s2-select" data-act="lane" aria-label="Rota">${laneOptions}</select></label>
           <label>Confronto<select class="s2-select" data-act="opponent" aria-label="Confronto">${enemyOptions}</select></label>
-          <label>Fonte<select class="s2-select" data-act="source" aria-label="Fonte"><option value="lolalytics" selected>Lolalytics</option></select></label>
+          <label>Fonte<select class="s2-select" data-act="source" aria-label="Fonte"><option value="lolalytics" selected>Lolalytics</option></select></label>`}
           <button class="s2-btn ghost" data-act="close" aria-label="Fechar">✕</button>
         </div>
         <div class="s2-tabs" role="tablist">${tabs.map(([k, v]) => `<button role="tab" data-act="tab" data-tab="${k}" aria-selected="${S.tab === k}">${v}</button>`).join("")}</div>
@@ -634,7 +631,6 @@
           }
           S.tab = el.dataset.tab;
           S.screen = "home";
-          if (S.tab === "prefs") requestFriends();
           break;
         case "retry": send({ type: "assistant-request" }); break;
         case "rune-open": {
@@ -693,10 +689,6 @@
     panel.addEventListener("change", (e) => {
       const t = e.target;
       if (t.dataset.act === "opponent" && t.value) send({ type: "assistant-opponent", championId: Number(t.value) });
-      if (t.dataset.act === "auto-accept") {
-        S.friends = { ...(S.friends || {}), autoAccept: t.checked };
-        send({ type: "friends-request", action: "auto-accept", enabled: t.checked, requestId: "assistant-" + ++friendsSeq });
-      }
       if (t.dataset.act === "lane") {
         S.lanePending = t.value;
         send({ type: "assistant-lane", lane: t.value });
@@ -715,11 +707,7 @@
       }
       S.lanePending = null;
       S.state = state;
-      if (S.justOpened && state.supported === false && !panel.hidden) {
-        S.justOpened = false;
-        return openMods();
-      }
-      S.justOpened = false;
+      setStatsMode(state.supported === false);
       openWantedKeystone(state);
       render();
     }
@@ -742,18 +730,20 @@
       send({ type: "assistant-runes-choose", selection: "keystone", matchup: false }); // importação antecipada
     }
 
-    // In queues without statistics (Arena and others) the button opens the mods panel directly.
-    function openMods() {
-      close();
-      if (window.__sexo2Mods) window.__sexo2Mods.open();
+    // In queues without statistics (Arena and others) the assistant shows only Mods and settings (see visibleTabs).
+    function setStatsMode(noStats) {
+      S.noStats = noStats;
+      if (noStats && S.tab !== "mods") {
+        S.tab = "mods";
+        S.screen = "home";
+      }
     }
 
     window.__sexo2Assistant = {
       toggle(anchor) {
         console.log("[SEXO2-Assistant] toggle", { open: !panel.hidden, supported: S.state ? S.state.supported : null });
         if (!panel.hidden) return close();
-        if (S.state && S.state.supported === false) return openMods();
-        S.justOpened = true;
+        setStatsMode(!!(S.state && S.state.supported === false));
         open(anchor);
       },
       close,
@@ -770,11 +760,6 @@
       bridge = b;
       bridge.subscribe("assistant-state", receive);
       bridge.subscribe("assistant-error", () => render());
-      bridge.subscribe("friends-state", (d) => {
-        if (!d || typeof d.autoAccept !== "boolean") return;
-        S.friends = d;
-        if (!panel.hidden && S.tab === "prefs") render();
-      });
       bridge.subscribe("champion-locked", () => !panel.hidden && send({ type: "assistant-request" }));
       bridge.subscribe("phase-change", (d) => {
         if (d && d.phase === "ChampSelect") send({ type: "assistant-request" }); // know the queue before a click

@@ -108,3 +108,10 @@ test('the default build shows only the first group as Inicial, Essenciais and Si
   assert.deepEqual(A.defaultBuild([]), { inicial: null, essenciais: null, situacionais: null });
   assert.equal(A.defaultBuild([block('Itens iniciais', 4)]).inicial, null);
 });
+
+test('sem estatísticas só Mods e Todas as configurações aparecem', () => {
+  const keys = (noStats) => A.visibleTabs(noStats).map(([k]) => k);
+  assert.deepEqual(keys(false), ['runes', 'items', 'mods', 'settings']);
+  assert.deepEqual(keys(true), ['mods', 'settings']);
+  assert.ok(!keys(false).includes('prefs'));
+});
