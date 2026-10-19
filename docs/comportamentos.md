@@ -17,7 +17,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Autoaceite opcional | `friends/auto_accept.py` | `test_r6_protections` |
 | Sala privada (relay, túnel, reconexão) | `party/`, `friends/room.py` | `party/tests`, `test_private_relay`, `test_tunnel_dns`, `test_fixed_party`, `test_party_ui.cjs`, `test_friends_ui.cjs` |
 | Biblioteca de mods, importação e exportação | `sexo2/services/mod_library.py` | `test_mod_library`, `test_mod_library_bridge`, `test_modpkg`, `test_safe_extract_limits` |
-| Seleção de mods na seleção de campeões | `pengu/communication/message_handler.py`, `SEXO2-CustomWheel` | `test_custom_mod_monitor`, `test_mod_manifest`; **sem teste** por mensagem `mod-*` |
+| Seleção de mods na seleção de campeões | `pengu/communication/message_handler.py`, `SEXO2-CustomWheel` | `test_custom_mod_monitor`, `test_mod_manifest`; **sem teste** por mensagem `mod-*`; o painel antigo é a única interface de seleção (D-132) |
 | Swiftplay e fixados | `threads/handlers/swiftplay_handler.py`, `pengu/processing/swiftplay_pins.py` | `test_quickplay`, `test_swiftplay_historic`, `test_swiftplay_pins`, `test_swiftplay_draw` (sorteio só para quem não escolheu, nunca gravado), `test_swiftplay_pins_ui.cjs` |
 | Arena Bravura | `friends/arena_bravery.py` | `test_arena_bravery` |
 | Ponte Pengu ↔ backend e reconexão | `pengu/core/`, `pengu/communication/` | `pengu/tests` (porta, watchdog, isolamento de mensagens) |
@@ -37,6 +37,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Importação automática dos itens ao confirmar o campeão (travamento, troca, Swiftplay) | `sexo2/services/assistant.py`, `sexo2/services/assistant_runtime.py`, `threads/handlers/champion_lock_handler.py`, `threads/handlers/swiftplay_handler.py` | `test_assistant_service` (debounce, último vence, provisório ignorado) |
 | `core.dll` do Pengu lê `%LOCALAPPDATA%\SEXO2\config.ini` (corrigido na montagem: textos e tamanhos, sem assinatura) | `scripts/patch_core_dll.py`, `scripts/restore_build_binaries.py` | `test_patch_core_dll`, `test_restore_build_binaries`; **sem teste** no cliente real |
 | Fachada do LCU com as chamadas do assistente (`get` sem cache, `put`, `post`) | `lcu/core/client.py` | `lcu/tests/test_lcu_facade` |
+| Filas sem estatísticas (Arena etc.): o botão SEXO2 abre o assistente só com Mods e Todas as configurações | `SEXO2-Assistant` (`visibleTabs`) | `test_assistant_plugin.cjs`; **sem teste** do DOM real |
 | Painel acima do botão SEXO2 | `ROSE-CustomWheel` (`computeAnchor`), protótipo `js/anchor.js` | `test_anchor.cjs`; **sem teste** do DOM real |
 | Aprimoramentos: catálogo por modo, estatísticas, ofertas, reconhecimento | `sexo2/augments/`, `sexo2/overlay/augment_overlay.py` | `test_augments` (capturas reais MIT); **sem teste** em partida real |
 | Ouro no placar (visual D-130, modo B): janela só da coluna central com alpha por pixel, desenho em 4x reduzido; bitmap refeito só quando os valores mudam; conexão e nome do jogador reaproveitados na partida; só aparece com Tab e o jogo em primeiro plano | `sexo2/overlay/gold_overlay.py`, `alpha_surface.py` | `test_gold_overlay`, `test_gold_comparison`, `test_alpha_surface`; **sem teste** de FPS no jogo |

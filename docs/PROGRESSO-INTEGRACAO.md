@@ -25,3 +25,16 @@ Ordem: ux/v0.9-prelaunch, ux/v0.9-m5b-rename, ux/abertura, ux/icone-novo (1dc67b
   do cliente, mas não aparecem no painel). A Rota agora é seletor (não só leitura).
 - Não validado: cliente real (DOM do assistente, biblioteca de mods embutida, ancoragem) e `node --test` (só Deno local).
 - Sem Node local: testes `.cjs` rodam só no CI.
+
+## Filas sem estatísticas e painel antigo (19/10/2026, D-131 e D-132)
+- Feito: em filas sem estatísticas (`supported === false`, ex.: Arena) o botão SEXO2 abre o assistente só com Mods e Todas
+  as configurações (`visibleTabs`, `setStatsMode`); `openMods()` saiu. Preferências rápidas: `prefsTab`, `requestFriends`,
+  `friends-state`, `auto-accept`, CSS `.pref-row` e o estado `friends` foram removidos do assistente.
+- NÃO removido, por dúvida real de perda de função: o painel de mods antigo (`openPanel` e vizinhos em `SEXO2-CustomWheel`,
+  ~2.300 das 3.062 linhas). Ele é o único lugar que envia `select-skin-mod`, `select-map`, `select-font`, `select-announcer`
+  e `select-other` (escolha de qual mod instalado entra no jogo) e que guarda o estado do modo histórico, do selo de contagem
+  do botão e da reaplicação automática. A biblioteca (SEXO2-ModLibrary) só importa, renomeia, exporta e define alvos; não
+  seleciona. Nas filas com estatísticas o painel já não era acessível pela interface; agora, sem o `openMods()`, só resta
+  `window.__sexo2Mods.open()` no DevTools. Pendente: decisão do usuário sobre onde a seleção de mods passa a ficar (por
+  exemplo, na aba Mods do assistente); só depois o painel antigo pode ser apagado sem perder a função.
+- Sem Node local: teste `.cjs` novo (`visibleTabs`) roda só no CI.
