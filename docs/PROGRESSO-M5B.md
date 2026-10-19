@@ -18,7 +18,7 @@ Estado: feito com migração onde havia caminho seguro; o resto fica como está,
 - **Pasta `%LOCALAPPDATA%\Rose`:** o `core.dll` do Pengu (binário sem fonte no repositório) lê o `config.ini` de um caminho que não dá para verificar aqui; o hook IFEO aponta para o `core.dll` dentro dela (mover após uma queda deixa o cliente apontando para DLL ausente); o nome `SEXO2` colide com a pasta de instalação padrão `%LOCALAPPDATA%\SEXO2`. Sem teste no Windows real. Caminho futuro: nome distinto (ex.: `SEXO2-Dados`) com junção `Rose`, validado no cliente.
 - **Metadados `rose_mod_targets.json`, `rose_category_mods.json`:** estão na pasta dos mods, entram em exportações e fora do hash da sala. Versões antigas dos amigos os esperam.
 - **Escrita de `ROSE:` e `#rose=`:** versões distribuídas só removem o prefixo `ROSE:`; `SEXO2:` seria recusado. Trocar a escrita exige todos os amigos na versão nova.
-- **Relay público** `rose-party-relay.roseapp.workers.dev` e `v=1.4.7`: serviço externo e protocolo herdado.
+- **Protocolo `v=1.4.7`** da sala: herdado. O relay padrão agora é o Worker próprio (`sala/`, D-133).
 - **Executáveis antigos:** `Rose.exe`/`Rose Sala.exe` em instalador, atualizador e `sexo2/update/lifecycle.py`; atalhos antigos no `InstallDelete`.
 - **Plugin `SEXO2-Jade` (terceiros, desabilitado):** pasta e caminhos renomeados; chaves `Rose-language`/`Rose-plugin-settings` do DataStore, classes `Rose-*` e `ROSEJadeLog` mantidos (config do usuário, sem como testar). `assets/logo.png` mantido (não geramos imagens).
 - `cslol-dll.stub` (binário pré-compilado) e `native/cslol_stub` (mensagem de erro); `launcher/update/github_client.py` (código morto, `FORK_BUILD`); vendor `Program.cs` links e `icon_rose.png` (créditos, binário não é recompilado no CI).

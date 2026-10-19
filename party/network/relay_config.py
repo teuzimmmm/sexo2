@@ -1,7 +1,6 @@
-"""Relay shared with the local Teste 0.2/0.3 friends' builds.
+"""The always-online room: SEXO2's own Worker (code and deploy steps in sala/).
 
-Keep this file when porting the fork; it is excluded from upstream Git.
 The room key is selected by party_manager, not by this endpoint.
 """
 
-RELAY_URL = "wss://rose-party-relay.roseapp.workers.dev"
+RELAY_URL = "wss://sexo2-sala.matheus-barbosa-gomes10.workers.dev"
