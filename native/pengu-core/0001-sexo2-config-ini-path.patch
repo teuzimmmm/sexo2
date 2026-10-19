@@ -1,0 +1,92 @@
+diff --git a/core/src/config.cc b/core/src/config.cc
+index aa0f67f..977b708 100644
+--- a/core/src/config.cc
++++ b/core/src/config.cc
+@@ -10,12 +10,55 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+ #include <libgen.h>
+ #endif
+ 
++#if OS_WIN
++// SEXO2: the app shares its config.ini with this core (General/disabled, General/loaderpath).
++static bool env_path(const wchar_t *name, std::wstring &out)
++{
++    wchar_t buf[2048];
++    DWORD n = GetEnvironmentVariableW(name, buf, _countof(buf));
++    if (n == 0 || n >= _countof(buf))
++        return false;
++    out.assign(buf, n);
++    return true;
++}
++
++path config::ini_path()
++{
++    std::wstring value;
++    if (env_path(L"SEXO2_CONFIG_PATH", value) || env_path(L"ROSE_CONFIG_PATH", value))
++        return value;
++    if (env_path(L"LOCALAPPDATA", value))
++        return path(value) / L"Rose" / L"config.ini";
++    return path();
++}
++
++static std::wstring ini_value(const wchar_t *key)
++{
++    wchar_t buf[2048]{};
++    auto ini = config::ini_path().wstring();
++    if (ini.empty())
++        return L"";
++    GetPrivateProfileStringW(L"General", key, L"", buf, _countof(buf), ini.c_str());
++    return buf;
++}
++
++bool config::hook_enabled()
++{
++    return ini_value(L"disabled") == L"0";
++}
++#endif
++
+ path config::loader_dir()
+ {
+ #if OS_WIN
+     static std::wstring path;
+     if (path.empty())
+     {
++        // SEXO2: the app tells where the loader (config, plugins, datastore) lives.
++        auto fromIni = ini_value(L"loaderpath");
++        if (!fromIni.empty())
++            return path = fromIni;
++
+         // Get this dll path.
+         WCHAR thisPath[2048];
+         GetModuleFileNameW((HINSTANCE)&__ImageBase, thisPath, ARRAYSIZE(thisPath) - 1);
+diff --git a/core/src/dllmain.cc b/core/src/dllmain.cc
+index 7135b55..c9ad563 100644
+--- a/core/src/dllmain.cc
++++ b/core/src/dllmain.cc
+@@ -52,6 +52,10 @@ static BOOL WINAPI Hooked_CreateProcessW(LPCWSTR lpApplicationName, LPWSTR lpCom
+ 
+ static void Initialize()
+ {
++    // SEXO2: hook only while the app's config.ini says disabled=0.
++    if (!config::hook_enabled())
++        return;
++
+     WCHAR exe_path[2048]{};
+     GetModuleFileNameW(nullptr, exe_path, _countof(exe_path));
+ 
+diff --git a/core/src/pengu.h b/core/src/pengu.h
+index 6cea01b..33549a4 100644
+--- a/core/src/pengu.h
++++ b/core/src/pengu.h
+@@ -306,6 +306,12 @@ namespace config
+     /// 
+     path loader_dir();
+ 
++    /// SEXO2: path of the app's config.ini (SEXO2_CONFIG_PATH, ROSE_CONFIG_PATH, then %LOCALAPPDATA%\Rose\config.ini).
++    path ini_path();
++
++    /// SEXO2: true only when config.ini has General/disabled=0.
++    bool hook_enabled();
++
+     ///
+     /// Get the datastore path.
+     /// @returns Path to datastore file.

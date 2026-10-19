@@ -1,0 +1,69 @@
+name: Build Pengu core
+# Builds core.dll from upstream PenguLoader v1.1.6 plus native/pengu-core/*.patch.
+# Separate from release.yml; publishes the DLL only as a workflow artifact.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'native/pengu-core/**'
+      - '.github/workflows/pengu-core.yml'
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: app
+      - name: Fetch upstream at the pinned commit
+        shell: pwsh
+        run: |
+          $c = (Get-Content app/native/pengu-core/UPSTREAM | Where-Object { $_ -like 'commit=*' }) -replace 'commit=', ''
+          git clone https://github.com/PenguLoader/PenguLoader.git upstream
+          git -C upstream checkout --quiet $c
+          if ((git -C upstream rev-parse HEAD) -ne $c) { throw 'Upstream commit mismatch.' }
+          git -C upstream submodule update --init --depth 1 core/cef
+      - name: Apply SEXO2 patch
+        shell: pwsh
+        run: |
+          git -C upstream apply --check ../app/native/pengu-core/0001-sexo2-config-ini-path.patch
+          git -C upstream apply ../app/native/pengu-core/0001-sexo2-config-ini-path.patch
+          if ($LASTEXITCODE -ne 0) { throw 'Patch failed.' }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build preload script (generates preload.g.h)
+        shell: pwsh
+        working-directory: upstream/plugins
+        run: |
+          npm install -g pnpm@9
+          pnpm install --frozen-lockfile
+          pnpm build
+          if (-not (Test-Path dist/preload.g.h)) { throw 'preload.g.h missing.' }
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build core.dll (MSVC v143, Release x64)
+        shell: pwsh
+        working-directory: upstream
+        run: |
+          msbuild core/core.vcxproj /p:Configuration=Release /p:Platform=x64 /m
+          if ($LASTEXITCODE -ne 0) { throw 'MSBuild failed.' }
+      - name: Collect output
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem upstream -Recurse -Filter core.dll | Where-Object { $_.FullName -match 'Release|bin' } | Select-Object -First 1
+          if (-not $dll) { throw 'core.dll not found.' }
+          New-Item -ItemType Directory out | Out-Null
+          Copy-Item $dll.FullName out/core.dll
+          Copy-Item upstream/LICENSE out/LICENSE-PenguLoader-GPL-3.0
+          Copy-Item app/native/pengu-core/0001-sexo2-config-ini-path.patch out/
+          $h = (Get-FileHash out/core.dll -Algorithm SHA256).Hash.ToLower()
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property catalog_productDisplayVersion
+          $cl = (Get-ChildItem "$env:VCToolsInstallDir\bin\Hostx64\x64\cl.exe").VersionInfo.ProductVersion
+          @("sha256=$h", "visual_studio=$vs", "msvc_cl=$cl", "node=$(node -v)", "sexo2_commit=${{ github.sha }}") | Set-Content out/build-info.txt
+          Get-Content out/build-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pengu-core-${{ github.sha }}
+          path: out
+          retention-days: 30
