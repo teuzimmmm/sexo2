@@ -1,6 +1,6 @@
 /**
  * @name SEXO2-Assistant
- * @description Assistente da seleção de campeões: Runas, Itens, Mods, Preferências rápidas e Todas as configurações (D-017, D-018, D-117).
+ * @description Assistente da seleção de campeões: Runas, Itens, Mods e Todas as configurações (D-017, D-018, D-117).
  *
  * Abre acima do botão SEXO2 (SEXO2-CustomWheel chama window.__sexo2Assistant.toggle). Os dados e as
  * importações vêm do SEXO2 pela ponte (mensagens assistant-*); nomes e ícones de runas, itens e
@@ -546,7 +546,7 @@
     function draw() {
       if (panel.hidden) return;
       const st = S.state;
-      const tabs = [["runes", "Runas"], ["items", "Itens"], ["mods", "Mods"], ["prefs", "Preferências rápidas"], ["settings", "Todas as configurações"]];
+      const tabs = [["runes", "Runas"], ["items", "Itens"], ["mods", "Mods"], ["settings", "Todas as configurações"]];
       const lane = S.lanePending || (st && st.lane);
       const opp = st && st.opponentId;
       const laneOptions = (LANES[lane] ? "" : `<option value="" selected disabled>—</option>`) + Object.entries(LANES).map(([k, v]) => `<option value="${k}" ${k === lane ? "selected" : ""}>${v}</option>`).join("");
