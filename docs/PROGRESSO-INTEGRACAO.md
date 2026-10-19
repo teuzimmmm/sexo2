@@ -15,5 +15,13 @@ Ordem: ux/v0.9-prelaunch, ux/v0.9-m5b-rename, ux/abertura, ux/icone-novo (1dc67b
 - Ícone: `icon.png`/`sexo2.svg` no item de menu (`SEXO2-UI`); `hub_icon.png` e Galo/BORK removidos.
 
 ## Pendências conhecidas
-- Aba "Preferências rápidas" e "Todas as configurações" do assistente (D-117) não estão na versão da sexoatividade.
+- Reaplicado depois da integração (D-130 e D-117): overlay de ouro modo B; assistente com cabeçalho Rota, Confronto e
+  Fonte (só Lolalytics), abas Runas, Itens, Mods (biblioteca embutida), Preferências rápidas e Todas as configurações,
+  "Build padrão" (Inicial/Essenciais/Situacionais) e botão SEXO2 em Oswald com cantos retos. Já estavam certos: 452x492,
+  sem aba Skins, sem Onetricks, sem o texto "Ver a recomendação...", ancoragem D-017, painel D-115 e busca de Favoritas.
+- Decisões de texto/UX que ficaram como estavam em versões anteriores e esperam aprovação explícita: conteúdo da aba
+  Preferências rápidas (só "Aceitar partidas automaticamente"), "Nenhum" no Confronto sem adversário, "—" na Rota sem rota
+  do cliente, e "Build padrão" mostrar só o primeiro grupo do conjunto (as seções de mais jogada e Counter seguem no conjunto
+  do cliente, mas não aparecem no painel). A Rota agora é seletor (não só leitura).
+- Não validado: cliente real (DOM do assistente, biblioteca de mods embutida, ancoragem) e `node --test` (só Deno local).
 - Sem Node local: testes `.cjs` rodam só no CI.
