@@ -181,19 +181,33 @@
 
   // ---- clock: one timeline, one rAF ----
   var el = 0, playing = false, raf = 0, last = 0, ended = false, loadingGone = false, booted = false, resizeTimer = 0;
+  var holdTimer = 0, loadingObs = null;
+  // Longest the final frame waits for the client after the animation, whatever the client does
+  var MAX_HOLD_MS = 3000;
 
   function unmount() {
     cancelAnimationFrame(raf); raf = 0; playing = false;
     clearTimeout(resizeTimer);
+    clearTimeout(holdTimer);
+    if (loadingObs) { loadingObs.disconnect(); loadingObs = null; }
     window.removeEventListener("resize", onResize);
     if (root && root.parentNode) root.parentNode.removeChild(root);
     root = null;
   }
 
-  // The final frame stays while the client still shows its loading screen; the overlay goes only after the animation ended.
+  // The client may hide its loading screen, or remove an ancestor of it, instead of removing it
+  function loadingShown() {
+    if (!loadingDiv.isConnected || !loadingDiv.getClientRects().length) return false;
+    var cs = getComputedStyle(loadingDiv);
+    return cs.visibility !== "hidden" && parseFloat(cs.opacity) > 0;
+  }
+
+  // The final frame stays while the client still shows its loading screen, at most MAX_HOLD_MS;
+  // the overlay goes only after the animation ended.
   function finish() {
     ended = true;
-    if (loadingGone || !loadingDiv.isConnected) unmount();
+    if (loadingGone || !loadingShown()) unmount();
+    else if (!holdTimer) holdTimer = setTimeout(unmount, MAX_HOLD_MS);
   }
 
   function tick(now) {
@@ -286,13 +300,14 @@
     started = true;
     loadingDiv = div;
     mountOverlay();
-    var obs = new MutationObserver(function () {
-      if (div.isConnected) return;
-      obs.disconnect();
+    // Disconnected by unmount; lives only while the opening is on screen
+    loadingObs = new MutationObserver(function () {
+      if (loadingShown()) return;
       loadingGone = true;
       if (ended || !booted) unmount();
     });
-    if (div.parentNode) obs.observe(div.parentNode, { childList: true });
+    loadingObs.observe(document.body, { childList: true, subtree: true });
+    loadingObs.observe(div, { attributes: true, attributeFilter: ["style", "class", "hidden"] });
     return true;
   }
 
