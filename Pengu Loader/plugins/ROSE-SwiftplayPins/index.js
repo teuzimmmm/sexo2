@@ -69,8 +69,15 @@
 `;
   document.head.appendChild(style);
   document.body.appendChild(root);
-  window.addEventListener('rose-hub-friends',e=>{if(root.closest('#rose-hub')){hubActive=e.detail.tab==='Automático';if(!hubActive)root.hidden=true;}});
+  window.addEventListener('rose-hub-friends',e=>{if(root.closest('#rose-hub')){hubActive=e.detail.tab==='Swiftplay';if(!hubActive)root.hidden=true;}});
   window.addEventListener('rose-hub-swiftplay',e=>{hubActive=true;e.detail.target.appendChild(root);open=true;render();});
+  let announced = null;
+  function announce() {
+    const active = state?.active === true;
+    if (active === announced) return;
+    announced = active;
+    window.dispatchEvent(new CustomEvent('rose-swiftplay-state', {detail: {active}}));
+  }
   const el = (tag, cls, text) => {
     const node = document.createElement(tag);
     if (cls) node.className = cls;
@@ -222,6 +229,7 @@
     const updated = visibleState(state) !== visibleState(data);
     const changed = oldIds.slice().sort().join(",") !== data.championIds.slice().sort().join(",");
     state=data; lastState=Date.now();
+    announce();
     draft=reconcileDraft(draft,data.champions,wasSave || !dirty || !data.active);
     if (wasSave) {dirty=false;message="Preferências salvas. Fixada significa escolha guardada; o preparo ocorre ao buscar partida.";chooser=null;}
     else if (changed) {if (dirty) message="Os campeões mudaram. Confira as escolhas antes de salvar.";chooser=null;}
@@ -240,7 +248,7 @@
       bridge.subscribe("phase-change", data => {
         const phase=data.phase;
         if (phase && !["Lobby","Matchmaking","ReadyCheck"].includes(phase)) {
-          state=null;open=false;dirty=false;chooser=null;render();
+          state=null;open=false;dirty=false;chooser=null;announce();render();
         }
       });
     }

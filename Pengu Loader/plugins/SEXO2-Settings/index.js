@@ -173,7 +173,6 @@
       libraryHost.hidden = true;
     });
     tools.append(
-      button('Biblioteca de mods', openLibrary),
       button('Diagnóstico detalhado', () =>
         window.dispatchEvent(
           new CustomEvent('sexo2-settings-tool', { detail: { action: 'diagnostics', category: 'skins' } }),
@@ -201,7 +200,7 @@
     credits.append(el('summary', 'Créditos da base'));
     const note = el(
       'p',
-      'SEXO2 utiliza componentes de Rose, Pengu Loader e LTK. BORK pertence à Riot Games; o escudo pertence ao Clube Atlético Mineiro.',
+      'SEXO2 utiliza componentes de Rose, Pengu Loader e LTK.',
     );
     credits.append(note);
     const link = el('a', 'Código e licença da base Rose');

@@ -60,7 +60,7 @@
     panel.className = 's2';
     panel.hidden = true;
     panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-label', 'Ferramentas de skins');
+    panel.setAttribute('aria-label', 'SEXO2');
     const nav = document.createElement('nav'),
       main = document.createElement('div'),
       head = document.createElement('div'),
@@ -74,10 +74,10 @@
     main.append(head, content);
     panel.append(nav, main);
     document.body.append(panel);
-    let current = 'Skins',
+    let current = 'Sala',
       anchor = null,
       phase = null,
-      skinTab = 'Automático';
+      swift = false;
     const containers = {};
     function dispatch(type, detail) {
       window.dispatchEvent(new CustomEvent(type, { detail }));
@@ -115,15 +115,15 @@
         }),
       );
     }
-    // Seções do protótipo aprovado (D-017); cada uma monta os painéis que já existiam.
-    const SECTIONS = ['Skins', 'Mods', 'Sala', 'Configurações', 'Diagnóstico'];
+    // Menus do painel SEXO2 (D-115); Swiftplay só aparece quando o jogo é Swiftplay.
+    const sections = () => ['Sala', 'Favoritas', 'Configurações', 'Suporte', ...(swift ? ['Swiftplay'] : [])];
     function mount() {
       nav.replaceChildren();
       const brand = document.createElement('div');
       brand.className = 'brand';
       brand.textContent = 'SEXO2';
       nav.append(brand);
-      for (const label of SECTIONS) {
+      for (const label of sections()) {
         const b = createButton(label, () => {
           current = label;
           mount();
@@ -145,37 +145,15 @@
       }
       const target = containers[current];
       target.hidden = false;
-      if (current === 'Skins') {
-        const tabs = {
-          'Seleção automática': 'Automático',
-          'Favoritas': 'Favoritas',
-          'Perfis': 'Perfis',
-          'Sorteio temático': 'Sorteio',
-        };
-        subnav(
-          target,
-          Object.entries(tabs).map(([label, tab]) => [
-            label,
-            () => {
-              skinTab = tab;
-              mount();
-            },
-          ]),
-          Object.keys(tabs).find((k) => tabs[k] === skinTab),
-        );
-        dispatch('rose-hub-friends', { target, tab: skinTab });
-        if (skinTab === 'Automático') dispatch('rose-hub-swiftplay', { target });
-        else {
-          const pins = document.getElementById('rose-swiftplay-pins');
-          if (pins) pins.hidden = true;
-        }
-      } else if (current === 'Mods') {
-        dispatch('sexo2-mod-library-open', { target, category: 'all' });
-      } else if (current === 'Sala') {
+      if (current === 'Sala') {
         dispatch('rose-hub-friends', { target, tab: 'Sala' });
         const legacyParty = document.getElementById('rose-party-panel');
         if (legacyParty) legacyParty.hidden = true;
-      } else if (current === 'Diagnóstico') {
+      } else if (current === 'Favoritas') {
+        dispatch('rose-hub-friends', { target, tab: 'Favoritas' });
+      } else if (current === 'Swiftplay') {
+        dispatch('rose-hub-swiftplay', { target });
+      } else if (current === 'Suporte') {
         dispatch('rose-hub-settings-close');
         dispatch('rose-hub-friends', { target, tab: 'Preparo' });
       } else {
@@ -193,7 +171,17 @@
         anchor = navItem;
         if (phase === 'InProgress') return;
         panel.hidden = !panel.hidden;
-        if (!panel.hidden) mount();
+        if (!panel.hidden) {
+          current = 'Sala';
+          mount();
+        }
+      },
+      show(label) {
+        anchor = anchor || document.querySelector('lol-uikit-navigation-item.menu_item_Golden.Rose');
+        if (phase === 'InProgress') return;
+        current = label;
+        panel.hidden = false;
+        mount();
       },
       close: hide,
       refreshSettings() {
@@ -210,6 +198,13 @@
       },
       true,
     );
+    window.addEventListener('rose-swiftplay-state', (e) => {
+      const active = e.detail?.active === true;
+      if (active === swift) return;
+      swift = active;
+      if (!swift && current === 'Swiftplay') current = 'Sala';
+      if (!panel.hidden) mount();
+    });
     window.addEventListener('resize', position);
     document.addEventListener('pointerdown', (e) => {
       if (

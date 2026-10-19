@@ -1,12 +1,13 @@
 """One controlled reconnect for Arena's explicitly marked Bravery pick."""
 
-import json, secrets, threading, time
+import json, threading, time
 from pathlib import Path
 import requests
 from utils.core.atomic_file import atomic_write
 from utils.core.logging import get_logger
 from utils.core.paths import get_user_data_dir
-from friends.lottery import eligible, draw
+from friends.lottery import eligible
+from friends.skin_selector import select_skin
 
 log = get_logger()
 ACTIVE = {"GameStart", "InProgress", "Reconnect"}
@@ -160,10 +161,15 @@ class ArenaBravery:
         if not candidates:
             self.armed = False
             return
-        pick = draw(candidates, secrets.token_hex(16), 0, cid)
+        pick = select_skin(
+            candidates,
+            favorites=set(prefs["favorites"].get(str(cid), [])),
+            recent=service.recents(cid),
+        )
         if not service.archive(cid, pick["skinId"], verify=True):
             self.armed = False
             return
+        service.record(cid, pick["skinId"])
         from injection.game.match_recovery import game_pids
         import psutil
 

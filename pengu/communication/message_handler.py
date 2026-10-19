@@ -131,6 +131,7 @@ _ROUTES = {
     "assistant-runes-edit": "_handle_assistant",
     "assistant-runes-confirm": "_handle_assistant",
     "assistant-runes-back": "_handle_assistant",
+    "assistant-items-request": "_handle_assistant",
     "assistant-items-import": "_handle_assistant",
     "assistant-items-choose": "_handle_assistant",
     "assistant-items-default": "_handle_assistant",

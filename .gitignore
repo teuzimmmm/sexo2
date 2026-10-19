@@ -36,3 +36,4 @@ Pengu Loader/datastore
 **/bin/
 .ruff_cache/
 .claude/worktrees/
+.DS_Store

@@ -22,19 +22,22 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  for(const name of ['SEXO2-Style','ROSE-Amigos','ROSE-SwiftplayPins','ROSE-PartyMode','ROSE-SettingsPanel','SEXO2-ModLibrary','SEXO2-Settings','ROSE-Hub','ROSE-UI'])await page.addScriptTag({path:path.resolve('Pengu Loader/plugins',name,'index.js')});
  await page.waitForTimeout(200);
  await page.locator('.menu_item_Golden').last().click();
- await page.getByRole('combobox',{name:'Skin automática'}).waitFor();
+ await page.getByRole('button',{name:'Criar sala',exact:true}).waitFor();
+ assert.equal(await page.locator('#rose-hub>header .hub-brand').textContent(),'SEXO2');
+ assert.deepEqual(await page.locator('#rose-hub>nav button').allTextContents(),['Sala','Favoritas','Configurações','Suporte','Swiftplay']);
+ assert.equal(await page.locator('#rose-hub').evaluate(e=>getComputedStyle(e).borderRadius),'0px');
  await page.evaluate(()=>window.__roseBridge.ready=false);
  await page.getByText('Reconectando ao SEXO2…',{exact:true}).waitFor();
  assert.equal(await page.locator('#rose-hub').getByText(/O Rose/).count(),0);
  await page.evaluate(()=>window.__roseBridge.ready=true);
  await page.waitForFunction(()=>!document.querySelector('#rose-hub')?.textContent.includes('Reconectando ao SEXO2…'));
- await page.getByRole('combobox',{name:'Skin automática'}).waitFor();
+ await page.getByRole('button',{name:'Criar sala',exact:true}).waitFor();
 
  const icon=await page.locator('.menu_item_Golden .menu-item-icon').last().evaluate(e=>({width:e.clientWidth,height:e.clientHeight,color:getComputedStyle(e).backgroundColor}));
  assert.deepEqual(icon,{width:20,height:20,color:'rgb(205, 190, 145)'});
  assert.equal(await page.locator('#rose-amigos-launch').isVisible(),false);
  assert.equal(await page.locator('.rsp-launch').isVisible(),false);
- await page.getByRole('button',{name:'Sortear agora',exact:true}).waitFor();
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Swiftplay',exact:true}).click();
  await page.getByRole('button',{name:'Escolher',exact:true}).click();
  await page.locator('.rsp-grid').evaluate(e=>e.scrollTop=e.scrollHeight);
  const scroll=await page.locator('.rsp-grid').evaluate(e=>e.scrollTop);assert.ok(scroll>0);
@@ -45,11 +48,12 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
    window.__roseBridge.send=p=>{
      if(p.action==='library-open')window.sample.browseChampion={championId:p.championId,name:'Ashe',skins:[{skinId:22001,name:'Ashe Freljord',favorite:false},{skinId:22002,name:'Ashe PROJETO',favorite:false}]};
      if(p.action==='favorite'){window.sample.browseChampion.skins.find(s=>s.skinId===p.skinId).favorite=p.enabled;}
+     if(p.action==='skin-index')window.sample.skinIndex=[[22001,'Ashe Freljord']];
      original(p);
    };
  });
- await page.getByRole('button',{name:'Favoritas',exact:true}).click();
- await page.getByRole('searchbox',{name:'Buscar campeão',exact:true}).fill('Ashe');
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Favoritas',exact:true}).click();
+ await page.getByRole('searchbox',{name:'Buscar campeão ou skin',exact:true}).fill('Ashe');
  await page.getByRole('button',{name:'Ashe',exact:true}).click();
  // The champion's screen: one card per skin; a click marks or unmarks it as a favourite.
  await page.getByRole('button',{name:'Favorita Ashe Freljord',exact:true}).click();
@@ -59,11 +63,7 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  assert.equal(await page.getByRole('button',{name:'Favorita Ashe PROJETO',exact:true}).getAttribute('aria-pressed'),'true');
  fs.mkdirSync('preview-r6',{recursive:true});await page.screenshot({path:'preview-r6/favorites-editor.png'});
  await page.getByRole('button',{name:'← Voltar',exact:true}).click();
- await page.getByRole('searchbox',{name:'Buscar campeão',exact:true}).waitFor();
- await page.locator('#rose-hub>nav').getByRole('button',{name:'Skins',exact:true}).click();
- await page.locator('#rose-hub .hub-subnav').getByRole('button',{name:'Perfis',exact:true}).click();
- await page.getByRole('button',{name:'Usar perfil'}).waitFor();
- await page.getByRole('button',{name:'Sorteio temático'}).click();await page.getByRole('button',{name:'Sortear só para mim'}).waitFor();
+ await page.getByRole('searchbox',{name:'Buscar campeão ou skin',exact:true}).waitFor();
  await page.locator('#rose-hub>nav').getByRole('button',{name:'Sala',exact:true}).click();
  await page.getByRole('button',{name:'Criar sala',exact:true}).click();await page.getByRole('button',{name:'Copiar link',exact:true}).waitFor();
  assert.equal(await page.locator('#rose-hub #rose-party-panel').count(),0);
@@ -97,26 +97,9 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  assert.ok(await page.evaluate(()=>window.sent.some(p=>p.type==='sexo2-update-open')));
  await page.locator('#rose-hub-content').evaluate(e=>e.scrollTop=0);
  await page.screenshot({path:'preview-r6/settings-adapted.png'});
- await page.evaluate(()=>{
-  const previous=window.__roseBridge.send;
-  window.__roseBridge.send=data=>{
-   if(data.type==='sexo2-library-request'){
-    const library={type:'sexo2-library-state',message:'Cole os arquivos na pasta aberta. Originais preservados.',champions:[{id:11,name:'Master Yi'},{id:22,name:'Ashe'}],mods:[{id:'aa11',name:'BORK Master Yi',category:'skins',championId:11,targets:[11000]},{id:'bb22',name:'Ashe Elegante',category:'skins',championId:22,targets:[22000]}],incoming:[{id:'cc33',file:'skins/Outfit.fantome',displayName:'Outfit',category:'skins',status:'revisar'}]};
-    setTimeout(()=>window.emit('sexo2-library-state',library),0);return;
-   }
-   previous(data);
-  };
- });
- await page.getByRole('button',{name:'Biblioteca de mods',exact:true}).click();
- await page.locator('#rose-hub #sexo2-mod-library').waitFor();
- assert.equal(await page.locator('lol-uikit-dialog-frame').count(),0);
- await page.waitForTimeout(50);await page.screenshot({path:'preview-r6/mod-library-in-hud.png'});
- await page.getByRole('button',{name:'← Configurações',exact:true}).click();
+ // A biblioteca de mods agora vive na aba Mods do assistente da seleção (SEXO2-Assistant).
 
- await page.locator('#rose-hub>nav').getByRole('button',{name:'Mods',exact:true}).click();
- await page.locator('#rose-hub [data-hub-section="Mods"] #sexo2-mod-library').waitFor();
- assert.equal(await page.getByRole('button',{name:'← Configurações',exact:true}).isVisible(),false);
- await page.locator('#rose-hub>nav').getByRole('button',{name:'Diagnóstico',exact:true}).click();
+ await page.locator('#rose-hub>nav').getByRole('button',{name:'Suporte',exact:true}).click();
  await page.getByText('Aceitar partidas automaticamente',{exact:true}).waitFor();
  assert.equal(await page.locator('#rose-hub #rose-settings-panel').count(),0);
  const box=await page.locator('#rose-hub').boundingBox();assert.ok(box.x>=0&&box.y>=0&&box.x+box.width<=1280&&box.y+box.height<=720);

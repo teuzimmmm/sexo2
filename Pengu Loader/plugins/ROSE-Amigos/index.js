@@ -79,6 +79,8 @@
     let championSearch = '',
       skinSearch = '',
       favChampion = null,
+      skinIndex = null,
+      skinIndexAsked = false,
       libraryLoaded = false,
       favoriteQueue = [],
       favoriteDraft = {},
@@ -254,9 +256,9 @@
           );
           const champFilter = node('input');
           champFilter.type = 'search';
-          champFilter.placeholder = 'Buscar campeão';
+          champFilter.placeholder = 'Buscar campeão ou skin';
           champFilter.value = championSearch;
-          champFilter.setAttribute('aria-label', 'Buscar campeão');
+          champFilter.setAttribute('aria-label', 'Buscar campeão ou skin');
           panel.append(champFilter);
           const champions = node('div', undefined, 'ra-champ-grid ra-skins');
           panel.append(champions);
@@ -281,11 +283,39 @@
               champions.append(b);
             }
           }
+          const plain = (t) =>
+            String(t)
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .toLowerCase();
+          const hitsBox = node('div', undefined, 'ra-skins');
+          panel.append(hitsBox);
+          function drawHits() {
+            hitsBox.replaceChildren();
+            const term = plain(championSearch);
+            if (term.length < 2) return;
+            const hits = (skinIndex || []).filter(([, name]) => plain(name).includes(term)).slice(0, 40);
+            for (const [sid, name] of hits) {
+              const cid = Math.floor(sid / 1000);
+              const owner = (state.libraryChampions || []).find((c) => c.championId === cid);
+              const b = button(name + (owner ? ' · ' + owner.name : ''), () => {
+                skinSearch = '';
+                favChampion = cid;
+                request('library-open', { championId: cid });
+                render();
+              });
+              b.setAttribute('aria-label', name);
+              hitsBox.append(b);
+            }
+            if (!hits.length && !skinIndex) hitsBox.append(node('p', 'Carregando a busca por skin…', 'ra-muted'));
+          }
           champFilter.oninput = () => {
             championSearch = champFilter.value;
             drawChampions();
+            drawHits();
           };
           drawChampions();
+          drawHits();
           if (!state.libraryChampions?.length) panel.append(button('Carregar campeões', () => request('library-list')));
         }
       }
@@ -615,6 +645,7 @@
       pending = null;
       if (action === 'favorite') delete favoriteDraft[extra.championId + ':' + extra.skinId];
       if (data.type === 'friends-error') {
+        if (action === 'skin-index') skinIndexAsked = true;
         transportNotice = false;
         notice = data.error || 'Não foi possível confirmar a operação.';
         render();
@@ -648,9 +679,16 @@
         request('favorite', favoriteQueue.shift());
         return;
       }
+      if (action === 'skin-index' && Array.isArray(data.skinIndex)) {
+        skinIndex = data.skinIndex;
+        render();
+      }
       if (tab === 'Favoritas' && !libraryLoaded) {
         libraryLoaded = true;
         request('library-list');
+      } else if (tab === 'Favoritas' && libraryLoaded && !skinIndex && !skinIndexAsked && !pending) {
+        skinIndexAsked = true;
+        request('skin-index');
       }
     }
     launch.onclick = () => {

@@ -59,6 +59,78 @@ class SwiftplayHandler:
         # Champions the user set to a non-default skin this lobby session: their
         # choice wins over the saved (historic) skin, like in champ select
         self._historic_declined: set = set()
+        # Skins drawn for champions the user did not choose for, this lobby session only. They are
+        # never written as pins or as historic entries, so a draw never becomes a choice.
+        self._drawn: dict = {}
+
+    def _friends(self):
+        service = getattr(self.state, "friends_service", None)
+        if service is None:
+            from friends.service import FriendsService
+
+            service = FriendsService(self.state, self.lcu, self.injection_manager)
+            self.state.friends_service = service
+        return service
+
+    def _draw_candidates(self, ids, pins) -> dict:
+        """Weighted draw (favorites first) for champions with no SEXO2 pin and no choice in this session.
+
+        Runs outside the Swiftplay lock because it reads the client. Nothing is stored here.
+        """
+        wanted = [
+            cid
+            for cid in ids or ()
+            if cid not in pins and cid not in self._user_changed_since_inject and cid not in self._historic_declined
+        ]
+        if not wanted:
+            return {}
+        picks = {}
+        try:
+            from friends.lottery import eligible
+            from friends.skin_selector import select_skin
+
+            service = self._friends()
+            prefs = service.preferences.snapshot()
+            if service.preferences.error:
+                return {}
+            owned = service.owned()
+            for cid in wanted:
+                if cid in self._drawn:
+                    picks[cid] = self._drawn[cid]
+                    continue
+                skins = eligible(
+                    service.catalogs.catalog(cid)["skins"],
+                    "Qualquer",
+                    set(prefs["excluded"]),
+                    lambda sid, cid=cid: sid not in owned and service.available(cid, sid),
+                )
+                if not skins:
+                    continue
+                pick = select_skin(
+                    skins, favorites=set(prefs["favorites"].get(str(cid), [])), recent=service.recents(cid)
+                )
+                if service.archive(cid, pick["skinId"], verify=True):
+                    picks[cid] = pick["skinId"]
+        except Exception as e:
+            log.warning(f"[phase] Swiftplay draw skipped: {e}")
+        return picks
+
+    def _apply_drawn_skins(self, picks: dict) -> None:
+        """Use a drawn skin only where nothing else (client choice, pin, saved skin) set one. Caller holds the lock."""
+        tracking = self.state.swiftplay_skin_tracking
+        for cid, sid in picks.items():
+            current = tracking.get(cid)
+            if current is not None and current != cid * 1000 and self._drawn.get(cid) != current:
+                self._drawn.pop(cid, None)
+                continue
+            tracking[cid] = sid
+            if self._drawn.get(cid) != sid:
+                self._drawn[cid] = sid
+                try:
+                    self._friends().record(cid, sid)
+                except Exception:
+                    pass
+            log.info(f"[phase] Swiftplay: no choice for champion {cid}; drawn skin {sid}")
 
     def detect_swiftplay_in_lobby(self) -> tuple[Optional[str], Optional[int]]:
         """Detect lobby game mode using multiple API endpoints."""
@@ -370,7 +442,7 @@ class SwiftplayHandler:
                 champion_id, skin_id = int(champion_id), int(skin_id)
             except (TypeError, ValueError):
                 continue
-            if skin_id != champion_id * 1000:
+            if skin_id != champion_id * 1000 and self._drawn.get(champion_id) != skin_id:
                 write_historic_entry(champion_id, skin_id)
                 log.info(f"[HISTORIC] Stored last injected ID {skin_id} for champion {champion_id} (Swiftplay)")
 
@@ -480,6 +552,7 @@ class SwiftplayHandler:
                 self._last_injected_tracking = {}
                 self._user_changed_since_inject = set()
                 self._historic_declined = set()
+                self._drawn = {}
 
                 # Ensure Swiftplay flag and queue ID are cleared
                 self.state.is_swiftplay_mode = False
@@ -513,6 +586,7 @@ class SwiftplayHandler:
         confirmed_ids = read_lobby(self.lcu)
         pins = self.pins.snapshot()
         slots_ready = base_slots_ready(self.lcu, confirmed_ids, pins)
+        drawn = self._draw_candidates(confirmed_ids, pins) if self.state.current_queue_id == 480 else {}
         with self.state.swiftplay_lock:
             try:
                 self.state.swiftplay_pin_status = {}
@@ -549,6 +623,8 @@ class SwiftplayHandler:
                     for cid, prev_skin in self._last_injected_tracking.items():
                         if cid in self._user_changed_since_inject or (confirmed_ids and cid in pins):
                             continue
+                        if self._drawn.get(cid) == prev_skin:
+                            continue  # a draw is never carried over as a choice
                         current = self.state.swiftplay_skin_tracking.get(cid)
                         if current is not None and current == int(cid) * 1000 and prev_skin != current:
                             log.info(f"[phase] Restoring previous skin for champion {cid}: {current} → {prev_skin}")
@@ -558,6 +634,7 @@ class SwiftplayHandler:
                 # Reuse cached IDs from _sync_tracking_with_lobby if available
                 active_champion_ids = set(confirmed_ids) if confirmed_ids else self._get_active_lobby_champion_ids()
                 self._apply_historic_skins(active_champion_ids)
+                self._apply_drawn_skins(drawn)
 
                 if not self.state.swiftplay_skin_tracking:
                     log.warning("[phase] No tracked skins - cannot trigger injection")
