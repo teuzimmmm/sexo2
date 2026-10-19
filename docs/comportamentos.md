@@ -17,7 +17,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Autoaceite opcional | `friends/auto_accept.py` | `test_r6_protections` |
 | Sala privada (relay, túnel, reconexão) | `party/`, `friends/room.py` | `party/tests`, `test_private_relay`, `test_tunnel_dns`, `test_fixed_party`, `test_party_ui.cjs`, `test_friends_ui.cjs` |
 | Biblioteca de mods, importação e exportação | `sexo2/services/mod_library.py` | `test_mod_library`, `test_mod_library_bridge`, `test_modpkg`, `test_safe_extract_limits` |
-| Seleção de mods na seleção de campeões | `pengu/communication/message_handler.py`, `ROSE-CustomWheel` | `test_custom_mod_monitor`, `test_mod_manifest`; **sem teste** por mensagem `mod-*` |
+| Seleção de mods na seleção de campeões | `pengu/communication/message_handler.py`, `SEXO2-CustomWheel` | `test_custom_mod_monitor`, `test_mod_manifest`; **sem teste** por mensagem `mod-*` |
 | Swiftplay e fixados | `threads/handlers/swiftplay_handler.py`, `pengu/processing/swiftplay_pins.py` | `test_quickplay`, `test_swiftplay_historic`, `test_swiftplay_pins`, `test_swiftplay_draw` (sorteio só para quem não escolheu, nunca gravado), `test_swiftplay_pins_ui.cjs` |
 | Arena Bravura | `friends/arena_bravery.py` | `test_arena_bravery` |
 | Ponte Pengu ↔ backend e reconexão | `pengu/core/`, `pengu/communication/` | `pengu/tests` (porta, watchdog, isolamento de mensagens) |
@@ -27,7 +27,8 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Inicialização rápida e verificação de hashes | `launcher/core/startup_policy.py`, `launcher/sequences/` | `test_startup_policy`, `test_startup_hash_checks` |
 | Configurações e início com o Windows | `sexo2/services/settings.py`, `utils/integration/tray_settings.py` | `test_settings_service`, `test_config_consistency` |
 | Bandeja | `utils/integration/tray_manager.py` | `test_tray_lifecycle` |
-| Instância única | `main/core/lockfile.py` (mutex `RoseSingleInstance`) | **sem teste** |
+| Instância única (mutex novo e o antigo, tomados juntos) | `main/core/lockfile.py` | `tests/test_legacy_names.py` (núcleo com kernel simulado); **sem teste** no Windows real |
+| Migração de nomes antigos: arquivos, tarefa agendada, plugins `ROSE-*`, sessão do Pengu, códigos e links | `utils/core/legacy_names.py`, `utils/system/admin_utils.py`, `utils/integration/pengu_loader.py`, `party/` | `test_legacy_names`, `test_plugin_rename`; **sem teste** em upgrade real |
 | Dados do usuário em `%LOCALAPPDATA%\SEXO2`, movidos uma vez de `%LOCALAPPDATA%\Rose` | `utils/core/paths.py` (`_data_dir_in`) | `test_data_folder_migration` |
 | Diagnóstico sem segredos | `friends/diagnostics.py` | `test_friends_features` (sanitização) |
 | Biblioteca LoLalytics | `lolalytics/` | `tests/test_lolalytics_*` (fixtures reais) |
@@ -43,4 +44,4 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Outras builds e outras runas (D-120): listas do LoLalytics, build escolhida no topo do conjunto SEXO2 e volta ao padrão, página da runa-chave escolhida no editor | `sexo2/services/stats.py`, `sexo2/services/assistant.py`, `SEXO2-Assistant` | `test_stats_service`, `test_assistant_service` (`AlternativeChoicesTests`), `test_assistant_plugin.cjs`; **sem teste** no cliente real |
 
 Lacunas que os marcos devem cobrir antes de mexer na área: precisão do disparo
-da injeção (M13), mensagens `mod-*` (M7) e instância única (M5b).
+da injeção (M13), mensagens `mod-*` (M7) instância única e migração de nomes (M5b).

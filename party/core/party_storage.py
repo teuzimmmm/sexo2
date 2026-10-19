@@ -3,7 +3,7 @@
 """
 Party Storage
 Keeps each account's party key across sessions, so the token (and room)
-friends already have keeps working after Rose restarts.
+friends already have keeps working after SEXO2 restarts.
 """
 
 import json

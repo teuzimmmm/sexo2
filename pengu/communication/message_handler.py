@@ -3039,7 +3039,7 @@ class MessageHandler:
             log.error(f"[SkinMonitor] Failed to launch Pengu Loader UI: {e}")
 
     def _handle_language_save(self, payload: dict) -> None:
-        """Save the language of Rose's menus ("auto": the client's) and tell the plugins"""
+        """Save the language of SEXO2's menus ("auto": the client's) and tell the plugins"""
         from utils.core.i18n import AUTO, LANGUAGES
 
         language = payload.get("language")

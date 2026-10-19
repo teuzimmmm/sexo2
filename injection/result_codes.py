@@ -9,7 +9,7 @@ O Rose oficial só distinguia 0 (deu certo) de qualquer-outra-coisa (falhou).
 O Teste 0.3 acrescentou situações em que a aplicação da skin termina sem
 sucesso mas TAMBÉM sem erro: o usuário pediu parada de emergência, ou o
 limite de segurança liberou o LoL antes de a skin ficar pronta. Nos dois
-casos o Rose se comportou exatamente como deveria.
+casos o SEXO2 se comportou exatamente como deveria.
 
 Sem este módulo, `inject_skin` tratava esses retornos como falha e disparava
 um aviso "Injection failed" por cima do diagnóstico honesto da bandeja — ou
@@ -28,10 +28,10 @@ OK = 0
 BUILD_TIMEOUT = 124  # mkoverlay estourou o tempo de preparação
 MISSING_PREREQUISITE = 127  # pasta do LoL ou mod-tools.exe ausente
 
-# Desfechos deliberados — o Rose agiu como planejado.
+# Desfechos deliberados — o SEXO2 agiu como planejado.
 SAFETY_RELEASE = 125  # limite de pausa atingido; LoL liberado sem skin
 GAME_NEVER_SEEN = 126  # ferramenta terminou sem o processo do jogo aparecer
-EMERGENCY_STOP = 130  # usuário pediu "Parar Rose nesta partida"
+EMERGENCY_STOP = 130  # usuário pediu "Parar SEXO2 nesta partida"
 
 #: Retornos que NÃO devem gerar alarme de erro ao usuário.
 EXPECTED_STOPS = frozenset({SAFETY_RELEASE, GAME_NEVER_SEEN, EMERGENCY_STOP})

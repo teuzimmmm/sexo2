@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
-const source = fs.readFileSync(path.join(__dirname, '../Pengu Loader/plugins/ROSE-PartyMode/index.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../Pengu Loader/plugins/SEXO2-PartyMode/index.js'), 'utf8');
 
 function client() {
   const sent = [], timers = new Map();

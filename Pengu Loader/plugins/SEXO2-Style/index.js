@@ -106,7 +106,7 @@
     fonts.id = "sexo2-fonts";
     document.head.appendChild(fonts);
     const setFonts = () => {
-      const bridge = window.__roseBridge;
+      const bridge = window.__sexo2Bridge;
       fonts.textContent = fontFaces(bridge ? bridge.port : 50000);
       return !!bridge;
     };

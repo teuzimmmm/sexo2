@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Complete build script for Rose
+Complete build script for SEXO2
 Builds executable with PyInstaller and creates Windows installer in one step
 """
 
@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MIN_PYTHON = (3, 11)
 if sys.version_info < MIN_PYTHON:
     sys.stderr.write(
-        f"Rose build scripts require Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer.\n"
+        f"SEXO2 build scripts require Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer.\n"
         "Please re-run using an updated interpreter.\n"
     )
     sys.exit(1)
@@ -53,7 +53,7 @@ def run_build_exe():
         return False
 
     # Verify the executable was created
-    exe_path = ROOT / "dist/Rose/Rose.exe"
+    exe_path = ROOT / "dist/SEXO2/SEXO2.exe"
     if not exe_path.exists():
         print("\n[ERROR] Executable not found at expected location!")
         return False
@@ -80,7 +80,7 @@ def run_create_installer():
 
     # Verify the installer was created
     installer_dir = ROOT / "installer"
-    installer_files = list(installer_dir.glob("Rose_Setup*.exe"))
+    installer_files = list(installer_dir.glob("SEXO2_Setup*.exe"))
     if not installer_files:
         print("\n[ERROR] Installer not found at expected location!")
         return False
@@ -109,7 +109,7 @@ def check_dependencies():
 def build_all():
     """Complete build process: executable + installer"""
 
-    print_header("Rose - Complete Build Process")
+    print_header("SEXO2 - Complete Build Process")
 
     start_time = time.time()
 
@@ -130,7 +130,7 @@ def build_all():
         print("\nTroubleshooting:")
         print("1. Make sure all dependencies are installed:")
         print("   pip install -r requirements.txt")
-        print("2. Close any running instances of Rose.exe")
+        print("2. Close any running instances of SEXO2.exe")
         print("3. Make sure PyInstaller is installed:")
         print("   pip install pyinstaller")
         return False
@@ -140,7 +140,7 @@ def build_all():
         print_header("[WARNING] BUILD PARTIALLY COMPLETED (2/3)")
         print("Executable was built successfully, but installer creation failed.")
         print("\nYou can still use the executable directly from:")
-        print("  dist/Rose/Rose.exe")
+        print("  dist/SEXO2/SEXO2.exe")
         print("\nTo create the installer:")
         print("1. Install Inno Setup from: https://jrsoftware.org/isdl.php")
         print("2. Run: python scripts/create_installer.py")
@@ -154,8 +154,8 @@ def build_all():
     print_header("[SUCCESS] BUILD COMPLETED SUCCESSFULLY!")
 
     # Get file information
-    exe_path = ROOT / "dist/Rose/Rose.exe"
-    installer_files = list((ROOT / "installer").glob("Rose_Setup*.exe"))
+    exe_path = ROOT / "dist/SEXO2/SEXO2.exe"
+    installer_files = list((ROOT / "installer").glob("SEXO2_Setup*.exe"))
     installer_path = installer_files[0] if installer_files else None
 
     exe_size_mb = exe_path.stat().st_size / (1024 * 1024)
@@ -174,13 +174,13 @@ def build_all():
 
     print("\nNext Steps:")
     print("  • For development/testing:")
-    print("    Run: dist\\Rose\\Rose.exe")
+    print("    Run: dist\\SEXO2\\SEXO2.exe")
     print()
     print("  • For distribution:")
-    print(f"    Share: {installer_path if installer_path else 'installer/Rose_Setup.exe'}")
+    print(f"    Share: {installer_path if installer_path else 'installer/SEXO2_Setup.exe'}")
     print()
     print("  • For portable version:")
-    print("    Zip: dist\\Rose\\ folder")
+    print("    Zip: dist\\SEXO2\\ folder")
 
     print("\n" + "=" * 70)
 
@@ -193,7 +193,7 @@ def main():
     # Check if we're in the right directory
     if not (ROOT / "main.py").exists():
         print("ERROR: main.py not found!")
-        print("Please run this script from the Rose root directory.")
+        print("Please run this script from the SEXO2 root directory.")
         sys.exit(1)
 
     # Check if build_pyinstaller.py exists

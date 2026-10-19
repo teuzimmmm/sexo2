@@ -172,7 +172,7 @@ class SkinProcessor:
                 old_base_skin_id != new_base_skin_id or (old_is_chroma and not new_is_chroma)
             ) and not selected_chroma_is_current_skin:
                 # Different base skin - reset chroma selection. A chroma
-                # selected through the Rose wheel is also reported as a skin
+                # selected through the SEXO2 wheel is also reported as a skin
                 # change, so preserve it when it is the newly detected skin.
                 if self.shared_state.selected_chroma_id is not None:
                     log.debug(f"[CHROMA] Resetting selected_chroma_id on skin change ({old_skin_id} -> {skin_id})")

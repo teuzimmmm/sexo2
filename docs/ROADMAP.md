@@ -20,7 +20,7 @@ conferir no cliente LoL ou na instalação do usuário. As decisões citadas (D-
 | M10 | Inferência de rotas e matchup | M9 | — |
 | M11 | Overlay de valor dos itens | M0 | janela pronta, desligada por padrão; calibração das linhas e teste em partida pendentes |
 | M12 | Aprimoramentos (Arena e Mayhem) | M11 | — |
-| M5b (antigo M13) | Identificadores e caminhos (`Rose` → `SEXO2`) com migração | M5, validação no Windows | pasta de dados migrada para `%LOCALAPPDATA%\SEXO2` (`test_data_folder_migration`); demais pendentes; arriscado |
+| M5b (antigo M13) | Identificadores e caminhos (`Rose` → `SEXO2`) com migração | M5, validação no Windows | implementado com migração e testes do formato antigo (`docs/PROGRESSO-M5B.md`); pasta de dados já migrada para `SEXO2` (fora do M5b) e formato de sala mantido; validação real pendente |
 
 ## M5: nacionalização dos textos
 
@@ -32,7 +32,7 @@ linguagem continua em D-107).
   sala, título do seletor de mods, faixa de início do log. O diagnóstico agora sai como
   `SEXO2-diagnostico-*.zip`.
 - **Plugins:** textos do painel de configurações e da sala; as chaves em inglês e os 21 arquivos de
-  `ROSE-I18n/locales` mudaram juntos, para os textos manterem a tradução.
+  `SEXO2-I18n/locales` mudaram juntos, para os textos manterem a tradução.
 - **Links do Rose:** Discord, Ko-fi e GitHub saíram do painel de configurações e do diálogo do
   patcher. O crédito fica em "Créditos da base" (`SEXO2-Settings`) e no `LICENSE`.
 - **Instalador:** pede para fechar o SEXO2 (a verificação continua cobrindo `Rose.exe` e
@@ -40,34 +40,21 @@ linguagem continua em D-107).
 - **Ativos:** `assets/rose_without_bg.png` removido (sem referência). `golden_rose.png` fica: é a
   máscara do ícone do Hub.
 
-Mantidos de propósito (compatibilidade ou crédito; lista viva em `tests/test_no_visible_rose.py`):
+Mantidos de propósito (compatibilidade ou crédito; motivos em `docs/PROGRESSO-M5B.md`, lista viva em `tests/test_no_visible_rose.py`):
 
-- `rose.lock` e os metadados `rose_*.json` dos mods, dentro da pasta de dados `%LOCALAPPDATA%\SEXO2` (movida de
-  `%LOCALAPPDATA%\Rose`); os logs já viraram `sexo2_*.log` e `sexo2_diagnostics.txt`;
-- mutex `Local\RoseSingleInstance` e `AppMutex` do instalador; tarefa agendada `Rose`; chave de
-  desinstalação `Uninstall\Rose`;
-- `Rose.exe` e `Rose Sala.exe` nas listas do atualizador e do instalador;
-- pastas `ROSE-*` dos plugins e os nomes nos cabeçalhos (`@name`, `@author Rose Team`);
-- globais e eventos entre plugins (`__roseBridge`, `__roseHub`, `RoseI18n`, `rose-open-settings`,
-  `rose-hub-*`, ids e classes CSS `rose-*`, classe `menu_item_Golden Rose`);
-- fragmento `#rose=` dos links de sala, prefixo `ROSE:` dos códigos de grupo, valores do protocolo
-  do relay (`rose-host-readiness`, `rose-friends-relay`), `ROSE_RELAY_URL`;
-- `Rose.spec` (usado por `scripts/build_pyinstaller.py` e por teste) e os scripts de build;
-- `AppPublisher` do instalador ("baseado em Rose") e o texto de créditos;
-- plugin desativado `ROSE-Jade` (`index.js_`, não carrega).
+- os metadados `rose_*.json` dos mods dentro da pasta de dados `%LOCALAPPDATA%\SEXO2` (movida de `%LOCALAPPDATA%\Rose`, `test_data_folder_migration`);
+- escrita de `ROSE:` nos códigos e `#rose=` nos links de sala, relay público e `v=` do protocolo;
+- `Rose.exe` e `Rose Sala.exe` nas listas do atualizador e do instalador (instalações antigas);
+- `AppPublisher` do instalador ("baseado em Rose") e o texto de créditos; `LICENSE` (MIT) com a atribuição.
 
-**Migrações arriscadas** (M5b, exigem validação real no Windows e teste do formato antigo):
-o mutex (instalador e app juntos), a tarefa agendada, as pastas `ROSE-*`
-(o Pengu guarda o estado ativado pelo nome da pasta) e os globais compartilhados entre plugins.
-A pasta de dados já foi migrada (`test_data_folder_migration`); falta validar no Windows real.
+**M5b feito** (lê o formato antigo e escreve o novo): mutex (os dois são tomados), tarefa agendada, arquivos de log e diagnóstico, pastas de plugin (`SEXO2-*`, estado habilitado migrado), globais/eventos/CSS dos plugins, `SEXO2_RELAY_URL`, leitura de `SEXO2:` e `#sexo2=`. Falta a validação em instalação real (ver `entrega-rename/LEIA-ME.md`).
 
 ## Pendências técnicas registradas
 
 - **Remoção de código morto ainda não feita**, por risco ou uso parcial:
   - `launcher/update/*` (no bundle, desativado por `FORK_BUILD`);
   - `party` STUN/UDP (exportado em `__init__`);
-  - plugin `ROSE-PartyMode` (tem teste e rotas no backend);
-  - `Rose.spec` (usado por `scripts/build_pyinstaller.py` e por um teste);
+  - plugin `SEXO2-PartyMode` (tem teste e rotas no backend);
   - ramo `mayhem` em `lolalytics/item_pages.py`.
 - **Respostas da ponte direcionadas ao solicitante:** depende de teste de contrato por mensagem (M6, antigo M6a).
 - **Executável de teste no CI:** `SEXO2.spec` empacota binários que não estão no repositório (Pengu Loader, mod-tools, cloudflared, hashes). Eles são recuperados de uma instalação anterior por `scripts/prepare_release.py`, o que exige infraestrutura nova no CI.

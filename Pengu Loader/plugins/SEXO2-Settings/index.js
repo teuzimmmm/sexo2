@@ -115,14 +115,14 @@
     select.setAttribute('aria-label', 'Idioma dos menus');
     const languages = {
       auto: 'Automático (cliente)',
-      ...(window.RoseI18n?.languages || { pt_BR: 'Português', en: 'English' }),
+      ...(window.Sexo2I18n?.languages || { pt_BR: 'Português', en: 'English' }),
     };
     for (const [value, name] of Object.entries(languages)) {
       const option = el('option', name);
       option.value = value;
       select.append(option);
     }
-    select.value = window.RoseI18n?.setting || 'auto';
+    select.value = window.Sexo2I18n?.setting || 'auto';
     select.onchange = () => bridge?.send({ type: 'language-save', language: select.value });
     language.append(select);
     form.append(language);
@@ -153,7 +153,7 @@
     let configHidden = [];
     function openLibrary() {
       root.dataset.libraryOpen = 'true';
-      const subnav = root.closest('#rose-hub-content')?.querySelector('.hub-subnav');
+      const subnav = root.closest('#sexo2-hub-content')?.querySelector('.hub-subnav');
       if (subnav) subnav.hidden = true;
       configHidden = [...root.children]
         .filter((node) => node !== libraryHost && node.tagName !== 'STYLE')
@@ -168,7 +168,7 @@
       for (const [node, hidden] of configHidden) node.hidden = hidden;
       configHidden = [];
       delete root.dataset.libraryOpen;
-      const subnav = root.closest('#rose-hub-content')?.querySelector('.hub-subnav');
+      const subnav = root.closest('#sexo2-hub-content')?.querySelector('.hub-subnav');
       if (subnav) subnav.hidden = false;
       libraryHost.hidden = true;
     });
@@ -263,7 +263,7 @@
       github.href = data.github;
       github.removeAttribute('aria-disabled');
     }
-    for (const item of document.querySelectorAll('.menu_item_Golden.Rose')) {
+    for (const item of document.querySelectorAll('.menu_item_SEXO2')) {
       item.toggleAttribute('data-sexo2-update', data.available === true);
       item.title = data.available ? 'SEXO2: atualização disponível' : 'SEXO2';
     }
@@ -286,23 +286,23 @@
       if (!dirty) message('');
     }
   }
-  window.addEventListener('rose-hub-settings', (e) => {
+  window.addEventListener('sexo2-hub-settings', (e) => {
     if (!root) build();
     root.hidden = false;
     e.detail.target.append(root);
     if (root.dataset.libraryOpen === 'true') {
-      const subnav = root.closest('#rose-hub-content')?.querySelector('.hub-subnav');
+      const subnav = root.closest('#sexo2-hub-content')?.querySelector('.hub-subnav');
       if (subnav) subnav.hidden = true;
     }
     request();
   });
-  window.addEventListener('rose-hub-settings-close', () => {
+  window.addEventListener('sexo2-hub-settings-close', () => {
     if (root) root.hidden = true;
   });
   const timer = setInterval(() => {
     if (!root) build();
-    if (!bridge && window.__roseBridge) {
-      bridge = window.__roseBridge;
+    if (!bridge && window.__sexo2Bridge) {
+      bridge = window.__sexo2Bridge;
       bridge.subscribe('settings-data', receive);
       bridge.subscribe('settings-saved', receive);
       bridge.subscribe('sexo2-update-state', updateReceived);

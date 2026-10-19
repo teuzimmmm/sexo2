@@ -6,7 +6,7 @@ Issue Reporter
 Writes a small, human-friendly diagnostics file that summarizes important
 errors and "non-error failure reasons" (e.g., timeouts, settings mismatches).
 
-File: %LOCALAPPDATA%\\SEXO2\\sexo2_diagnostics.txt
+File: %LOCALAPPDATA%\\Rose\\sexo2_diagnostics.txt (rose_diagnostics.txt before the rename)
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ import threading
 import time
 from typing import Any, Callable, Dict, Optional
 
+from utils.core.legacy_names import migrate_file
 from utils.core.logging import get_logger
 from utils.core.paths import get_user_data_dir
 
@@ -34,30 +35,14 @@ _ALLOWED_CODES = {
     "LTK_PATCHER_MISSING",  # User-provided LTK patcher files are missing
     "LTK_PATCHER_EOL",  # LTK patcher DLL no longer supports the current game build
     "LTK_PATCHER_FAILED",  # LTK patcher host/DLL reported an error
-    "PENGU_ACTIVATION_FAILED",  # Pengu Loader could not be activated: Rose is missing from the client
+    "PENGU_ACTIVATION_FAILED",  # Pengu Loader could not be activated: SEXO2 is missing from the client
 }
 
 
-DIAGNOSTICS_FILE = "sexo2_diagnostics.txt"
-_LEGACY_DIAGNOSTICS_FILE = "rose_diagnostics.txt"  # earlier versions
-
-
-def _issues_path():
+def issues_path():
     base_dir = get_user_data_dir()
     base_dir.mkdir(parents=True, exist_ok=True)
-    path = base_dir / DIAGNOSTICS_FILE
-    legacy = base_dir / _LEGACY_DIAGNOSTICS_FILE
-    if legacy.exists() and not path.exists():
-        try:
-            legacy.rename(path)  # keep the history written by earlier versions
-        except OSError:
-            pass
-    return path
-
-
-def issues_path():
-    """Where the diagnostics summary is written."""
-    return _issues_path()
+    return migrate_file(base_dir, "rose_diagnostics.txt", "sexo2_diagnostics.txt")
 
 
 def report_issue(
@@ -100,7 +85,7 @@ def report_issue(
         line = "\n".join(lines) + "\n"
 
         with _LOCK:
-            p = _issues_path()
+            p = issues_path()
 
             # Lightweight size cap (~1.5MB): keep last ~4000 lines
             try:
@@ -119,7 +104,7 @@ def report_issue(
 def read_issues_tail(*, max_lines: int = 60) -> list[str]:
     """Read the last N lines from sexo2_diagnostics.txt (safe, never raises)."""
     try:
-        p = _issues_path()
+        p = issues_path()
         if not p.exists():
             return []
         with _LOCK:
@@ -136,7 +121,7 @@ def remove_issues(should_remove: Callable[[str, str], bool]) -> bool:
     """Remove the reports for which should_remove(message_line, fix_line) is true (safe, never raises)."""
     try:
         with _LOCK:
-            p = _issues_path()
+            p = issues_path()
             if not p.exists():
                 return True
             lines = p.read_text(encoding="utf-8", errors="ignore").splitlines()
@@ -165,7 +150,7 @@ def clear_issues() -> bool:
     """Clear sexo2_diagnostics.txt (safe, never raises). Returns True if cleared."""
     try:
         with _LOCK:
-            p = _issues_path()
+            p = issues_path()
             p.write_text("", encoding="utf-8", errors="ignore")
         return True
     except Exception as e:

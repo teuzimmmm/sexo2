@@ -25,7 +25,7 @@ class FriendsRelay:
     def request(self, connection, request):
         parts = urlsplit(request.path)
         if parts.path == "/" and request.headers.get("Upgrade", "").lower() != "websocket":
-            return connection.respond(200, json.dumps({"status": "ok", "service": "rose-friends-relay"}))
+            return connection.respond(200, json.dumps({"status": "ok", "service": "sexo2-friends-relay"}))
         query = parse_qs(parts.query)
         supplied = query.get("access", [""])[0]
         key = query.get("key", [""])[0]
@@ -41,11 +41,11 @@ class FriendsRelay:
             return connection.respond(426, "Atualize o aplicativo para uma versão compatível.\n")
         if len(self.connections) >= self.max_members:
             return connection.respond(409, "Room is full\n")
-        connection.rose_room = key
+        connection.sexo2_room = key
         return None
 
     async def start(self, port=0):
-        logger = logging.getLogger("rose.private.server")
+        logger = logging.getLogger("sexo2.private.server")
         logger.setLevel(logging.WARNING)
         self.server = await serve(
             self.handler,
@@ -157,7 +157,7 @@ class FriendsRelay:
             await ws.close(1013, "full")
             return
         self.connections.add(ws)
-        key = ws.rose_room
+        key = ws.sexo2_room
         room = self.rooms[key]
         rate = deque()
         try:
@@ -210,6 +210,6 @@ class FriendsRelay:
             self.connections.discard(ws)
             room.pop(ws, None)
             await self.broadcast(key)
-            if not room and not any(getattr(other, "rose_room", None) == key for other in self.connections):
+            if not room and not any(getattr(other, "sexo2_room", None) == key for other in self.connections):
                 if self.rooms.get(key) is room:
                     self.rooms.pop(key, None)

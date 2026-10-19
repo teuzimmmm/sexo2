@@ -1,2 +1,2 @@
-# Rose - Modular Skin Injector
+# SEXO2 - Modular Skin Injector
 # Main package initialization

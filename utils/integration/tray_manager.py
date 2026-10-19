@@ -61,7 +61,7 @@ class TrayManager:
         image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(image)
 
-        # Draw a simple "S2" logo (Rose)
+        # Draw a simple "S2" logo (SEXO2)
         # Background circle (scaled 2x)
         draw.ellipse(
             TRAY_ICON_ELLIPSE_COORDS, fill=(20, 24, 28, 255), outline=(190, 190, 190, 255), width=TRAY_ICON_BORDER_WIDTH

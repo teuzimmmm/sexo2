@@ -343,8 +343,8 @@
     window.__sexo2ModLibrary.open(event.detail.target, event.detail.category, event.detail.add),
   );
   const timer = setInterval(() => {
-    if (!bridge && window.__roseBridge) {
-      bridge = window.__roseBridge;
+    if (!bridge && window.__sexo2Bridge) {
+      bridge = window.__sexo2Bridge;
       bridge.subscribe('sexo2-library-state', receive);
       bridge.subscribe('sexo2-library-skins', skins);
       bridge.onReady(() => {

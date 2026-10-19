@@ -9,7 +9,7 @@ def sanitize(text, secrets=()):
     for secret in sorted((str(s) for s in secrets if s), key=len, reverse=True):
         text = text.replace(secret, "<removido>")
     text = re.sub(r'(?:https?|wss?)://[^\s<>"\']+', "<endereço removido>", text, flags=re.I)
-    text = re.sub(r"#rose=[A-Za-z0-9_-]+", "#rose=<removido>", text, flags=re.I)
+    text = re.sub(r"#(rose|sexo2)=[A-Za-z0-9_-]+", r"#\1=<removido>", text, flags=re.I)
     text = re.sub(r"(?i)(authorization[\"\']?\s*[:=]\s*[\"\']?)(?:basic|bearer)\s+[^\"\'\s,}]+", r"\1<removido>", text)
     text = re.sub(
         r'(?i)((?:password|passwd|token|secret|relay_access|room_key)\s*["\']?\s*[:=]\s*["\']?)[^\s,"\'}]+',

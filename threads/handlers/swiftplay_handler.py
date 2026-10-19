@@ -468,7 +468,7 @@ class SwiftplayHandler:
         if not tracking:
             return
         try:
-            # A pinned skin is applied by Rose, so use the base slot even when the
+            # A pinned skin is applied by SEXO2, so use the base slot even when the
             # account owns it: the client might have a DIFFERENT owned skin selected.
             owned = set(getattr(self.state, "owned_skin_ids", None) or set())
             owned.difference_update(pin["skinId"] for cid, pin in pins.items() if ids and cid in ids)

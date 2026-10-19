@@ -3,7 +3,7 @@
 ## O QUE MUDOU NA PORTAGEM PARA O ROSE 1.3.1 (leia antes de "restaurar" algo)
 
 Este módulo era maior. Ele tinha uma máquina de repetição: se o processo do
-LoL sumisse cedo, o Rose reiniciava o overlay até três vezes dentro de quatro
+LoL sumisse cedo, o SEXO2 reiniciava o overlay até três vezes dentro de quatro
 minutos (`may_retry`, `wait_for_new_game`, `start_retry_window`, e a opção
 "Tentar recuperar após crash do LoL" na bandeja).
 
@@ -23,7 +23,7 @@ desligar.
 
 ## O QUE SOBROU, E POR QUÊ
 
-1. **A trava de parada de emergência** (`cancelled`). O "Parar Rose nesta
+1. **A trava de parada de emergência** (`cancelled`). O "Parar SEXO2 nesta
    partida" continua sendo nosso: o Rose oficial tem `stop_injection_by_user`,
    mas só alcançável pelo botão dentro do cliente. A trava garante que, depois
    de parar, nenhuma injeção recomece **nesta partida** — nem por pedido do
@@ -94,7 +94,7 @@ class MatchRecovery:
                 self.clear_issue_callback()
 
     def stop_current_match(self, injection_manager) -> None:
-        """Para o Rose nesta partida e devolve o jogo ao usuário.
+        """Para o SEXO2 nesta partida e devolve o jogo ao usuário.
 
         A ordem importa: a trava vem primeiro, para que nada que esteja em voo
         recomece enquanto desligamos o resto.

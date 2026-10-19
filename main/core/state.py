@@ -13,7 +13,7 @@ class AppState:
         self.lock_file = None
         self.lock_file_path = None
 
-        # NEW: keep the OS mutex handle alive for the lifetime of the process
+        # The OS mutex handles (current and legacy name), kept alive for the lifetime of the process
         self.mutex_handle = None
 
 

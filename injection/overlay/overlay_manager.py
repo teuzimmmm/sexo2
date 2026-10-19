@@ -33,7 +33,7 @@ from .. import result_codes
 from .match_context import MatchContext
 from contextvars import ContextVar
 
-_CURRENT_MATCH_CONTEXT = ContextVar("rose_match_context", default=None)
+_CURRENT_MATCH_CONTEXT = ContextVar("sexo2_match_context", default=None)
 from ..tools.patcher import check_ltk_patcher, describe_ltk_patcher_files
 from config import (
     GAME_EXECUTABLE_NAMES,
@@ -60,7 +60,7 @@ DISK_SPACE_ERROR_MARKERS = (
 )
 
 # LTK patcher host settings (see ltk-manager patcher/host/protocol.rs).
-# Flag 4 = CSLOL_HOOK_OPT_OUT_AH_V1: Rose replaces skin0 with the selected
+# Flag 4 = CSLOL_HOOK_OPT_OUT_AH_V1: SEXO2 replaces skin0 with the selected
 # skin, which the DLL's base-skin check rejects and then disables the whole
 # overlay; opting out downgrades that to a warning (same as LTK Manager's
 # "enforce skinhack scan" setting turned off). Log level 0x10 = Info.
@@ -69,7 +69,7 @@ LTK_PATCHER_LOG_LEVEL = 0x10
 # Printed by the DLL when the game build is newer than its end-of-life date
 END_OF_LIFE_MESSAGE = "end of life reached"
 LATE_JOIN_MESSAGE = "joined too late"
-# Session error Rose records when the DLL reports a late join
+# Session error SEXO2 records when the DLL reports a late join
 LATE_JOIN_ERROR = "the game started before the patcher, overlay not applied"
 
 # WAD v3 header: magic + version (4), RSA signature (256), checksum (8)
@@ -260,7 +260,7 @@ class OverlayManager:
             )
             return 1
 
-        # League may have updated past the DLL's end of life since Rose started
+        # League may have updated past the DLL's end of life since SEXO2 started
         patcher = check_ltk_patcher(ltk_host.parent)
         if patcher.expired_for(self.game_dir):
             eol = time.strftime("%Y-%m-%d %H:%M", time.localtime(patcher.eol))
@@ -665,8 +665,8 @@ class OverlayManager:
                 self._report_ltk_patcher_failure(session["error"])
                 return 1
             if not game_ended and proc.returncode not in (0, None):
-                if getattr(proc, "stopped_by_rose", False):
-                    # Rose's own cleanup killed it (end of game, lobby, shutdown)
+                if getattr(proc, "stopped_by_app", False):
+                    # SEXO2's own cleanup killed it (end of game, lobby, shutdown)
                     log.info(f"[INJECT] LTK patcher stopped by SEXO2 (exit code {proc.returncode})")
                     return 0
                 log.error(

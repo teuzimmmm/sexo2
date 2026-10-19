@@ -29,11 +29,11 @@ class PenguLifecycleTests(unittest.TestCase):
         self.deactivate = self.enterContext(patch.object(loader, "deactivate", return_value=True))
         self.activate = self.enterContext(patch.object(loader, "activate", return_value=True))
         self.restart = self.enterContext(patch.object(loader, "restart_client", return_value=True))
-        self.enterContext(patch.object(loader, "_external_pengu_with_rose_plugins", return_value=None))
+        self.enterContext(patch.object(loader, "_external_pengu_with_app_plugins", return_value=None))
         self.enterContext(patch.object(loader, "_ensure_loader_config"))
         # No test may reach a real loader executable or change the user's registry.
         self.enterContext(patch.object(loader, "_run_cli_result", side_effect=AssertionError("unexpected real CLI")))
-        self.assertTrue(loader._write_session(was_active=False, rose_activated=True))
+        self.assertTrue(loader._write_session(was_active=False, app_activated=True))
 
     def test_quitting_with_league_open_keeps_the_plugins_and_restarts_nothing(self):
         self.assertTrue(loader.deactivate_on_exit())
@@ -79,7 +79,7 @@ class PenguLifecycleTests(unittest.TestCase):
         self.other.return_value = Path("external/core.dll")
         self.assertTrue(loader.deactivate_on_exit())
         self.deactivate.assert_not_called()
-        self.assertTrue(loader._write_session(was_active=True, rose_activated=False))
+        self.assertTrue(loader._write_session(was_active=True, app_activated=False))
         self.other.return_value = None
         self.assertTrue(loader.deactivate_on_exit())
         self.deactivate.assert_not_called()

@@ -2,7 +2,7 @@
  * @name SEXO2-Assistant
  * @description Assistente da seleção de campeões: Runas e Itens (protótipo aprovado, D-017/D-018), Mods.
  *
- * Abre acima do botão SEXO2 (ROSE-CustomWheel chama window.__sexo2Assistant.toggle). Os dados e as
+ * Abre acima do botão SEXO2 (SEXO2-CustomWheel chama window.__sexo2Assistant.toggle). Os dados e as
  * importações vêm do SEXO2 pela ponte (mensagens assistant-*); nomes e ícones de runas, itens e
  * campeões vêm do próprio cliente. A aba Mods abre o painel de mods existente, com todas as funções.
  */
@@ -122,7 +122,7 @@
     },
   };
 
-  // Mesma regra de ROSE-CustomWheel/index.js (computeAnchor).
+  // Mesma regra de SEXO2-CustomWheel/index.js (computeAnchor).
   function computeAnchor(buttonRect, panelSize, viewport, gap = 8, margin = 8) {
     const room = Math.max(0, buttonRect.top - gap - margin);
     const height = Math.min(panelSize.height, room);
@@ -710,10 +710,10 @@
     console.log("[SEXO2-Assistant] ready");
     window.dispatchEvent(new Event("sexo2-assistant-ready"));
 
-    // The bridge object appears once ROSE-SkinMonitor knows the SEXO2 port, which can be
+    // The bridge object appears once SEXO2-SkinMonitor knows the SEXO2 port, which can be
     // long after the client loaded (SEXO2 started later): the panel also connects on open.
     function connectBridge() {
-      const b = window.__roseBridge;
+      const b = window.__sexo2Bridge;
       if (bridge || !b) return !!bridge;
       bridge = b;
       bridge.subscribe("assistant-state", receive);
