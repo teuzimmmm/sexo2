@@ -879,12 +879,14 @@ def _external_pengu_with_app_plugins() -> Optional[Path]:
     external = core.parent
     if not (external / "Pengu Loader.exe").is_file():
         return None
-    # A set installed before the rename counts too: it talks to the same bridge
-    for prefix in (PLUGIN_PREFIX, LEGACY_PLUGIN_PREFIX):
-        if (external / "plugins" / f"{prefix}SkinMonitor" / "index.js").is_file() and (
-            external / "plugins" / f"{prefix}UI" / "index.js"
-        ).is_file():
-            return external
+    # Only a set with the current plugin names: ROSE-* plugins mean Rose itself or a SEXO2
+    # from before the rename, whose core.dll and plugins don't match this version (no SEXO2
+    # menu, Rose's dialog). SEXO2's own loader takes the hook over from those.
+    plugins = external / "plugins"
+    if (plugins / f"{PLUGIN_PREFIX}SkinMonitor" / "index.js").is_file() and (
+        plugins / f"{PLUGIN_PREFIX}UI" / "index.js"
+    ).is_file():
+        return external
     return None
 
 
