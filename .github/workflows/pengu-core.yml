@@ -67,4 +67,4 @@ jobs:
         with:
           name: pengu-core-${{ github.sha }}
           path: out
-          retention-days: 30
+          retention-days: 90

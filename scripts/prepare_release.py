@@ -6,13 +6,16 @@ from pathlib import Path
 p = argparse.ArgumentParser()
 p.add_argument("--base", required=True)
 p.add_argument("--version", required=True)
+p.add_argument("--core", help="source-built core.dll (hash-checked against native/pengu-core/core.lock.json)")
 a = p.parse_args()
 version = a.version.removeprefix("v")
 if not re.fullmatch(r"\d+\.\d+\.\d+", version):
     raise SystemExit("Invalid release version")
-from restore_build_binaries import restore
+from restore_build_binaries import apply_core, restore
 
 restore(Path(a.base))
+if a.core:
+    apply_core(Path(a.core))
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 

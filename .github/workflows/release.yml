@@ -41,6 +41,9 @@ jobs:
     needs: test
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/sexoatividade')
     runs-on: windows-latest
+    permissions:
+      contents: read
+      actions: read
     # The repository root has an __init__.py, so PyInstaller puts its parent folder on the
     # module path: a checkout folder named "sexo2" would shadow the sexo2 package.
     defaults:
@@ -55,7 +58,7 @@ jobs:
           python-version: '3.14'
       - name: Install build dependencies
         run: python -m pip install -r requirements.txt
-      - name: Restore build-only binaries from the 1.6.4 baseline
+      - name: Restore build-only binaries from the 1.6.4 baseline (Pengu core.dll from the source build)
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -63,7 +66,10 @@ jobs:
           gh release download v1.6.4 --repo ${{ github.repository }} --pattern SEXO2-baseline.zip --dir baseline
           if ($LASTEXITCODE -ne 0) { throw 'Baseline download failed.' }
           Expand-Archive baseline/SEXO2-baseline.zip -DestinationPath baseline/extracted
-          python scripts/restore_build_binaries.py --base baseline/extracted
+          $lock = Get-Content native/pengu-core/core.lock.json | ConvertFrom-Json
+          gh run download $lock.run_id --repo ${{ github.repository }} --name $lock.artifact --dir core-artifact
+          if ($LASTEXITCODE -ne 0) { throw 'Pengu core artifact download failed.' }
+          python scripts/restore_build_binaries.py --base baseline/extracted --core core-artifact/core.dll
           if ($LASTEXITCODE -ne 0) { throw 'Binary restore failed.' }
       - name: Build
         shell: pwsh
