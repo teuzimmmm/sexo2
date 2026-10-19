@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 SOURCE = ASSETS / "sexo2.svg"
 SIZES = (16, 24, 32, 48, 64, 128, 256)
-ICO_FILES = ("sexo2.ico", "sexo2-v2.ico", "sexo2-black-v3.ico", "icon.ico", "galo.ico")
-PNG_256 = ("icon.png", "galo.png", "tray_ready.png", "tray_starting.png")
+ICO_FILES = ("sexo2.ico", "sexo2-v2.ico", "sexo2-black-v3.ico", "icon.ico")
+PNG_256 = ("icon.png", "tray_ready.png", "tray_starting.png")
 TOAST = "sexo2-toast.png"  # shown at 40 px inside core.dll
 
 

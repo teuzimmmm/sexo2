@@ -234,11 +234,11 @@ class UpdateDialog(Win32Window):
     def _prepare_window_icon(self) -> Optional[str]:
         png_path: Optional[Path] = None
         try:
-            png_candidate = get_asset_path("galo.png")
+            png_candidate = get_asset_path("icon.png")
             if png_candidate.exists():
                 png_path = png_candidate
         except Exception as exc:  # noqa: BLE001
-            updater_log.warning(f"Failed to resolve tray_ready.png icon: {exc}")
+            updater_log.warning(f"Failed to resolve icon.png: {exc}")
 
         if png_path is not None and Image is not None:
             try:

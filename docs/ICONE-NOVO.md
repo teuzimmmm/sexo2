@@ -1,4 +1,4 @@
-# Novo ícone do SEXO2 (D-122, pendente de confirmação)
+# Novo ícone do SEXO2 (D-123 pendente de confirmação; D-112 decidido)
 
 Fonte única: `assets/sexo2.svg` (cópia byte a byte de `icone-final.svg`, sha256
 `ee8a0d414846af736215fbbf3690f5101348d1770b27bd907a05d1fe6f9ebb31`). Derivados:
@@ -14,26 +14,32 @@ Fonte única: `assets/sexo2.svg` (cópia byte a byte de `icone-final.svg`, sha25
 | Atalhos (menu, área de trabalho) | `.iss` IconFilename `sexo2-v2.ico` | ico novo |
 | Atalho criado pelo atualizador | `updater_main.py` -> `sexo2-black-v3.ico` | ico novo |
 | Janela de erro (TaskDialog) | `main/__init__.py` -> `icon.ico` | ico novo |
-| Janela do atualizador, diálogo de bandeja | `update_dialog.py`, `tray_settings.py` -> `galo.png`/`tray_ready.png`/`icon.ico` | arquivos trocados |
+| Janela do atualizador, diálogo de bandeja | `update_dialog.py`, `tray_settings.py` -> `icon.png`/`icon.ico` | `galo.png` trocado por `icon.png` |
 | Bandeja | `tray_manager.py` -> `tray_starting.png`, `tray_ready.png`, `icon.png` | PNG 256 novo (sem variação de estado) |
 | Aviso de boas-vindas do Pengu | `sexo2-toast.png` (64) embutido em core.dll por `restore_build_binaries.py` | PNG novo |
-| Logo no aviso do Pengu | `ROSE-UI/index.js` -> `/asset/galo.png` | arquivo trocado |
+| Logo no aviso do Pengu | `ROSE-UI/index.js` -> `/asset/galo.png` -> `/asset/icon.png` |
 | Item de menu do cliente | `ROSE-UI/index.js` | usa `icon.png` como imagem (era máscara de `golden_rose.png`) |
 | Pacote | `create_installer.py` gera `icon.ico` a partir de `tray_ready.png` | já coerente |
-| Duplicatas | `icon.ico`, `sexo2.ico`, `sexo2-v2.ico`, `sexo2-black-v3.ico`, `galo.ico` | mesmo ico; mantidas (referenciadas) |
+| Duplicatas | `icon.ico`, `sexo2.ico`, `sexo2-v2.ico`, `sexo2-black-v3.ico` | mesmo ico; mantidas (referenciadas) |
+
+## Removidos (D-112: Galo e BORK sem papel de marca)
+`galo.svg/png/ico`, `bork-black-v3/blue/desktop-v2/hud-v2.png`, `golden_rose.png`, `visual-provenance.json`
+(sem referência no código, specs, instalador, testes ou `compatibility_bases.json`; `audit_frozen.py` ajustado).
+
+## Pendente
+- Bandeja: `tray_starting.png` e `tray_ready.png` são idênticos; o código só escolhe o arquivo. Diferença visual é decisão nova.
+- Texto de créditos (`SEXO2-Settings`, linha 204) ainda cita BORK e o escudo: texto visível, exige aprovação.
 
 ## Não aplicado
 | Item | Motivo |
 |---|---|
 | `SEXO2-Startup/index.js` | coberto pela abertura (outro agente) |
-| `golden_rose.png` | sem uso no plugin agora; mantido por `audit_frozen.py` |
-| `galo.svg`, `bork-*.png`, `visual-provenance.json` | papel do Galo/BORK pendente (D-112) |
 | `ROSE-Jade/assets/logo.png` | logo do plugin Jade, não do app |
 | Ícones de campeões, itens, runas, skins, cromas, botões de skin | conteúdo do jogo mantém as cores |
 | `Rose.spec` | legado (aponta `icon.ico`, agora novo) |
 | `scripts/apply_icon.py`, `design/propostas/icone/` | propostas históricas (D-121); não rodar `apply_icon.py` |
 | `vendor/PenguLoader-1.1.6` | código de terceiros |
-| `docs/` e README antigos citando o galo | histórico das decisões |
+| `docs/` antigos (`arquivo/`, PREPROJETO) citando o galo | histórico das decisões |
 
 ## Verificações de compatibilidade
 - `compatibility_bases.json`: sem hash de ícone. `restore_build_binaries.py` só lê `sexo2-toast.png`.

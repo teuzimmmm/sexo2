@@ -77,6 +77,6 @@ for file in (root / "Pengu Loader/plugins").rglob("*"):
 assert (bundle / "_internal/hosting-tools/cloudflared.exe").is_file()
 print("PASS: compiled modules and every plugin match source; integrated tunnel binary exists.")
 
-for name in ["galo.png", "galo.ico", "bork-black-v3.png", "sexo2.ico", "golden_rose.png", "update-source.json"]:
+for name in ["icon.png", "icon.ico", "sexo2.svg", "sexo2.ico", "update-source.json"]:
     assert (bundle / "_internal/assets" / name).read_bytes() == (root / "assets" / name).read_bytes(), name
 print("PASS: release visual assets and update source match.")

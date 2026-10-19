@@ -24,7 +24,7 @@
     for(const logo of shadowRoot.querySelectorAll('img')){
       const source=logo.getAttribute('src')||'',alt=logo.getAttribute('alt')||'';
       if(/rose|logo/i.test(source+' '+alt)&&!source.includes('shields.io')){
-        logo.src=`http://127.0.0.1:${window.__roseBridge?.port||50000}/asset/galo.png`;
+        logo.src=`http://127.0.0.1:${window.__roseBridge?.port||50000}/asset/icon.png`;
         logo.alt='SEXO2';logo.style.objectFit='contain';
       }
     }

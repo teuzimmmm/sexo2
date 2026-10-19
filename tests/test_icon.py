@@ -8,8 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 SVG_SHA256 = "ee8a0d414846af736215fbbf3690f5101348d1770b27bd907a05d1fe6f9ebb31"
 SIZES = [16, 24, 32, 48, 64, 128, 256]
-ICOS = ("sexo2.ico", "sexo2-v2.ico", "sexo2-black-v3.ico", "icon.ico", "galo.ico")
-PNG_SIZES = {"icon.png": 256, "galo.png": 256, "tray_ready.png": 256, "tray_starting.png": 256, "sexo2-toast.png": 64}
+ICOS = ("sexo2.ico", "sexo2-v2.ico", "sexo2-black-v3.ico", "icon.ico")
+PNG_SIZES = {"icon.png": 256, "tray_ready.png": 256, "tray_starting.png": 256, "sexo2-toast.png": 64}
 
 
 def ico_sizes(data: bytes) -> list[int]:
