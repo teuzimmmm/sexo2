@@ -42,3 +42,13 @@ O Pengu Loader é GPL-3.0 (`vendor/PenguLoader-1.1.6/LICENSE`): manter avisos e 
 da licença, indicar as modificações e oferecer o fonte correspondente da versão modificada a quem receber o
 binário. Hoje o core distribuído já é uma versão modificada **sem fonte publicada**, o que precisa ser
 resolvido de qualquer forma. Esta nota não é parecer jurídico.
+
+## Atualização: busca do fonte do fork
+- `github.com/Alban1911/Rose` (HEAD `146f798`, histórico completo, 1531 commits): só traz o `core.dll` pronto
+  (`Pengu Loader/core.dll`, SHA-256 `280c894f…7679a`, **idêntico** ao `Rose\Pengu Loader\core.dll` local). Nenhum
+  `.cc/.cpp/.vcxproj` jamais foi commitado; `vendor/PenguLoader-1.1.6` tem só o loader C#.
+- Demais repositórios de Alban1911 (`LeagueUnlocked`, `openfork`): sem fonte de core. `Watermelon` tem um core C++
+  em `src-tauri/native`, mas sem `config.ini`/`\Rose`/`loaderpath` (outro produto, Tauri); não serve de base.
+- Conclusão: **não há fonte público do core da baseline**. Recompilar exige (a) obter o fonte com o autor
+  (Alban1911; o core também precisaria ser publicado por ele sob GPL-3.0), ou (b) um patch novo sobre o upstream
+  v1.1.6, que é comportamento novo e precisa de aprovação.
