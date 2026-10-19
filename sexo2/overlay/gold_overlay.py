@@ -26,9 +26,15 @@ from sexo2.services.gold import CHAOS, ORDER, Comparison, Unsupported, compare, 
 log = logging.getLogger(__name__)
 
 LIVE_CLIENT = "https://127.0.0.1:2999/liveclientdata"
-ALLY = "#4db0fc"
-ENEMY = "#e8404f"
+ALLY = "#97d1b8"  # advantage for my team (approved overlay design, mode B)
+ENEMY = "#edaf8c"  # advantage for the other team
 NEUTRAL = "#a4a9b0"
+NUMBER = "#e4eadf"
+TRACK = "#3c494b"
+TOTAL_BG = "#253b35"
+TOTAL_FG = "#c4dfba"
+BAR_UNIT = 12  # gold per pixel of bar at 1280 px wide, as in the approved design
+BAR_MAX = 58
 
 
 @dataclass(frozen=True)
@@ -49,12 +55,15 @@ class Mark:
     text: str
     color: str
     arrow: str | None  # "left" (toward my team), "right" (toward theirs) or None
-    left: str = ""
-    right: str = ""
+    value: int = 0
 
 
 def _number(value: int) -> str:
     return f"{value:,}".replace(",", ".")
+
+
+def _signed(diff: int) -> str:
+    return ("+" if diff > 0 else "-" if diff < 0 else "") + _number(abs(diff))
 
 
 def _side(diff: int) -> tuple[str, str | None]:
@@ -76,11 +85,10 @@ def layout(comparison: Comparison, width: int, height: int, geometry: Geometry =
                 "total",
                 x,
                 round(height * geometry.total_y),
-                _number(abs(comparison.difference)),
+                _signed(comparison.difference),
                 color,
                 arrow,
-                _number(comparison.order_total),
-                _number(comparison.chaos_total),
+                comparison.difference,
             )
         )
     for index, row in enumerate(comparison.rows):
@@ -88,7 +96,7 @@ def layout(comparison: Comparison, width: int, height: int, geometry: Geometry =
             continue  # unknown price: show nothing rather than a wrong number
         color, arrow = _side(row.difference)
         y = round(height * (geometry.rows_top + index * geometry.row_step))
-        marks.append(Mark("row", x, y, _number(abs(row.difference)), color, arrow))
+        marks.append(Mark("row", x, y, _signed(row.difference), color, arrow, row.difference))
     return marks
 
 
@@ -139,17 +147,7 @@ def _tab_down() -> bool:
     return bool(hwnd and user32.GetClassNameW(hwnd, name, len(name)) and name.value == "RiotWindowClass")
 
 
-SUPERSAMPLE = 4  # drawn at 4x and reduced: smooth digits, edges and arrows
-# Look of the scoreboard comparison made popular by Blitz, drawn here: dark diamonds with
-# a bronze edge on the seam between the players, the arrow inside, the number below.
-FRAME = (58, 56, 47, 255)
-FRAME_LIGHT = (96, 88, 62, 255)
-ALLY_FILL = (13, 30, 43, 240)
-ENEMY_FILL = (42, 14, 18, 240)
-NEUTRAL_FILL = (24, 26, 29, 240)
-BAR_FILL = (14, 30, 38, 235)
-COIN = (201, 164, 92, 255)
-COIN_DARK = (120, 92, 44, 255)
+SUPERSAMPLE = 4  # drawn at 4x and reduced: smooth digits and bars
 SHADOW = (0, 0, 0, 160)
 
 
@@ -163,64 +161,43 @@ def _font(size: int):
     return ImageFont.truetype(str(get_asset_path("fonts/inter-bold.ttf")), size * SUPERSAMPLE)
 
 
+def bar_length(value: int, unit: float = 1.0) -> float:
+    """Length of the advantage bar for ``unit`` pixels per 1280x720 pixel."""
+    return min(BAR_MAX, abs(value) / BAR_UNIT) * unit
+
+
 def render(comparison: Comparison, width: int, height: int, geometry: Geometry):
-    """The overlay bitmap with true alpha: diamonds on the scoreboard seam and a totals bar."""
+    """The overlay bitmap with true alpha: signed number with a discreet bar per row, signed total on top."""
     from PIL import Image, ImageDraw
 
     left, top, right, bottom = overlay_bounds(width, height, geometry)
     k = SUPERSAMPLE
     s = height / 1080 * k  # one 1080p pixel, supersampled
+    unit = height / 720 * k  # one pixel of the approved 1280x720 design, supersampled
     image = Image.new("RGBA", ((right - left) * k, (bottom - top) * k))
     draw = ImageDraw.Draw(image)
 
-    def font(size: int):
-        return _font(max(9, round(size * height / 1080)))
-
     def text(x: float, y: float, value: str, color: str, size: int) -> None:
-        value = value.replace(".", "")  # 1928, as the scoreboard writes numbers
-        draw.text((x, y), value, fill=color, font=font(size), anchor="mm", stroke_width=round(s), stroke_fill=SHADOW)
-
-    def diamond(x: float, y: float, radius: float, mark: Mark) -> None:
-        def shape(r: float) -> list[tuple[float, float]]:
-            return [(x, y - r), (x + r, y), (x, y + r), (x - r, y)]
-
-        fill = {"left": ALLY_FILL, "right": ENEMY_FILL}.get(mark.arrow, NEUTRAL_FILL)
-        draw.polygon(shape(radius), fill=FRAME)
-        draw.polygon(shape(radius - 1.2 * s), fill=FRAME_LIGHT)
-        draw.polygon(shape(radius - 2.4 * s), fill=FRAME)
-        draw.polygon(shape(radius - 3.6 * s), fill=fill)
-        if mark.arrow:
-            tip = -5 * s if mark.arrow == "left" else 5 * s
-            # Centred on the diamond's centre, tip to base.
-            draw.polygon([(x + tip, y), (x - tip, y - 6 * s), (x - tip, y + 6 * s)], fill=mark.color)
-
-    def coin(x: float, y: float) -> None:
-        for dx, dy in ((-1.5, 2), (1.5, -1.5)):
-            box = (x + (dx - 6) * s, y + (dy - 4) * s, x + (dx + 6) * s, y + (dy + 4) * s)
-            draw.ellipse(box, fill=COIN, outline=COIN_DARK, width=round(s))
+        font = _font(max(9, round(size * height / 1080)))
+        draw.text((x, y), value, fill=color, font=font, anchor="mm", stroke_width=round(s), stroke_fill=SHADOW)
 
     for mark in layout(comparison, width, height, geometry):
         x, y = (mark.x - left) * k, (mark.y - top) * k
         if mark.kind == "total":
-            half_w, half_h = 111 * s, 12 * s
+            half_w, half_h = 111 * s, 22 * s
+            draw.rectangle((x - half_w, y - half_h, x + half_w, y + half_h), fill=TOTAL_BG)
+            text(x, y, mark.text, TOTAL_FG, 28)
+            continue
+        text(x, y - 7.5 * unit, mark.text, NUMBER, 25)
+        track_y, thickness = y + 22.5 * unit, 4 * unit
+        half = 70 * unit
+        draw.rectangle((x - half, track_y - thickness / 2, x + half, track_y + thickness / 2), fill=TRACK)
+        if mark.value:
+            length = bar_length(mark.value, unit)
+            end = x - length if mark.arrow == "left" else x + length
             draw.rectangle(
-                (x - half_w, y - half_h, x + half_w, y + half_h), fill=BAR_FILL, outline=FRAME_LIGHT, width=round(s)
+                (min(x, end), track_y - thickness / 2, max(x, end), track_y + thickness / 2), fill=mark.color
             )
-            draw.rectangle(
-                (x - half_w + 2 * s, y - half_h + 2 * s, x + half_w - 2 * s, y + half_h - 2 * s),
-                outline=FRAME,
-                width=round(s),
-            )
-            # Coin before each total, as the scoreboard shows gold.
-            coin(x - 95 * s, y)
-            text(x - 57 * s, y, mark.left, ALLY, 16)
-            coin(x + 42 * s, y)
-            text(x + 81 * s, y, mark.right, ENEMY, 16)
-            diamond(x, y, 20 * s, mark)
-            text(x, y + 17 * s, mark.text, mark.color, 13)
-        else:
-            diamond(x, y, 17.5 * s, mark)
-            text(x, y + 25 * s, mark.text, mark.color, 12)
     return image.resize((right - left, bottom - top), Image.Resampling.LANCZOS)
 
 

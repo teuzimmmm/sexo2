@@ -37,12 +37,58 @@ class GoldOverlayTests(unittest.TestCase):
         comparison = read_comparison(self.fetch("Eu#BR1"), PRICES)
         marks = layout(comparison, 1920, 1080, Geometry())
         total = marks[0]
-        self.assertEqual((total.kind, total.text, total.color, total.arrow), ("total", "2.150", ENEMY, "right"))
-        self.assertEqual((total.left, total.right), ("4.950", "7.100"))
+        self.assertEqual((total.kind, total.text, total.color, total.arrow), ("total", "-2.150", ENEMY, "right"))
         rows = [m for m in marks if m.kind == "row"]
-        self.assertEqual([(m.text, m.arrow) for m in rows], [("850", "left"), ("3.000", "right")])
+        self.assertEqual([(m.text, m.arrow) for m in rows], [("+850", "left"), ("-3.000", "right")])
         self.assertEqual(rows[0].color, ALLY)
         self.assertEqual(rows[1].y - rows[0].y, round(1080 * Geometry().row_step))
+
+    def test_rows_carry_the_signed_value_and_zero_is_plain(self):
+        from sexo2.services.gold import Comparison, Row
+
+        comparison = Comparison((Row("a", "b", 1000, 1000), Row("c", "d", 1850, 1000)), 2850, 2000, frozenset())
+        marks = layout(comparison, 1920, 1080)
+        self.assertEqual(
+            [(m.kind, m.text, m.value) for m in marks], [("total", "+850", 850), ("row", "0", 0), ("row", "+850", 850)]
+        )
+
+    def test_total_is_only_the_signed_difference_without_team_totals_or_words(self):
+        from dataclasses import fields
+
+        from sexo2.overlay.gold_overlay import Mark
+
+        self.assertEqual({f.name for f in fields(Mark)}, {"kind", "x", "y", "text", "color", "arrow", "value"})
+        comparison = read_comparison(self.fetch("Eu#BR1"), PRICES)
+        total = layout(comparison, 1920, 1080)[0]
+        self.assertEqual(total.text, "-2.150")
+        self.assertNotIn("ITENS", total.text.upper())
+        self.assertNotIn("OURO", total.text.upper())
+
+    def test_bar_is_proportional_capped_and_goes_toward_the_winning_team(self):
+        from sexo2.overlay.gold_overlay import BAR_MAX, bar_length
+
+        self.assertEqual(bar_length(120), 10)
+        self.assertEqual(bar_length(-240), 20)
+        self.assertEqual(bar_length(100000), BAR_MAX)
+        self.assertEqual(bar_length(120, 2.0), 20)
+        comparison = read_comparison(self.fetch("Eu#BR1"), PRICES)
+        rows = [m for m in layout(comparison, 1920, 1080) if m.kind == "row"]
+        self.assertEqual([(m.arrow, m.value) for m in rows], [("left", 850), ("right", -3000)])
+
+    def test_design_colors_and_bar_pixels(self):
+        from sexo2.overlay.gold_overlay import NUMBER, TOTAL_BG, TOTAL_FG, TRACK, render
+
+        self.assertEqual(
+            (ALLY, ENEMY, NUMBER, TRACK, TOTAL_BG, TOTAL_FG),
+            ("#97d1b8", "#edaf8c", "#e4eadf", "#3c494b", "#253b35", "#c4dfba"),
+        )
+        comparison = read_comparison(self.fetch("Eu#BR1"), PRICES)
+        image = render(comparison, 1920, 1080, Geometry())
+        colors = {px[:3] for px in zip(*[iter(image.tobytes())] * 4) if px[3] == 255}
+        self.assertIn((0x97, 0xD1, 0xB8), colors)  # advantage bar
+        self.assertIn((0xED, 0xAF, 0x8C), colors)  # disadvantage bar
+        self.assertIn((0x3C, 0x49, 0x4B), colors)  # track
+        self.assertIn((0x25, 0x3B, 0x35), colors)  # total box
 
     def test_red_side_sees_the_same_match_from_its_side(self):
         comparison = read_comparison(self.fetch("X#BR1"), PRICES)
