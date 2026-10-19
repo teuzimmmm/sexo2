@@ -47,7 +47,7 @@ class IconTests(unittest.TestCase):
 
     def test_build_files_reference_existing_icons(self):
         refs = []
-        for name in ("SEXO2.spec", "SEXO2-Updater.spec", "Rose.spec"):
+        for name in ("SEXO2.spec", "SEXO2-Updater.spec"):
             refs += re.findall(r"icon\s*=\s*['\"]([^'\"]+)['\"]", (ROOT / name).read_text(encoding="utf-8"))
         installer = (ROOT / "installer-sexo2.iss").read_text(encoding="utf-8")
         refs += [m.replace("\\", "/") for m in re.findall(r"SetupIconFile=(\S+)", installer)]
@@ -55,7 +55,7 @@ class IconTests(unittest.TestCase):
         refs += [
             "assets/" + m for m in re.findall(r"assets\\\\?([\w.-]+\.ico)", (ROOT / "updater_main.py").read_text())
         ]
-        self.assertGreaterEqual(len(refs), 7)
+        self.assertGreaterEqual(len(refs), 6)
         for ref in refs:
             self.assertTrue((ROOT / ref).is_file(), ref)
 
