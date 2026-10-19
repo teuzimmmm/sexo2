@@ -59,8 +59,9 @@ jobs:
           Copy-Item app/native/pengu-core/0001-sexo2-config-ini-path.patch out/
           $h = (Get-FileHash out/core.dll -Algorithm SHA256).Hash.ToLower()
           $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property catalog_productDisplayVersion
-          $cl = (Get-ChildItem "$env:VCToolsInstallDir\bin\Hostx64\x64\cl.exe").VersionInfo.ProductVersion
-          @("sha256=$h", "visual_studio=$vs", "msvc_cl=$cl", "node=$(node -v)", "sexo2_commit=${{ github.sha }}") | Set-Content out/build-info.txt
+          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          $cl = (Get-ChildItem "$vsPath\VC\Tools\MSVC" | Sort-Object Name | Select-Object -Last 1).Name
+          @("sha256=$h", "visual_studio=$vs", "msvc_toolset_dir=$cl", "msbuild=$(msbuild -version -nologo | Select-Object -Last 1)", "node=$(node -v)", "sexo2_commit=${{ github.sha }}") | Set-Content out/build-info.txt
           Get-Content out/build-info.txt
       - uses: actions/upload-artifact@v4
         with:
