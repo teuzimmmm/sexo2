@@ -37,3 +37,5 @@ Pengu Loader/datastore
 .ruff_cache/
 .claude/worktrees/
 .DS_Store
+sala/.wrangler/
+sala/node_modules/
