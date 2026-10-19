@@ -24,7 +24,7 @@
     for(const logo of shadowRoot.querySelectorAll('img')){
       const source=logo.getAttribute('src')||'',alt=logo.getAttribute('alt')||'';
       if(/rose|logo/i.test(source+' '+alt)&&!source.includes('shields.io')){
-        logo.src=`http://127.0.0.1:${window.__sexo2Bridge?.port||50000}/asset/galo.png`;
+        logo.src=`http://127.0.0.1:${window.__sexo2Bridge?.port||50000}/asset/icon.png`;
         logo.alt='SEXO2';logo.style.objectFit='contain';
       }
     }
@@ -792,9 +792,9 @@
       return false;
     }
 
-    // Check if SEXO2 item already exists by checking for the hub_icon.png image
+    // Check if SEXO2 item already exists by checking for the SEXO2 icon image
     const existingItem = rightNavMenu.querySelector(
-      'lol-uikit-navigation-item .menu-item-icon[style*="hub_icon.png"]'
+      'lol-uikit-navigation-item .menu-item-icon[style*="/asset/icon.png"]'
     );
     if (existingItem) {
       const navItem = existingItem.closest("lol-uikit-navigation-item");
@@ -819,10 +819,12 @@
 
     const icon = document.createElement("div");
     icon.className = "menu-item-icon";
-    icon.style.webkitMaskSize = "contain";
-    icon.style.webkitMaskRepeat = "no-repeat";
-    icon.style.webkitMaskPosition = "center";
-    icon.style.webkitMaskImage = `url(http://127.0.0.1:${window.__sexo2Bridge ? window.__sexo2Bridge.port : 50000}/asset/hub_icon.png)`;
+    // The icon is an opaque tile: shown as a picture, not as a mask (a mask would be a solid square).
+    icon.style.backgroundColor = "transparent";
+    icon.style.backgroundSize = "contain";
+    icon.style.backgroundRepeat = "no-repeat";
+    icon.style.backgroundPosition = "center";
+    icon.style.backgroundImage = `url(http://127.0.0.1:${window.__sexo2Bridge ? window.__sexo2Bridge.port : 50000}/asset/icon.png)`;
 
     iconWrapper.appendChild(glow);
     iconWrapper.appendChild(icon);

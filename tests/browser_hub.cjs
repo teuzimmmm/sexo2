@@ -5,13 +5,13 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  try{
  const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.route('http://127.0.0.1:*/asset/hub_icon.png',route=>route.fulfill({contentType:'image/png',body:fs.readFileSync('assets/hub_icon.png')}));
+ await page.route('http://127.0.0.1:*/asset/icon.png',route=>route.fulfill({contentType:'image/png',body:fs.readFileSync('assets/icon.png')}));
  await page.setContent(`<html><head><style>.right-nav-menu{position:absolute;right:120px;top:18px;display:flex;gap:20px}.menu-item-icon{width:20px;height:20px;background:#cdbe91}body{background:#09141b;margin:0}</style></head><body><div class="right-nav-menu"><lol-uikit-navigation-item class="menu_item_SEXO2"><div class="menu-item-icon-wrapper"><div class="menu-item-icon"></div></div></lol-uikit-navigation-item></div><div class="lol-social-actions-bar"></div><div class="parties-game-info-panel"></div><div class="skin-selection-item" id="native-skin">Skin do cliente</div></body></html>`);
  await page.evaluate(()=>{
   window.sent=[];window.handlers={};window.fakePhase='Lobby';window.confirm=()=>true;
   window.rcp={postInit(){}};
-  document.querySelector('.menu-item-icon').style.webkitMaskImage='url(http://127.0.0.1:50000/asset/hub_icon.png)';
-  document.querySelector('.menu-item-icon').style.webkitMaskSize='contain';
+  document.querySelector('.menu-item-icon').style.backgroundImage='url(http://127.0.0.1:50000/asset/icon.png)';
+  document.querySelector('.menu-item-icon').style.backgroundSize='contain';
   window.emit=(type,data)=>{for(const cb of window.handlers[type]||[])cb(data);};
   window.fetch=async()=>({ok:true,json:async()=>({port:50000}),text:async()=>'{"port":50000}'});
   window.sample={type:'friends-state',phase:'Lobby',editable:true,automatic:'favorites',favorites:{11:[11001]},profiles:{Arcane:{11:{skinId:11001,name:'Arcane'}}},activeProfile:null,excluded:[],themes:['Qualquer','Arcane'],lotteryOptin:false,message:'',champions:[{championId:11,name:'Master Yi',selectedSkinId:11001,skins:Array.from({length:35},(_,i)=>({skinId:11000+i,name:'Skin '+i,available:true}))}],members:[],readiness:{localReady:true,groupReady:false,title:'Arquivos preparados',checks:[]},room:{status:'idle',connected:false}};

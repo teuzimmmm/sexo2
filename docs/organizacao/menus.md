@@ -2,7 +2,7 @@
 
 Conferência de cada menu contra as regras aprovadas (D-007 fontes, D-017 protótipo `sexo2-v1`, tokens de
 `SEXO2-Style`). Detalhes e catálogo em `docs/organizacao/design.md`. Sem alterar textos, estrutura,
-comportamento, ids ou mensagens da ponte. D-119 (ouro Blitz) e o ícone não foram tocados.
+comportamento, ids ou mensagens da ponte. D-128 (ouro Blitz) e o ícone não foram tocados.
 
 ## Conforme
 

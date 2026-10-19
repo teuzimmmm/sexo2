@@ -7,11 +7,11 @@ conferir no cliente LoL ou na instalação do usuário. As decisões citadas (D-
 | Marco | Escopo | Depende de | Estado |
 |---|---|---|---|
 | M0 | CI com todas as suítes, inventário de comportamentos, amostrador de desempenho | — | verificado; linha de base pendente (usuário) |
-| M1 | Remover telemetria; `Host` na ponte; config.ini em ANSI ao salvar a sala | M0 | verificado; validação real pendente |
+| M1 | Remover telemetria; `Host` na ponte; config.ini em ANSI ao salvar a sala | M0 | verificado; em validação pelo usuário (D-122); validação real pendente |
 | M2 | Versão única (`sexo2/version.py`) no painel, diagnóstico, User-Agent e instalador | M0 | verificado; validação real pendente |
 | M3 | Formatação (ruff, AST verificada), remoção de scripts obsoletos, tracebacks preservados em injeção e monitor | M0 | verificado; remoção parcial (ver abaixo) |
 | M4 | `CLAUDE.md`, skill `sexo2-ui`, registro de decisões, tokens, fontes, protótipo tipográfico | M0 | verificado; D-101 a D-103 pendentes |
-| M5 | Rebrand dos textos visíveis | M2, M4, D-107 | nome trocado nos textos (ver abaixo, `test_no_visible_rose`); validação real pendente; demais textos aguardam D-107 |
+| M5 | Rebrand dos textos visíveis | M2, M4, D-107 | nome trocado nos textos (ver abaixo, `test_no_visible_rose`); validação real pendente; demais textos aguardam D-107; fase 0.9: painel, Favoritas, assistente, Swiftplay e ícone/abertura novos aprovados (D-112, D-115 a D-120, D-123, D-124) |
 | M6 | Infraestrutura funcional: tabela de despacho; LCU de runas e conjuntos; validação pelas regras do cliente; controlador de importação; adaptador LoLalytics; serviço do assistente com mensagens `assistant-*` na ponte | M0 | verificado por testes com cliente simulado; validação real pendente (contratos do LCU listados em `docs/VALIDACAO_WINDOWS.md`) |
 | M13 (antigo M6b) | Desempenho: ticker de 1 kHz, filtro de eventos do LCU, polling JS, inbox, cliente WS único | linha de base (D-108), depois da 1.0 | adiado |
 | M7 | Assistente na seleção (interface Pengu) | protótipo aprovado (D-101 a D-105) | protótipo pronto em `design/propostas/sexo2-v1`; interface real aguarda aprovação |
@@ -37,8 +37,7 @@ linguagem continua em D-107).
   patcher. O crédito fica em "Créditos da base" (`SEXO2-Settings`) e no `LICENSE`.
 - **Instalador:** pede para fechar o SEXO2 (a verificação continua cobrindo `Rose.exe` e
   `Rose Sala.exe`).
-- **Ativos:** `assets/rose_without_bg.png` removido (sem referência). `golden_rose.png` fica: é a
-  máscara do ícone do Hub.
+- **Ativos:** `assets/rose_without_bg.png` removido (sem referência). `golden_rose.png` foi removido (D-112); o item de menu do Hub usa `icon.png` (D-123).
 
 Mantidos de propósito (compatibilidade ou crédito; motivos em `docs/PROGRESSO-M5B.md`, lista viva em `tests/test_no_visible_rose.py`):
 

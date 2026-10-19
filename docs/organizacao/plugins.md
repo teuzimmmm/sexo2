@@ -1,26 +1,26 @@
 # Inventário dos plugins Pengu
 
 Fotografia do código em `Pengu Loader/plugins/*/index.js`. Só descreve; nada aqui muda comportamento.
-Contagens por `grep` (aproximadas). `ROSE-Jade` está desativado (`index.js_`) e fora do inventário.
+Contagens por `grep` (aproximadas). `SEXO2-Jade` está desativado (`index.js_`) e fora do inventário.
 
 ## Plugins
 
 | Plugin | Função | Linhas | Estilo | Ponte | Timers / observadores |
 |---|---|---:|---|---|---|
-| ROSE-Amigos | Skins: preparo, perfis, sorteio, sala, diagnóstico | 707 | formatado (era 1 linha) | `__roseBridge` | 1 interval, 1 timeout |
-| ROSE-ChromaWheel | Roda de chromas | 4076 | formatado, linhas longas | `waitForBridge` | 1 interval, 11 timeouts, 1 MO, 2 rAF |
-| ROSE-CustomSkinSelector | Seletor de skin custom | 946 | formatado | `waitForBridge` | 1 interval, 2 timeouts, 1 MO |
-| ROSE-CustomWheel | Roda de mods por skin | 3060 | formatado | `waitForBridge` | 1 interval, 7 timeouts, 1 MO |
-| ROSE-FormsWheel | Roda de formas (assets) | 5527 | formatado | `waitForBridge` | 1 interval, 9 timeouts, 1 MO, 2 rAF |
-| ROSE-HistoricMode | Modo histórico | 1230 | formatado | `waitForBridge` | 6 timeouts, 1 MO |
-| ROSE-Hub | Entrada única de navegação | 250 | formatado (era 1 linha) | `__roseBridge` | 1 interval, 1 timeout |
-| ROSE-I18n | Idioma dos menus | 135 | formatado | `__roseBridge` | 1 timeout |
-| ROSE-PartyMode | Sala fixa automática (SEXO PARTY) | 1454 | formatado | WebSocket próprio (relay), sem `__roseBridge` | 2 intervals, 2 timeouts, 2 rAF |
-| ROSE-RandomSkin | Skin aleatória | 711 | formatado | `waitForBridge` | 4 timeouts, 1 MO |
-| ROSE-SettingsPanel | Painel de configurações | 5233 | formatado | `waitForBridge` | 3 intervals, 25 timeouts, 6 MO, 4 rAF |
-| ROSE-SkinMonitor | Dono do WebSocket da ponte; publica `__roseBridge` | 712 | formatado | cria a ponte | 1 interval, 2 timeouts, 1 MO |
-| ROSE-SwiftplayPins | Skins fixadas por campeão (Swiftplay) | 263 | formatado | via `__roseBridge` | 1 interval, 1 timeout |
-| ROSE-UI | Desbloqueio de interface | 995 | formatado | `waitForBridge` | 2 intervals, 4 timeouts, 6 MO, 2 rAF |
+| SEXO2-Amigos | Skins: preparo, perfis, sorteio, sala, diagnóstico | 707 | formatado (era 1 linha) | `__roseBridge` | 1 interval, 1 timeout |
+| SEXO2-ChromaWheel | Roda de chromas | 4076 | formatado, linhas longas | `waitForBridge` | 1 interval, 11 timeouts, 1 MO, 2 rAF |
+| SEXO2-CustomSkinSelector | Seletor de skin custom | 946 | formatado | `waitForBridge` | 1 interval, 2 timeouts, 1 MO |
+| SEXO2-CustomWheel | Roda de mods por skin | 3060 | formatado | `waitForBridge` | 1 interval, 7 timeouts, 1 MO |
+| SEXO2-FormsWheel | Roda de formas (assets) | 5527 | formatado | `waitForBridge` | 1 interval, 9 timeouts, 1 MO, 2 rAF |
+| SEXO2-HistoricMode | Modo histórico | 1230 | formatado | `waitForBridge` | 6 timeouts, 1 MO |
+| SEXO2-Hub | Entrada única de navegação | 250 | formatado (era 1 linha) | `__roseBridge` | 1 interval, 1 timeout |
+| SEXO2-I18n | Idioma dos menus | 135 | formatado | `__roseBridge` | 1 timeout |
+| SEXO2-PartyMode | Sala fixa automática (SEXO PARTY) | 1454 | formatado | WebSocket próprio (relay), sem `__roseBridge` | 2 intervals, 2 timeouts, 2 rAF |
+| SEXO2-RandomSkin | Skin aleatória | 711 | formatado | `waitForBridge` | 4 timeouts, 1 MO |
+| SEXO2-SettingsPanel | Painel de configurações | 5233 | formatado | `waitForBridge` | 3 intervals, 25 timeouts, 6 MO, 4 rAF |
+| SEXO2-SkinMonitor | Dono do WebSocket da ponte; publica `__roseBridge` | 712 | formatado | cria a ponte | 1 interval, 2 timeouts, 1 MO |
+| SEXO2-SwiftplayPins | Skins fixadas por campeão (Swiftplay) | 263 | formatado | via `__roseBridge` | 1 interval, 1 timeout |
+| SEXO2-UI | Desbloqueio de interface | 995 | formatado | `waitForBridge` | 2 intervals, 4 timeouts, 6 MO, 2 rAF |
 | SEXO2-Assistant | Assistente da seleção (Runas, Itens, Mods) | 734 | formatado | `__roseBridge` | 1 interval, 2 timeouts |
 | SEXO2-ModLibrary | Biblioteca de mods no painel | 356 | formatado (era 1 linha) | `__roseBridge` | 1 interval |
 | SEXO2-Settings | Configurações próprias no HUD | 326 | formatado (era 1 linha) | `__roseBridge` | 2 intervals |

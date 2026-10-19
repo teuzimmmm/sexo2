@@ -39,6 +39,7 @@ O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plan
 | D-127 | Seção “Overlays” em Configurações: caixas “Ouro no placar (Tab)” e “Aprimoramentos na Arena e no Mayhem”, que gravam `[Overlay] gold_enabled`/`augments_enabled` e ligam ou desligam ao salvar, sem reiniciar; abaixo, “O jogo precisa estar em tela sem bordas.” | usuário, sessão 1.0b |
 | D-128 | Ouro no placar com o visual do Blitz, desenhado pelo SEXO2 (sem arquivos do Blitz): losango escuro com borda bronze na divisa das linhas, seta azul ou vermelha dentro e a diferença embaixo; barra dos totais com moeda antes de cada total e o losango da diferença no meio; números sem separador de milhar, como o placar. Fica fora do estilo do app por pedido do usuário (“mais natural in-game”). | usuário, sessão 1.0b |
 | D-129 | Escolhas além das recomendações, no estilo do painel (D-017), definidas pelo agente por delegação do usuário (“faça do seu jeito”). Itens: botão “Outras builds” abre a lista dos trios observados (mais jogados primeiro; ícones, WR e partidas; campo “Buscar item”); clicar põe o trio como primeira seção do conjunto SEXO2, acima das seções padrão, e “Voltar ao padrão” desfaz. Runas: seção “Outras runas” com cada runa-chave (WR e partidas); clicar abre a página mais jogada com ela no editor, como as recomendações (ranked e ARAM). Substitui a proposta D-118. | usuário, sessão 1.0b |
+| D-112 | O ícone novo (`assets/sexo2.svg`, D-123) é o único ícone e marca do app em qualquer lugar que teria ícone; Galo e BORK não têm mais papel de marca (arquivos removidos). Decidido; aprovado pelo usuário na sessão de design em 19/10/2026. | usuário, 18–19/10/2026 |
 
 ## Pendentes
 
@@ -55,17 +56,16 @@ O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plan
 | D-109 | Oferecer “voltar à versão anterior” | M2 ou posterior |
 | D-110 | Fila (queue ID) do novo modo competitivo | informação do usuário |
 | D-111 | Opt-in para Dynamic Workflows | por marco |
-| D-112 | Papel do Galo e do BORK na nova identidade | com D-102 |
 | D-113 | Nome da página de runas gerenciada (provisório: “SEXO2”). O conjunto de itens foi decidido em D-018 | antes do M8 |
 | D-114 | Sem página de runas livre: hoje a importação falha com `no_free_page` e nenhuma página pessoal é apagada ou sobrescrita | antes do M8 |
-| D-115 | Painel SEXO2: cantos retos, cabeçalho só "SEXO2" (Oswald), menus Sala, Favoritas, Configurações, Suporte e Swiftplay (só no Swiftplay); abre em Sala. Implementado em `SEXO2-Hub`. Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
-| D-116 | Favoritas: todos os campeões, busca por campeão e por skin, skins com imagem do cliente, cromas favoritáveis separadamente, só o botão "Favoritar". Implementado em `SEXO2-Amigos` (e `skin-index` em `friends/service.py`). Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
-| D-117 | Assistente da seleção 452×492 (plugin `SEXO2-Assistant`): Rota, Confronto e Fonte no topo; abas Runas, Itens, Mods, Preferências rápidas e Todas as configurações; sem aba Skins; biblioteca de mods na aba Mods. Proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
-| D-119 | Remover Conjuntos (perfis) e Sorteio como funções: apenas retirados da UI. O código e os testes ficam (o sorteio serve à Bravura). Remoção de código só com testes que provem equivalência. Nota para a equipe. | proposta A |
-| D-120 | Swiftplay: o campeão sem escolha (nem pin do SEXO2 nem skin no cliente) recebe sorteio ponderado, favoritas primeiro; o sorteado nunca é gravado como escolha. Implementado; proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
-| D-121 | Renomear "Hub" e "Atividades": aguardando os nomes do usuário. Sem imagens de skins de mods, algoritmo ponderado nem rede nova. | proposta A |
-| D-122 | M5b: identificadores `Rose` renomeados para `SEXO2` com leitura do formato antigo; pasta de dados, formato de código/link de sala e metadados dos mods mantidos. Aguarda confirmação formal do usuário e validação no Windows. | `docs/PROGRESSO-M5B.md` |
-| D-124 | Nova abertura animada do SEXO2 (`[ícone] SEXO 2` → `[ícone] 2`, 2,55 s, uma vez; fundo `#0d0e10`, Oswald 600, ícone aprovado). Implementada no plugin `SEXO2-Startup` conforme `skins/identidade/animacao-abertura/HANDOFF.md`; validação em `docs/ABERTURA-QA.md`. Pendente de confirmação formal do usuário (visual, duração e identidade) e de teste no cliente real | confirmação do usuário |
+| D-115 | Painel SEXO2: cantos retos, cabeçalho só "SEXO2" (Oswald), menus Sala, Favoritas, Configurações, Suporte e Swiftplay (só no Swiftplay); abre em Sala. Implementado em `SEXO2-Hub`. Proposto pelo usuário na sessão de design de 18/10/2026. Aprovado pelo usuário na sessão de design em 19/10/2026. | aprovada |
+| D-116 | Favoritas: todos os campeões, busca por campeão e por skin, skins com imagem do cliente, cromas favoritáveis separadamente, só o botão "Favoritar". Implementado em `SEXO2-Amigos` (e `skin-index` em `friends/service.py`). Proposto pelo usuário na sessão de design de 18/10/2026. Aprovado pelo usuário na sessão de design em 19/10/2026. | aprovada |
+| D-117 | Assistente da seleção 452×492 (plugin `SEXO2-Assistant`): Rota, Confronto e Fonte no topo; abas Runas, Itens, Mods, Preferências rápidas e Todas as configurações; sem aba Skins; biblioteca de mods na aba Mods. Proposto pelo usuário na sessão de design de 18/10/2026. Aprovado pelo usuário na sessão de design em 19/10/2026. | aprovada |
+| D-119 | Remover Conjuntos (perfis) e Sorteio como funções: apenas retirados da UI. O código e os testes ficam (o sorteio serve à Bravura). Remoção de código só com testes que provem equivalência. Nota para a equipe. Aprovado pelo usuário na sessão de design em 19/10/2026. | aprovada |
+| D-120 | Swiftplay: o campeão sem escolha (nem pin do SEXO2 nem skin no cliente) recebe sorteio ponderado, favoritas primeiro; o sorteado nunca é gravado como escolha. Implementado; proposto pelo usuário na sessão de design de 18/10/2026. Aprovado pelo usuário na sessão de design em 19/10/2026. | aprovada |
+| D-122 | M5b: identificadores `Rose` renomeados para `SEXO2` com leitura do formato antigo; formato de código/link de sala e metadados dos mods mantidos (a pasta de dados migra para `SEXO2` por decisão própria). Em validação pelo usuário; não aprovada. Falta validação no Windows. | `docs/PROGRESSO-M5B.md` |
+| D-124 | Nova abertura animada do SEXO2 (`[ícone] SEXO 2` → `[ícone] 2`, 2,55 s, uma vez; fundo `#0d0e10`, Oswald 600, ícone aprovado). Implementada no plugin `SEXO2-Startup` conforme `skins/identidade/animacao-abertura/HANDOFF.md`; validação em `docs/ABERTURA-QA.md`. Aprovada pelo usuário na sessão de design em 19/10/2026 (o pedido foi explícito); falta o teste no cliente real | confirmação do usuário |
+| D-123 | Novo ícone do aplicativo (SEXO2 · “2 · Degrau”, `assets/sexo2.svg`) aplicado no executável, atalhos, instalador, atualizador, janelas, bandeja, aviso do Pengu e item de menu do cliente, no lugar do galo. Aprovado pelo usuário na sessão de design em 19/10/2026. Tray “iniciando” e “pronto” idênticos: diferença visual (se desejada) é decisão nova, pendente. Galo/BORK: D-112 | `docs/ICONE-NOVO.md` |
 
 ## Rejeitadas
 
@@ -74,3 +74,5 @@ O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plan
 | D-201 | Token da ponte entregue por endpoint ou arquivo legível pelos plugins | Não protege nada além do que `Origin` e `Host` já cobrem. |
 | D-202 | WebView2, Tauri ou Electron para janelas e overlays | RAM comparável à do Electron no Windows (ADR-5). |
 | D-203 | Rótulos explicativos sobre a origem dos dados | Ver D-008. |
+
+Nota (antiga D-121, "Hub"/"Atividades"): o usuário decidiu "é só tirar"; o app não exibe esses nomes (19/10/2026).

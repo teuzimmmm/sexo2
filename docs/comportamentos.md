@@ -41,7 +41,7 @@ Todos os testes rodam com `python scripts/run_tests.py` e `node --test tests/tes
 | Aprimoramentos: catálogo por modo, estatísticas, ofertas, reconhecimento | `sexo2/augments/`, `sexo2/overlay/augment_overlay.py` | `test_augments` (capturas reais MIT); **sem teste** em partida real |
 | Ouro no placar (visual D-119): janela só da coluna central com alpha por pixel, desenho em 4x reduzido; bitmap refeito só quando os valores mudam; conexão e nome do jogador reaproveitados na partida; só aparece com Tab e o jogo em primeiro plano | `sexo2/overlay/gold_overlay.py`, `alpha_surface.py` | `test_gold_overlay`, `test_gold_comparison`, `test_alpha_surface`; **sem teste** de FPS no jogo |
 | Estatísticas do assistente (slug do campeão, runas por runa-chave) | `sexo2/services/stats.py` | `test_stats_service` (fixtures LoLalytics) |
-| Outras builds e outras runas (D-120): listas do LoLalytics, build escolhida no topo do conjunto SEXO2 e volta ao padrão, página da runa-chave escolhida no editor | `sexo2/services/stats.py`, `sexo2/services/assistant.py`, `SEXO2-Assistant` | `test_stats_service`, `test_assistant_service` (`AlternativeChoicesTests`), `test_assistant_plugin.cjs`; **sem teste** no cliente real |
+| Outras builds e outras runas (D-129): listas do LoLalytics, build escolhida no topo do conjunto SEXO2 e volta ao padrão, página da runa-chave escolhida no editor | `sexo2/services/stats.py`, `sexo2/services/assistant.py`, `SEXO2-Assistant` | `test_stats_service`, `test_assistant_service` (`AlternativeChoicesTests`), `test_assistant_plugin.cjs`; **sem teste** no cliente real |
 
 Lacunas que os marcos devem cobrir antes de mexer na área: precisão do disparo
 da injeção (M13), mensagens `mod-*` (M7) instância única e migração de nomes (M5b).

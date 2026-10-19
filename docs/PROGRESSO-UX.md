@@ -1,6 +1,6 @@
 # Progresso da UX (branch ux/v0.9-prelaunch, base sexoatividade @2bf8607)
 
-Origem: proposta A (sessão de design de 18/10/2026). Decisões registradas como pendentes (D-115 a D-121).
+Origem: proposta A (sessão de design de 18/10/2026). Decisões D-115, D-116, D-117, D-119 e D-120 aprovadas pelo usuário em 19/10/2026; a antiga D-121 ("Hub"/"Atividades") foi encerrada ("é só tirar").
 Nada foi validado no cliente real do LoL, no Windows nem em partida. Sem bump de versão.
 
 | Item | Estado | Commit |

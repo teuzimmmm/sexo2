@@ -38,5 +38,4 @@ Esta integração não adiciona overlay nem importação no cliente LoL.
 ## Créditos
 
 Base Rose, Pengu Loader, LTK e dependências mantêm suas licenças/atribuições.
-BORK é da Riot Games; o escudo do Galo é do Clube Atlético Mineiro.
-Veja `LICENSE` e as fontes em `assets/visual-provenance.json`.
+Veja `LICENSE`.
