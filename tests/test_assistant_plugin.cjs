@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const A = require('../Pengu Loader/plugins/SEXO2-Assistant/index.js');
-const wheel = require('../Pengu Loader/plugins/ROSE-CustomWheel/index.js');
+const wheel = require('../Pengu Loader/plugins/SEXO2-CustomWheel/index.js');
 
 const styles = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/lcu/perks-styles-representative.json'), 'utf8')).styles;
 const perks = [{ id: 8112, name: 'Eletrocutar', iconPath: '/i/8112.png', shortDesc: 'x' }, { id: 5008, name: 'Força Adaptativa', iconPath: '/i/5008.png' }];
