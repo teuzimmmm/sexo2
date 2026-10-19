@@ -13,7 +13,7 @@ App privado para League of Legends: núcleo Python + plugins Pengu no cliente. F
   Mudança nesses pontos exige migração explícita e teste do formato antigo.
 - **Comportamentos protegidos:** `docs/comportamentos.md`. Toque numa área só com o teste correspondente passando.
 - **Desempenho:** nada de polling, timers ou observadores novos sem necessidade. Não declare ganho sem medição (`docs/MEDICAO.md`). Não remova recuperação ou watchdog sem teste que prove a equivalência.
-- **Commits:** pequenos e por finalidade. Formatação separada de comportamento: prove com `python scripts/ast_equal.py`. Branch `sexoatividade`; nunca `main` nem releases sem autorização.
+- **Commits:** pequenos e por finalidade. Formatação separada de comportamento: prove com `python scripts/ast_equal.py`. Branch `amolula` (oficial; a `sexoatividade` está obsoleta, ver `docs/BRANCH-OFICIAL.md`); nunca `main` nem releases sem autorização.
 
 ## Verificação
 ```

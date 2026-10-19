@@ -1,5 +1,7 @@
 # SEXO2
 
+> **Branch oficial: `amolula`.** A `sexoatividade` está obsoleta e não recebe mais trabalho (ver `docs/BRANCH-OFICIAL.md`).
+
 Aplicativo personalizado para nosso grupo no League of Legends, baseado em Rose.
 Um ponto de entrada no HUD reúne seleção de skins, favoritas, perfis, sorteio,
 sala privada e configurações. Configurações e skins pessoais ficam fora do programa.
