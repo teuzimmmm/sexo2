@@ -91,3 +91,20 @@ test('other builds are filtered by item name, ignoring accents and case', () => 
   assert.deepEqual(A.filterBuilds(builds, 'liándry', name).length, 2);
   assert.deepEqual(A.filterBuilds(builds, 'zzz', name), []);
 });
+
+test('the default build shows only the first group as Inicial, Essenciais and Situacionais', () => {
+  const block = (type, ...ids) => ({ type, items: ids.map((id) => ({ id: String(id), count: 1 })) });
+  const blocks = [
+    block('56,3% — 1.200 partidas', 1, 2, 3),
+    block('Itens iniciais', 4),
+    block('Alternativas', 5),
+    block('54,0% — 3.000 partidas', 6),
+    block('Itens iniciais', 7),
+  ];
+  const build = A.defaultBuild(blocks);
+  assert.equal(build.essenciais.type, '56,3% — 1.200 partidas');
+  assert.equal(build.inicial.items[0].id, '4');
+  assert.equal(build.situacionais.items[0].id, '5');
+  assert.deepEqual(A.defaultBuild([]), { inicial: null, essenciais: null, situacionais: null });
+  assert.equal(A.defaultBuild([block('Itens iniciais', 4)]).inicial, null);
+});
