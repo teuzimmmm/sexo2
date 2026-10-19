@@ -65,6 +65,7 @@ O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plan
 | D-120 | Swiftplay: o campeão sem escolha (nem pin do SEXO2 nem skin no cliente) recebe sorteio ponderado, favoritas primeiro; o sorteado nunca é gravado como escolha. Implementado; proposto pelo usuário na sessão de design de 18/10/2026; pendente de confirmação formal. | proposta A |
 | D-121 | Renomear "Hub" e "Atividades": aguardando os nomes do usuário. Sem imagens de skins de mods, algoritmo ponderado nem rede nova. | proposta A |
 | D-122 | M5b: identificadores `Rose` renomeados para `SEXO2` com leitura do formato antigo; pasta de dados, formato de código/link de sala e metadados dos mods mantidos. Aguarda confirmação formal do usuário e validação no Windows. | `docs/PROGRESSO-M5B.md` |
+| D-124 | Nova abertura animada do SEXO2 (`[ícone] SEXO 2` → `[ícone] 2`, 2,55 s, uma vez; fundo `#0d0e10`, Oswald 600, ícone aprovado). Implementada no plugin `SEXO2-Startup` conforme `skins/identidade/animacao-abertura/HANDOFF.md`; validação em `docs/ABERTURA-QA.md`. Pendente de confirmação formal do usuário (visual, duração e identidade) e de teste no cliente real | confirmação do usuário |
 
 ## Rejeitadas
 

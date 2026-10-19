@@ -13,11 +13,13 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
   await page.addScriptTag({content:script});
   const css=await page.locator('#index_loading_div42').evaluate(el=>{
    const before=getComputedStyle(el,'::before'),after=getComputedStyle(el,'::after');
-   return {name:after.content,image:before.backgroundImage,size:before.backgroundSize,radius:before.borderRadius};
+   return {bg:getComputedStyle(el).backgroundColor,before:before.content,after:after.content};
   });
-  assert.equal(css.name,'"SEXO2"');assert.ok(css.image.includes('data:image/png;base64,'));
-  assert.equal(css.size,'contain');assert.equal(css.radius,'0px');
+  // The client's own branding is gone; the opening overlay (#0d0e10) replaces it, once.
+  assert.equal(css.bg,'rgb(13, 14, 16)');assert.equal(css.after,'none');assert.equal(css.before,'none');
   assert.equal(await page.locator('#sexo2-startup-style').count(),1);
-  console.log('Startup branding: passes without bridge, including late core styles.');
+  assert.equal(await page.locator('#sexo2-abertura').count(),1);
+  assert.equal(await page.locator('#sexo2-abertura .g').count(),5);
+  console.log('Startup opening: mounts once over the loading div, without bridge, including late core styles.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
