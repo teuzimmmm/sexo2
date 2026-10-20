@@ -405,3 +405,112 @@ class AutomaticItemImportTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FavoriteBuildTests(unittest.TestCase):
+    """D-135: the build pinned for a champion, apart for SR and ARAM."""
+
+    def setUp(self):
+        from sexo2.services.favorite_builds import FavoriteBuilds
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        FakeStats.with_builds = True
+        self.addCleanup(setattr, FakeStats, "with_builds", False)
+        self.lcu = FakeLCU()
+        self.published = []
+        self.queue = 420
+        self.timers = []
+        self.controller = FakeController()
+        self.page = PageSpec(8100, 8200, (8112, 8139, 8140, 8106, 8226, 8210, 5005, 5008, 5001))
+        self.controller.snap = RuneImportSnapshot(None, (), None, self.page, False, None)
+        self.favorites = FavoriteBuilds()
+        self.service = AssistantService(
+            self.lcu,
+            self.published.append,
+            queue_id=lambda: self.queue,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=self.controller,
+            schedule=lambda delay, action: self.timers.append(action),
+            favorites=self.favorites,
+        )
+
+    def confirm(self, champion=103):
+        self.service.champion_confirmed(champion)
+        timers, self.timers = self.timers, []
+        for action in timers:
+            action()
+
+    def top(self):
+        managed = next(s for s in self.lcu.item_sets["itemSets"] if s.get("uid") == "sexo2-managed")
+        return [int(i["id"]) for i in managed["blocks"][0]["items"][:3]]
+
+    def test_pinned_runes_and_trio_are_applied_on_the_next_confirmation(self):
+        self.service.handle({"type": "assistant-request"})
+        self.service.handle({"type": "assistant-items-choose", "items": [2503, 3158, 3100]})
+        self.service.handle({"type": "assistant-favorite", "what": "items", "action": "pin"})
+        self.service.handle({"type": "assistant-favorite", "what": "runes", "action": "pin"})
+        favorite = self.published[-1]["favorite"]
+        self.assertEqual(favorite["items"], [2503, 3158, 3100])
+        self.assertEqual(favorite["runes"]["perks"][0], 8112)
+        # A new champion select with the same champion
+        self.lcu.session = session(session_id="cs-2")
+        self.service._chosen_build = None
+        self.controller.calls.clear()
+        self.confirm()
+        self.assertEqual(self.top(), [2503, 3158, 3100])
+        chosen = [c for c in self.controller.calls if c[0] == "choose"]
+        self.assertEqual(chosen[-1][1], self.page)
+        self.assertEqual(self.published[-1]["favorite"]["unavailable"], [])
+
+    def test_the_default_build_can_be_pinned_too(self):
+        self.confirm()
+        default_top = self.top()
+        self.service.handle({"type": "assistant-favorite", "what": "items", "action": "pin"})
+        self.assertEqual(self.published[-1]["favorite"]["items"], default_top)
+        self.lcu.session = session(session_id="cs-2")
+        self.confirm()
+        self.assertEqual(self.top(), default_top)
+        self.assertEqual(self.published[-1]["favorite"]["unavailable"], [])
+
+    def test_a_trio_gone_from_the_statistics_keeps_the_default_and_says_so(self):
+        self.favorites.set_items("sr", 103, [1001, 1002, 1003])
+        self.confirm()
+        self.assertNotEqual(self.top(), [1001, 1002, 1003])
+        self.assertEqual(self.published[-1]["favorite"]["unavailable"], ["items"])
+        self.assertEqual(self.published[-1]["favorite"]["items"], [1001, 1002, 1003])  # kept
+
+    def test_a_rune_page_the_client_refuses_is_reported(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.favorites.set_runes("sr", 103, {"primary": 8100, "sub": 8200, "perks": [1, 2, 3]})
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, "invalid_page")
+        self.confirm()
+        self.assertEqual(self.published[-1]["favorite"]["unavailable"], ["runes"])
+
+    def test_sr_and_aram_are_apart(self):
+        self.favorites.set_items("sr", 103, [2503, 3158, 3100])
+        self.queue = 450
+        self.confirm()
+        self.assertIsNone(self.published[-1]["favorite"]["items"])
+        self.assertNotEqual(self.top(), [2503, 3158, 3100])
+
+    def test_unpin_and_malformed_requests(self):
+        self.service.handle({"type": "assistant-request"})
+        self.service.handle({"type": "assistant-favorite", "what": "runes", "action": "pin"})
+        self.service.handle({"type": "assistant-favorite", "what": "runes", "action": "unpin"})
+        self.assertIsNone(self.published[-1]["favorite"]["runes"])
+        for bad in ({"what": "skins", "action": "pin"}, {"what": "runes", "action": "delete"}):
+            with self.assertRaises(ValueError):
+                self.service.handle({"type": "assistant-favorite", **bad})
+
+    def test_a_later_confirmation_keeps_the_players_own_pick(self):
+        self.favorites.set_items("sr", 103, [2503, 3158, 3100])
+        self.confirm()
+        self.service.handle({"type": "assistant-items-default"})
+        self.service.handle({"type": "assistant-opponent", "championId": 1})
+        timers, self.timers = self.timers, []
+        for action in timers:
+            action()
+        self.assertNotEqual(self.top(), [2503, 3158, 3100])

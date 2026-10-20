@@ -115,3 +115,15 @@ test('sem estatísticas só Mods e Todas as configurações aparecem', () => {
   assert.deepEqual(keys(true), ['mods', 'settings']);
   assert.ok(!keys(false).includes('prefs'));
 });
+
+test('build favorita: o trio do topo do conjunto e a comparação com o fixado', () => {
+  const blocks = [
+    { type: '56,8% — 7.505 partidas', items: [{ id: '2503' }, { id: '3158' }, { id: '3100' }, { id: '3089' }] },
+    { type: 'Itens iniciais', items: [{ id: '1056' }] },
+  ];
+  assert.deepEqual(A.topTrio(blocks), [2503, 3158, 3100]);
+  assert.deepEqual(A.topTrio([]), []);
+  assert.equal(A.sameIds([2503, 3158, 3100], A.topTrio(blocks)), true);
+  assert.equal(A.sameIds(null, A.topTrio(blocks)), false);
+  assert.equal(A.sameIds([2503, 3158], A.topTrio(blocks)), false);
+});

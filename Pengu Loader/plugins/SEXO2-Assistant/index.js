@@ -186,6 +186,14 @@
     return out;
   }
 
+  // Build favorita (D-135): the trio on top of the set is the first three items of its first block.
+  function topTrio(blocks) {
+    const first = (blocks || [])[0];
+    return first ? first.items.slice(0, 3).map((i) => Number(i.id)) : [];
+  }
+  const sameIds = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => v === b[i]);
+  const FAVORITE_UNAVAILABLE = "Favorita indisponível neste patch.";
+
   const RUNE_ERRORS = {
     cannot_edit: "A seleção terminou antes da confirmação.",
     no_free_page: "Sem espaço para a página do SEXO2. Apague uma página no cliente.",
@@ -207,7 +215,7 @@
   }
 
   if (typeof window === "undefined" && typeof module !== "undefined" && module.exports) {
-    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, visibleTabs, runeError, itemError, LANES };
+    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, topTrio, sameIds, visibleTabs, runeError, itemError, LANES };
     return;
   }
 
@@ -256,6 +264,8 @@
 #sexo2-assistant .rec-row .items{display:flex;gap:3px;}
 #sexo2-assistant .rec-row .items img{width:26px;height:26px;}
 #sexo2-assistant .rec-row .name{font-size:13px;color:var(--s2-fg);}
+#sexo2-assistant .fav-row{display:flex;align-items:center;gap:var(--sp-2);}
+#sexo2-assistant .fav-row .rec-row{flex:1;min-width:0;}
 #sexo2-assistant .list-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-1) 4px;font-size:var(--t-small);color:var(--s2-fg-3);}
 #sexo2-assistant .list-head .wr{width:52px;text-align:right;}
 #sexo2-assistant .list-head .n{width:56px;text-align:right;}
@@ -398,7 +408,18 @@
         </button>`;
       };
       const vs = st.runes.matchup || [];
+      const fav = (st.favorite || {}).runes;
+      const favRow = () => {
+        const p = fromPerks(data, fav);
+        return `<div class="section-head"><span class="t-heading">Favorita</span></div>
+        <div class="fav-row"><button class="rec-row" data-act="fav-runes-apply" aria-pressed="${samePage(st.runes.applied, fav)}">
+          <img class="keystone s2-icon" src="${runeIcon(p.keystone)}" alt="" data-tip="${esc(perkName(p.keystone))}|${esc((data.styles[p.primary] || {}).name)}">
+          ${p.secondary.map((s) => `<img class="minor s2-icon" src="${runeIcon(s.id)}" alt="" data-tip="${esc(perkName(s.id))}|${esc((data.styles[p.sub] || {}).name)}">`).join("")}
+          <span class="name">${esc(perkName(p.keystone))}</span><span class="grow"></span>
+        </button><button class="s2-btn ghost" data-act="fav-runes-unpin">Desafixar</button></div>`;
+      };
       return `<div class="rec-cards">${st.runes.general.map(card).join("")}</div>
+        ${fav ? favRow() : ""}
         <div class="section-head">
           <span class="t-heading">${opp ? "Contra " + esc(champName(opp)) : "Contra"}</span>
         </div>
@@ -456,12 +477,15 @@
 
     function runesFoot() {
       const r = (S.state && S.state.runes) || {};
+      const fav = (S.state && S.state.favorite) || {};
       let left = "";
       if (r.pending) left = `<span class="s2-spinner"></span><span>Importando…</span>`;
       else if (r.error) left = `<span class="err">${esc(runeError(r.error))}</span>`;
       else if (S.screen === "tree" && S.draft && data && validate(data, S.draft).length) left = `<span>Página incompleta</span>`;
       else if (S.state && S.state.error === "keystone_unavailable") left = `<span class="err">Sem página com essa runa.</span>`;
-      const right = r.applied && data ? `<span class="t-small">Aplicada</span>${miniPage(r.applied)}` : `<span class="t-muted">Nenhuma página aplicada</span>`;
+      else if (fav.unavailable && fav.unavailable.includes("runes")) left = `<span class="err">${FAVORITE_UNAVAILABLE}</span>`;
+      const pin = r.applied && !samePage(r.applied, fav.runes) ? `<button class="s2-btn" data-act="fav-runes-pin">Fixar como favorita</button>` : "";
+      const right = r.applied && data ? `<span class="t-small">Aplicada</span>${miniPage(r.applied)}${pin}` : `<span class="t-muted">Nenhuma página aplicada</span>`;
       return `<div class="asst-foot">${left}<span class="grow"></span>${right}</div>`;
     }
 
@@ -480,14 +504,18 @@
       };
       if (S.screen === "builds") return otherBuilds();
       const builds = (st.options || {}).builds || [];
+      const favorite = sameIds((st.favorite || {}).items, topTrio(it.blocks));
       const actions = [
         it.chosen ? `<button class="s2-btn ghost" data-act="items-default">Voltar ao padrão</button>` : "",
         builds.length ? `<button class="s2-btn" data-act="builds-open">Outras builds</button>` : "",
+        favorite
+          ? `<button class="s2-btn ghost" data-act="fav-items-unpin">Desafixar</button>`
+          : `<button class="s2-btn" data-act="fav-items-pin">Fixar</button>`,
       ].join("");
       const build = defaultBuild(it.blocks);
       const part = (label, block) =>
         block ? `<div class="ip-section"><div class="ip-sub"><span class="ip-title">${label}</span>${label === "Essenciais" ? `<span class="t-small num">${esc(block.type)}</span>` : ""}</div><div class="ip-items">${block.items.map((i) => icon(Number(i.id), i.count)).join("")}</div></div>` : "";
-      return `<div class="ip-page"><div class="section-head ip-head"><span class="t-heading">Build padrão</span><span class="actions">${actions}</span></div>
+      return `<div class="ip-page"><div class="section-head ip-head"><span class="t-heading">${favorite ? "Build favorita" : "Build padrão"}</span><span class="actions">${actions}</span></div>
         ${part("Inicial", build.inicial)}${part("Essenciais", build.essenciais)}${part("Situacionais", build.situacionais)}</div>`;
     }
 
@@ -525,6 +553,7 @@
       let left = "";
       if (it.pending) left = `<span class="s2-spinner"></span><span>Importando…</span>`;
       else if (it.error) left = `<span class="err">${esc(itemError(it.error, champName(S.state.championId)))}</span>`;
+      else if (((S.state && S.state.favorite) || {}).unavailable?.includes("items")) left = `<span class="err">${FAVORITE_UNAVAILABLE}</span>`;
       else if (it.confirmed) left = `<span>Conjunto importado</span>`;
       const retry = it.error ? `<button class="s2-btn primary" data-act="items-import">Importar conjunto</button>` : "";
       return `<div class="asst-foot">${left}<span class="grow"></span>${retry}</div>`;
@@ -653,6 +682,11 @@
         case "shard": S.draft = edit.shard(data, S.draft, +el.dataset.row, +el.dataset.id); sendEdit(); break;
         case "items-import": send({ type: "assistant-items-import" }); break;
         case "items-default": send({ type: "assistant-items-default" }); break;
+        case "fav-runes-pin": send({ type: "assistant-favorite", what: "runes", action: "pin" }); break;
+        case "fav-runes-unpin": send({ type: "assistant-favorite", what: "runes", action: "unpin" }); break;
+        case "fav-runes-apply": send({ type: "assistant-favorite", what: "runes", action: "apply" }); break;
+        case "fav-items-pin": send({ type: "assistant-favorite", what: "items", action: "pin" }); break;
+        case "fav-items-unpin": send({ type: "assistant-favorite", what: "items", action: "unpin" }); break;
         case "builds-open": S.screen = "builds"; break;
         case "builds-back": S.screen = "home"; break;
         case "build-pick":

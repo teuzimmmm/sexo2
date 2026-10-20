@@ -10,6 +10,11 @@ confirmed (lock, trade or Swiftplay choice), without the panel being open:
 :meth:`AssistantService.champion_confirmed` is called by the champion lock
 handlers. Calls are debounced and the latest confirmation wins; a write is
 skipped when the same session, champion and opponent were already confirmed.
+
+A build pinned for the champion (D-135, kept apart for SR and ARAM) is applied on
+that confirmation: its rune page is imported and its item trio heads the set. One
+that no longer fits (the patch changed a rune, the trio left the statistics) is
+not applied; the state says so and the default stays.
 """
 
 from __future__ import annotations
@@ -23,6 +28,7 @@ from lcu.features.lcu_item_sets import LCUItemSets
 from lcu.features.lcu_perks import LCUPerks
 from lolalytics.errors import QueryError
 from lolalytics.item_pages import format_games, format_rate
+from sexo2.services.favorite_builds import FavoriteBuilds, group_for
 from sexo2.services.item_sets import build_item_set, import_item_set
 from sexo2.services.rune_import import RuneImportController, RuneImportSnapshot, SessionKey
 from sexo2.services.rune_rules import PageSpec, StyleCatalog
@@ -128,6 +134,7 @@ class AssistantService:
         controller: RuneImportController | None = None,
         schedule: Callable[[float, Callable[[], None]], None] | None = None,
         auto_delay: float = 0.5,
+        favorites: FavoriteBuilds | None = None,
     ) -> None:
         self._lcu = lcu
         self._publish = publish
@@ -157,6 +164,11 @@ class AssistantService:
         self._alternatives: Alternatives | None = None
         self._chosen_build: ItemCombo | None = None  # the player's own pick in "Outras builds"
         self._keystone_pending: int | None = None
+        self._alternatives_key: tuple | None = None
+        self._favorites = favorites if favorites is not None else FavoriteBuilds()
+        self._favorite_key: tuple | None = None  # (session, champion) the favourite was applied to
+        self._favorite_wanted: tuple[int, ...] | None = None  # trio to put first in the next set
+        self._favorite_unavailable: set[str] = set()  # "runes"/"items" pinned but not applicable
 
     # Bridge entry points (return quickly; work goes to the worker) ----------
 
@@ -204,6 +216,11 @@ class AssistantService:
             self._keystone_pending = keystone
             self._publish_state()
             self._submit(lambda: self._load_keystone(keystone))
+        elif kind == "assistant-favorite":
+            what, action = payload.get("what"), payload.get("action")
+            if what not in ("runes", "items") or action not in ("pin", "unpin", "apply"):
+                raise ValueError("unknown favourite request")
+            self._submit(lambda: self._favorite(what, action))
 
     def champion_confirmed(self, champion_id: int, *, swiftplay: bool = False) -> None:
         """The local player's champion is confirmed: import its item set (debounced).
@@ -284,6 +301,7 @@ class AssistantService:
             self._publish_state()
             return
         general = [(layout, layout.to_page(self._catalog)) for layout in stats.layouts]
+        self._alternatives_key = None  # reloaded below
         matchup = [(layout, layout.to_page(self._catalog)) for layout in stats.matchup]
         keystone = self._runes.get("keystone", []) if self._runes.get("champion") == context.champion_id else []
         self._runes = {
@@ -300,6 +318,7 @@ class AssistantService:
             self._alternatives = self._stats.alternatives(
                 context.champion_id, context.mode, context.lane, self._keystone_ids()
             )
+            self._alternatives_key = (context.champion_id, context.mode, context.lane)
         except Exception as error:
             log.info("[ASSISTANT] no alternatives for champion %s: %s", context.champion_id, error)
             self._alternatives = None
@@ -308,9 +327,13 @@ class AssistantService:
 
     def _keystone_ids(self) -> frozenset[int]:
         """Keystones: the first slot of every rune tree."""
+        return self._keystone_ids_of(self._catalog)
+
+    @staticmethod
+    def _keystone_ids_of(catalog: StyleCatalog) -> frozenset[int]:
         return frozenset(
             perk
-            for style in self._catalog.styles
+            for style in catalog.styles
             if style.slots and style.slots[0].kind != "kStatMod"
             for perk in style.slots[0].perks
         )
@@ -372,10 +395,93 @@ class AssistantService:
             self._items = {"error": "unsupported_mode"}
             self._publish_state()
             return
+        if (context.session_id, champion_id) != self._favorite_key:
+            # First confirmation of this champion here: its pinned build, if any. Later ones
+            # (opponent changed) keep what the player picked meanwhile.
+            self._favorite_key = (context.session_id, champion_id)
+            self._favorite_unavailable = set()
+            group = group_for(context.mode)
+            favorite = self._favorites.get(group, champion_id) if group else {"runes": None, "items": None}
+            if favorite["runes"] and not swiftplay:  # Swiftplay runes are set outside champion select
+                self._apply_favorite_runes(context, favorite["runes"])
+            self._favorite_wanted = tuple(favorite["items"]) if favorite["items"] else None
         key = (context.session_id, champion_id, self._opponent)
         if key == self._items_key:
             return  # this champion's set is already confirmed
         self._write_items(context, generation)
+
+    def _ensure_catalog(self) -> StyleCatalog:
+        if self._catalog is None:
+            self._catalog = StyleCatalog.from_payload(self._lcu.get("/lol-perks/v1/styles"))
+            self._controller.set_catalog(self._catalog)
+        return self._catalog
+
+    def _apply_favorite_runes(self, context: ChampSelectContext, page: dict) -> None:
+        try:
+            self._ensure_catalog()
+            self._controller.set_session(SessionKey(context.session_id, context.champion_id))
+            snapshot = self._controller.choose(page_from_json(page))
+        except Exception as error:
+            log.info("[ASSISTANT] favourite rune page not applied: %s", error)
+            self._favorite_unavailable.add("runes")
+            return
+        if snapshot.error == "invalid_page":
+            self._favorite_unavailable.add("runes")  # the patch changed a rune of the page
+
+    def _ensure_alternatives(self, context: ChampSelectContext) -> Alternatives | None:
+        key = (context.champion_id, context.mode, context.lane)
+        if self._alternatives_key != key:
+            try:
+                self._alternatives = self._ensure_stats().alternatives(
+                    context.champion_id, context.mode, context.lane, self._keystone_ids_of(self._ensure_catalog())
+                )
+                self._alternatives_key = key
+            except Exception as error:
+                log.info("[ASSISTANT] no alternatives for champion %s: %s", context.champion_id, error)
+                self._alternatives = None
+        return self._alternatives
+
+    def _top_trio(self) -> tuple[int, ...] | None:
+        """The first three items of the set's first block: the build on top of the set."""
+        blocks = self._items.get("blocks") or []
+        try:
+            trio = tuple(int(item["id"]) for item in blocks[0]["items"][:3])
+        except (IndexError, KeyError, TypeError, ValueError):
+            return None
+        return trio or None
+
+    def _favorite(self, what: str, action: str) -> None:
+        """Pin, unpin or (runes) apply the champion's favourite build."""
+        context = self._context
+        group = group_for(context.mode) if context else None
+        if group is None:
+            self._error = "no_session"
+            self._publish_state()
+            return
+        champion = context.champion_id
+        if what == "runes" and action == "apply":
+            page = self._favorites.get(group, champion)["runes"]
+            if page:
+                self._apply_favorite_runes(context, page)
+            self._publish_state()
+            return
+        if what == "runes":
+            applied = self._controller.snapshot().applied if action == "pin" else None
+            if action == "pin" and applied is None:
+                self._error = "nothing_applied"
+                self._publish_state()
+                return
+            self._favorites.set_runes(group, champion, page_json(applied))
+        else:
+            trio = self._top_trio() if action == "pin" else None
+            if action == "pin" and trio is None:
+                self._error = "nothing_applied"
+                self._publish_state()
+                return
+            self._favorites.set_items(group, champion, list(trio) if trio else None)
+        self._favorite_unavailable.discard(what)
+        self._error = None
+        self._publish_state()
 
     def _import_items(self) -> None:
         """Import on request from the panel (same set as the automatic import)."""
@@ -418,6 +524,12 @@ class AssistantService:
             return
         if generation is not None and generation != self._auto_generation:
             return  # the champion changed while the statistics loaded
+        wanted, self._favorite_wanted = self._favorite_wanted, None
+        if wanted is not None:
+            alternatives = self._ensure_alternatives(context)
+            self._chosen_build = (
+                next((c for c in alternatives.builds if c.items == wanted), None) if alternatives else None
+            )
         by_selection = {page.selection: page for page in builds.pages}
         try:
             item_set = build_item_set(
@@ -441,6 +553,10 @@ class AssistantService:
             item_set = {**item_set, "blocks": [block, *item_set["blocks"]]}
         else:
             chosen = self._chosen_build = None
+        if wanted is not None:
+            top = tuple(int(i["id"]) for i in item_set["blocks"][0]["items"][:3]) if item_set["blocks"] else ()
+            if top != wanted:
+                self._favorite_unavailable.add("items")  # the trio left the statistics: default kept
         result = import_item_set(LCUItemSets(self._lcu), item_set)
         if result.confirmed:
             self._items_key = (context.session_id, context.champion_id, self._opponent)
@@ -496,7 +612,13 @@ class AssistantService:
             },
             "items": dict(self._items),
             "options": _options_json(self._alternatives),
+            "favorite": self._favorite_state(context),
         }
+
+    def _favorite_state(self, context: ChampSelectContext | None) -> dict:
+        group = group_for(context.mode) if context else None
+        favorite = self._favorites.get(group, context.champion_id) if group else {"runes": None, "items": None}
+        return {**favorite, "unavailable": sorted(self._favorite_unavailable)}
 
 
 def _options_json(alternatives: Alternatives | None) -> dict:
