@@ -57,7 +57,7 @@ QUEUE_MODES = {
 POSITION_LANES = {"top": "top", "jungle": "jungle", "middle": "middle", "bottom": "bottom", "utility": "support"}
 
 # Ranked queues read from the client, in order of preference, and the per-side
-# cap of players read in one champion select (D-122).
+# cap of players read in one champion select (D-140).
 RANKED_QUEUES = ("RANKED_SOLO_5x5", "RANKED_FLEX_SR")
 RANKED_LIMIT = 5
 RANKED_TIMEOUT_S = 0.5
@@ -434,7 +434,7 @@ class AssistantService:
             return self._ranked_cache[puuid]
         seen = self._ranked_seen[side]
         if len(seen) >= RANKED_LIMIT:
-            return None  # per-selection cap (D-122)
+            return None  # per-selection cap (D-140)
         seen.add(puuid)
         try:
             payload = self._lcu.ranked_stats(puuid, timeout=RANKED_TIMEOUT_S)

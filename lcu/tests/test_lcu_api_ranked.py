@@ -1,4 +1,4 @@
-"""The ranked-stats read used by the champion-select assistant (D-122)."""
+"""The ranked-stats read used by the champion-select assistant (D-140)."""
 
 import unittest
 from types import SimpleNamespace

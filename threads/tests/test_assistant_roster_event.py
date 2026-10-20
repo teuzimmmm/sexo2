@@ -1,4 +1,4 @@
-"""The champion-select roster signal is sent only when the roster changes (D-122)."""
+"""The champion-select roster signal is sent only when the roster changes (D-140)."""
 
 import unittest
 from types import SimpleNamespace

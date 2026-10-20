@@ -1,4 +1,4 @@
-# Relatório — Elo na seleção de campeões (D-122)
+# Relatório — Elo na seleção de campeões (D-140)
 
 Data: 20/10/2026
 
@@ -81,8 +81,8 @@ a suíte completa passou na repetição.
 
 ## Commits
 
-- `54c5a09` — Add LCU ranked-stats read and team elo state for D-122
+- `54c5a09` — Add LCU ranked-stats read and team elo state for D-140
 - `0c90067` — Show team elo in the assistant Equipe tab
-- `0d62619` — Document D-122 and its protected behavior
+- `0d62619` — Document D-140 and its protected behavior
 
 Branch: `sexoatividade`.
