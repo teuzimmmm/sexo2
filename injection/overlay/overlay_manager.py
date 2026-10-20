@@ -76,6 +76,11 @@ LATE_JOIN_ERROR = "the game started before the patcher, overlay not applied"
 WAD_HEADER_SIZE = 268
 
 
+# Seconds the game may be gone while the client still says the match is on (normal end:
+# Reconnect for ~8 s, then the results) before SEXO2 reports it lost
+GAME_EXIT_GRACE_S = 30.0
+
+
 class OverlayManager:
     """Manages overlay creation and execution"""
 
@@ -597,7 +602,7 @@ class OverlayManager:
             seen = game_pids()
             if seen:
                 ctx.report.jogo_visto(seen)
-            missing_polls = 0
+            missing_since = None
             exit_reported = False
             no_game_reported = False
 
@@ -612,10 +617,13 @@ class OverlayManager:
                 if live:
                     seen.update(live)
                     ctx.report.jogo_visto(live)
-                    missing_polls = 0
+                    missing_since = None
                 elif seen and ctx.in_active_phase:
-                    missing_polls += 1
-                    if missing_polls >= 6 and not exit_reported:
+                    # At a normal end the game closes and the client stays a few seconds in
+                    # Reconnect before the results: only a game gone that long is lost
+                    if missing_since is None:
+                        missing_since = time.monotonic()
+                    if time.monotonic() - missing_since >= GAME_EXIT_GRACE_S and not exit_reported:
                         ctx.report.jogo_perdido()
                         ctx.report_issue(
                             "GAME_EXIT",

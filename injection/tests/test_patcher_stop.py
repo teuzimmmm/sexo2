@@ -5,6 +5,7 @@ import threading
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+import unittest.mock
 from unittest.mock import patch
 
 from injection.overlay import overlay_manager, process_manager
@@ -96,6 +97,75 @@ class StoppedPatcherTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.report_issue.assert_called_once()
         self.assertIn("overlay not applied", self.report_issue.call_args.args[2])
+
+
+class GameExitTests(unittest.TestCase):
+    """The game closing at the normal end of a match is not "SEXO2 lost the game"."""
+
+    def setUp(self):
+        from injection.game import match_recovery
+        from injection.overlay.match_context import MatchContext
+
+        temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        root = Path(temp_dir.name)
+        self.overlay_dir = root / "overlay"
+        self.overlay_dir.mkdir()
+        self.process_manager = ProcessManager()
+        self.overlay = OverlayManager(root / "tools", root / "mods", root / "game", self.process_manager)
+        self.state = SimpleNamespace(phase="InProgress")
+        self.manager = SimpleNamespace(shared_state=self.state, resume_game=lambda: None)
+        self.game = {4242}
+        for target, name, value in (
+            (match_recovery, "game_pids", lambda: set(self.game)),
+            (overlay_manager, "PROCESS_MONITOR_SLEEP_S", 0.02),
+            (overlay_manager, "GAME_EXIT_GRACE_S", 1.0),
+            (overlay_manager, "report_issue", unittest.mock.Mock()),
+        ):
+            patcher = patch.object(target, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.issues = []
+        issue = patch.object(MatchContext, "report_issue", lambda ctx, code, *a: self.issues.append(code))
+        issue.start()
+        self.addCleanup(issue.stop)
+
+    def serve(self, script):
+        proc, session = StoppedPatcherTests._start_patcher(self)
+        runner = threading.Thread(
+            target=lambda: self.overlay._run_ltk_patcher(session, self.overlay_dir, None, self.manager)
+        )
+        runner.start()
+        script()
+        self.process_manager.stop_overlay_process()
+        runner.join(timeout=15)
+        self.assertFalse(runner.is_alive())
+
+    def test_normal_end_reconnect_then_results_is_not_reported(self):
+        import time
+
+        def end_of_match():
+            time.sleep(0.2)
+            self.game.clear()  # the game closes
+            self.state.phase = "Reconnect"  # a few seconds before the results (Arena, 20/10/2026)
+            time.sleep(0.6)
+            self.state.phase = "PreEndOfGame"
+            time.sleep(1.0)
+
+        self.serve(end_of_match)
+        self.assertNotIn("GAME_EXIT", self.issues)
+
+    def test_a_game_gone_while_the_match_goes_on_is_reported(self):
+        import time
+
+        def crash():
+            time.sleep(0.2)
+            self.game.clear()
+            self.state.phase = "Reconnect"
+            time.sleep(1.6)
+
+        self.serve(crash)
+        self.assertEqual(self.issues.count("GAME_EXIT"), 1)
 
 
 if __name__ == "__main__":
