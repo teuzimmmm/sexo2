@@ -424,6 +424,26 @@ class ArenaMatchTests(unittest.TestCase):
         self.assertIs(overlay.layout_for("arena"), ARENA_LAYOUT)
         self.assertEqual(overlay.layout_for("mayhem"), Layout())
 
+    def test_arena_under_a_new_queue_id_is_still_arena(self):
+        from types import SimpleNamespace
+        from unittest import mock
+
+        from sexo2.augments.session import augment_mode
+        from sexo2.overlay.augment_overlay import AugmentOverlayThread
+
+        # The user's Arena on 20/10/2026: queue 1750, game mode CHERRY
+        self.assertEqual(augment_mode(1750), "arena")
+        self.assertEqual(augment_mode(1799, "CHERRY"), "arena")
+        self.assertEqual(augment_mode(2400, "ARAM"), "mayhem")
+        self.assertIsNone(augment_mode(420, "CLASSIC"))
+        state = SimpleNamespace(
+            phase="InProgress", current_queue_id=1799, locked_champ_id=134, current_game_mode="CHERRY"
+        )
+        overlay = AugmentOverlayThread(state, object())
+        with mock.patch.object(overlay, "_prepare", return_value="session") as prepare:
+            self.assertEqual(overlay._session_for_match(), "session")
+        prepare.assert_called_once_with("arena", 134)
+
 
 TITLES = {
     "1920x1080_gold": ("Scopier Weapons", "Vulnerability", "Combusting Interest"),

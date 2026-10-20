@@ -33,7 +33,16 @@ from sexo2.augments.vision import IconMatcher
 
 log = logging.getLogger(__name__)
 
-QUEUE_MODES = {1700: "arena", 1710: "arena", 2400: "mayhem"}
+QUEUE_MODES = {1700: "arena", 1710: "arena", 1750: "arena", 2400: "mayhem"}
+# Riot opens Arena under new queue ids; its game mode stays CHERRY
+GAME_MODES = {"CHERRY": "arena"}
+
+
+def augment_mode(queue_id: Any, game_mode: Any = None) -> str | None:
+    """``arena``/``mayhem`` for a match with augments, by queue id or else by game mode."""
+    return QUEUE_MODES.get(queue_id) or GAME_MODES.get(str(game_mode or "").upper())
+
+
 CHERRY_AUGMENTS = "/lol-game-data/assets/v1/cherry-augments.json"
 AUGMENT_LISTS = "/lol-game-data/assets/v1/augment-lists.json"
 

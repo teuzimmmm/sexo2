@@ -21,7 +21,7 @@ import time
 from typing import Any
 
 from sexo2.augments.ocr import combine, read_titles, windows_reader
-from sexo2.augments.session import QUEUE_MODES, AugmentSession, arena_stats, load_catalog, load_templates, mayhem_stats
+from sexo2.augments.session import AugmentSession, augment_mode, arena_stats, load_catalog, load_templates, mayhem_stats
 from sexo2.augments.view import CardView
 from sexo2.augments.vision import ARENA_LAYOUT, IconMatcher, Layout, card_area, crops, read_offer
 
@@ -229,7 +229,7 @@ class AugmentOverlayThread(threading.Thread):
                 queue_id = queue_from_gameflow(self._lcu.get("/lol-gameflow/v1/session"))
             except Exception as error:
                 log.debug("[AUGMENTS] gameflow session: %s", error)
-        if queue_id in QUEUE_MODES:
+        if augment_mode(queue_id, getattr(self._state, "current_game_mode", None)):
             try:
                 champion_id = champion_from_live(
                     self._live("/playerlist"),
@@ -262,7 +262,7 @@ class AugmentOverlayThread(threading.Thread):
             queue_id = queue_id if queue_id is not None else found_queue
             if not isinstance(champion_id, int) or champion_id <= 0:
                 champion_id = found_champion
-        mode = QUEUE_MODES.get(queue_id)
+        mode = augment_mode(queue_id, getattr(self._state, "current_game_mode", None))
         if mode is None:
             self._wait(f"queue {queue_id} has no augments" if queue_id is not None else "queue unknown")
             return None
