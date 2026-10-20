@@ -218,11 +218,12 @@
   }
 
   // The client may hide its loading screen, or remove an ancestor of it, instead of removing it
-  function loadingShown() {
-    if (!loadingDiv || !loadingDiv.isConnected || !loadingDiv.getClientRects().length) return false;
-    var cs = getComputedStyle(loadingDiv);
+  function shown(div) {
+    if (!div || !div.isConnected || !div.getClientRects().length) return false;
+    var cs = getComputedStyle(div);
     return cs.visibility !== "hidden" && parseFloat(cs.opacity) > 0;
   }
+  function loadingShown() { return shown(loadingDiv); }
 
   // The final frame stays while the client still shows its loading screen, at most MAX_HOLD_MS;
   // the overlay goes only after the animation ended.
@@ -357,7 +358,8 @@
   var REPLAY_GAP_MS = 30000, BRIEF_DROP_MS = 10000;
   window.addEventListener("sexo2-bridge-lost", function () { bridgeLostAt = Date.now(); });
   window.addEventListener("sexo2-bridge-ready", function () {
-    if (root || !document.body || document.querySelector(LOADING)) return;
+    // the client keeps its loading screen in the page, hidden, once it is loaded
+    if (root || !document.body || Array.prototype.some.call(document.querySelectorAll(LOADING), shown)) return;
     if (Date.now() - lastShownAt < REPLAY_GAP_MS) return;
     if (bridgeLostAt && Date.now() - bridgeLostAt < BRIEF_DROP_MS) return;
     injectStyle();
