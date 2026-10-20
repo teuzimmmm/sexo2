@@ -196,7 +196,7 @@
 
   // ---- clock: one timeline, one rAF ----
   var el = 0, playing = false, raf = 0, last = 0, ended = false, loadingGone = false, booted = false, resizeTimer = 0;
-  var holdTimer = 0, loadingObs = null, killTimer = 0;
+  var holdTimer = 0, loadingObs = null, killTimer = 0, lastShownAt = 0, bridgeLostAt = 0;
   // Longest the final frame waits for the client after the animation, whatever the client does
   var MAX_HOLD_MS = 3000;
   // Longest the opening stays at all, by the plain timer clock: even if animation frames never
@@ -212,13 +212,14 @@
     window.removeEventListener("resize", onResize);
     if (root && root.parentNode) root.parentNode.removeChild(root);
     root = null;
+    lastShownAt = Date.now();
     // and any copy of it the client put in its place
     document.querySelectorAll("#" + ROOT_ID).forEach(function (node) { node.remove(); });
   }
 
   // The client may hide its loading screen, or remove an ancestor of it, instead of removing it
   function loadingShown() {
-    if (!loadingDiv.isConnected || !loadingDiv.getClientRects().length) return false;
+    if (!loadingDiv || !loadingDiv.isConnected || !loadingDiv.getClientRects().length) return false;
     var cs = getComputedStyle(loadingDiv);
     return cs.visibility !== "hidden" && parseFloat(cs.opacity) > 0;
   }
@@ -349,6 +350,21 @@
     });
     seek.observe(document.documentElement, { childList: true, subtree: true });
   }
+
+  // SEXO2 opened with the client already loaded (no loading screen, the client is not
+  // restarted): the opening plays when SEXO2 connects. Not when it is on screen or just
+  // played (the client started with SEXO2 running), nor after a brief drop of the connection.
+  var REPLAY_GAP_MS = 30000, BRIEF_DROP_MS = 10000;
+  window.addEventListener("sexo2-bridge-lost", function () { bridgeLostAt = Date.now(); });
+  window.addEventListener("sexo2-bridge-ready", function () {
+    if (root || !document.body || document.querySelector(LOADING)) return;
+    if (Date.now() - lastShownAt < REPLAY_GAP_MS) return;
+    if (bridgeLostAt && Date.now() - bridgeLostAt < BRIEF_DROP_MS) return;
+    injectStyle();
+    el = 0; playing = false; ended = false; booted = false;
+    loadingDiv = null; loadingGone = true;
+    mountOverlay();
+  });
 
   injectStyle();
   if (document.body) start();

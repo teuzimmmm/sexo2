@@ -215,6 +215,8 @@ function _notifySubscribers(data) {
 }
 
 function _notifyReady() {
+  // Plugins that don't use the bridge itself (SEXO2-Startup) learn that SEXO2 connected
+  window.dispatchEvent(new Event("sexo2-bridge-ready"));
   for (const cb of _readyCallbacks) {
     try { cb(); } catch (e) {
       console.warn(`${LOG_PREFIX} onReady callback error:`, e);
@@ -448,6 +450,7 @@ function setupBridgeSocket() {
   });
 
   bridgeSocket.addEventListener("close", () => {
+    if (bridgeReady) window.dispatchEvent(new Event("sexo2-bridge-lost"));
     bridgeReady = false;
     scheduleBridgeRetry();
   });
