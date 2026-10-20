@@ -253,6 +253,19 @@ class Broadcaster:
 
         self._send_message(json.dumps(payload))
 
+    def broadcast_assistant_roster(self) -> None:
+        """Tell the assistant panel that the champion-select roster changed."""
+        if not self.websocket_server.loop or not self.websocket_server.connections:
+            return
+
+        payload = {
+            "type": "assistant-roster",
+            "timestamp": int(time.time() * 1000),
+        }
+
+        log.debug("[SkinMonitor] Broadcasting champion-select roster change")
+        self._send_message(json.dumps(payload))
+
     def broadcast_champion_locked(self, locked: bool) -> None:
         """Broadcast champion lock state to JavaScript plugins"""
         if not self.websocket_server.loop or not self.websocket_server.connections:

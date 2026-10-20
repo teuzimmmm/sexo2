@@ -194,6 +194,30 @@
   const sameIds = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => v === b[i]);
   const FAVORITE_UNAVAILABLE = "Favorita indisponível neste patch.";
 
+  const TIERS = {
+    IRON: "Ferro",
+    BRONZE: "Bronze",
+    SILVER: "Prata",
+    GOLD: "Ouro",
+    PLATINUM: "Platina",
+    EMERALD: "Esmeralda",
+    DIAMOND: "Diamante",
+    MASTER: "Mestre",
+    GRANDMASTER: "Grão-Mestre",
+    CHALLENGER: "Desafiante",
+  };
+  const APEX_TIERS = new Set(["MASTER", "GRANDMASTER", "CHALLENGER"]);
+  function eloText(elo) {
+    if (!elo || typeof elo.tier !== "string") return "—";
+    const upper = elo.tier.toUpperCase();
+    const tier = TIERS[upper];
+    if (!tier) return "—";
+    const division = !APEX_TIERS.has(upper) && elo.division && /^(I|II|III|IV)$/.test(elo.division) ? ` ${elo.division}` : "";
+    const points = Number.isInteger(elo.leaguePoints) ? ` · ${elo.leaguePoints} PDL` : "";
+    const queue = elo.queue === "RANKED_FLEX_SR" ? "Flex · " : "";
+    return `${queue}${tier}${division}${points}`;
+  }
+
   const RUNE_ERRORS = {
     cannot_edit: "A seleção terminou antes da confirmação.",
     no_free_page: "Sem espaço para a página do SEXO2. Apague uma página no cliente.",
@@ -208,14 +232,16 @@
     return "O cliente recusou o conjunto.";
   }
 
-  // Sem estatísticas (Arena e outras filas) só Mods e as configurações fazem sentido (decisão de 19/10/2026).
-  function visibleTabs(noStats) {
-    const all = [["runes", "Runas"], ["items", "Itens"], ["mods", "Mods"], ["settings", "Todas as configurações"]];
-    return noStats ? all.filter(([k]) => k === "mods" || k === "settings") : all;
+  // Sem estatísticas (Arena e outras filas) só Equipe, Mods e as configurações fazem sentido (decisão de 19/10/2026).
+  // Equipe só existe com um elenco na seleção de campeões: não aparece no Swiftplay, que não tem.
+  function visibleTabs(noStats, hasTeam) {
+    const all = [["runes", "Runas"], ["items", "Itens"], ["team", "Equipe"], ["mods", "Mods"], ["settings", "Todas as configurações"]];
+    return all.filter(([k]) => (k !== "team" || hasTeam) && (!noStats || k === "team" || k === "mods" || k === "settings"));
   }
+  const hasTeamRows = (st) => !!(st && st.ranked && ((st.ranked.team || []).length || (st.ranked.enemies || []).length));
 
   if (typeof window === "undefined" && typeof module !== "undefined" && module.exports) {
-    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, topTrio, sameIds, visibleTabs, runeError, itemError, LANES };
+    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, topTrio, sameIds, visibleTabs, hasTeamRows, runeError, itemError, eloText, TIERS, LANES };
     return;
   }
 
@@ -266,6 +292,11 @@
 #sexo2-assistant .rec-row .name{font-size:13px;color:var(--s2-fg);}
 #sexo2-assistant .fav-row{display:flex;align-items:center;gap:var(--sp-2);}
 #sexo2-assistant .fav-row .rec-row{flex:1;min-width:0;}
+#sexo2-assistant .rank-row{display:flex;align-items:center;gap:var(--sp-2);padding:6px var(--sp-1);border-bottom:1px solid var(--s2-line);}
+#sexo2-assistant .rank-row .champ{width:20px;height:20px;border-radius:2px;}
+#sexo2-assistant .rank-row .champ.empty{background:var(--s2-surface-2);}
+#sexo2-assistant .rank-row .pos{font-size:13px;color:var(--s2-fg);}
+#sexo2-assistant .rank-row .elo{font-size:13px;color:var(--s2-fg);font-variant-numeric:tabular-nums;}
 #sexo2-assistant .list-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-1) 4px;font-size:var(--t-small);color:var(--s2-fg-3);}
 #sexo2-assistant .list-head .wr{width:52px;text-align:right;}
 #sexo2-assistant .list-head .n{width:56px;text-align:right;}
@@ -559,6 +590,25 @@
       return `<div class="asst-foot">${left}<span class="grow"></span>${retry}</div>`;
     }
 
+    // ----------------------------------------------------------- equipe
+    function teamTab() {
+      const st = S.state;
+      if (!st) return dataState();
+      const ranked = st.ranked || {};
+      const row = (p) => {
+        const icon = p.championId
+          ? `<img class="champ s2-icon" src="/lol-game-data/assets/v1/champion-icons/${p.championId}.png" alt="">`
+          : `<span class="champ empty"></span>`;
+        return `<div class="rank-row">${icon}<span class="pos">${esc(LANES[p.position] || "")}</span><span class="grow"></span><span class="elo">${esc(eloText(p.elo))}</span></div>`;
+      };
+      const section = (title, rows) =>
+        rows.length ? `<div class="section-head"><span class="t-heading">${title}</span></div>${rows.map(row).join("")}` : "";
+      const team = ranked.team || [];
+      const enemies = ranked.enemies || [];
+      if (!team.length && !enemies.length) return `<div class="state">—</div>`;
+      return `${section("Meu time", team)}${section("Adversário", enemies)}`;
+    }
+
     // ----------------------------------------------------------- painel
     function render() {
       try {
@@ -572,7 +622,8 @@
     function draw() {
       if (panel.hidden) return;
       const st = S.state;
-      const tabs = visibleTabs(S.noStats);
+      const tabs = visibleTabs(S.noStats, hasTeamRows(st));
+      if (!tabs.some(([k]) => k === S.tab)) S.tab = S.noStats ? "mods" : "runes"; // the tab it was on is gone (the team left)
       const lane = S.lanePending || (st && st.lane);
       const opp = st && st.opponentId;
       const laneOptions = (LANES[lane] ? "" : `<option value="" selected disabled>—</option>`) + Object.entries(LANES).map(([k, v]) => `<option value="${k}" ${k === lane ? "selected" : ""}>${v}</option>`).join("");
@@ -580,7 +631,7 @@
       const keep = panel.querySelector(".asst-body");
       const scroll = keep ? keep.scrollTop : 0;
       const modsShown = modsHost.isConnected; // the library keeps its own state: reopen it only when it was not shown
-      const body = S.tab === "runes" ? runesTab() : S.tab === "items" ? itemsTab() : "";
+      const body = S.tab === "runes" ? runesTab() : S.tab === "items" ? itemsTab() : S.tab === "team" ? teamTab() : "";
       const foot = S.tab === "runes" ? runesFoot() : S.tab === "items" ? itemsFoot() : "";
       panel.innerHTML = `
         <div class="asst-head">
@@ -767,7 +818,7 @@
     // In queues without statistics (Arena and others) the assistant shows only Mods and settings (see visibleTabs).
     function setStatsMode(noStats) {
       S.noStats = noStats;
-      if (noStats && S.tab !== "mods") {
+      if (noStats && S.tab !== "mods" && S.tab !== "team") {
         S.tab = "mods";
         S.screen = "home";
       }
@@ -794,6 +845,7 @@
       bridge = b;
       bridge.subscribe("assistant-state", receive);
       bridge.subscribe("assistant-error", () => render());
+      bridge.subscribe("assistant-roster", () => !panel.hidden && send({ type: "assistant-ranked" }));
       bridge.subscribe("champion-locked", () => !panel.hidden && send({ type: "assistant-request" }));
       bridge.subscribe("phase-change", (d) => {
         if (d && d.phase === "ChampSelect") send({ type: "assistant-request" }); // know the queue before a click

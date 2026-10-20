@@ -182,6 +182,10 @@ class PenguSkinMonitorThread(threading.Thread):
         """Broadcast champion lock state (delegates to broadcaster)"""
         self.broadcaster.broadcast_champion_locked(locked)
 
+    def _broadcast_assistant_roster(self) -> None:
+        """Broadcast a champion-select roster change (delegates to broadcaster)"""
+        self.broadcaster.broadcast_assistant_roster()
+
     def _broadcast_random_mode_state(self) -> None:
         """Broadcast random mode state (delegates to broadcaster)"""
         self.broadcaster.broadcast_random_mode_state()

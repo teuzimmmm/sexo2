@@ -63,6 +63,22 @@ test('same anchor rule as the CustomWheel button', () => {
   assert.deepEqual([a.left, a.top, a.maxHeight], [w.left, w.top, w.maxHeight]);
 });
 
+test('ranked entries from the client become the Equipe line', () => {
+  const ranked = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/lcu/ranked-stats-representative.json'), 'utf8'));
+  const solo = ranked.queueMap.RANKED_SOLO_5x5;
+  const flex = ranked.queueMap.RANKED_FLEX_SR;
+  assert.equal(A.eloText({ queue: solo.queueType, tier: solo.tier, division: solo.division, leaguePoints: solo.leaguePoints }), 'Platina IV · 77 PDL');
+  assert.equal(A.eloText({ queue: flex.queueType, tier: flex.tier, division: flex.division, leaguePoints: flex.leaguePoints }), 'Flex · Ouro II · 45 PDL');
+  assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: null, leaguePoints: 312 }), 'Mestre · 312 PDL');
+  assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: 'I', leaguePoints: 312 }), 'Mestre · 312 PDL');
+});
+
+test('a player without ranked, or an unknown tier, is a dash', () => {
+  assert.equal(A.eloText(null), '—');
+  assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: '', division: 'NA', leaguePoints: 0 }), '—');
+  assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: 'NOT_A_TIER', division: 'I', leaguePoints: 1 }), '—');
+});
+
 test('error codes become the approved texts', () => {
   assert.equal(A.runeError('no_free_page'), 'Sem espaço para a página do SEXO2. Apague uma página no cliente.');
   assert.equal(A.runeError('lcu_rejected'), 'O cliente recusou a página.');
@@ -109,11 +125,22 @@ test('the default build shows only the first group as Inicial, Essenciais and Si
   assert.equal(A.defaultBuild([block('Itens iniciais', 4)]).inicial, null);
 });
 
-test('sem estatísticas só Mods e Todas as configurações aparecem', () => {
-  const keys = (noStats) => A.visibleTabs(noStats).map(([k]) => k);
-  assert.deepEqual(keys(false), ['runes', 'items', 'mods', 'settings']);
-  assert.deepEqual(keys(true), ['mods', 'settings']);
-  assert.ok(!keys(false).includes('prefs'));
+test('sem estatísticas só Equipe, Mods e Todas as configurações aparecem; Equipe só com elenco', () => {
+  const keys = (noStats, hasTeam) => A.visibleTabs(noStats, hasTeam).map(([k]) => k);
+  // Summoner's Rift (ranqueadas, normais): tudo
+  assert.deepEqual(keys(false, true), ['runes', 'items', 'team', 'mods', 'settings']);
+  // ARAM tem estatísticas e elenco
+  assert.deepEqual(keys(false, true), ['runes', 'items', 'team', 'mods', 'settings']);
+  // Arena (sem estatísticas): Equipe, Mods e configurações
+  assert.deepEqual(keys(true, true), ['team', 'mods', 'settings']);
+  // Swiftplay (sem seleção de campeões com elenco): nada de Equipe
+  assert.deepEqual(keys(false, false), ['runes', 'items', 'mods', 'settings']);
+  assert.deepEqual(keys(true, false), ['mods', 'settings']);
+  assert.ok(!keys(false, true).includes('prefs'));
+  assert.equal(A.hasTeamRows(null), false);
+  assert.equal(A.hasTeamRows({ ranked: { team: [], enemies: [] } }), false);
+  assert.equal(A.hasTeamRows({ ranked: { team: [{ position: 'top' }], enemies: [] } }), true);
+  assert.equal(A.hasTeamRows({ ranked: { team: [], enemies: [{ position: 'top' }] } }), true);
 });
 
 test('build favorita: o trio do topo do conjunto e a comparação com o fixado', () => {

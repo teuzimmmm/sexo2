@@ -52,6 +52,7 @@ class WebSocketEventHandler:
         self.swiftplay_handler = swiftplay_handler
         self._ws_last_phase = None
         self._last_error = None
+        self._last_roster_signature = None
 
     def handle_message(self, ws, msg):
         """Handle incoming WebSocket message"""
@@ -278,9 +279,44 @@ class WebSocketEventHandler:
             log_status(log, "Champion hovered", f"{nm} (ID: {cid})", "👆")
             self.state.hovered_champ_id = cid
 
+    @staticmethod
+    def _session_roster_signature(session: dict):
+        """Identity of the visible roster: changes when a player or champion changes."""
+
+        def side(name: str):
+            return tuple(
+                (
+                    player.get("cellId"),
+                    player.get("puuid"),
+                    player.get("championId"),
+                    player.get("championPickIntent"),
+                    player.get("assignedPosition"),
+                )
+                for player in session.get(name) or []
+                if isinstance(player, dict)
+            )
+
+        return (session.get("id") or session.get("gameId"), side("myTeam"), side("theirTeam"))
+
+    def _notify_assistant_roster(self, session: dict) -> None:
+        """Broadcast only when the roster changed; no polling or new observer."""
+        ui = getattr(self.state, "ui_skin_thread", None)
+        if ui is None:
+            return
+        signature = self._session_roster_signature(session)
+        if signature == self._last_roster_signature:
+            return
+        self._last_roster_signature = signature
+        try:
+            ui._broadcast_assistant_roster()
+        except Exception as error:
+            log.debug(f"[WS] Could not broadcast the champion-select roster: {error}")
+
     def _handle_session_event(self, payload: dict):
         """Handle champion select session event"""
         sess = payload.get("data") or {}
+        if isinstance(sess, dict):
+            self._notify_assistant_roster(sess)
         bravery = getattr(self.state, "arena_bravery_controller", None)
         if bravery and isinstance(sess, dict):
             bravery.observe(sess)
