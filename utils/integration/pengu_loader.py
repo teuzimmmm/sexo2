@@ -11,6 +11,7 @@ around the executable bundled alongside SEXO2.
 from __future__ import annotations
 
 import configparser
+import hashlib
 import json
 import os
 import re
@@ -18,6 +19,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -45,6 +47,9 @@ os.environ["SEXO2_CONFIG_PATH"] = str(_CONFIG_FILE)
 os.environ["ROSE_CONFIG_PATH"] = str(_CONFIG_FILE)
 
 _ACTIVE_FLAG = get_state_dir() / "pengu_active.flag"
+# What the plugins were when SEXO2 last saw them, and since when: a client that started
+# before that has older plugins loaded
+_PLUGINS_FILE = get_state_dir() / "pengu_plugins.json"
 _LEGACY_PENGU_LOGS = (
     "rose.log",
     "rose.log.old",
@@ -942,7 +947,13 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
             log.info("Using existing external Pengu Loader with SEXO2 plugins: %s", external)
             # This activation belongs to the user, so SEXO2 must not remove it
             # on exit or replace its registry entry with the bundled loader.
-            return _write_session(was_active=True, app_activated=False)
+            written = _write_session(was_active=True, app_activated=False)
+            # Left on by an earlier SEXO2 (its own runtime folder): an open client may still run
+            # the plugins of that version
+            if written and external.resolve() == PENGU_DIR.resolve() and _client_has_older_plugins(external):
+                log.info("The running League client has older SEXO2 plugins; restarting it to load these.")
+                _restart_pending = frozenset() if restart_client() else _process_ids(("LeagueClientUx.exe",))
+            return written
         if not _is_available():
             log.error("Pengu Loader executable is unavailable: %s", PENGU_EXE)
             return False
@@ -970,7 +981,12 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
         # whatever state an earlier Rose left the loader in, unless the previous
         # SEXO2 left this very client running with the plugins loaded.
         restart_needed = _process_running(("LeagueClientUx.exe",))
-        if restart_needed and stale_app_owned and _clients_still_have_plugins(session):
+        if (
+            restart_needed
+            and stale_app_owned
+            and _clients_still_have_plugins(session)
+            and not _client_has_older_plugins(PENGU_DIR)
+        ):
             log.info("The running League client still has SEXO2's plugins; no restart needed.")
             restart_needed = False
         activated_now = False
@@ -1042,6 +1058,55 @@ def _clients_still_have_plugins(session: Optional[dict[str, object]]) -> bool:
         return False
     running = _process_ids(("LeagueClientUx.exe",))
     return bool(running) and running <= {pid for pid in recorded if isinstance(pid, int)}
+
+
+def _client_start_times() -> list[float]:
+    if psutil is None:
+        return []
+    try:
+        return [
+            proc.info["create_time"]
+            for proc in psutil.process_iter(["name", "create_time"])
+            if (proc.info.get("name") or "").lower() == "leagueclientux.exe" and proc.info.get("create_time")
+        ]
+    except (psutil.Error, OSError):
+        return []
+
+
+def _plugins_changed_at(pengu_dir: Path) -> Optional[float]:
+    """When the plugin files last changed in content, as SEXO2 saw it (now, the first time)."""
+    try:
+        digest = hashlib.sha256()
+        plugins = pengu_dir / "plugins"
+        for file in sorted(path for path in plugins.rglob("*") if path.is_file()):
+            digest.update(file.relative_to(plugins).as_posix().encode("utf-8"))
+            digest.update(file.read_bytes())
+        known = digest.hexdigest()
+    except OSError as exc:
+        log.debug("Could not read the plugins to compare them: %s", exc)
+        return None
+    try:
+        record = json.loads(_PLUGINS_FILE.read_text(encoding="utf-8"))
+        if record.get("digest") == known and isinstance(record.get("changed_at"), (int, float)):
+            return float(record["changed_at"])
+    except (OSError, ValueError, AttributeError):
+        pass
+    changed_at = time.time()
+    try:
+        _PLUGINS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _PLUGINS_FILE.write_text(json.dumps({"digest": known, "changed_at": changed_at}) + "\n", encoding="utf-8")
+    except OSError as exc:
+        log.debug("Could not save the plugins record: %s", exc)
+    return changed_at
+
+
+def _client_has_older_plugins(pengu_dir: Path) -> bool:
+    """A League client loads the plugins when it starts: one older than their last change has old ones."""
+    started = _client_start_times()
+    if not started:
+        return False
+    changed_at = _plugins_changed_at(pengu_dir)
+    return changed_at is not None and changed_at > min(started)
 
 
 def deactivate_on_exit() -> bool:
