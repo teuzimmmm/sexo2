@@ -16,10 +16,13 @@ that confirmation: its rune page is imported and its item trio heads the set. On
 that no longer fits (the patch changed a rune, the trio left the statistics) is
 not applied; the state says so and the default stays. Without a favourite the
 highest win rate rune page is imported (D-136), unless the player chose one already.
+In Swiftplay the page goes into each champion's lobby slot, once per champion and
+lobby, so a page the player sets afterwards stays (D-137).
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import threading
 from dataclasses import dataclass, replace
@@ -32,7 +35,7 @@ from lolalytics.item_pages import format_games, format_rate
 from sexo2.services.favorite_builds import FavoriteBuilds, group_for
 from sexo2.services.item_sets import build_item_set, import_item_set
 from sexo2.services.rune_import import RuneImportController, RuneImportSnapshot, SessionKey
-from sexo2.services.rune_rules import PageSpec, StyleCatalog
+from sexo2.services.rune_rules import PageSpec, StyleCatalog, validate_page
 from sexo2.services.stats import Alternatives, ChampionDirectory, ItemCombo, RuneLayout, StatsError, StatsService
 from sexo2.services.work_queue import SerialWorker
 
@@ -112,6 +115,28 @@ def page_json(page: PageSpec | None) -> dict | None:
     return {"primary": page.primary_style_id, "sub": page.sub_style_id, "perks": list(page.perk_ids)}
 
 
+SWIFT_SLOTS_PATH = "/lol-lobby/v1/lobby/members/localMember/player-slots"
+SWIFT_PERK_KEYS = frozenset(("perkIds", "perkStyle", "perkSubStyle"))
+
+
+def swift_perks(raw: Any, page: PageSpec) -> Any:
+    """The slot's ``perks`` value with this page, in the format the client gave it (a JSON
+    string or an object), or None when that format is not the known one."""
+    try:
+        parsed = json.loads(raw) if isinstance(raw, str) else raw
+    except ValueError:
+        return None
+    if not isinstance(parsed, dict) or not SWIFT_PERK_KEYS <= parsed.keys():
+        return None
+    value = {
+        **parsed,
+        "perkIds": list(page.perk_ids),
+        "perkStyle": page.primary_style_id,
+        "perkSubStyle": page.sub_style_id,
+    }
+    return json.dumps(value, separators=(",", ":")) if isinstance(raw, str) else value
+
+
 def page_from_json(payload: Any) -> PageSpec:
     if not isinstance(payload, dict):
         raise ValueError("page must be an object")
@@ -170,6 +195,7 @@ class AssistantService:
         self._favorite_key: tuple | None = None  # (session, champion) the favourite was applied to
         self._favorite_wanted: tuple[int, ...] | None = None  # trio to put first in the next set
         self._favorite_unavailable: set[str] = set()  # "runes"/"items" pinned but not applicable
+        self._swift_runes_done: set[tuple] = set()  # (lobby, champion) whose Swiftplay slot was filled
 
     # Bridge entry points (return quickly; work goes to the worker) ----------
 
@@ -396,6 +422,8 @@ class AssistantService:
             self._items = {"error": "unsupported_mode"}
             self._publish_state()
             return
+        if swiftplay:
+            self._apply_swiftplay_runes(context.mode)
         if (context.session_id, champion_id) != self._favorite_key:
             # First confirmation of this champion here: its pinned build, if any. Later ones
             # (opponent changed) keep what the player picked meanwhile.
@@ -450,6 +478,54 @@ class AssistantService:
             self._controller.choose(layout.to_page(catalog))
         except Exception as error:
             log.info("[ASSISTANT] no automatic rune page for champion %s: %s", context.champion_id, error)
+
+    def _swift_page(self, champion_id: int, mode: str, catalog: StyleCatalog) -> PageSpec | None:
+        """The favourite page if it still fits, else the highest win rate page."""
+        favorite = self._favorites.get(group_for(mode) or "sr", champion_id)["runes"]
+        if favorite:
+            try:
+                page = page_from_json(favorite)
+                if not validate_page(page, catalog):
+                    return page
+            except ValueError:
+                pass
+        stats = self._ensure_stats().runes(champion_id, mode, "all")
+        layout = next((layout for layout in stats.layouts if layout.selection == "win"), None)
+        return layout.to_page(catalog) if layout else None
+
+    def _apply_swiftplay_runes(self, mode: str | None) -> None:
+        """Fill each Swiftplay slot's rune page once per champion and lobby (D-137)."""
+        if mode is None:
+            return
+        try:
+            lobby = self._lcu.get("/lol-lobby/v2/lobby")
+            slots = ((lobby or {}).get("localMember") or {}).get("playerSlots")
+            if not isinstance(slots, list):
+                return
+            lobby_id = str((lobby or {}).get("partyId") or "")
+            catalog = self._ensure_catalog()
+            changed = False
+            for slot in slots:
+                champion = slot.get("championId") if isinstance(slot, dict) else None
+                if isinstance(champion, bool) or not isinstance(champion, int) or champion <= 0:
+                    continue
+                if (lobby_id, champion) in self._swift_runes_done:
+                    continue  # filled once: a page the player set since stays
+                self._swift_runes_done.add((lobby_id, champion))
+                page = self._swift_page(champion, mode, catalog)
+                value = swift_perks(slot.get("perks"), page) if page else None
+                if value is None:
+                    log.info("[ASSISTANT] Swiftplay slot runes left as they are: %r", slot.get("perks"))
+                    continue
+                slot["perks"] = value
+                changed = True
+            if changed:
+                response = self._lcu.put(SWIFT_SLOTS_PATH, slots, 10, headers={"x-riot-source": "rcp-fe-lol-parties"})
+                status = getattr(response, "status_code", None)
+                if status not in (200, 201, 204):
+                    log.warning("[ASSISTANT] Swiftplay rune pages refused: %s", status)
+        except Exception as error:
+            log.info("[ASSISTANT] no Swiftplay rune pages: %s", error)
 
     def _ensure_alternatives(self, context: ChampSelectContext) -> Alternatives | None:
         key = (context.champion_id, context.mode, context.lane)

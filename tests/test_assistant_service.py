@@ -560,3 +560,81 @@ class AutomaticRuneImportTests(FavoriteBuildTests):
         for action in self.timers:
             action()
         self.assertEqual(self.chosen_pages(), [])
+
+
+class SwiftplayRuneTests(unittest.TestCase):
+    """D-137: in Swiftplay each lobby slot gets its rune page once per champion and lobby."""
+
+    PERKS = '{"perkIds":[8005,9111,9104,8014,8226,8210,5005,5008,5001],"perkStyle":8000,"perkSubStyle":8200}'
+
+    def setUp(self):
+        from sexo2.services.favorite_builds import FavoriteBuilds
+
+        self.lcu = FakeLCU()
+        self.lcu.session = None
+        self.lobby = {
+            "partyId": "p-1",
+            "localMember": {
+                "playerSlots": [
+                    {"championId": 103, "skinId": 103000, "perks": self.PERKS, "spell1": 4},
+                    {"championId": 86, "skinId": 86000, "perks": self.PERKS, "spell1": 4},
+                ]
+            },
+        }
+        get = self.lcu.get
+        self.lcu.get = lambda path, **kw: (
+            copy.deepcopy(self.lobby) if path == "/lol-lobby/v2/lobby" else get(path, **kw)
+        )
+        self.timers = []
+        self.favorites = FavoriteBuilds()
+        self.service = AssistantService(
+            self.lcu,
+            lambda state: None,
+            queue_id=lambda: 480,
+            in_champ_select=lambda: False,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=FakeController(),
+            schedule=lambda delay, action: self.timers.append(action),
+            favorites=self.favorites,
+        )
+
+    def confirm(self):
+        self.service.champion_confirmed(103, swiftplay=True)
+        timers, self.timers = self.timers, []
+        for action in timers:
+            action()
+
+    def slot_puts(self):
+        return [p for p in self.lcu.puts if isinstance(p, list)]
+
+    def test_both_champions_get_the_highest_win_rate_page_in_the_clients_format(self):
+        self.confirm()
+        (slots,) = self.slot_puts()
+        for slot in slots:
+            perks = json.loads(slot["perks"])
+            self.assertEqual(perks["perkIds"][0], 8112)  # "win" layout
+            self.assertEqual((perks["perkStyle"], perks["perkSubStyle"]), (8100, 8200))
+            self.assertEqual(slot["spell1"], 4)  # the rest of the slot untouched
+
+    def test_a_valid_favourite_wins(self):
+        page = {"primary": 8100, "sub": 8200, "perks": [8128, 8139, 8140, 8106, 8226, 8210, 5005, 5008, 5001]}
+        self.favorites.set_runes("sr", 103, page)
+        self.confirm()
+        (slots,) = self.slot_puts()
+        self.assertEqual(json.loads(slots[0]["perks"])["perkIds"][0], 8128)
+        self.assertEqual(json.loads(slots[1]["perks"])["perkIds"][0], 8112)
+
+    def test_each_champion_is_filled_once_per_lobby(self):
+        self.confirm()
+        self.lobby["localMember"]["playerSlots"][1] = {"championId": 1, "skinId": 1000, "perks": self.PERKS}
+        self.confirm()  # only the new champion is written; the first keeps what the player set
+        self.assertEqual(len(self.slot_puts()), 2)
+        self.assertEqual(self.slot_puts()[1][0]["perks"], self.PERKS)
+        self.assertEqual(json.loads(self.slot_puts()[1][1]["perks"])["perkIds"][0], 8112)
+
+    def test_an_unknown_perks_format_is_left_alone(self):
+        for slot in self.lobby["localMember"]["playerSlots"]:
+            slot["perks"] = "something else"
+        self.confirm()
+        self.assertEqual(self.slot_puts(), [])
