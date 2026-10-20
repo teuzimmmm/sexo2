@@ -291,6 +291,14 @@ class _Window:
         return hwnd
 
 
+def shows_gold(state: Any) -> bool:
+    """A match is on whose scoreboard the overlay knows: Arena (CHERRY) has another layout."""
+    return (
+        getattr(state, "phase", None) == "InProgress"
+        and str(getattr(state, "current_game_mode", None) or "").upper() != "CHERRY"
+    )
+
+
 class GoldOverlayThread(threading.Thread):
     def __init__(self, state: Any, lcu: Any, geometry: Geometry = Geometry()) -> None:
         super().__init__(name="SEXO2-GoldOverlay", daemon=True)
@@ -341,7 +349,7 @@ class GoldOverlayThread(threading.Thread):
         last_prices = float("-inf")
         try:
             while not self._stop_event.is_set():
-                if getattr(self._state, "phase", None) != "InProgress":
+                if not shows_gold(self._state):
                     self._prices = {}
                     last_prices = float("-inf")
                     self._reset_client()
@@ -373,7 +381,7 @@ class GoldOverlayThread(threading.Thread):
                         comparison = read_comparison(self._fetch, self._prices)
                         if self._stop_event.is_set():
                             break
-                        if getattr(self._state, "phase", None) == "InProgress" and _tab_down():
+                        if shows_gold(self._state) and _tab_down():
                             self._window.show(comparison)
                             shown = True
                         elif shown:

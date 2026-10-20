@@ -315,3 +315,14 @@ class GoldOverlayTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GoldModesTests(unittest.TestCase):
+    def test_no_gold_in_arena_whose_scoreboard_differs(self):
+        from sexo2.overlay.gold_overlay import shows_gold
+
+        self.assertTrue(shows_gold(SimpleNamespace(phase="InProgress", current_game_mode="CLASSIC")))
+        self.assertTrue(shows_gold(SimpleNamespace(phase="InProgress", current_game_mode="ARAM")))
+        self.assertTrue(shows_gold(SimpleNamespace(phase="InProgress", current_game_mode=None)))
+        self.assertFalse(shows_gold(SimpleNamespace(phase="InProgress", current_game_mode="CHERRY")))
+        self.assertFalse(shows_gold(SimpleNamespace(phase="ChampSelect", current_game_mode="CLASSIC")))
