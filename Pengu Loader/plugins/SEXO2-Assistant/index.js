@@ -599,7 +599,7 @@
         const icon = p.championId
           ? `<img class="champ s2-icon" src="/lol-game-data/assets/v1/champion-icons/${p.championId}.png" alt="">`
           : `<span class="champ empty"></span>`;
-        return `<div class="rank-row">${icon}<span class="pos">${esc(LANES[p.position] || "")}</span><span class="grow"></span><span class="elo">${esc(eloText(p.elo))}</span></div>`;
+        return `<div class="rank-row">${icon}<span class="pos">${esc(LANES[p.position] || champName(p.championId))}</span><span class="grow"></span><span class="elo">${esc(eloText(p.elo))}</span></div>`;
       };
       const section = (title, rows) =>
         rows.length ? `<div class="section-head"><span class="t-heading">${title}</span></div>${rows.map(row).join("")}` : "";
