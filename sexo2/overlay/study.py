@@ -94,8 +94,20 @@ def describe_live(data: Any, path: str = "", out: dict | None = None) -> dict:
     return out
 
 
+def _measured(path: Path) -> bool:
+    """A study file with at least one window that PresentMon really measured."""
+    try:
+        windows = json.loads(path.read_text(encoding="utf-8")).get("windows") or {}
+        return any(isinstance(w, dict) and w.get("frames", 0) >= 10 for w in windows.values())
+    except (OSError, ValueError, AttributeError):
+        return True  # unreadable: never count it as a failed try, or the study could repeat for ever
+
+
 def done_matches(folder: Path) -> int:
-    return len(list(folder.glob(PREFIX + "*.json"))) if folder.is_dir() else 0
+    """Matches that count: those measured, until as many tries measured nothing (then it stops)."""
+    files = list(folder.glob(PREFIX + "*.json")) if folder.is_dir() else []
+    measured = sum(_measured(path) for path in files)
+    return measured if len(files) - measured < MATCHES else MATCHES
 
 
 class _CaptureLoad:
@@ -219,6 +231,10 @@ def _fetch_live() -> Any:
         return response.json()
 
 
+def _tail(done: Any) -> str:
+    return ((done.stderr or "") + (done.stdout or ""))[-500:]
+
+
 class OverlayStudyThread(threading.Thread):
     def __init__(self, state: Any) -> None:
         super().__init__(name="SEXO2-OverlayStudy", daemon=True)
@@ -308,14 +324,23 @@ class OverlayStudyThread(threading.Thread):
             "--stop_existing_session",
         ]
         try:
-            subprocess.run(
+            done = subprocess.run(
                 command,
                 capture_output=True,
+                text=True,
+                errors="replace",
                 timeout=WINDOW_S + 30,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         except (OSError, subprocess.SubprocessError) as error:
             return {"error": str(error)}
         if not csv_path.is_file():
-            return {"error": "no_csv"}
-        return summarize_csv(csv_path)
+            return {"error": "no_csv", "exit": done.returncode, "output": _tail(done)}
+        summary = summarize_csv(csv_path)
+        if summary.get("frames", 0) < 10:  # nothing measured: keep what PresentMon said, to see why
+            try:
+                head = csv_path.read_text(encoding="utf-8", errors="replace")[:600]
+            except OSError:
+                head = ""
+            summary.update({"exit": done.returncode, "output": _tail(done), "csvHead": head})
+        return summary

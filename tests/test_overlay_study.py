@@ -82,6 +82,37 @@ class OverlayStudyTests(unittest.TestCase):
         (self.dir / f"{study.PREFIX}0-nada.csv").write_text("", encoding="utf-8")
         self.assertEqual(study.done_matches(self.dir), study.MATCHES)
 
+    def test_a_try_without_frames_does_not_count_until_three_have_failed(self):
+        def write(name, frames):
+            windows = {"nada": {"frames": frames}, "janela": {"frames": frames}}
+            (self.dir / f"{study.PREFIX}{name}.json").write_text(json.dumps({"windows": windows}), encoding="utf-8")
+
+        write("a", 0)
+        write("b", 0)
+        self.assertEqual(study.done_matches(self.dir), 0)  # PresentMon measured nothing: still to do
+        write("c", 1800)
+        self.assertEqual(study.done_matches(self.dir), 1)
+        write("d", 0)
+        self.assertEqual(study.done_matches(self.dir), study.MATCHES)  # three tries measured nothing: stop
+
+    def test_a_silent_presentmon_leaves_what_it_said(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        csv_path = self.dir / "x.csv"
+        csv_path.write_text("Application,MsBetweenPresents\n", encoding="utf-8")
+        thread = study.OverlayStudyThread(SimpleNamespace(phase="InProgress"))
+        done = SimpleNamespace(returncode=5, stderr="error: no session", stdout="")
+        with (
+            patch.object(study.subprocess, "run", return_value=done),
+            patch.object(study, "presentmon_path", return_value=csv_path),
+        ):
+            result = thread._measure(csv_path)
+        self.assertEqual(result["frames"], 0)
+        self.assertEqual(result["exit"], 5)
+        self.assertIn("no session", result["output"])
+        self.assertIn("MsBetweenPresents", result["csvHead"])
+
     def test_results_go_into_the_diagnostic_zip(self):
         from friends.diagnostics import export_report
 
