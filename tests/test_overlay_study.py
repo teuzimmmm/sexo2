@@ -38,6 +38,31 @@ class OverlayStudyTests(unittest.TestCase):
         self.assertEqual(described["augments"], {"activePlayer.augments": [{"id": 1205, "name": "ADAPt"}]})
         self.assertNotIn("Eu#BR1", json.dumps(described, default=list))
 
+    def test_the_whole_match_is_read_and_each_offer_kept_once(self):
+        answers = iter(
+            [
+                {"activePlayer": {"level": 1}},
+                {"activePlayer": {"level": 2, "augments": ["A", "B", "C"]}},
+                {"activePlayer": {"level": 2, "augments": ["A", "B", "C"]}},  # same offer
+                RuntimeError("game loading"),
+                {"activePlayer": {"level": 5, "augments": ["D", "E", "F"]}},
+            ]
+        )
+
+        def fetch():
+            answer = next(answers)
+            if isinstance(answer, Exception):
+                raise answer
+            return answer
+
+        probe = study._LiveProbe(fetch)
+        for _ in range(5):
+            probe.read_once()
+        result = probe.result()
+        self.assertEqual([s["value"] for s in result["augmentSamples"]], [["A", "B", "C"], ["D", "E", "F"]])
+        self.assertEqual(result["errors"], 1)
+        self.assertIn("activePlayer.level", result["fields"])
+
     def test_three_matches_then_never_again(self):
         self.assertEqual(study.done_matches(self.dir / "missing"), 0)
         for i in range(3):

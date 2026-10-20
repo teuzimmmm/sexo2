@@ -4,8 +4,8 @@ In the next three matches (any mode), 90 s after the match starts, the game's fr
 and present mode are measured with PresentMon in three 40 s windows: nothing, the screen
 capture the augment overlay does, and an invisible click-through window over the game
 (as the overlays' windows). The augment overlay pauses its own capture meanwhile. The
-game's local API is read once: only its field names, and the values of fields about
-augments (never player names). The result goes to
+game's local API is read every 5 s for the whole match: only its field names, and the
+values of fields about augments (never player names). The result goes to
 ``diagnostics/estudo-overlay-<time>.json`` in the data folder, which "Gerar diagnóstico"
 includes, and to one log line. After three matches the study stops for good.
 """
@@ -173,6 +173,52 @@ LOADS: tuple[tuple[str, Callable[[], Any] | None], ...] = (
 )
 
 
+class _LiveProbe(threading.Thread):
+    """The game's local API every 5 s for the whole match: the field names, and every
+    distinct value of a field about augments (the offers come four times in Arena)."""
+
+    def __init__(self, fetch: Callable[[], Any], every: float = 5.0) -> None:
+        super().__init__(name="SEXO2-Study-live", daemon=True)
+        self._fetch = fetch
+        self._every = every
+        self._stop = threading.Event()
+        self._started = time.monotonic()
+        self.fields: set[str] = set()
+        self.samples: list[dict] = []
+        self.errors = 0
+
+    def stop(self) -> None:
+        self._stop.set()
+
+    def run(self) -> None:
+        while not self._stop.is_set():
+            self.read_once()
+            self._stop.wait(self._every)
+
+    def read_once(self) -> None:
+        try:
+            described = describe_live(self._fetch())
+        except Exception:
+            self.errors += 1
+            return
+        self.fields |= described["fields"]
+        seen = {(sample["path"], json.dumps(sample["value"], sort_keys=True)) for sample in self.samples}
+        for path, value in described["augments"].items():
+            if (path, json.dumps(value, sort_keys=True)) not in seen and len(self.samples) < 60:
+                self.samples.append({"s": round(time.monotonic() - self._started), "path": path, "value": value})
+
+    def result(self) -> dict:
+        return {"fields": sorted(self.fields), "augmentSamples": self.samples, "errors": self.errors}
+
+
+def _fetch_live() -> Any:
+    import requests
+
+    with requests.get(LIVE_CLIENT + "/allgamedata", verify=False, timeout=2) as response:  # Riot's certificate
+        response.raise_for_status()
+        return response.json()
+
+
 class OverlayStudyThread(threading.Thread):
     def __init__(self, state: Any) -> None:
         super().__init__(name="SEXO2-OverlayStudy", daemon=True)
@@ -182,38 +228,54 @@ class OverlayStudyThread(threading.Thread):
     def stop(self) -> None:
         self._stop.set()
 
+    def _in_match(self) -> bool:
+        return getattr(self._state, "phase", None) == "InProgress"
+
     def run(self) -> None:
         if sys.platform != "win32":
             return
         folder = results_dir()
         while not self._stop.is_set() and done_matches(folder) < MATCHES:
-            if getattr(self._state, "phase", None) != "InProgress":
+            if not self._in_match():
                 self._stop.wait(5.0)
                 continue
-            if self._stop.wait(SETTLE_S) or getattr(self._state, "phase", None) != "InProgress":
-                continue
-            try:
-                self._study(folder)
-            except Exception:
-                log.exception("[ESTUDO] study failed")
-            while not self._stop.is_set() and getattr(self._state, "phase", None) == "InProgress":
-                self._stop.wait(5.0)  # one study per match
+            stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            result: dict = {
+                "time": stamp,
+                "queue": getattr(self._state, "current_queue_id", None),
+                "gameMode": getattr(self._state, "current_game_mode", None),
+                "presentmon": presentmon_path().is_file(),
+                "windows": {},
+            }
+            probe = _LiveProbe(_fetch_live)
+            probe.start()
+            if not self._stop.wait(SETTLE_S) and self._in_match():
+                try:
+                    self._measure_windows(folder, stamp, result)
+                except Exception:
+                    log.exception("[ESTUDO] measurement failed")
+            while not self._stop.is_set() and self._in_match():
+                self._stop.wait(5.0)  # the API is read until the match ends; one study per match
+            probe.stop()
+            result["liveClient"] = probe.result()
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / f"{PREFIX}{stamp}.json").write_text(json.dumps(result, indent=1, default=str), encoding="utf-8")
+            log.info(
+                "[ESTUDO] %s",
+                json.dumps(
+                    {
+                        "windows": result["windows"],
+                        "augmentFields": sorted({s["path"] for s in result["liveClient"]["augmentSamples"]}),
+                    }
+                ),
+            )
 
-    def _study(self, folder: Path) -> None:
+    def _measure_windows(self, folder: Path, stamp: str, result: dict) -> None:
         folder.mkdir(parents=True, exist_ok=True)
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        result: dict = {
-            "time": stamp,
-            "queue": getattr(self._state, "current_queue_id", None),
-            "gameMode": getattr(self._state, "current_game_mode", None),
-            "presentmon": presentmon_path().is_file(),
-            "windows": {},
-        }
-        result["liveClient"] = self._probe_live()
         _measuring.set()
         try:
             for name, load in LOADS:
-                if getattr(self._state, "phase", None) != "InProgress" or self._stop.is_set():
+                if not self._in_match() or self._stop.is_set():
                     break
                 csv_path = folder / f"{PREFIX}{stamp}-{name}.csv"
                 if load is None:
@@ -224,13 +286,6 @@ class OverlayStudyThread(threading.Thread):
                 csv_path.unlink(missing_ok=True)
         finally:
             _measuring.clear()
-        (folder / f"{PREFIX}{stamp}.json").write_text(json.dumps(result, indent=1, default=str), encoding="utf-8")
-        log.info(
-            "[ESTUDO] %s",
-            json.dumps(
-                {"windows": result["windows"], "augmentFields": sorted(result["liveClient"].get("augments", {}))}
-            ),
-        )
 
     def _measure(self, csv_path: Path) -> dict:
         exe = presentmon_path()
@@ -264,14 +319,3 @@ class OverlayStudyThread(threading.Thread):
         if not csv_path.is_file():
             return {"error": "no_csv"}
         return summarize_csv(csv_path)
-
-    def _probe_live(self) -> dict:
-        try:
-            import requests
-
-            with requests.get(LIVE_CLIENT + "/allgamedata", verify=False, timeout=2) as response:  # Riot's certificate
-                response.raise_for_status()
-                described = describe_live(response.json())
-        except Exception as error:
-            return {"error": str(error)}
-        return {"fields": sorted(described["fields"]), "augments": described["augments"]}
