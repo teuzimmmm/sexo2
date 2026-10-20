@@ -1,0 +1,39 @@
+{
+  "queueMap": {
+    "RANKED_SOLO_5x5": {
+      "queueType": "RANKED_SOLO_5x5",
+      "tier": "PLATINUM",
+      "division": "IV",
+      "leaguePoints": 77,
+      "isProvisional": false
+    },
+    "RANKED_FLEX_SR": {
+      "queueType": "RANKED_FLEX_SR",
+      "tier": "GOLD",
+      "division": "II",
+      "leaguePoints": 45,
+      "isProvisional": false
+    },
+    "RANKED_TFT": {
+      "queueType": "RANKED_TFT",
+      "tier": "",
+      "division": "NA",
+      "leaguePoints": 0,
+      "isProvisional": true
+    }
+  },
+  "queues": [
+    {
+      "queueType": "RANKED_SOLO_5x5",
+      "tier": "PLATINUM",
+      "division": "IV",
+      "leaguePoints": 77
+    },
+    {
+      "queueType": "RANKED_FLEX_SR",
+      "tier": "GOLD",
+      "division": "II",
+      "leaguePoints": 45
+    }
+  ]
+}

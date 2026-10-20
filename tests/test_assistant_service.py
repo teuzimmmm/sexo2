@@ -38,6 +38,8 @@ class FakeLCU:
         self.session = session()
         self.item_sets = {"accountId": 1, "itemSets": [copy.deepcopy(PERSONAL)], "timestamp": 1}
         self.puts = []
+        self.ranked = {}
+        self.ranked_calls = []
 
     def get(self, path, **kwargs):
         if path == "/lol-item-sets/v1/item-sets/7/sets":
@@ -56,6 +58,13 @@ class FakeLCU:
         self.puts.append(copy.deepcopy(json_data))
         self.item_sets = copy.deepcopy(json_data)
         return MagicMock(status_code=204)
+
+    def ranked_stats(self, puuid, timeout=1.0):
+        self.ranked_calls.append(puuid)
+        value = self.ranked.get(puuid)
+        if isinstance(value, Exception):
+            raise value
+        return copy.deepcopy(value)
 
 
 class FakeStats:
@@ -401,6 +410,124 @@ class AutomaticItemImportTests(unittest.TestCase):
         self.assertEqual(len(self.lcu.puts), 2)
         types = [block["type"] for block in self.managed()[0]["blocks"]]
         self.assertEqual(types[6], "Counter Annie — 49,57% — 1.852 partidas")
+
+
+def ranked_payload(queue, tier, division, league_points):
+    return {
+        "queueMap": {
+            queue: {"queueType": queue, "tier": tier, "division": division, "leaguePoints": league_points},
+        }
+    }
+
+
+def ranked_session(session_id, my_team, their_team=()):
+    return {
+        "id": session_id,
+        "localPlayerCellId": 2,
+        "myTeam": list(my_team),
+        "theirTeam": list(their_team),
+        "timer": {"phase": "BAN_PICK"},
+    }
+
+
+def player(cell_id, position, puuid, champion=1):
+    return {"cellId": cell_id, "assignedPosition": position, "championId": champion, "puuid": puuid}
+
+
+class RankedTeamTests(unittest.TestCase):
+    def setUp(self):
+        self.lcu = FakeLCU()
+        self.published = []
+        self.service = AssistantService(
+            self.lcu,
+            self.published.append,
+            queue_id=lambda: 420,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=FakeController(),
+        )
+
+    def test_team_prefers_solo_then_flex_and_caches_each_puuid(self):
+        self.lcu.session = ranked_session(
+            "cs-rank",
+            [
+                player(1, "top", "p-top", 86),
+                player(2, "middle", "p-mid", 103),
+                player(3, "utility", "p-sup", 1),
+            ],
+        )
+        self.lcu.ranked = {
+            "p-top": ranked_payload("RANKED_SOLO_5x5", "PLATINUM", "IV", 77),
+            "p-mid": ranked_payload("RANKED_FLEX_SR", "GOLD", "II", 45),
+        }
+        self.service.handle({"type": "assistant-request"})
+        rows = {row["position"]: row for row in self.published[-1]["ranked"]["team"]}
+        self.assertEqual(
+            rows["top"]["elo"],
+            {"queue": "RANKED_SOLO_5x5", "tier": "PLATINUM", "division": "IV", "leaguePoints": 77},
+        )
+        self.assertEqual(rows["middle"]["elo"]["queue"], "RANKED_FLEX_SR")
+        self.assertIsNone(rows["support"]["elo"])  # no rank: the panel shows a dash
+        calls = list(self.lcu.ranked_calls)
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(self.lcu.ranked_calls, calls)
+
+    def test_enemies_are_read_only_when_the_client_exposes_a_puuid(self):
+        self.lcu.session = ranked_session(
+            "cs-enemy",
+            [player(2, "middle", "p-mid", 103)],
+            [{"cellId": 6, "assignedPosition": "top", "championId": 1}],
+        )
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(self.published[-1]["ranked"]["enemies"], [])
+        self.assertEqual(self.lcu.ranked_calls, ["p-mid"])
+
+        self.lcu.session["theirTeam"][0]["puuid"] = "p-enemy"
+        self.lcu.ranked["p-enemy"] = ranked_payload("RANKED_SOLO_5x5", "DIAMOND", "III", 4)
+        self.service.handle({"type": "assistant-ranked"})
+        enemies = self.published[-1]["ranked"]["enemies"]
+        self.assertEqual(len(enemies), 1)
+        self.assertEqual(enemies[0]["elo"]["tier"], "DIAMOND")
+        self.assertIn("p-enemy", self.lcu.ranked_calls)
+
+    def test_a_failed_read_is_a_dash_and_does_not_raise(self):
+        self.lcu.session = ranked_session("cs-fail", [player(2, "middle", "p-mid", 103)])
+        self.lcu.ranked["p-mid"] = RuntimeError("client closed")
+        self.service.handle({"type": "assistant-request"})
+        self.assertIsNone(self.published[-1]["ranked"]["team"][0]["elo"])
+
+    def test_the_cap_is_five_puuids_per_side(self):
+        team = [player(i, "", f"p{i}", 1) for i in range(1, 7)]
+        team[1] = player(2, "middle", "p2", 103)  # local player
+        enemies = [player(10 + i, "", f"e{i}", 1) for i in range(1, 7)]
+        self.lcu.session = ranked_session("cs-cap", team, enemies)
+        for i in range(1, 7):
+            self.lcu.ranked[f"p{i}"] = ranked_payload("RANKED_SOLO_5x5", "GOLD", "I", i)
+            self.lcu.ranked[f"e{i}"] = ranked_payload("RANKED_SOLO_5x5", "SILVER", "I", i)
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(len(self.lcu.ranked_calls), 10)
+        self.assertNotIn("p6", self.lcu.ranked_calls)
+        self.assertNotIn("e6", self.lcu.ranked_calls)
+        self.assertEqual(len(self.published[-1]["ranked"]["team"]), 6)
+        self.assertIsNone(self.published[-1]["ranked"]["team"][-1]["elo"])
+
+    def test_ranks_show_before_the_local_player_picks_a_champion(self):
+        self.lcu.session = ranked_session("cs-pick", [player(2, "middle", "p-mid", 0)])
+        self.lcu.ranked["p-mid"] = ranked_payload("RANKED_SOLO_5x5", "MASTER", None, 312)
+        self.service.handle({"type": "assistant-request"})
+        state = self.published[-1]
+        self.assertIsNone(state["championId"])
+        self.assertEqual(state["ranked"]["team"][0]["elo"]["tier"], "MASTER")
+        self.assertIsNone(state["ranked"]["team"][0]["elo"]["division"])
+
+    def test_a_new_champion_select_reads_the_same_player_again(self):
+        self.lcu.session = ranked_session("cs-1", [player(2, "middle", "p-mid", 103)])
+        self.lcu.ranked["p-mid"] = ranked_payload("RANKED_SOLO_5x5", "GOLD", "II", 10)
+        self.service.handle({"type": "assistant-request"})
+        self.lcu.session = ranked_session("cs-2", [player(2, "middle", "p-mid", 103)])
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(self.lcu.ranked_calls, ["p-mid", "p-mid"])
 
 
 if __name__ == "__main__":

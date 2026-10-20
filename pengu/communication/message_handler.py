@@ -126,6 +126,7 @@ def _choose_mod_file() -> Optional[Path]:
 # Message type -> handler method. Special cases live in MessageHandler._route.
 _ROUTES = {
     "assistant-request": "_handle_assistant",
+    "assistant-ranked": "_handle_assistant",
     "assistant-opponent": "_handle_assistant",
     "assistant-runes-choose": "_handle_assistant",
     "assistant-runes-edit": "_handle_assistant",

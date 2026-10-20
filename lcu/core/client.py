@@ -74,6 +74,10 @@ class LCU:
         """Make GET request to LCU API"""
         return self._api.get(path, timeout, cache_ttl=cache_ttl, use_cache=use_cache)
 
+    def ranked_stats(self, puuid: str, timeout: float = 1.0):
+        """Ranked queues of one player (see LCUAPI.ranked_stats)"""
+        return self._api.ranked_stats(puuid, timeout)
+
     def put(self, path: str, json_data, timeout: float, headers: Optional[dict] = None):
         """Make PUT request to LCU API (see LCUAPI.put)"""
         return self._api.put(path, json_data, timeout, headers)

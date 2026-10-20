@@ -56,6 +56,30 @@ QUEUE_MODES = {
 }
 POSITION_LANES = {"top": "top", "jungle": "jungle", "middle": "middle", "bottom": "bottom", "utility": "support"}
 
+# Ranked queues read from the client, in order of preference, and the per-side
+# cap of players read in one champion select (D-122).
+RANKED_QUEUES = ("RANKED_SOLO_5x5", "RANKED_FLEX_SR")
+RANKED_LIMIT = 5
+RANKED_TIMEOUT_S = 0.5
+POSITION_ORDER = {"top": 0, "jungle": 1, "middle": 2, "bottom": 3, "support": 4}
+_MISSING = object()
+
+
+@dataclass(frozen=True)
+class RankedEntry:
+    queue: str
+    tier: str
+    division: str | None
+    league_points: int | None
+
+    def json(self) -> dict:
+        return {
+            "queue": self.queue,
+            "tier": self.tier,
+            "division": self.division,
+            "leaguePoints": self.league_points,
+        }
+
 
 @dataclass(frozen=True)
 class ChampSelectContext:
@@ -98,6 +122,54 @@ def read_context(session: Any, queue_id: int | None) -> ChampSelectContext | Non
         can_edit=phase != "GAME_STARTING",
         locked=isinstance(locked, int) and not isinstance(locked, bool) and locked > 0,
     )
+
+
+def read_ranked_entry(payload: Any) -> RankedEntry | None:
+    """Solo/duo first, flex second, from the client's ``queueMap``/``queues``.
+
+    The real response carries both shapes; either is enough. Missing tier means
+    the player has no rank in that queue.
+    """
+    if not isinstance(payload, dict):
+        return None
+    by_queue: dict[str, dict] = {}
+    queue_map = payload.get("queueMap")
+    if isinstance(queue_map, dict):
+        for name, entry in queue_map.items():
+            if isinstance(name, str) and isinstance(entry, dict):
+                by_queue[name.upper()] = entry
+    queues = payload.get("queues")
+    if isinstance(queues, list):
+        for entry in queues:
+            if not isinstance(entry, dict):
+                continue
+            name = entry.get("queueType")
+            if isinstance(name, str):
+                by_queue.setdefault(name.upper(), entry)
+    for queue in RANKED_QUEUES:
+        entry = by_queue.get(queue.upper())
+        if entry is None:
+            continue
+        tier = entry.get("tier")
+        if not isinstance(tier, str) or tier.strip().upper() in ("", "NONE", "UNRANKED"):
+            continue
+        division = entry.get("division")
+        division = division.strip().upper() if isinstance(division, str) else ""
+        if division in ("", "NA", "NONE"):
+            division = None
+        points = entry.get("leaguePoints")
+        if isinstance(points, bool) or not isinstance(points, int):
+            points = None
+        return RankedEntry(queue, tier.strip().upper(), division, points)
+    return None
+
+
+def champion_id(player: dict, allow_intent: bool) -> int:
+    for key in ("championId", "championPickIntent") if allow_intent else ("championId",):
+        value = player.get(key)
+        if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+            return value
+    return 0
 
 
 def layout_json(layout: RuneLayout, page: PageSpec) -> dict:
@@ -196,6 +268,11 @@ class AssistantService:
         self._favorite_wanted: tuple[int, ...] | None = None  # trio to put first in the next set
         self._favorite_unavailable: set[str] = set()  # "runes"/"items" pinned but not applicable
         self._swift_runes_done: set[tuple] = set()  # (lobby, champion) whose Swiftplay slot was filled
+        self._ranked_team: list[dict] = []
+        self._ranked_enemies: list[dict] = []
+        self._ranked_session: str | None = None
+        self._ranked_cache: dict[str, RankedEntry | None] = {}
+        self._ranked_seen: dict[str, set[str]] = {"team": set(), "enemies": set()}
 
     # Bridge entry points (return quickly; work goes to the worker) ----------
 
@@ -203,6 +280,8 @@ class AssistantService:
         kind = payload.get("type")
         if kind == "assistant-request":
             self._submit(self._refresh)
+        elif kind == "assistant-ranked":
+            self._submit(self._refresh_ranked)
         elif kind == "assistant-opponent":
             opponent = payload.get("championId")
             self._opponent = opponent if isinstance(opponent, int) and opponent > 0 else None
@@ -283,8 +362,13 @@ class AssistantService:
         context = self._context
         return bool(context and context.can_edit and self._in_champ_select())
 
-    def _read_context(self) -> ChampSelectContext | None:
-        context = read_context(self._lcu.get("/lol-champ-select/v1/session"), self._queue_id())
+    def _read_session(self) -> Any:
+        return self._lcu.get("/lol-champ-select/v1/session")
+
+    def _read_context(self, session: Any = _MISSING) -> ChampSelectContext | None:
+        if session is _MISSING:
+            session = self._read_session()
+        context = read_context(session, self._queue_id())
         if context is not None and self._lane is not None and self._lane[0] == context.session_id:
             context = replace(context, lane=self._lane[1])
         return context
@@ -297,9 +381,76 @@ class AssistantService:
             self._stats = self._stats_factory(self._directory)
         return self._stats
 
+    def _refresh_ranked(self) -> None:
+        """Refresh only the team ranks, without touching runes or builds."""
+        self._load_ranked(self._read_session())
+        self._publish_state()
+
+    def _clear_ranked(self) -> None:
+        self._ranked_team = []
+        self._ranked_enemies = []
+        self._ranked_session = None
+        self._ranked_cache = {}
+        self._ranked_seen = {"team": set(), "enemies": set()}
+
+    def _load_ranked(self, session: Any) -> None:
+        if not isinstance(session, dict):
+            self._clear_ranked()
+            return
+        session_id = str(session.get("id") or session.get("gameId") or "")
+        if session_id != self._ranked_session:
+            self._ranked_session = session_id
+            self._ranked_cache = {}
+            self._ranked_seen = {"team": set(), "enemies": set()}
+        self._ranked_team = self._ranked_rows(session.get("myTeam"), "team", allow_intent=True)
+        self._ranked_enemies = self._ranked_rows(
+            session.get("theirTeam"), "enemies", allow_intent=False, require_puuid=True
+        )
+
+    def _ranked_rows(self, players: Any, side: str, *, allow_intent: bool, require_puuid: bool = False) -> list[dict]:
+        rows = []
+        for player in players or []:
+            if not isinstance(player, dict):
+                continue
+            puuid = player.get("puuid")
+            puuid = puuid.strip() if isinstance(puuid, str) else ""
+            if require_puuid and not puuid:
+                continue  # the client did not reveal this enemy: never infer it
+            entry = self._ranked_entry(puuid, side) if puuid else None
+            position = POSITION_LANES.get(str(player.get("assignedPosition") or "").lower(), "")
+            rows.append(
+                {
+                    "cellId": player.get("cellId"),
+                    "position": position,
+                    "championId": champion_id(player, allow_intent),
+                    "elo": entry.json() if entry is not None else None,
+                }
+            )
+        rows.sort(key=lambda row: POSITION_ORDER.get(row["position"], len(POSITION_ORDER)))
+        return rows
+
+    def _ranked_entry(self, puuid: str, side: str) -> RankedEntry | None:
+        if puuid in self._ranked_cache:
+            return self._ranked_cache[puuid]
+        seen = self._ranked_seen[side]
+        if len(seen) >= RANKED_LIMIT:
+            return None  # per-selection cap (D-122)
+        seen.add(puuid)
+        try:
+            payload = self._lcu.ranked_stats(puuid, timeout=RANKED_TIMEOUT_S)
+        except Exception as error:
+            log.info("[ASSISTANT] ranked stats unavailable: %s", error)
+            payload = None
+        entry = read_ranked_entry(payload)
+        self._ranked_cache[puuid] = entry
+        return entry
+
     def _refresh(self) -> None:
-        context = self._read_context()
+        session = self._read_session()
+        context = self._read_context(session)
         self._context = context
+        # The team's ranks do not depend on the local player having a champion.
+        self._load_ranked(session)
         if context is None:
             self._controller.set_session(None)
             self._runes, self._error = {}, None
@@ -696,6 +847,7 @@ class AssistantService:
             "lane": context.lane if context else None,
             "mode": context.mode if context else None,
             "enemies": list(context.enemies) if context else [],
+            "ranked": {"team": self._ranked_team, "enemies": self._ranked_enemies},
             "opponentId": self._opponent,
             "error": self._error,
             "runes": {
