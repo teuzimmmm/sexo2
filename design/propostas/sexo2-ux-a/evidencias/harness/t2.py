@@ -1,120 +1,321 @@
 from cdp import *
 import sys
-URL='file:///Users/matheus/Documents/tremdolol/sexo2-lab/a/design/propostas/sexo2-ux-a/index.html'
-EV='/Users/matheus/Documents/tremdolol/sexo2-lab/a/design/propostas/sexo2-ux-a/evidencias/'
-os.makedirs(EV,exist_ok=True)
-b=Br(1280,720);b.size(1280,720);b.go(URL)
-R=[]
-def ck(n,c,extra=''):
-    R.append((n,bool(c)));print(('OK  ' if c else 'FAIL'),n,extra)
+
+URL = "file:///Users/matheus/Documents/tremdolol/sexo2-lab/a/design/propostas/sexo2-ux-a/index.html"
+EV = "/Users/matheus/Documents/tremdolol/sexo2-lab/a/design/propostas/sexo2-ux-a/evidencias/"
+os.makedirs(EV, exist_ok=True)
+b = Br(1280, 720)
+b.size(1280, 720)
+b.go(URL)
+R = []
+
+
+def ck(n, c, extra=""):
+    R.append((n, bool(c)))
+    print(("OK  " if c else "FAIL"), n, extra)
+
+
 def clk(k):
-    r=b.js(f"(()=>{{const e=document.querySelector('[data-k=\"{k}\"]');if(!e)return 'none';if(e.disabled)return 'dis';e.focus();e.click();return 'ok'}})()");
-    if r!='ok':print('  click',k,r)
+    r = b.js(
+        f"(()=>{{const e=document.querySelector('[data-k=\"{k}\"]');if(!e)return 'none';if(e.disabled)return 'dis';e.focus();e.click();return 'ok'}})()"
+    )
+    if r != "ok":
+        print("  click", k, r)
     return r
-def tx(s):return b.js(s)
-def wait(t=.15):time.sleep(t)
-errs=[]
+
+
+def tx(s):
+    return b.js(s)
+
+
+def wait(t=0.15):
+    time.sleep(t)
+
+
+errs = []
 # A01 navegacao
-for p in ['Mods','Sala','Configurações','Suporte','Seleção','Skins']:
-    clk('nav|'+p);wait(.05);ck('nav '+p,tx("S.page")==p and tx("document.querySelector('nav [aria-current=page]').textContent.startsWith('%s')"%p[:5]))
+for p in ["Mods", "Sala", "Configurações", "Suporte", "Seleção", "Skins"]:
+    clk("nav|" + p)
+    wait(0.05)
+    ck(
+        "nav " + p,
+        tx("S.page") == p
+        and tx("document.querySelector('nav [aria-current=page]').textContent.startsWith('%s')" % p[:5]),
+    )
 # erro contextual
-clk('nav|Skins');clk('champ|Lux');clk('skin|2');clk('chroma|2:0')
-sel0=tx("JSON.stringify(S.sel)")
-tx("document.getElementById('simFail').click()");wait()
-clk('apply|');wait()
-ck('A01 alerta de erro',tx("!!document.querySelector('[role=alert]')"))
-b.shot(EV+'a01-erro-skins.png')
-clk('toSupport|');wait()
-ck('A01 suporte com origem',tx("S.page==='Suporte'&&document.body.innerText.includes('Origem: Skins')"))
-ck('A01 selecao preservada no suporte',tx("document.body.innerText.includes('Lux · Elementalista Exaltada · croma Aurora')"))
-b.shot(EV+'a01-suporte-origem.png')
-clk('recheck|');wait()
-ck('A01 verificacao resolve erro',tx("S.fail===false&&S.errors.every(e=>e.resolved)"))
-clk('back|');wait()
-ck('A01 retorno Skins sem perder escolha',tx("S.page==='Skins'&&JSON.stringify(S.sel)")==True or (tx("S.page")=='Skins' and tx("JSON.stringify(S.sel)")==sel0))
-clk('apply|');wait()
-ck('A02 aplicar skin estado visivel',tx("S.applied&&document.body.innerText.includes('Skin aplicada: Lux · Elementalista Exaltada · croma Aurora')"))
+clk("nav|Skins")
+clk("champ|Lux")
+clk("skin|2")
+clk("chroma|2:0")
+sel0 = tx("JSON.stringify(S.sel)")
+tx("document.getElementById('simFail').click()")
+wait()
+clk("apply|")
+wait()
+ck("A01 alerta de erro", tx("!!document.querySelector('[role=alert]')"))
+b.shot(EV + "a01-erro-skins.png")
+clk("toSupport|")
+wait()
+ck("A01 suporte com origem", tx("S.page==='Suporte'&&document.body.innerText.includes('Origem: Skins')"))
+ck(
+    "A01 selecao preservada no suporte",
+    tx("document.body.innerText.includes('Lux · Elementalista Exaltada · croma Aurora')"),
+)
+b.shot(EV + "a01-suporte-origem.png")
+clk("recheck|")
+wait()
+ck("A01 verificacao resolve erro", tx("S.fail===false&&S.errors.every(e=>e.resolved)"))
+clk("back|")
+wait()
+ck(
+    "A01 retorno Skins sem perder escolha",
+    tx("S.page==='Skins'&&JSON.stringify(S.sel)") == True
+    or (tx("S.page") == "Skins" and tx("JSON.stringify(S.sel)") == sel0),
+)
+clk("apply|")
+wait()
+ck(
+    "A02 aplicar skin estado visivel",
+    tx("S.applied&&document.body.innerText.includes('Skin aplicada: Lux · Elementalista Exaltada · croma Aurora')"),
+)
 # A02 croma inelegivel, favorita
-clk('chroma|2:1');wait()
-ck('A02 croma Obsidiana inelegível visivel',tx("document.body.innerText.includes('inelegível: Exalted + croma Obsidiana desativa CTRL5')"))
-clk('fav|');wait();ck('A02 favorita',tx("S.fav.has('Lux|2|1')&&document.querySelector('[data-k=\"fav|\"]').getAttribute('aria-pressed')==='true'"))
-b.shot(EV+'a02-skins-colecao.png')
+clk("chroma|2:1")
+wait()
+ck(
+    "A02 croma Obsidiana inelegível visivel",
+    tx("document.body.innerText.includes('inelegível: Exalted + croma Obsidiana desativa CTRL5')"),
+)
+clk("fav|")
+wait()
+ck(
+    "A02 favorita",
+    tx("S.fav.has('Lux|2|1')&&document.querySelector('[data-k=\"fav|\"]').getAttribute('aria-pressed')==='true'"),
+)
+b.shot(EV + "a02-skins-colecao.png")
 # conjuntos
-clk('tab|skins:Conjuntos');wait()
-clk('setEdit|1');wait()
-ck('A02 modal editar conjunto',tx("document.getElementById('dlg').open"))
-clk('setAdd|');clk('setRm|0');wait()
-tx("(()=>{const i=document.getElementById('setName');i.value='Competitivo 2';i.dispatchEvent(new Event('input',{bubbles:true}))})()")
-b.shot(EV+'a02-editar-conjunto.png')
-clk('setSave|');wait(.3)
-ck('A02 conjunto salvo + modal fechado',tx("!document.getElementById('dlg').open&&S.sets[0].name==='Competitivo 2'&&S.sets[0].items.length===3"))
-ck('A02 foco restaurado apos modal',tx("document.activeElement.dataset.k==='setEdit|1'"),tx("document.activeElement.dataset.k"))
-clk('setApply|2');wait();ck('A02 aplicar conjunto estado',tx("S.activeSet===2&&document.body.innerText.includes('aplicação nº 2')"))
-clk('setApply|1');wait()
-b.shot(EV+'a02-conjuntos.png')
+clk("tab|skins:Conjuntos")
+wait()
+clk("setEdit|1")
+wait()
+ck("A02 modal editar conjunto", tx("document.getElementById('dlg').open"))
+clk("setAdd|")
+clk("setRm|0")
+wait()
+tx(
+    "(()=>{const i=document.getElementById('setName');i.value='Competitivo 2';i.dispatchEvent(new Event('input',{bubbles:true}))})()"
+)
+b.shot(EV + "a02-editar-conjunto.png")
+clk("setSave|")
+wait(0.3)
+ck(
+    "A02 conjunto salvo + modal fechado",
+    tx("!document.getElementById('dlg').open&&S.sets[0].name==='Competitivo 2'&&S.sets[0].items.length===3"),
+)
+ck(
+    "A02 foco restaurado apos modal",
+    tx("document.activeElement.dataset.k==='setEdit|1'"),
+    tx("document.activeElement.dataset.k"),
+)
+clk("setApply|2")
+wait()
+ck("A02 aplicar conjunto estado", tx("S.activeSet===2&&document.body.innerText.includes('aplicação nº 2')"))
+clk("setApply|1")
+wait()
+b.shot(EV + "a02-conjuntos.png")
 # sorteio
-clk('tab|skins:Sorteio');wait();clk('draw|');wait()
-ck('A06 sorteio nunca inelegivel',tx("(()=>{for(let i=0;i<60;i++){A.draw();const e=elig(S.sel.champ,S.drawn.s,S.drawn.j);if(!e.ok)return false}return true})()"))
-ck('A06 inelegibilidade antes do ranking',tx("document.body.innerText.toLowerCase().includes('exalted + croma obsidiana desativa ctrl5')&&document.body.innerText.toLowerCase().includes('inelegível')"))
-clk('brav|');wait()
-ck('A06 bravura oculto->revelado',tx("S.bravura.state==='revelado'"))
-tx("S.bravura.state='oculto';S.bravura.champ=null;rerender()");ck('A06 bravura oculto sem campeão',tx("!document.querySelector('.card img[src*=champions]')||true")and tx("document.body.innerText.includes('Campeão oculto')"))
-b.shot(EV+'a06-sorteio-bravura.png')
+clk("tab|skins:Sorteio")
+wait()
+clk("draw|")
+wait()
+ck(
+    "A06 sorteio nunca inelegivel",
+    tx(
+        "(()=>{for(let i=0;i<60;i++){A.draw();const e=elig(S.sel.champ,S.drawn.s,S.drawn.j);if(!e.ok)return false}return true})()"
+    ),
+)
+ck(
+    "A06 inelegibilidade antes do ranking",
+    tx(
+        "document.body.innerText.toLowerCase().includes('exalted + croma obsidiana desativa ctrl5')&&document.body.innerText.toLowerCase().includes('inelegível')"
+    ),
+)
+clk("brav|")
+wait()
+ck("A06 bravura oculto->revelado", tx("S.bravura.state==='revelado'"))
+tx("S.bravura.state='oculto';S.bravura.champ=null;rerender()")
+ck(
+    "A06 bravura oculto sem campeão",
+    tx("!document.querySelector('.card img[src*=champions]')||true")
+    and tx("document.body.innerText.includes('Campeão oculto')"),
+)
+b.shot(EV + "a06-sorteio-bravura.png")
 # sala + coordenado
-clk('nav|Sala');wait()
-ck('A02 coord bloqueado sem sala',tx("document.querySelector('[data-k=\"coordAsk|\"]').disabled"))
-clk('roomCreate|');wait();ck('A03 sala criada',tx("S.room.on&&document.getElementById('keyShow').textContent.startsWith('SX2-')"))
-clk('roomCopy|');wait();ck('A03 copiar chave estado',tx("S.room.copied&&document.body.innerText.includes('Chave copiada')"))
-clk('roomAdd|');wait()
-clk('coordAsk|');wait()
-ck('A02 modal informa desativacao',tx("document.getElementById('dlgB').innerText.includes('desativar o conjunto ativo')"))
-b.shot(EV+'a02-sorteio-coordenado-modal.png')
-clk('coordGo|');wait(.3)
-ck('A02 perfil desativado efetivo',tx("S.coord&&S.activeSet===null&&document.body.innerText.includes('Conjunto ativo: nenhum')"))
-clk('roomDraw|');wait();ck('A02 sorteio sala resultado',tx("S.roomResult&&S.roomResult.length===S.room.parts.length"))
-b.shot(EV+'a03-sala-conectada.png')
-clk('roomLeave|');wait();ck('A03 sair da sala',tx("!S.room.on&&S.room.last&&!S.coord"))
-clk('roomRejoin|');wait();ck('A03 reconectar',tx("S.room.on&&S.room.key===S.room.last"))
-clk('roomLeave|');wait()
-tx("(()=>{const i=document.getElementById('roomKey');i.value='abc';i.dispatchEvent(new Event('input',{bubbles:true}))})()");clk('roomJoin|');wait()
-ck('A03 chave invalida erro',tx("S.room.err.length>0&&!S.room.on"))
-tx("(()=>{const i=document.getElementById('roomKey');i.value='sx2-aaaa-1234';i.dispatchEvent(new Event('input',{bubbles:true}))})()");clk('roomJoin|');wait()
-ck('A03 conectar com chave',tx("S.room.on&&S.room.key==='SX2-AAAA-1234'"))
-clk('coordAsk|');wait();clk('coordGo|');wait(.3)
-clk('nav|Skins');wait();ck('A02 skins mostra desativado coordenado',tx("document.body.innerText.includes('Desativado pelo sorteio coordenado')"))
-clk('tab|skins:Conjuntos');wait();ck('A02 aplicar conjunto bloqueado em coord',tx("[...document.querySelectorAll('[data-act=setApply]')].every(x=>x.disabled)"))
+clk("nav|Sala")
+wait()
+ck("A02 coord bloqueado sem sala", tx("document.querySelector('[data-k=\"coordAsk|\"]').disabled"))
+clk("roomCreate|")
+wait()
+ck("A03 sala criada", tx("S.room.on&&document.getElementById('keyShow').textContent.startsWith('SX2-')"))
+clk("roomCopy|")
+wait()
+ck("A03 copiar chave estado", tx("S.room.copied&&document.body.innerText.includes('Chave copiada')"))
+clk("roomAdd|")
+wait()
+clk("coordAsk|")
+wait()
+ck(
+    "A02 modal informa desativacao",
+    tx("document.getElementById('dlgB').innerText.includes('desativar o conjunto ativo')"),
+)
+b.shot(EV + "a02-sorteio-coordenado-modal.png")
+clk("coordGo|")
+wait(0.3)
+ck(
+    "A02 perfil desativado efetivo",
+    tx("S.coord&&S.activeSet===null&&document.body.innerText.includes('Conjunto ativo: nenhum')"),
+)
+clk("roomDraw|")
+wait()
+ck("A02 sorteio sala resultado", tx("S.roomResult&&S.roomResult.length===S.room.parts.length"))
+b.shot(EV + "a03-sala-conectada.png")
+clk("roomLeave|")
+wait()
+ck("A03 sair da sala", tx("!S.room.on&&S.room.last&&!S.coord"))
+clk("roomRejoin|")
+wait()
+ck("A03 reconectar", tx("S.room.on&&S.room.key===S.room.last"))
+clk("roomLeave|")
+wait()
+tx(
+    "(()=>{const i=document.getElementById('roomKey');i.value='abc';i.dispatchEvent(new Event('input',{bubbles:true}))})()"
+)
+clk("roomJoin|")
+wait()
+ck("A03 chave invalida erro", tx("S.room.err.length>0&&!S.room.on"))
+tx(
+    "(()=>{const i=document.getElementById('roomKey');i.value='sx2-aaaa-1234';i.dispatchEvent(new Event('input',{bubbles:true}))})()"
+)
+clk("roomJoin|")
+wait()
+ck("A03 conectar com chave", tx("S.room.on&&S.room.key==='SX2-AAAA-1234'"))
+clk("coordAsk|")
+wait()
+clk("coordGo|")
+wait(0.3)
+clk("nav|Skins")
+wait()
+ck(
+    "A02 skins mostra desativado coordenado",
+    tx("document.body.innerText.includes('Desativado pelo sorteio coordenado')"),
+)
+clk("tab|skins:Conjuntos")
+wait()
+ck(
+    "A02 aplicar conjunto bloqueado em coord",
+    tx("[...document.querySelectorAll('[data-act=setApply]')].every(x=>x.disabled)"),
+)
 # Mods
-clk('nav|Mods');wait()
-ck('A03 10 categorias legadas',tx("CATS.length===10&&CATS.every(c=>document.body.innerText.includes(c))"))
-tx("(()=>{const i=document.getElementById('modQ');i.value='noturno';i.dispatchEvent(new Event('input',{bubbles:true}))})()")
-ck('A03 busca filtra',tx("document.querySelectorAll('#modList .k b').length===1"))
+clk("nav|Mods")
+wait()
+ck("A03 10 categorias legadas", tx("CATS.length===10&&CATS.every(c=>document.body.innerText.includes(c))"))
+tx(
+    "(()=>{const i=document.getElementById('modQ');i.value='noturno';i.dispatchEvent(new Event('input',{bubbles:true}))})()"
+)
+ck("A03 busca filtra", tx("document.querySelectorAll('#modList .k b').length===1"))
 tx("(()=>{const i=document.getElementById('modQ');i.value='';i.dispatchEvent(new Event('input',{bubbles:true}))})()")
-clk('impOpen|');wait()
-ck('A03 importar exige campeao/skin-base',tx("document.querySelector('[data-act=impGo]').disabled&&document.getElementById('dlgB').innerText.includes('campeão e skin-base')"))
-tx("(()=>{const s=document.getElementById('impChamp');s.value='Jinx';s.dispatchEvent(new Event('change',{bubbles:true}))})()");wait()
-tx("(()=>{const s=document.getElementById('impState');s.value='selecao';s.dispatchEvent(new Event('change',{bubbles:true}))})()");wait()
-b.shot(EV+'a03-importar-mod.png')
-ck('A03 importar habilita apos campeao',tx("!document.querySelector('[data-act=impGo]').disabled"))
-clk('impGo|');wait(.3)
-ck('A03 importado na fila ate fim da selecao',tx("S.mods.at(-1).st.startsWith('Na fila')&&document.body.innerText.includes('aguardando o fim da seleção')"))
-clk('endSel|');wait();ck('A03 fim da selecao processa',tx("S.mods.at(-1).st==='Pronto'"))
-clk('modEdit|'+str(tx("S.mods.at(-1).id")));wait()
-tx("(()=>{const i=document.getElementById('impName');i.value='Jinx Editada';i.dispatchEvent(new Event('input',{bubbles:true}))})()");clk('impGo|');wait(.3)
-ck('A03 editar',tx("S.mods.at(-1).name==='Jinx Editada'"))
-clk('modExp|'+str(tx("S.mods.at(-1).id")));wait();ck('A03 exportar',tx("S.lastExport==='jinx-editada.fantome'"))
-clk('modRm|'+str(tx("S.mods.at(-1).id")));wait();clk('modRmGo|'+str(tx("S.modN")));wait(.3);ck('A03 remover',tx("!S.mods.find(m=>m.name==='Jinx Editada')"))
-clk('impErr|');wait();ck('A01 erro mods -> suporte',tx("!!document.querySelector('[role=alert]')"));b.shot(EV+'a03-mods-biblioteca.png')
-clk('toSupport|');wait();clk('back|');wait();ck('A01 retorno Mods',tx("S.page==='Mods'"))
+clk("impOpen|")
+wait()
+ck(
+    "A03 importar exige campeao/skin-base",
+    tx(
+        "document.querySelector('[data-act=impGo]').disabled&&document.getElementById('dlgB').innerText.includes('campeão e skin-base')"
+    ),
+)
+tx(
+    "(()=>{const s=document.getElementById('impChamp');s.value='Jinx';s.dispatchEvent(new Event('change',{bubbles:true}))})()"
+)
+wait()
+tx(
+    "(()=>{const s=document.getElementById('impState');s.value='selecao';s.dispatchEvent(new Event('change',{bubbles:true}))})()"
+)
+wait()
+b.shot(EV + "a03-importar-mod.png")
+ck("A03 importar habilita apos campeao", tx("!document.querySelector('[data-act=impGo]').disabled"))
+clk("impGo|")
+wait(0.3)
+ck(
+    "A03 importado na fila ate fim da selecao",
+    tx("S.mods.at(-1).st.startsWith('Na fila')&&document.body.innerText.includes('aguardando o fim da seleção')"),
+)
+clk("endSel|")
+wait()
+ck("A03 fim da selecao processa", tx("S.mods.at(-1).st==='Pronto'"))
+clk("modEdit|" + str(tx("S.mods.at(-1).id")))
+wait()
+tx(
+    "(()=>{const i=document.getElementById('impName');i.value='Jinx Editada';i.dispatchEvent(new Event('input',{bubbles:true}))})()"
+)
+clk("impGo|")
+wait(0.3)
+ck("A03 editar", tx("S.mods.at(-1).name==='Jinx Editada'"))
+clk("modExp|" + str(tx("S.mods.at(-1).id")))
+wait()
+ck("A03 exportar", tx("S.lastExport==='jinx-editada.fantome'"))
+clk("modRm|" + str(tx("S.mods.at(-1).id")))
+wait()
+clk("modRmGo|" + str(tx("S.modN")))
+wait(0.3)
+ck("A03 remover", tx("!S.mods.find(m=>m.name==='Jinx Editada')"))
+clk("impErr|")
+wait()
+ck("A01 erro mods -> suporte", tx("!!document.querySelector('[role=alert]')"))
+b.shot(EV + "a03-mods-biblioteca.png")
+clk("toSupport|")
+wait()
+clk("back|")
+wait()
+ck("A01 retorno Mods", tx("S.page==='Mods'"))
 # Config
-clk('nav|Configurações');wait();clk('tab|cfg:Seleção');wait()
-tx("(()=>{const i=document.getElementById('pref-autoaceite');i.click()})()");wait()
-ck('A06 rascunho dirty',tx("dirty()===1"))
-clk('nav|Skins');clk('nav|Configurações');wait();clk('tab|cfg:Seleção');wait();ck('A06 rascunho persiste navegando',tx("dirty()===1&&document.querySelector('[data-k=\"cfgSave|\"]')&&!document.querySelector('[data-k=\"cfgSave|\"]').disabled"))
-clk('cfgCancel|');wait();ck('A06 cancelar descarta',tx("dirty()===0&&S.prefs.autoaceite===true"))
-tx("document.getElementById('pref-autoaceite').click()");wait();clk('cfgSave|');wait();ck('A06 salvar grava',tx("S.prefs.autoaceite===false&&dirty()===0"))
-clk('tab|cfg:Overlays');wait()
-ck('A06 ouro e aprimoramentos separados',tx("[...document.querySelectorAll('main h2')].map(x=>x.textContent).join('|').toLowerCase().includes('ouro no placar')&&document.body.innerText.toLowerCase().includes('aprimoramentos')"))
-b.shot(EV+'a06-config-overlays.png')
-clk('nav|Suporte');wait();clk('report|');wait();ck('A01 suporte relatório',tx("!!S.report"));b.shot(EV+'a01-suporte.png')
-print(sum(1 for r in R if not r[1]),'falhas de',len(R))
+clk("nav|Configurações")
+wait()
+clk("tab|cfg:Seleção")
+wait()
+tx("(()=>{const i=document.getElementById('pref-autoaceite');i.click()})()")
+wait()
+ck("A06 rascunho dirty", tx("dirty()===1"))
+clk("nav|Skins")
+clk("nav|Configurações")
+wait()
+clk("tab|cfg:Seleção")
+wait()
+ck(
+    "A06 rascunho persiste navegando",
+    tx(
+        "dirty()===1&&document.querySelector('[data-k=\"cfgSave|\"]')&&!document.querySelector('[data-k=\"cfgSave|\"]').disabled"
+    ),
+)
+clk("cfgCancel|")
+wait()
+ck("A06 cancelar descarta", tx("dirty()===0&&S.prefs.autoaceite===true"))
+tx("document.getElementById('pref-autoaceite').click()")
+wait()
+clk("cfgSave|")
+wait()
+ck("A06 salvar grava", tx("S.prefs.autoaceite===false&&dirty()===0"))
+clk("tab|cfg:Overlays")
+wait()
+ck(
+    "A06 ouro e aprimoramentos separados",
+    tx(
+        "[...document.querySelectorAll('main h2')].map(x=>x.textContent).join('|').toLowerCase().includes('ouro no placar')&&document.body.innerText.toLowerCase().includes('aprimoramentos')"
+    ),
+)
+b.shot(EV + "a06-config-overlays.png")
+clk("nav|Suporte")
+wait()
+clk("report|")
+wait()
+ck("A01 suporte relatório", tx("!!S.report"))
+b.shot(EV + "a01-suporte.png")
+print(sum(1 for r in R if not r[1]), "falhas de", len(R))
 b.close()
