@@ -113,7 +113,10 @@
     LOADING + "::before," + LOADING + "::after{content:none!important;display:none!important}",
     '@font-face{font-family:Oswald;src:url("' + BASE + 'oswald.woff2") format("woff2");font-weight:200 700;font-style:normal;font-display:block}',
     '@font-face{font-family:Inter;src:url("' + BASE + 'inter.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:block}',
-    "#" + ROOT_ID + "{position:fixed;inset:0;z-index:2147483000;overflow:hidden;background:#0d0e10;opacity:0;pointer-events:none}",
+    // The browser itself hides the opening 8 s after it appears, without any script: the client
+    // can replace the element with a copy that the script no longer holds
+    "#" + ROOT_ID + "{position:fixed;inset:0;z-index:2147483000;overflow:hidden;background:#0d0e10;opacity:0;pointer-events:none;animation:sexo2-abertura-fim .3s linear 8s forwards}",
+    "@keyframes sexo2-abertura-fim{to{opacity:0;visibility:hidden}}",
     "#" + ROOT_ID + ".on{opacity:1}",
     "#" + ROOT_ID + " .g{position:absolute;left:0;top:0;display:block;white-space:pre;line-height:1;font-family:Oswald,system-ui,sans-serif;font-weight:600;letter-spacing:0;color:#ececec;transform-origin:0 0;will-change:transform,opacity}",
     "#" + ROOT_ID + " .ic{position:absolute;left:0;top:0;line-height:0;transform-origin:0 0;will-change:transform}",
@@ -197,6 +200,8 @@
     window.removeEventListener("resize", onResize);
     if (root && root.parentNode) root.parentNode.removeChild(root);
     root = null;
+    // and any copy of it the client put in its place
+    document.querySelectorAll("#" + ROOT_ID).forEach(function (node) { node.remove(); });
   }
 
   // The client may hide its loading screen, or remove an ancestor of it, instead of removing it
