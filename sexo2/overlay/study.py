@@ -181,19 +181,19 @@ class _LiveProbe(threading.Thread):
         super().__init__(name="SEXO2-Study-live", daemon=True)
         self._fetch = fetch
         self._every = every
-        self._stop = threading.Event()
-        self._started = time.monotonic()
+        self._halt = threading.Event()
+        self._began = time.monotonic()
         self.fields: set[str] = set()
         self.samples: list[dict] = []
         self.errors = 0
 
     def stop(self) -> None:
-        self._stop.set()
+        self._halt.set()
 
     def run(self) -> None:
-        while not self._stop.is_set():
+        while not self._halt.is_set():
             self.read_once()
-            self._stop.wait(self._every)
+            self._halt.wait(self._every)
 
     def read_once(self) -> None:
         try:
@@ -205,7 +205,7 @@ class _LiveProbe(threading.Thread):
         seen = {(sample["path"], json.dumps(sample["value"], sort_keys=True)) for sample in self.samples}
         for path, value in described["augments"].items():
             if (path, json.dumps(value, sort_keys=True)) not in seen and len(self.samples) < 60:
-                self.samples.append({"s": round(time.monotonic() - self._started), "path": path, "value": value})
+                self.samples.append({"s": round(time.monotonic() - self._began), "path": path, "value": value})
 
     def result(self) -> dict:
         return {"fields": sorted(self.fields), "augmentSamples": self.samples, "errors": self.errors}

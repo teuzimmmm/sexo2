@@ -2,6 +2,7 @@
 
 import json
 import tempfile
+import time
 import unittest
 import zipfile
 from pathlib import Path
@@ -62,6 +63,17 @@ class OverlayStudyTests(unittest.TestCase):
         self.assertEqual([s["value"] for s in result["augmentSamples"]], [["A", "B", "C"], ["D", "E", "F"]])
         self.assertEqual(result["errors"], 1)
         self.assertIn("activePlayer.level", result["fields"])
+
+    def test_the_probe_runs_as_a_real_thread(self):
+        probe = study._LiveProbe(lambda: {"activePlayer": {"level": 3}}, every=0.01)
+        probe.start()
+        deadline = time.monotonic() + 1.0
+        while not probe.fields and time.monotonic() < deadline:
+            time.sleep(0.01)
+        probe.stop()
+        probe.join(timeout=2)
+        self.assertFalse(probe.is_alive())
+        self.assertIn("activePlayer.level", probe.result()["fields"])
 
     def test_three_matches_then_never_again(self):
         self.assertEqual(study.done_matches(self.dir / "missing"), 0)
