@@ -71,6 +71,9 @@ def export_report(directory, snapshot, log_dir, secrets=()):
 
             archive.writestr("resumo.json", json.dumps(clean(summary), ensure_ascii=False, indent=2))
             archive.writestr("log_recente.txt", sanitize(recent, secrets))
+            # Overlay study results (docs/estudos/OVERLAYS.md), next to the logs folder
+            for study in sorted(Path(log_dir).parent.glob("diagnostics/estudo-overlay-*.json"))[-3:]:
+                archive.writestr("estudos/" + study.name, sanitize(study.read_text(encoding="utf-8"), secrets))
             archive.writestr(
                 "LEIA-ME.txt",
                 "Relatório local sanitizado. Não inclui config.ini, lockfile, chave da sala ou arquivos de skins. A verificação de preparo não confirma aplicação em partida.",

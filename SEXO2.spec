@@ -12,6 +12,9 @@ block_cipher = None
 
 # Collect all data files for packages that need them
 datas = [('hosting-tools/cloudflared.exe','hosting-tools')]
+# PresentMon (MIT, Intel) for the overlay study; downloaded by the CI test build, optional elsewhere
+if Path('diagnostic-tools/PresentMon.exe').is_file():
+    datas += [('diagnostic-tools/PresentMon.exe', 'diagnostic-tools')]
 
 # Assets folder - verify and add entire directory
 import os

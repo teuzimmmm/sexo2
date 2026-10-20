@@ -65,11 +65,20 @@ def _sync(start: bool) -> None:
 
 
 def setup(manager: Any, state: Any, lcu: Any) -> None:
-    """At startup: register the enabled overlays; the manager starts them with the rest."""
+    """At startup: register the enabled overlays; the manager starts them with the rest.
+
+    The overlay study (docs/estudos/OVERLAYS.md) runs in the next three matches whatever
+    the switches, and then never again.
+    """
     global _context
     with _lock:
         _context = (manager, state, lcu)
         _sync(start=False)
+        from sexo2.overlay.study import MATCHES, OverlayStudyThread, done_matches, results_dir
+
+        if done_matches(results_dir()) < MATCHES:
+            study = OverlayStudyThread(state)
+            manager.register("Overlay study", study, stop_method=study.stop)
 
 
 def apply() -> None:

@@ -296,7 +296,12 @@ class AugmentOverlayThread(threading.Thread):
         self._reader = windows_reader()
         log.info("[AUGMENTS] title OCR %s", "available" if self._reader else "unavailable; icons only")
         shown = False
+        from sexo2.overlay import study
+
         while not self._stop.is_set():
+            if study.measuring():  # the overlay study measures the game without this capture
+                self._stop.wait(1.0)
+                continue
             session = self._session_for_match()
             if session is None:
                 self._session, self._session_key = None, None

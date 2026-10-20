@@ -39,3 +39,4 @@ Pengu Loader/datastore
 .DS_Store
 sala/.wrangler/
 sala/node_modules/
+diagnostic-tools/

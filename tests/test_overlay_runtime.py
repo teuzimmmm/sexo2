@@ -45,6 +45,8 @@ class OverlayRuntimeTests(unittest.TestCase):
             patch.object(runtime, "_create", side_effect=create),
             patch.object(runtime, "_threads", {}),
             patch.object(runtime, "_context", None),
+            # The overlay study is done unless a test says otherwise (it reads the data folder)
+            patch("sexo2.overlay.study.done_matches", return_value=3),
         ]
         for p in patches:
             p.start()
@@ -55,6 +57,11 @@ class OverlayRuntimeTests(unittest.TestCase):
         runtime.setup(self.manager, "state", "lcu")
         self.assertEqual(self.manager.registered, ["gold overlay"])
         self.assertFalse(self.created[0][1].alive)
+
+    def test_the_overlay_study_runs_until_its_three_matches_are_done(self):
+        with patch("sexo2.overlay.study.done_matches", return_value=2):
+            runtime.setup(self.manager, "state", "lcu")
+        self.assertEqual(self.manager.registered, ["gold overlay", "Overlay study"])
 
     def test_saving_starts_and_stops_overlays_to_match(self):
         runtime.setup(self.manager, "state", "lcu")
