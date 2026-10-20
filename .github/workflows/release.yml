@@ -92,7 +92,7 @@ jobs:
           path: app/dist-test/SEXO2
           retention-days: 14
       - name: Publish test pre-release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/sexoatividade'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}

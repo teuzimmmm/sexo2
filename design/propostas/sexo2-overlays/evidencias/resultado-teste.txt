@@ -1,0 +1,47 @@
+PASS sem hash -> #b e B pressionado  | #b
+PASS inner 1280x720  | [1280, 720]
+PASS total B "ITENS · -210 ouro"
+PASS diffs B na tela  | ['-340', '+770', '-640', '+540', '-540']
+PASS O02 calc normal  | {'d': [-340, 770, -640, 540, -540], 'total': -210, 'enemyTotal': 45850, 'allyTotal': 45640}
+PASS document.fonts: Inter e Oswald loaded  | Inter:loaded Oswald:loaded
+PASS fonte computada: body Inter, h1 Oswald, svg Inter
+PASS clique blitz -> hash/pressed
+PASS clique a -> hash/pressed
+PASS clique b -> hash/pressed
+PASS voltar -> #a  | #a
+PASS voltar -> #blitz
+PASS avançar -> #a
+PASS abertura direta #a
+PASS abertura direta #b
+PASS abertura direta #blitz
+PASS vantagem: total +2070
+PASS vantagem: 5 barras p/ direita (equipe à direita)  | ['M640 241h25', 'M640 323h41.666666666666664']
+PASS desvantagem: total -2070
+PASS desvantagem: 5 barras p/ esquerda  | ['M640 241h-25', 'M640 323h-41.666666666666664']
+PASS empate: total empate, linhas 0, sem barras  | ['ITENS · empate (0 ouro)']
+PASS indisponível B: total indisponível, 1 linha "—", nenhum total numérico, linha não é 0  | 1
+PASS calc missing: d[2]=null total=null  | {'d': [-340, 770, None, 540, -540], 'total': None, 'enemyTotal': None, 'allyTotal': None}
+PASS indisponível Blitz: sem totais/diamante numérico de total, 1 "—" de linha  | ['—', 'Kai’Sa', 'Jinx', '3/2/6', '4/2/5', '540', 'Lulu', 'Thresh', '3/2/6', '4/2/5', '540', '— TOTAL INDISPONÍVEL']
+PASS indisponível A: total e linha indisponíveis
+PASS direita: Garen(aliado) à direita de Darius  | (1090, 190)
+PASS esquerda: Garen à esquerda de Darius  | (190, 1090)
+PASS esquerda: vantagem(+770,+540) p/ esquerda; desvantagem(3) p/ direita  | (['M640 323h-58', 'M640 487h-45'], ['M640 241h28.333333333333332', 'M640 405h53.333333333333336', 'M640 569h45'])
+PASS A esquerda: -340 ▸ ; +770 ◂  | ['▸ −340', '◂ +770', '▸ −640', '◂ +540', '▸ −540']
+PASS A direita: -340 ◂ ; +770 ▸  | ['◂ −340', '▸ +770', '◂ −640', '▸ +540', '◂ −540']
+PASS ocultar: sem total nem diferenças (restam nomes/KDA/16/8), aviso  | ['◆', '16', '8', 'Darius', 'Garen', '3/2/6', '4/2/5', 'Lee Sin', 'Vi', '3/2/6', '4/2/5', 'Zed', 'Ahri', '3/2/6', '4/2/5', 'Kai’Sa', 'Jinx', '3/2/6', '4/2/5', 'Lulu', 'Thresh', '3/2/6', '4/2/5']
+PASS reexibir: cenário/lado/fonte mantidos e total
+PASS Escape (tecla real) oculta
+PASS após recarregar: prefs restauradas (dis/left/Oswald)  | ['dis', 'left', 'Oswald']
+PASS Tab real percorre 12 controles na ordem do documento  | ['A:Proposta:true', 'A:Proposta:true', 'BUTTON:b:true', 'BUTTON:blitz:true', 'BUTTON:a:true', 'SELECT:scenario:true', 'SELECT:side:true', 'SELECT:font:true', 'INPUT:visible:true', 'A::true', 'A:Blitz / :true', 'BODY:Overlays:false']
+PASS Tab até botão B: :focus-visible com outline claro 2px  | ['b', 'solid', 'rgb(236, 236, 236)', '2px', True]
+PASS Tab seguinte -> botão Blitz
+PASS Enter no botão focado ativa Blitz  | #blitz
+PASS Shift+Tab volta ao botão B  | b
+PASS foco chega ao checkbox Exibir  | visible
+PASS Espaço desmarca Exibir (oculta)
+PASS Espaço remarca Exibir (reexibe)
+PASS Escape com foco no checkbox oculta
+PASS UI neutra: botão/links/foco sem azul
+PASS sem rolagem horizontal 1280
+PASS assets locais: imagens carregadas  | ['blitz-reference.webp:1936', 'overlay-aprovado.png:1356']
+PASS sem rede/fetch: nenhuma URL http em src/link/@font-face (links http só <a>)

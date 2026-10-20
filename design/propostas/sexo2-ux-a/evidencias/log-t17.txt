@@ -1,0 +1,127 @@
+OK   R2 palco 1280x720 
+OK   R2 faixa de simulacao fora do palco 
+OK   R3 painel abre em Sala 
+OK   R2 painel 820x560 sobre o client {'x': 443, 'y': 143, 'w': 820, 'h': 560, 'r': 1263, 'b': 703}
+OK   R3 menus na ordem Sala/Favoritas/Configurações/Suporte 
+OK   R3 cabecalho do painel so SEXO2 + Fechar SEXO2
+Fechar
+OK   R3 nenhum texto/aria Hub ou Demonstracao no produto 
+OK   R3 sem cantos arredondados (Sala) True
+OK   A03 sala criada 
+OK   A03 copiar chave 
+OK   A03 sair 
+OK   A03 reconectar 
+OK   A03 chave invalida 
+OK   A03 conectar por chave 
+OK   R3 Sala sem sorteio/conjunto 
+OK   R3 Favoritas: todos os campeoes na grade 171
+OK   R3 retratos locais x placeholder 
+OK   R3 retratos locais resolvem (24 imagens ok) 
+OK   R3 busca por nome no lugar de conjunto/skin aplicada 
+OK   R3 busca filtra por nome 
+OK   R3 busca ignora apostrofo/caixa 
+OK   R4 busca de skin existente lista a skin e o campeao 
+OK   R4 busca inexistente: nada encontrado 
+OK   R4 resultado leva ao campeao com skin destacada 
+OK   R3 pagina de skins do campeao com 3 snippets placeholder 
+OK   R3 so Favoritar (sem Aplicar skin) 
+OK   R3 skin selecionada expande cromas 
+OK   R3 skin Exalted expande 2 cromas 
+OK   R3 favoritar skin NAO favorita cromas 
+OK   R3 croma selecionado nao esta favoritado 
+OK   R3 favoritar croma especifico 
+OK   R3 desfavoritar croma mantem skin 
+OK   R3 desfavoritar skin mantem estados separados 
+OK   R3 outro croma independente 
+OK   R3 voltar a grade com badge de favoritas 
+OK   R3 campeao sem retrato abre skins 
+OK   A06 rascunho 
+OK   A06 rascunho persiste 
+OK   A06 cancelar 
+OK   A06 salvar 
+OK   A06 ouro e aprimoramentos separados 
+OK   Bravura texto correto 
+OK   Bravura etapa 2 
+OK   Bravura favorita prioritaria 
+OK   Bravura aleatoria respeita exclusao 
+OK   A01 relatorio 
+OK   R3 sem cantos arredondados (todas as paginas) 
+OK   A07 painel Sala sem estouro 
+OK   A07 painel Favoritas sem estouro 
+OK   A07 painel Configurações sem estouro 
+OK   A07 painel Suporte sem estouro 
+OK   R3 Swiftplay aparece como 5o menu so no modo 
+OK   R4 simulacao: 2 campeoes travados distintos 
+OK   R4 Swiftplay mostra os dois campeoes travados 
+OK   R4 ambos nada tocado 
+OK   R4 nenhum tocado: ambos sorteio Bravura (favorita do 1o, aleatoria no 2o) 
+OK   R4 so um tocado: 1o manual, 2o intocado 
+OK   R4 so um tocado: manual vence no 1o e sorteio no 2o 
+OK   R4 ambos tocados: dois manuais 
+OK   R4 limpar um nao afeta o outro 
+OK   R4 campeoes travados distintos (rejeita igual) 
+OK   R4 trocar campeao reinicia a escolha dele 
+OK   A01 Swiftplay erro contextual 
+OK   A01 vai ao suporte com origem 
+OK   A01 retorna ao Swiftplay 
+OK   R3 sair do modo remove Swiftplay 
+OK   A07 D-017 assistente 452x492 ancorado {'w': 452, 'h': 492, 'right': 0, 'gap': 8, 'inside': True, 'overlap': False}
+OK   R3 assistente: header Rota/Confronto/Fonte sem nome do campeao 
+OK   R3 abas Runas/Itens/Mods/Prefs rapidas/Todas config (sem Skins) 
+OK   R3 abas cabem na largura 
+OK   R3 texto inutil removido 
+OK   R3 layout antigo: Maior WR / Mais comum / Contra / Outras runas 
+OK   R2 selecao: cena com campeoes/confirmar/botao inferior 
+OK   R3 sem cantos arredondados (selecao) True
+OK   R2 escolher campeao na cena 
+OK   A04 importando 
+OK   A04 sucesso 
+OK   A04 no_free_page 
+OK   A04 falha com Abrir Suporte 
+OK   A01 runas->suporte 
+OK   A01 retorna ao assistente 
+OK   A04 editor agrupa 
+OK   A04 Onetricks indisponivel honesto, sem importar 
+OK   A04 Onetricks simulado marcado 
+OK   A04 comparacao lado a lado 
+OK   A04 onetricks indisponivel na comparacao 
+OK   A04 amostras/patch separados 
+OK   R3 Build padrao Inicial/Essenciais/Situacionais mantida 
+OK   A05 ordenados por partidas 
+OK   A05 icones+WR 
+OK   A05 busca nome 
+OK   A05 busca id 
+OK   A05 trio antes do padrao 
+OK   A05 confirmar campeao simula importacao 
+OK   A05 restaurar 
+OK   R3 aba Mods so mods (sem skins) 
+OK   A03 10 categorias legadas 
+OK   A03 busca 
+OK   A03 filtro categoria 
+OK   A03 importar exige campeao/skin-base 
+OK   A03 fila ate fim da selecao 
+OK   A03 fim da selecao 
+OK   A03 editar 
+OK   A03 exportar 
+OK   A03 remover 
+OK   A01 erro em Mods 
+OK   A01 retorna e mantem aba Mods 
+OK   A06 prefs rapidas em aba, rascunho 
+OK   A06 todas as configuracoes preserva rascunho 
+OK   A06 volta a selecao panelToggle|
+OK   A06 cancelar 
+OK   A08 Escape fecha assistente e foca botao panelToggle|
+OK   A08 Enter reabre assistente 
+OK   A07 anel de foco claro 
+OK   A08 Enter abre painel com foco dentro h1
+OK   A08 Tab/Shift+Tab ciclam no painel ['roomCopy|', 'roomAdd|', 'roomLeave|', 'hubClose|', 'nav|Sala', 'nav|Favoritas', 'nav|Configurações', 'nav|Suporte', 'roomCopy|', 'roomAdd|', 'roomLeave|', 'hubClose|', 'nav|Sala', 'nav|Favoritas']
+OK   A08 foco preso no modal [True, True, True, True, True, True, True, True, True, True, True, True]
+OK   A08 Escape fecha modal (painel continua) e devolve foco tab|cfg:Avançado
+OK   A08 Escape fecha painel e foca botao SEXO2 hubToggle|
+OK   R2 partida: sem client/painel 
+OK   R4 SEXO2 em Oswald (botao inferior, botao do cabecalho, marca) 
+OK   R4 todo texto SEXO2 de marca no palco usa Oswald 
+OK   R4 marca SEXO2 do painel em Oswald 
+OK   A07 fontes carregadas 
+OK   A07 sem serif/azul na UI SEXO2 
+0 falhas de 125

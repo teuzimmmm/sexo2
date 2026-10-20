@@ -1,0 +1,27 @@
+OK   A07 D-017 1280x720 {'pw': 452, 'ph': 492, 'right': 0, 'gap': 8, 'inside': True, 'overlap': False}
+OK   A07 sem scroll horizontal 1280 
+OK   A07 D-017 820x560 {'pw': 452, 'ph': 492, 'right': 0, 'gap': 8, 'inside': True, 'overlap': False}
+OK   A07 sem scroll horizontal 820 
+OK   A04 importando visivel 
+OK   A04 sucesso 
+OK   A04 no_free_page sem apagar 
+OK   A04 falha 
+OK   A04 editor agrupa edicoes 
+OK   A04 mudar fonte nao importa 
+OK   A06 todas as configuracoes preserva rascunho 
+OK   A06 retorno a selecao 
+OK   A06 cancelar no painel 
+OK   A04 comparacao lado a lado 
+OK   A04 onetricks indisponivel honesto 
+OK   A04 amostras/patch separados 
+OK   A05 trios ordenados por partidas 
+OK   A05 icones + WR 
+OK   A05 busca por item 
+OK   A05 busca por id 
+OK   A05 trio antes do padrao 
+OK   A05 importacao simulada ao confirmar 
+OK   A05 restaurar padrao 
+OK   A05 so trios (3 ic./linha) 
+OK   A07 fontes carregadas 
+OK   A07 sem serif/azul 
+0 falhas de 26

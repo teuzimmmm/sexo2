@@ -78,6 +78,12 @@ O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plan
 | D-138 | Configurações salvam sozinhas: caixas na hora, números e textos ao sair do campo ou com Enter; sem os botões "Salvar alterações" e "Descartar alterações". "Aceitar partidas automaticamente" sai do Suporte e vai para Configurações, logo após "Ocultar categorias de mods vazias", com o mesmo texto de ajuda. Pedido pelo usuário em 20/10/2026. | aprovada |
 | D-139 | Cliente com plugins antigos: ao abrir, o SEXO2 reinicia a tela do cliente do LoL (sem tocar no jogo) quando os arquivos dos plugins mudaram desde que o cliente abriu, para não ser preciso fechar o LoL à mão. Só em Início, Lobby ou fim de partida; em fila, seleção ou jogo espera. Loader de outro Pengu do usuário não é reiniciado. Aprovado pelo usuário em 20/10/2026. | aprovada |
 
+## Obsoletas
+
+| ID | Decisão | Motivo |
+|---|---|---|
+| D-118 | Proposta histórica de outras builds, preservada em [PROPOSTA_OUTRAS_BUILDS.md](../PROPOSTA_OUTRAS_BUILDS.md). | Substituída pela D-120 em sexoatividade; preservada na sincronização de galinacio. |
+
 ## Rejeitadas
 
 | ID | Alternativa | Motivo |

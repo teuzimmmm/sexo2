@@ -1,0 +1,52 @@
+OK   nav Mods 
+OK   nav Sala 
+OK   nav Configurações 
+OK   nav Suporte 
+OK   nav Seleção 
+OK   nav Skins 
+OK   A01 alerta de erro 
+OK   A01 suporte com origem 
+OK   A01 selecao preservada no suporte 
+OK   A01 verificacao resolve erro 
+OK   A01 retorno Skins sem perder escolha 
+OK   A02 aplicar skin estado visivel 
+OK   A02 croma Obsidiana inelegível visivel 
+OK   A02 favorita 
+OK   A02 modal editar conjunto 
+OK   A02 conjunto salvo + modal fechado 
+OK   A02 foco restaurado apos modal setEdit|1
+OK   A02 aplicar conjunto estado 
+OK   A06 sorteio nunca inelegivel 
+OK   A06 inelegibilidade antes do ranking 
+OK   A06 bravura oculto->revelado 
+OK   A06 bravura oculto sem campeão 
+OK   A02 coord bloqueado sem sala 
+OK   A03 sala criada 
+OK   A03 copiar chave estado 
+OK   A02 modal informa desativacao 
+OK   A02 perfil desativado efetivo 
+OK   A02 sorteio sala resultado 
+OK   A03 sair da sala 
+OK   A03 reconectar 
+OK   A03 chave invalida erro 
+OK   A03 conectar com chave 
+OK   A02 skins mostra desativado coordenado 
+OK   A02 aplicar conjunto bloqueado em coord 
+OK   A03 10 categorias legadas 
+OK   A03 busca filtra 
+OK   A03 importar exige campeao/skin-base 
+OK   A03 importar habilita apos campeao 
+OK   A03 importado na fila ate fim da selecao 
+OK   A03 fim da selecao processa 
+OK   A03 editar 
+OK   A03 exportar 
+OK   A03 remover 
+OK   A01 erro mods -> suporte 
+OK   A01 retorno Mods 
+OK   A06 rascunho dirty 
+OK   A06 rascunho persiste navegando 
+OK   A06 cancelar descarta 
+OK   A06 salvar grava 
+OK   A06 ouro e aprimoramentos separados 
+OK   A01 suporte relatório 
+0 falhas de 51
