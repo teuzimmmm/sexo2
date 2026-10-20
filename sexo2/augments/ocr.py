@@ -101,10 +101,12 @@ def windows_reader() -> Callable[[Image.Image], str] | None:
         result = await engine.recognize_async(bitmap)
         return result.text
 
+    loop = asyncio.new_event_loop()  # one for every reading; the reader stays on the thread that made it
+
     def read(image: Image.Image) -> str:
         buffer = io.BytesIO()
         prepare(image).save(buffer, format="PNG")
-        return asyncio.run(recognise(buffer.getvalue()))
+        return loop.run_until_complete(recognise(buffer.getvalue()))
 
     return read
 

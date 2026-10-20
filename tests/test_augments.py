@@ -16,7 +16,16 @@ from sexo2.augments.stats import (
     parse_lolalytics_arena,
 )
 from sexo2.augments.view import card_views
-from sexo2.augments.vision import IconMatcher, Layout, card_area, cards_present, crops, read_offer
+from sexo2.augments.vision import (
+    IconMatcher,
+    Layout,
+    border_strip,
+    borders_lit,
+    card_area,
+    cards_present,
+    crops,
+    read_offer,
+)
 
 CAPTURES = Path(__file__).parent / "fixtures" / "augments"
 
@@ -266,6 +275,19 @@ class VisionTests(unittest.TestCase):
         reading = read_offer(part, self.matcher, screen=frame.size, origin=area[:2])
         self.assertEqual([r.augment_id for r in reading], [IDS["G"], IDS["H"], IDS["I"]])
 
+    def test_the_thin_border_strip_lets_every_offer_through_and_stops_champion_select(self):
+        for name in [*LABELS, "no_cards_champ_select"]:
+            with self.subTest(capture=name):
+                frame = capture(name)
+                strip = border_strip(*frame.size)
+                area = card_area(*frame.size)
+                strip_px = (strip[2] - strip[0]) * (strip[3] - strip[1])
+                self.assertLess(strip_px, 0.05 * (area[2] - area[0]) * (area[3] - area[1]))
+                lit = borders_lit(frame.crop(strip), screen=frame.size, origin=strip[:2])
+                self.assertEqual(lit, name != "no_cards_champ_select")
+                if cards_present(frame):
+                    self.assertTrue(lit)
+
     def test_frames_without_cards_give_no_reading(self):
         self.assertFalse(cards_present(capture("no_cards_champ_select")))
         self.assertIsNone(read_offer(capture("no_cards_champ_select"), self.matcher))
@@ -375,6 +397,21 @@ class OverlayTextTests(unittest.TestCase):
         positions = text_positions(1920, 1080)
         self.assertEqual(len(positions), 3)
         self.assertGreater(positions[0][1], Layout().cards(1920, 1080)[0][3])
+
+    def test_the_window_covers_the_text_under_the_cards_not_the_screen(self):
+        from sexo2.overlay.augment_overlay import font_size, text_band, text_positions
+        from sexo2.augments.vision import ARENA_LAYOUT
+
+        for width, height in ((1920, 1080), (1280, 720), (3440, 1440)):
+            for layout in (Layout(), ARENA_LAYOUT):
+                with self.subTest(screen=(width, height), layout=layout):
+                    left, top, right, bottom = text_band(width, height, layout)
+                    self.assertTrue(0 <= left < right <= width and 0 <= top < bottom <= height)
+                    self.assertGreaterEqual(top, max(b[3] for b in layout.cards(width, height)))
+                    size = font_size(height)
+                    for x, y in text_positions(width, height, layout):
+                        self.assertTrue(left < x < right and top <= y - size and y + size + 6 + size < bottom)
+                    self.assertLess((right - left) * (bottom - top), 0.1 * width * height)
 
 
 class ArenaMatchTests(unittest.TestCase):

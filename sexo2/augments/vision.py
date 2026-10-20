@@ -138,6 +138,43 @@ def _shift(box: tuple[int, int, int, int], origin: tuple[int, int]) -> tuple[int
     return (box[0] - origin[0], box[1] - origin[1], box[2] - origin[0], box[3] - origin[1])
 
 
+def _border_box(left: int, top: int, right: int, height: int) -> tuple[int, int, int, int]:
+    """The thin box on a card place's top edge, where a card shows a light frame."""
+    inset = round(0.1 * (right - left))
+    half = max(1, round(0.006 * height))
+    return (left + inset, top - half, right - inset, top + half + 1)
+
+
+def border_strip(width: int, height: int, layout: Layout = Layout()) -> tuple[int, int, int, int]:
+    """The thin row holding every card's top edge: about 2 % of the card area, captured
+    alone while no offer is open."""
+    boxes = [_border_box(left, top, right, height) for left, top, right, _bottom in layout.cards(width, height)]
+    return (
+        max(0, min(b[0] for b in boxes)),
+        max(0, min(b[1] for b in boxes)),
+        min(width, max(b[2] for b in boxes)),
+        min(height, max(b[3] for b in boxes)),
+    )
+
+
+def borders_lit(
+    strip: Image.Image,
+    layout: Layout = Layout(),
+    *,
+    screen: tuple[int, int],
+    origin: tuple[int, int],
+    border_min=150,
+) -> bool:
+    """The first half of :func:`cards_present`, on the :func:`border_strip` alone: every card
+    place shows a light top edge. Never False when cards_present is True."""
+    width, height = screen
+    grey = strip.convert("L")
+    return all(
+        ImageStat.Stat(grey.crop(_shift(_border_box(left, top, right, height), origin))).mean[0] >= border_min
+        for left, top, right, _bottom in layout.cards(width, height)
+    )
+
+
 def cards_present(
     frame: Image.Image,
     layout: Layout = Layout(),
@@ -157,9 +194,7 @@ def cards_present(
     width, height = screen or frame.size
     grey = frame.convert("L")
     for left, top, right, bottom in layout.cards(width, height):
-        inset = round(0.1 * (right - left))
-        half = max(1, round(0.006 * height))
-        border = grey.crop(_shift((left + inset, top - half, right - inset, top + half + 1), origin))
+        border = grey.crop(_shift(_border_box(left, top, right, height), origin))
         face_inset = round(0.25 * (right - left))
         face = grey.crop(
             _shift(

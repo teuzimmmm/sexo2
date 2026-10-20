@@ -5,10 +5,13 @@ look still need approval, and the recognition needs checking in real matches. Li
 gold overlay it needs the game in borderless or windowed mode on the main screen;
 nothing is injected into the game and no choice is ever made for the player.
 
-Work happens only during an Arena or Mayhem match: once a second the card area (not
-the whole screen) is captured and checked for cards; icons are matched only when the
-three cards are there, and twice a second while an offer is open to follow rerolls. The
-card titles are read with the Windows OCR when available (D-115); the icons back it up.
+Work happens only during an Arena or Mayhem match. While no offer is open, once a
+second only the thin row of the cards' top edges is captured (about 2 % of the card
+area); the card area is captured, its icons matched and titles read only when every top
+edge is lit, and twice a second while an offer is open to follow rerolls. The card titles
+are read with the Windows OCR when available (D-115); the icons back it up. The window
+covers only the text under the cards, not the screen, and is redrawn only when the text
+changes.
 """
 
 from __future__ import annotations
@@ -23,7 +26,16 @@ from typing import Any
 from sexo2.augments.ocr import combine, read_titles, windows_reader
 from sexo2.augments.session import AugmentSession, augment_mode, arena_stats, load_catalog, load_templates, mayhem_stats
 from sexo2.augments.view import CardView
-from sexo2.augments.vision import ARENA_LAYOUT, IconMatcher, Layout, card_area, crops, read_offer
+from sexo2.augments.vision import (
+    ARENA_LAYOUT,
+    IconMatcher,
+    Layout,
+    border_strip,
+    borders_lit,
+    card_area,
+    crops,
+    read_offer,
+)
 
 log = logging.getLogger(__name__)
 
@@ -61,6 +73,24 @@ def text_positions(width: int, height: int, layout: Layout = Layout()) -> list[t
         (round((left + right) / 2), round(bottom + 0.018 * height))
         for left, _top, right, bottom in layout.cards(width, height)
     ]
+
+
+def font_size(height: int) -> int:
+    return max(10, round(height * 0.013))
+
+
+def text_band(width: int, height: int, layout: Layout = Layout()) -> tuple[int, int, int, int]:
+    """The screen box holding the text under the cards: the window covers only this."""
+    size = font_size(height)
+    margin = round(0.05 * height)
+    boxes = layout.cards(width, height)
+    ys = [y for _x, y in text_positions(width, height, layout)]
+    return (
+        max(0, min(b[0] for b in boxes) - margin),
+        max(0, min(ys) - size),
+        min(width, max(b[2] for b in boxes) + margin),
+        min(height, max(ys) + 2 * size + 8),
+    )
 
 
 def queue_from_gameflow(session: Any) -> int | None:
@@ -126,23 +156,28 @@ class _Window:
         root.attributes("-topmost", True)
         root.configure(bg=TRANSPARENT)
         root.attributes("-transparentcolor", TRANSPARENT)
-        root.geometry(f"{width}x{height}+0+0")
-        canvas = tk.Canvas(root, width=width, height=height, bg=TRANSPARENT, highlightthickness=0)
+        canvas = tk.Canvas(root, bg=TRANSPARENT, highlightthickness=0)
         canvas.pack()
         root.withdraw()
         root.update_idletasks()
         GoldWindow._click_through(root)
-        size = max(10, round(height * 0.013))
+        size = font_size(height)
+        drawn = None  # what is on screen; the same reading is not drawn again
 
         def draw(cards: tuple[CardView, ...], layout: Layout) -> None:
+            left, top, right, bottom = text_band(width, height, layout)
+            root.geometry(f"{right - left}x{bottom - top}+{left}+{top}")
+            canvas.configure(width=right - left, height=bottom - top)
             canvas.delete("all")
             for card, (x, y) in zip(cards, text_positions(width, height, layout)):
+                x, y = x - left, y - top
                 text, colour = card_text(card)
                 if card.name:  # what was read, so a wrong reading can be noticed
                     canvas.create_text(x, y, text=card.name, fill=MUTED, font=("Segoe UI", max(8, size - 3)))
                 canvas.create_text(x, y + size + 6, text=text, fill=colour, font=("Segoe UI", size, "bold"))
 
         def poll() -> None:
+            nonlocal drawn
             try:
                 while True:
                     item = self._queue.get_nowait()
@@ -151,8 +186,10 @@ class _Window:
                         return
                     if item is None:
                         root.withdraw()
-                    else:
+                        drawn = None
+                    elif item != drawn:
                         draw(*item)
+                        drawn = item
                         root.deiconify()
                         root.attributes("-topmost", True)
             except queue.Empty:
@@ -311,8 +348,16 @@ class AugmentOverlayThread(threading.Thread):
                 self._stop.wait(2.0)
                 continue
             layout = self.layout_for(self._session_key[0])
+            lit = False
             try:
                 screen = _screen_size()
+                if session.tracker.offer is None:
+                    strip = border_strip(*screen, layout)
+                    if not borders_lit(ImageGrab.grab(bbox=strip), layout, screen=screen, origin=strip[:2]):
+                        session.observe(None)
+                        self._stop.wait(1.0)
+                        continue
+                lit = True
                 area = card_area(*screen, layout)
                 part = ImageGrab.grab(bbox=area)
                 reading = read_offer(part, session.matcher, layout, screen=screen, origin=area[:2])
@@ -334,4 +379,4 @@ class AugmentOverlayThread(threading.Thread):
                     shown = False
             except Exception as error:
                 log.debug("[AUGMENTS] reading failed: %s", error)
-            self._stop.wait(0.5 if session.tracker.offer else 1.0)
+            self._stop.wait(0.5 if lit or session.tracker.offer else 1.0)
