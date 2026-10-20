@@ -117,6 +117,20 @@ Todos em **PowerShell**. Rode o primeiro bloco em cada janela nova.
 $root = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'projeto'
 ```
 
+### 5.0 Atalho: um script cria as pastas e os arquivos
+
+`criar-projeto-deepseek.ps1` (na mesma pasta deste guia) cria `Documentos\projeto` com as pastas da
+seção 4, os arquivos de configuração da 5.6 e os briefings da seção 6. Não apaga nem sobrescreve nada que
+já exista. Salve o arquivo e rode:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\criar-projeto-deepseek.ps1            # só pastas e arquivos
+.\criar-projeto-deepseek.ps1 -Clonar    # também clona, cria ds/overlay e as 3 worktrees (5.2 e 5.3)
+```
+
+Os blocos 5.1 a 5.3 abaixo fazem o mesmo passo a passo, à mão.
+
 ### 5.1 Pastas
 
 ```powershell
