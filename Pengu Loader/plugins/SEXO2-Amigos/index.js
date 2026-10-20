@@ -591,7 +591,6 @@
           card.append(
             node('strong', m.name + (m.local ? ' · você' : '')),
             node('p', memberStatus(m), m.ready === true && m.sameLobby ? 'ra-ok' : 'ra-muted'),
-            node('p', m.lotteryOptin ? 'Participa do sorteio' : 'Fora do sorteio', 'ra-muted'),
           );
           if (m.choices.length)
             card.append(
