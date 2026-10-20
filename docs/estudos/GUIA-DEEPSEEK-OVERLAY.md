@@ -79,7 +79,7 @@ andando.
 ```text
 Documentos\
 └── projeto\
-    ├── principal\                 # clone de teuzimmmm/sexo2, branch ds/overlay (criada de amolula)
+    ├── principal\                 # clone de teuzimmmm/sexo2, branch ds/overlay (criada de galinacio)
     │   ├── .git\
     │   ├── CLAUDE.md              # regras do projeto (todos devem ler)
     │   ├── docs\estudos\          # OVERLAYS.md e este guia
@@ -125,12 +125,12 @@ New-Item -ItemType Directory -Force "$root\agentes","$root\config","$root\briefi
 
 ### 5.2 Código: clone e branch de integração
 
-A branch oficial é **`amolula`**. Não use `galinacio`, `sexoatividade` nem `main`.
+A branch oficial é **`galinacio`** (desde 20/10/2026). Não use `amolula`, `sexoatividade` nem `main`.
 
 ```powershell
 git clone https://github.com/teuzimmmm/sexo2.git "$root\principal"
 git -C "$root\principal" fetch origin
-git -C "$root\principal" switch -c ds/overlay origin/amolula
+git -C "$root\principal" switch -c ds/overlay origin/galinacio
 git -C "$root\principal" status
 ```
 
@@ -225,7 +225,7 @@ rode `python scripts/run_tests.py -q` e `ruff check . && ruff format --check .` 
 Integre na branch ds/overlay (cherry-pick de commits revisados). Uma mudança por commit, por finalidade.
 
 REGRAS ABSOLUTAS
-- Nunca faça push, merge na amolula/main, reset --hard, force, nem apague branches. Quem publica sou eu.
+- Nunca faça push, merge na galinacio/main, reset --hard, force, nem apague branches. Quem publica sou eu.
 - Nunca mude: formato de patch/assinatura, mutex, mensagens da ponte, dados em %LOCALAPPDATA%\SEXO2.
 - Textos visíveis, nomes, menus, cores e layout novos NÃO se implementam: registre como pendente
   em docs/produto/decisoes.md e me pergunte. Sem imagens geradas.
@@ -390,7 +390,7 @@ DECISÃO PEDIDA:  (uma pergunta fechada)
 
 ### Forma A (recomendada, sem instalar nada): o Claude desta conversa
 
-1. O coordenador sobe a branch para revisão (isso **não** publica versão; só o `amolula` publica):
+1. O coordenador sobe a branch para revisão (isso **não** publica versão; só a `galinacio` publica):
 
 ```powershell
 Set-Location "$root\principal"
@@ -398,7 +398,7 @@ git push -u origin ds/overlay
 ```
 
 2. Você cola o pedido de escalação aqui e diz o nome da branch. O Claude daqui busca a branch, lê o
-   diff, roda os testes, ajusta o que faltar e, **com o seu "pode"**, leva para o `amolula`, que gera a
+   diff, roda os testes, ajusta o que faltar e, **com o seu "pode"**, leva para a `galinacio`, que gera a
    versão de teste (`teste-<hash>`) para você baixar.
 
 ### Forma B: Claude Code no seu PC, dentro da rede
@@ -509,7 +509,7 @@ git merge ds/overlay            # merge, nunca reset --hard
   jogador em commit, em mensagem do Reason Network ou em capturas versionadas.
 - **Rede Reason:** só você e suas sessões; os nomes de sessão, branch e pasta ficam visíveis a quem estiver
   nela.
-- **Branches:** `main` e `amolula` só são tocadas por mim, com o seu "pode". Todo `push` do `amolula`
+- **Branches:** `main` e `galinacio` só são tocadas por mim, com o seu "pode". Todo `push` da `galinacio`
   gera uma versão de teste pública do repositório privado (CI).
 - **Riot:** o app só lê (API local e tela). Nada de memória do jogo, nada de jogar por você, nada de
   mostrar WR de aprimoramento além do que a decisão D-126 já registrou. Ler o elo dos adversários e

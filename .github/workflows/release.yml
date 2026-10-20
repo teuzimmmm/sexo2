@@ -37,13 +37,13 @@ jobs:
           node --test (Get-ChildItem tests -Filter 'test_*.cjs').FullName
           if ($LASTEXITCODE -ne 0) { throw 'Plugin tests failed.' }
   test-build:
-    # Unsigned test build for manual checks. Pushes to amolula also publish it as a
+    # Unsigned test build for manual checks. Pushes to galinacio also publish it as a
     # GitHub pre-release "teste-<commit>" (authorised by the user); the updater ignores
     # pre-releases (sexo2/update/client.py), so no installation ever receives it.
     needs: test
     permissions:
       contents: write
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/amolula')
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/galinacio')
     runs-on: windows-latest
     # The repository root has an __init__.py, so PyInstaller puts its parent folder on the
     # module path: a checkout folder named "sexo2" would shadow the sexo2 package.
@@ -99,7 +99,7 @@ jobs:
         run: |
           $tag = "teste-$($env:GITHUB_SHA.Substring(0, 7))"
           Compress-Archive -Path dist-test/SEXO2 -DestinationPath SEXO2-teste.zip
-          $notes = "Build de teste da branch amolula ($env:GITHUB_SHA), sem assinatura. Extraia o zip e rode SEXO2.exe com o SEXO2 instalado e o cliente do LoL fechados."
+          $notes = "Build de teste da branch galinacio ($env:GITHUB_SHA), sem assinatura. Extraia o zip e rode SEXO2.exe com o SEXO2 instalado e o cliente do LoL fechados."
           gh release create $tag SEXO2-teste.zip --repo ${{ github.repository }} --prerelease --target $env:GITHUB_SHA --title "SEXO2 teste $tag" --notes $notes
           if ($LASTEXITCODE -ne 0) { throw 'Pre-release failed.' }
           # Keep only the newest test pre-release.

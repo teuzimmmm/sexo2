@@ -1,6 +1,6 @@
 # BULA — agente noturno no Windows: terminar o SEXO2 até a 1.0 (sem decisões de produto)
 
-Cole este documento no Claude Code (Sonnet) que roda no Windows. Branch oficial: `amolula`. Tudo abaixo vale para você e para os agentes que você disparar.
+Cole este documento no Claude Code (Sonnet) que roda no Windows. Branch oficial: `galinacio`. Tudo abaixo vale para você e para os agentes que você disparar.
 
 ## 0. Contexto em 6 linhas
 SEXO2 é um app Python + plugins Pengu para o client do League of Legends. Só duas pessoas o usam (o dono e um amigo): **não existe base de usuários a migrar**. Fase 0.9 pre-launch concluída na `amolula`. A DLL nova (`core.dll`) já foi refeita pelo dono: **não a recompile e não a edite**. Leia primeiro: `CLAUDE.md`, `docs/BRANCH-OFICIAL.md`, `docs/ROADMAP.md`, `docs/PROGRESSO-INTEGRACAO.md`, `docs/produto/decisoes.md`, `docs/comportamentos.md`, `docs/VALIDACAO_WINDOWS.md`.
@@ -19,7 +19,7 @@ SEXO2 é um app Python + plugins Pengu para o client do League of Legends. Só d
 - Cada tarefa tem teto de 20 turnos e uma rodada de correção.
 
 ## 3. Regras de repositório
-- Trabalhe numa branch `noturno/AAAA-MM-DD` criada a partir da `amolula`. Commits pequenos, por finalidade, rodapé `Co-Authored-By: …` do agente que escreveu. **Push só dessa branch.** Nunca `main`, `amolula`, `sexoatividade`, force push, release, tag, PR (o dono revisa de manhã).
+- Trabalhe numa branch `noturno/AAAA-MM-DD` criada a partir da `galinacio`. Commits pequenos, por finalidade, rodapé `Co-Authored-By: …` do agente que escreveu. **Push só dessa branch.** Nunca `main`, `amolula`, `sexoatividade`, force push, release, tag, PR (o dono revisa de manhã).
 - O **CI Windows** (`Validate SEXO2`) é o juiz: ruff check/format, `scripts/run_tests.py -q` (agora no Windows, sem as 7 falhas "só-Windows" de antes: se alguma falhar de verdade, é trabalho), `build_tokens --check`, `node --test`. Uma tarefa só conta como feita com o CI verde (`gh run watch`, bloqueante, sem polling). Teste instável conhecido: `test_startup_resumes_a_game_a_dead_rose_left_suspended` → repita o job.
 - Preserve o crédito legal ao Rose/Pengu/LTK (LICENSE, README "baseado em Rose", instalador, créditos). Preservar comportamentos protegidos (`docs/comportamentos.md`) com o teste correspondente.
 
