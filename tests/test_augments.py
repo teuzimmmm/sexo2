@@ -60,7 +60,16 @@ class CatalogTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_catalog(CHERRY, LISTS, "urf")
         with self.assertRaises(ValueError):
-            build_catalog(CHERRY, [], "arena")
+            build_catalog(CHERRY, [], "mayhem")
+        with self.assertRaises(ValueError):
+            build_catalog([], [], "arena")
+
+    def test_arena_also_takes_augments_missing_from_its_pool(self):
+        # Queue 1750 (20/10/2026): the cards offered were not in the CHERRY pool
+        new = CHERRY + [{"id": 2001, "augmentNameId": "NewArena", "nameTRA": "Nova", "rarity": "kGold"}]
+        arena = build_catalog(new, LISTS, "arena")
+        self.assertEqual([a.id for a in arena.augments], [99, 1205, 2001])  # pool first, Mayhem-only left out
+        self.assertEqual([a.id for a in build_catalog(new, [], "arena").augments], [1205, 1141, 1004, 99, 2001])
 
 
 class StatsTests(unittest.TestCase):

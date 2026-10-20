@@ -46,8 +46,30 @@ def _rows(payload: Any, name: str) -> list[dict]:
     return [row for row in payload if isinstance(row, dict)]
 
 
+def _augment(row: dict, name_id: str) -> Augment:
+    return Augment(
+        id=row["id"],
+        name_id=name_id,
+        name=str(row.get("nameTRA") or name_id),
+        rarity=RARITIES.get(row.get("rarity"), ""),
+        icon_path=str(row.get("augmentSmallIconPath") or ""),
+    )
+
+
+def _pool_names(augment_lists: Any, mode_name: str) -> list[str] | None:
+    pool = next((row for row in _rows(augment_lists, "augment-lists") if row.get("modeName") == mode_name), None)
+    if pool is None or not isinstance(pool.get("augmentList"), list):
+        return None
+    return [str(entry).rsplit("/", 1)[-1] for entry in pool["augmentList"]]
+
+
 def build_catalog(cherry_augments: Any, augment_lists: Any, mode: str) -> Catalog:
-    """The pool of ``mode`` ("arena" or "mayhem") with the entries that did not resolve."""
+    """The pool of ``mode`` ("arena" or "mayhem") with the entries that did not resolve.
+
+    Arena also takes every other augment of ``cherry-augments.json`` (Arena's own file)
+    that is not Mayhem-only: a new Arena queue (1750, October 2026) offered augments
+    missing from the ``CHERRY`` pool, and none of its cards could be recognised.
+    """
     if mode not in MODE_POOLS:
         raise ValueError(f"unsupported mode {mode!r}")
     by_name: dict[str, dict] = {}
@@ -56,12 +78,11 @@ def build_catalog(cherry_augments: Any, augment_lists: Any, mode: str) -> Catalo
         augment_id = row.get("id")
         if isinstance(name_id, str) and name_id and isinstance(augment_id, int) and not isinstance(augment_id, bool):
             by_name.setdefault(name_id, row)
-    pool = next((row for row in _rows(augment_lists, "augment-lists") if row.get("modeName") == MODE_POOLS[mode]), None)
-    if pool is None or not isinstance(pool.get("augmentList"), list):
+    names = _pool_names(augment_lists, MODE_POOLS[mode])
+    if names is None and mode != "arena":
         raise ValueError(f"no augment pool for {MODE_POOLS[mode]}")
     augments, unmatched, seen = [], [], set()
-    for entry in pool["augmentList"]:
-        name_id = str(entry).rsplit("/", 1)[-1]
+    for name_id in names or []:
         row = by_name.get(name_id)
         if row is None:
             unmatched.append(name_id)
@@ -69,13 +90,13 @@ def build_catalog(cherry_augments: Any, augment_lists: Any, mode: str) -> Catalo
         if row["id"] in seen:
             continue
         seen.add(row["id"])
-        augments.append(
-            Augment(
-                id=row["id"],
-                name_id=name_id,
-                name=str(row.get("nameTRA") or name_id),
-                rarity=RARITIES.get(row.get("rarity"), ""),
-                icon_path=str(row.get("augmentSmallIconPath") or ""),
-            )
-        )
+        augments.append(_augment(row, name_id))
+    if mode == "arena":
+        mayhem_only = set(_pool_names(augment_lists, MODE_POOLS["mayhem"]) or []) - set(names or [])
+        for name_id, row in by_name.items():
+            if name_id not in mayhem_only and row["id"] not in seen:
+                seen.add(row["id"])
+                augments.append(_augment(row, name_id))
+    if not augments:
+        raise ValueError(f"no augments for {mode}")
     return Catalog(mode=mode, augments=tuple(augments), unmatched=tuple(unmatched))

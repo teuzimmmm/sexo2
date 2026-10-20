@@ -204,7 +204,13 @@ class AugmentOverlayThread(threading.Thread):
         else:
             directory = ChampionDirectory.from_summary(self._lcu.get("/lol-game-data/assets/v1/champion-summary.json"))
             stats = arena_stats(Client(), directory.slug(champion_id))
-        log.info("[AUGMENTS] %s: %d augments, %d icons", mode, len(catalog.augments), len(matcher._templates))
+        log.info(
+            "[AUGMENTS] %s: %d augments (%d of its pool not in the client data), %d icons",
+            mode,
+            len(catalog.augments),
+            len(catalog.unmatched),
+            len(matcher._templates),
+        )
         return AugmentSession(catalog, matcher, stats)
 
     def layout_for(self, mode: str | None) -> Layout:
@@ -311,6 +317,8 @@ class AugmentOverlayThread(threading.Thread):
                 icons = crops(part, layout, screen=screen, origin=area[:2]) if reading else None
                 session.observe(reading, icons)
                 cards = session.cards()
+                if cards and not shown:  # once per offer: what was read and recognised
+                    log.info("[AUGMENTS] offer: %s", [(card.name, card.state) for card in cards])
                 if cards:
                     if self._window is None:
                         self._window = _Window(screen)
