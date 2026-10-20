@@ -183,22 +183,29 @@ foreach ($n in '01','02','03') {
 
 ### 5.4 Conectar o DeepSeek (OpenCode)
 
-1. Crie uma chave de API no painel da DeepSeek (platform.deepseek.com) e coloque crédito.
+**Se o DeepSeek V4.1 Flash estiver gratuito no seu OpenCode, não precisa de chave de API nem de
+saldo**: pule o `/connect` e vá direto ao passo 2. (Isso eu não consegui verificar daqui; vale o que o
+seu OpenCode mostrar.)
+
+1. Só se o modelo que você quer **não** for gratuito: crie uma chave no painel da DeepSeek
+   (platform.deepseek.com), coloque crédito, abra o OpenCode e rode `/connect` → DeepSeek → cole a chave.
    **Nunca** salve a chave dentro de `projeto\principal` nem em arquivo versionado.
-2. Abra o OpenCode e conecte o provedor:
+2. Veja o identificador **exato** do modelo e use-o no passo 5.6:
 
 ```powershell
 Set-Location "$root\principal"
-opencode          # dentro dele: /connect  → escolha DeepSeek → cole a chave
+opencode models            # lista tudo; procure o DeepSeek V4.1 Flash
+opencode models deepseek   # ou só os do provedor DeepSeek
 ```
 
-3. Veja o identificador **exato** do modelo e use-o no passo 5.6:
+Se o modelo gratuito aparecer sob outro provedor (por exemplo, o do próprio OpenCode), use o ID **inteiro**
+como está na lista (`provedor/modelo`).
 
-```powershell
-opencode models deepseek
-```
+3. Teste uma pergunta curta (ex.: "liste os arquivos de sexo2/overlay") e confirme que responde.
 
-4. Teste uma pergunta curta (ex.: "liste os arquivos de sexo2/overlay") e confirme que responde.
+**Com modelo gratuito, o gargalo deixa de ser dinheiro e passa a ser limite de uso e de simultaneidade:**
+muitas sessões ao mesmo tempo podem bater em limite de requisições. Se começarem a dar erro 429 ou
+respostas lentas, feche o ds-03 e rode duas ao mesmo tempo.
 
 ### 5.5 Conectar o Reason Network
 
@@ -516,8 +523,8 @@ git merge ds/overlay            # merge, nunca reset --hard
 
 ## 11. Limites, custo e segurança
 
-- **Custo:** comece com 4 sessões. Anote o saldo da DeepSeek antes e depois da primeira rodada; só amplie
-  se a rodada trouxe commits integrados. Não deixe os agentes em laço aberto: peça "pare e relate" ao fim
+- **Custo e limite:** comece com 4 sessões. Se o modelo for pago, anote o saldo antes e depois da primeira
+  rodada; se for gratuito, observe erros de limite. Só amplie se a rodada trouxe commits integrados. Não deixe os agentes em laço aberto: peça "pare e relate" ao fim
   de cada tarefa.
 - **Chaves:** a chave da DeepSeek fica só no OpenCode. Nada de chave, `config.ini`, `lockfile` ou nome de
   jogador em commit, em mensagem do Reason Network ou em capturas versionadas.
