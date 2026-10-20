@@ -54,18 +54,23 @@ def presentmon_path() -> Path:
 
 
 def summarize_csv(path: Path) -> dict:
-    """Frames, mean fps, 1 % low fps and present modes of a PresentMon CSV."""
+    """Frames, mean fps, 1 % low fps and present modes of a PresentMon CSV.
+
+    PresentMon 2.x writes a byte order mark and names the columns ``msBetweenPresents`` and
+    ``PresentMode`` (older ones ``MsBetweenPresents``): the names are matched without case.
+    """
     frame_ms, modes = [], Counter()
-    with path.open(newline="", encoding="utf-8", errors="replace") as stream:
+    with path.open(newline="", encoding="utf-8-sig", errors="replace") as stream:
         for row in csv.DictReader(stream):
-            value = row.get("MsBetweenPresents") or row.get("FrameTime") or ""
+            row = {(key or "").strip().lower(): value for key, value in row.items()}
+            value = row.get("msbetweenpresents") or row.get("frametime") or ""
             try:
                 ms = float(value)
             except ValueError:
                 continue
             if ms > 0:
                 frame_ms.append(ms)
-                modes[row.get("PresentMode") or "?"] += 1
+                modes[row.get("presentmode") or "?"] += 1
     if len(frame_ms) < 10:
         return {"frames": len(frame_ms)}
     slow = sorted(frame_ms)[int(len(frame_ms) * 0.99) - 1]

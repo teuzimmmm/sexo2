@@ -28,6 +28,21 @@ class OverlayStudyTests(unittest.TestCase):
         path.write_text("Application,MsBetweenPresents\nx,1.0\n", encoding="utf-8")
         self.assertEqual(study.summarize_csv(path), {"frames": 1})
 
+    def test_a_presentmon_2_csv_with_a_byte_order_mark_and_lowercase_columns_is_read(self):
+        # The real header and rows of a PresentMon 2.4 capture of the game (no overlay on)
+        header = "Application,ProcessID,SwapChainAddress,Runtime,SyncInterval,PresentFlags,Dropped,TimeInSeconds,msInPresentAPI,msBetweenPresents,AllowsTearing,PresentMode"
+        rows = "\n".join(
+            f"League of Legends.exe,9552,0x1,DXGI,1,0,0,{i * 0.0145:.4f},7.8,14.5,0,"
+            + ("Hardware: Independent Flip" if i % 2 else "Composed: Flip")
+            for i in range(100)
+        )
+        path = self.dir / "pm2.csv"
+        path.write_bytes(("\ufeff" + header + "\n" + rows + "\n").encode("utf-8"))
+        result = study.summarize_csv(path)
+        self.assertEqual(result["frames"], 100)
+        self.assertAlmostEqual(result["fps"], 69.0, delta=0.1)
+        self.assertEqual(result["modes"], {"Hardware: Independent Flip": 50, "Composed: Flip": 50})
+
     def test_live_api_keeps_field_names_and_augment_values_only(self):
         data = {
             "activePlayer": {"riotId": "Eu#BR1", "augments": [{"id": 1205, "name": "ADAPt"}], "level": 3},
