@@ -514,3 +514,49 @@ class FavoriteBuildTests(unittest.TestCase):
         for action in timers:
             action()
         self.assertNotEqual(self.top(), [2503, 3158, 3100])
+
+
+class AutomaticRuneImportTests(FavoriteBuildTests):
+    """D-136: without a favourite, the highest win rate page is imported on confirmation."""
+
+    def chosen_pages(self):
+        return [c[1] for c in self.controller.calls if c[0] == "choose"]
+
+    def test_the_highest_win_rate_page_is_imported_when_nothing_was_chosen(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, None)
+        self.confirm()
+        (page,) = self.chosen_pages()
+        self.assertEqual(page.perk_ids[0], 8112)  # "win" layout of FakeStats
+
+    def test_a_page_the_player_chose_is_kept(self):
+        self.confirm()  # the snapshot already has a page applied
+        self.assertEqual(self.chosen_pages(), [])
+
+    def test_the_favourite_wins_over_the_default(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, None)
+        self.favorites.set_runes("sr", 103, {"primary": 8000, "sub": 8100, "perks": [9923, 1, 2]})
+        self.confirm()
+        self.assertEqual([p.perk_ids[0] for p in self.chosen_pages()], [9923])
+
+    def test_a_favourite_the_client_refuses_falls_back_to_the_default(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, "invalid_page")
+        self.favorites.set_runes("sr", 103, {"primary": 8000, "sub": 8100, "perks": [1, 2, 3]})
+        self.confirm()
+        self.assertEqual([p.perk_ids[0] for p in self.chosen_pages()], [1, 8112])
+
+    def test_swiftplay_imports_no_runes(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, None)
+        self.queue = 480
+        self.lcu.session = None
+        self.service.champion_confirmed(103, swiftplay=True)
+        for action in self.timers:
+            action()
+        self.assertEqual(self.chosen_pages(), [])

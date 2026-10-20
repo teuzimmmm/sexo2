@@ -14,7 +14,8 @@ skipped when the same session, champion and opponent were already confirmed.
 A build pinned for the champion (D-135, kept apart for SR and ARAM) is applied on
 that confirmation: its rune page is imported and its item trio heads the set. One
 that no longer fits (the patch changed a rune, the trio left the statistics) is
-not applied; the state says so and the default stays.
+not applied; the state says so and the default stays. Without a favourite the
+highest win rate rune page is imported (D-136), unless the player chose one already.
 """
 
 from __future__ import annotations
@@ -402,8 +403,11 @@ class AssistantService:
             self._favorite_unavailable = set()
             group = group_for(context.mode)
             favorite = self._favorites.get(group, champion_id) if group else {"runes": None, "items": None}
-            if favorite["runes"] and not swiftplay:  # Swiftplay runes are set outside champion select
-                self._apply_favorite_runes(context, favorite["runes"])
+            if not swiftplay:  # Swiftplay runes are set outside champion select
+                if favorite["runes"]:
+                    self._apply_favorite_runes(context, favorite["runes"])
+                if not favorite["runes"] or "runes" in self._favorite_unavailable:
+                    self._apply_default_runes(context)
             self._favorite_wanted = tuple(favorite["items"]) if favorite["items"] else None
         key = (context.session_id, champion_id, self._opponent)
         if key == self._items_key:
@@ -427,6 +431,25 @@ class AssistantService:
             return
         if snapshot.error == "invalid_page":
             self._favorite_unavailable.add("runes")  # the patch changed a rune of the page
+
+    def _apply_default_runes(self, context: ChampSelectContext) -> None:
+        """No favourite (or one that no longer fits): import the highest win rate page (D-136),
+        unless the player already chose a page in this champion select."""
+        try:
+            catalog = self._ensure_catalog()
+            self._controller.set_session(SessionKey(context.session_id, context.champion_id))
+            snapshot = self._controller.snapshot()
+            if snapshot.chosen is not None or snapshot.applied is not None:
+                return
+            stats = self._ensure_stats().runes(
+                context.champion_id, context.mode, context.lane, opponent_id=self._opponent
+            )
+            layout = next((layout for layout in stats.layouts if layout.selection == "win"), None)
+            if layout is None:
+                return
+            self._controller.choose(layout.to_page(catalog))
+        except Exception as error:
+            log.info("[ASSISTANT] no automatic rune page for champion %s: %s", context.champion_id, error)
 
     def _ensure_alternatives(self, context: ChampSelectContext) -> Alternatives | None:
         key = (context.champion_id, context.mode, context.lane)
