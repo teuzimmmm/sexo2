@@ -82,14 +82,16 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  // The new form preserves draft fields across unrelated state and tab changes.
  await page.getByRole('spinbutton',{name:'Limite de pausa do jogo (s)'}).fill('75');
  await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).fill('invalid');
- await page.getByRole('button',{name:'Salvar alterações',exact:true}).click();
+ await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).press('Enter');
  await page.getByText('Pasta inválida',{exact:true}).waitFor();
  assert.equal(await page.getByRole('spinbutton',{name:'Limite de pausa do jogo (s)'}).inputValue(),'75');
  await page.locator('#sexo2-hub>nav').getByRole('button',{name:'Sala',exact:true}).click();
  await page.locator('#sexo2-hub>nav').getByRole('button',{name:'Configurações',exact:true}).click();
  assert.equal(await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).inputValue(),'invalid');
  await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).fill('C:/Riot/Game');
- await page.getByRole('button',{name:'Salvar alterações',exact:true}).click();
+ await page.getByRole('textbox',{name:'Pasta do LoL (Game)'}).press('Enter');
+ assert.equal(await page.getByRole('button',{name:'Salvar alterações'}).count(),0);
+ await page.getByText('Aceitar partidas automaticamente',{exact:true}).waitFor();
  await page.getByText('Configurações salvas.',{exact:true}).waitFor();
  await page.evaluate(()=>window.emit('sexo2-update-state',{available:true,latest:'v1.5.1',message:'Nova versão disponível: v1.5.1',github:'https://github.com/example/sexo2'}));
  assert.equal(await page.getByRole('link',{name:'Abrir GitHub do projeto'}).getAttribute('href'),'https://github.com/example/sexo2');
@@ -100,7 +102,8 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  // A biblioteca de mods agora vive na aba Mods do assistente da seleção (SEXO2-Assistant).
 
  await page.locator('#sexo2-hub>nav').getByRole('button',{name:'Suporte',exact:true}).click();
- await page.getByText('Aceitar partidas automaticamente',{exact:true}).waitFor();
+ await page.getByText('Conferir novamente',{exact:true}).waitFor();
+ assert.equal(await page.locator('#sexo2-amigos-panel').getByText('Aceitar partidas automaticamente').count(),0);
  assert.equal(await page.locator('#sexo2-hub #sexo2-config-panel').count(),0);
  const box=await page.locator('#sexo2-hub').boundingBox();assert.ok(box.x>=0&&box.y>=0&&box.x+box.width<=1280&&box.y+box.height<=720);
  fs.mkdirSync('preview-r6',{recursive:true});await page.screenshot({path:'preview-r6/hub-check.png'});

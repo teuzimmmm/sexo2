@@ -60,6 +60,31 @@ class SettingsTests(unittest.TestCase):
             self.service.save(self.payload)
         self.assertEqual(write.call_args.args[0]["Overlay"], {"gold_enabled": "false", "augments_enabled": "true"})
 
+    def test_auto_accept_is_saved_and_switched_at_once(self):
+        switched = Mock()
+        self.service.on_auto_accept = switched
+        self.payload["autoAccept"] = True
+        with (
+            patch("sexo2.services.settings.set_config_options") as write,
+            patch("sexo2.services.settings.overlay_runtime.apply"),
+        ):
+            saved = self.service.save(self.payload)
+        self.assertEqual(write.call_args.args[0]["General"]["autoaccept"], "true")
+        switched.assert_called_once_with(True)
+        self.assertTrue(saved["autoAccept"])
+
+    def test_a_panel_without_auto_accept_keeps_it_as_it_is(self):
+        with (
+            patch("sexo2.services.settings.set_config_options") as write,
+            patch("sexo2.services.settings.overlay_runtime.apply"),
+            patch("sexo2.services.settings._auto_accept_enabled", return_value=True),
+        ):
+            self.service.save(self.payload)
+        self.assertEqual(write.call_args.args[0]["General"]["autoaccept"], "true")
+        self.payload["autoAccept"] = "yes"
+        with self.assertRaises(ValueError):
+            self.service.save(self.payload)
+
     def test_batch_preserves_other_sections(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "config.ini"

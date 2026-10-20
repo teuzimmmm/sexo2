@@ -794,8 +794,14 @@ class MessageHandler:
                 autostart_status=is_registered_for_autostart,
                 set_autostart=set_autostart,
                 infer_client_path=ConfigManager().infer_client_path_from_league_path,
+                on_auto_accept=self._set_auto_accept,
             )
         return self._settings_service
+
+    def _set_auto_accept(self, enabled):
+        controller = getattr(self.shared_state, "auto_accept_controller", None)
+        if controller is not None:
+            controller.enabled = enabled
 
     def _enqueue_settings(self, payload):
         from sexo2.services.work_queue import SerialWorker

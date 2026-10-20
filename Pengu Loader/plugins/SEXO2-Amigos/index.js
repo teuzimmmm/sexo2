@@ -374,16 +374,7 @@
           panel.append(node('p', 'Escolha um campeão para editar suas favoritas.', 'ra-muted'));
       }
       if (tab === 'Preparo') {
-        const label = node('label', undefined, 'ra-row');
-        const accept = node('input');
-        accept.type = 'checkbox';
-        accept.checked = state.autoAccept === true;
-        accept.onchange = () => request('auto-accept', { enabled: accept.checked });
-        label.append(accept, node('span', 'Aceitar partidas automaticamente'));
-        panel.append(
-          label,
-          node('p', 'Desligado por padrão. Aceita apenas a confirmação de partida; não inicia a busca.', 'ra-muted'),
-        );
+        // "Aceitar partidas automaticamente" lives in Configurações
         panel.append(node('h3', online() ? state.readiness.title : 'Sem resposta do SEXO2'));
         for (const check of state.readiness.checks) {
           const card = node('div', undefined, 'ra-card');

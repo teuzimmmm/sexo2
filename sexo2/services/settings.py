@@ -11,11 +11,13 @@ OVERLAY_KEYS = {"gold": "goldOverlay", "augments": "augmentsOverlay"}
 
 
 class SettingsService:
-    def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path):
+    def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path, on_auto_accept=None):
         self.validate_path = validate_path
         self.autostart_status = autostart_status
         self.set_autostart = set_autostart
         self.infer_client_path = infer_client_path
+        # Switches the running match acceptance at once (it reads the setting only at start)
+        self.on_auto_accept = on_auto_accept
 
     def snapshot(self):
         path = get_config_option("General", "leaguePath", "") or ""
@@ -29,6 +31,7 @@ class SettingsService:
             "gamePathValid": bool(path and self.validate_path(path)),
             "goldOverlay": overlay_enabled("gold"),
             "augmentsOverlay": overlay_enabled("augments"),
+            "autoAccept": _auto_accept_enabled(),
             "version": RELEASE_VERSION,
         }
 
@@ -49,6 +52,10 @@ class SettingsService:
         overlays = {kind: payload.get(key, overlay_enabled(kind)) for kind, key in OVERLAY_KEYS.items()}
         if any(type(value) is not bool for value in overlays.values()):
             raise ValueError("Confira as opções das configurações.")
+        # Moved here from Suporte; a panel from an older build does not send it.
+        auto_accept = payload.get("autoAccept", _auto_accept_enabled())
+        if type(auto_accept) is not bool:
+            raise ValueError("Confira as opções das configurações.")
         path = payload.get("gamePath")
         if not isinstance(path, str):
             raise ValueError("Confira a pasta do League of Legends.")
@@ -65,6 +72,7 @@ class SettingsService:
                 "hide_empty_categories": "true" if payload["hideEmptyCategories"] else "false",
                 "leaguePath": path,
                 "clientPath": client_path,
+                "autoaccept": "true" if auto_accept else "false",
             },
             "Overlay": {f"{kind}_enabled": "true" if value else "false" for kind, value in overlays.items()},
         }
@@ -82,6 +90,8 @@ class SettingsService:
                     ) from error
             raise
         overlay_runtime.apply()
+        if self.on_auto_accept is not None:
+            self.on_auto_accept(auto_accept)
         return {
             "threshold": threshold,
             "monitorAutoResumeTimeout": int(timeout),
@@ -91,5 +101,10 @@ class SettingsService:
             "gamePathValid": bool(path),
             "goldOverlay": overlays["gold"],
             "augmentsOverlay": overlays["augments"],
+            "autoAccept": auto_accept,
             "version": RELEASE_VERSION,
         }
+
+
+def _auto_accept_enabled():
+    return (get_config_option("General", "autoaccept", "false") or "").lower() == "true"

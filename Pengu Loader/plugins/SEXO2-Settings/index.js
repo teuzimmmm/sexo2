@@ -20,6 +20,7 @@
     status = null,
     dirty = false,
     pending = null,
+    again = false,
     sequence = 0,
     settings = null;
   const fields = {};
@@ -56,10 +57,11 @@
     fields[key] = input;
     row.append(title, input);
     form.append(row);
+    // Saved on its own: a box at once, a number or text when the field is left or Enter is pressed
     input.addEventListener('input', () => {
       dirty = true;
-      message('Alterações ainda não salvas.');
     });
+    input.addEventListener('change', autoSave);
     return input;
   }
   function build() {
@@ -96,6 +98,10 @@
       'A pausa dá tempo para preparar as skins. Ao atingir o limite, o aplicativo tenta liberar o jogo.';
     field('autostart', 'Iniciar com Windows', 'checkbox');
     field('hideEmptyCategories', 'Ocultar categorias de mods vazias', 'checkbox');
+    field('autoAccept', 'Aceitar partidas automaticamente', 'checkbox');
+    const acceptHelp = el('p', 'Desligado por padrão. Aceita apenas a confirmação de partida; não inicia a busca.');
+    acceptHelp.className = 's2-help';
+    form.append(acceptHelp);
     form.append(el('h3', 'Overlays'));
     field('goldOverlay', 'Ouro no placar (Tab)', 'checkbox');
     field('augmentsOverlay', 'Aprimoramentos na Arena e no Mayhem', 'checkbox');
@@ -129,22 +135,9 @@
     status = el('p', 'Conectando ao aplicativo…');
     status.setAttribute('role', 'status');
     form.append(status);
-    const actions = el('div');
-    actions.className = 's2-actions';
-    const save = button('Salvar alterações', saveSettings);
-    save.id = 'sexo2-settings-save';
-    actions.append(
-      save,
-      button('Descartar alterações', () => {
-        dirty = false;
-        if (settings) populate(settings);
-        message('Alterações descartadas.');
-      }),
-    );
-    form.append(actions);
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      saveSettings();
+      autoSave();
     });
     root.append(el('h3', 'Mods personalizados'));
     const tools = el('div');
@@ -226,13 +219,18 @@
     pending = { id: 's2-settings-' + ++sequence, saving: false, at: Date.now() };
     bridge.send({ type: 'settings-request', requestId: pending.id });
   }
+  // A change made while the previous one is still being saved goes right after it
+  function autoSave() {
+    if (pending?.saving) again = true;
+    else saveSettings();
+  }
   function saveSettings() {
     if (!bridge?.ready) {
       message('O aplicativo está desconectado. Suas alterações foram mantidas.', true);
       return;
     }
     if (pending) {
-      message('Aguarde a confirmação anterior.');
+      again = true;
       return;
     }
     if (!form.reportValidity()) return;
@@ -243,10 +241,10 @@
       hideEmptyCategories: fields.hideEmptyCategories.checked,
       goldOverlay: fields.goldOverlay.checked,
       augmentsOverlay: fields.augmentsOverlay.checked,
+      autoAccept: fields.autoAccept.checked,
       gamePath: fields.gamePath.value.trim(),
     };
     pending = { id: 's2-settings-' + ++sequence, saving: true, at: Date.now() };
-    lock(true);
     message('Salvando…');
     bridge.send({ type: 'settings-save', requestId: pending.id, ...values });
   }
@@ -274,10 +272,14 @@
     pending = null;
     lock(false);
     if (data.error || data.success === false) {
+      again = false;
       message(data.error || 'Não foi possível salvar. Suas alterações foram mantidas.', true);
       return;
     }
-    if (saving) {
+    if (saving && again) {
+      again = false;
+      saveSettings(); // a newer change arrived while this one was saved
+    } else if (saving) {
       dirty = false;
       populate(data.settings);
       message('Configurações salvas.');
