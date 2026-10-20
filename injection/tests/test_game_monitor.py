@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -19,6 +20,11 @@ class SuspendedGameTests(unittest.TestCase):
         self.game = psutil.Process(child.pid)
         self.game.suspend()
         self.addCleanup(self._resume_quietly)
+        # Windows reports a process as stopped only once every thread is suspended, and a
+        # process that has just started may still be creating threads: wait for it
+        deadline = time.monotonic() + 5
+        while self.game.status() != psutil.STATUS_STOPPED and time.monotonic() < deadline:
+            time.sleep(0.05)
         # Only the stand-in counts as the game, never a real League process
         names = patch.object(game_monitor, "_GAME_PROCESS_NAMES", frozenset({self.game.name().lower()}))
         names.start()
