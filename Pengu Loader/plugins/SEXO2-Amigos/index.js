@@ -618,13 +618,16 @@
           panel.append(card);
         }
       }
-      const footer = node('footer');
-      footer.append(
-        button('Gerar diagnóstico sem chave da sala', () => request('export-diagnostic')),
-        button('Abrir pasta do relatório', () => request('open-diagnostic'), !state.diagnostic),
-      );
-      if (state.diagnostic) footer.append(node('p', state.diagnostic.name, 'ra-muted'));
-      panel.append(footer);
+      // The diagnostic belongs to Suporte (the Preparo tab), not to every menu
+      if (tab === 'Preparo') {
+        const footer = node('footer');
+        footer.append(
+          button('Gerar diagnóstico sem chave da sala', () => request('export-diagnostic')),
+          button('Abrir pasta do relatório', () => request('open-diagnostic'), !state.diagnostic),
+        );
+        if (state.diagnostic) footer.append(node('p', state.diagnostic.name, 'ra-muted'));
+        panel.append(footer);
+      }
       if (focused) {
         const input = [...panel.querySelectorAll('[aria-label]')].find((n) => n.getAttribute('aria-label') === focused);
         if (input) {
