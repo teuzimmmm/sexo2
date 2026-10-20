@@ -173,7 +173,19 @@
     }
   }
 
+  // The client can put a copy of the opening in its place: always animate the one on screen
+  function rebind() {
+    var shown = document.getElementById(ROOT_ID);
+    if (!shown || shown === root) return;
+    root = shown;
+    scene = root.firstElementChild;
+    iconEl = scene.querySelector(".ic");
+    glyphs = Array.prototype.slice.call(scene.querySelectorAll(".g"));
+    probe = root.querySelector(".pr");
+  }
+
   function render(t) {
+    rebind();
     var f = frame(t, M), y = f.y.toFixed(2) + "px", i;
     iconEl.style.transform = "translate3d(" + f.iconL.toFixed(2) + "px," + f.iconT.toFixed(2) + "px,0)";
     for (i = 0; i < 5; i++) {
@@ -251,6 +263,7 @@
   function boot() {
     if (booted || !root) return;
     booted = true;
+    rebind();
     try {
       var c = canvas.getContext("2d");
       c.font = "600 200px Oswald";
@@ -320,7 +333,8 @@
     loadingObs = new MutationObserver(function () {
       if (loadingShown()) return;
       loadingGone = true;
-      if (ended || !booted) unmount();
+      // Once on screen the opening plays to its end, even when the client is ready sooner
+      if (ended) unmount();
     });
     loadingObs.observe(document.body, { childList: true, subtree: true });
     loadingObs.observe(div, { attributes: true, attributeFilter: ["style", "class", "hidden"] });
