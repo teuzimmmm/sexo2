@@ -134,7 +134,7 @@ git -C "$root\principal" switch -c ds/overlay origin/amolula
 git -C "$root\principal" status
 ```
 
-Dependências para rodar os testes (Python 3.12 ou 3.13 no Windows; veja `requirements.txt`):
+Dependências para rodar os testes (o CI usa Python 3.14 no Windows; use o mesmo; veja `requirements.txt`):
 
 ```powershell
 Set-Location "$root\principal"
