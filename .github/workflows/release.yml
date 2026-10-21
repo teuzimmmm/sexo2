@@ -69,16 +69,6 @@ jobs:
           Expand-Archive baseline/SEXO2-baseline.zip -DestinationPath baseline/extracted
           python scripts/restore_build_binaries.py --base baseline/extracted
           if ($LASTEXITCODE -ne 0) { throw 'Binary restore failed.' }
-      - name: PresentMon for the overlay study (optional)
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release download v2.4.1 --repo GameTechDev/PresentMon --pattern "PresentMon-*-x64.exe" --dir pm
-          $exe = Get-ChildItem pm -Filter "PresentMon-*-x64.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($exe) { New-Item -ItemType Directory -Force diagnostic-tools | Out-Null; Copy-Item $exe.FullName diagnostic-tools/PresentMon.exe }
-          else { Write-Warning 'PresentMon not downloaded; the overlay study will report presentmon_missing.' }
-          exit 0
       - name: Build
         shell: pwsh
         run: |

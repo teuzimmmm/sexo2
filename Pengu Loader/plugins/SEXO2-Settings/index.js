@@ -102,12 +102,6 @@
     const acceptHelp = el('p', 'Desligado por padrão. Aceita apenas a confirmação de partida; não inicia a busca.');
     acceptHelp.className = 's2-help';
     form.append(acceptHelp);
-    form.append(el('h3', 'Overlays'));
-    field('goldOverlay', 'Ouro no placar (Tab)', 'checkbox');
-    field('augmentsOverlay', 'Aprimoramentos na Arena e no Mayhem', 'checkbox');
-    const overlayHelp = el('p', 'O jogo precisa estar em tela sem bordas.');
-    overlayHelp.className = 's2-help';
-    form.append(overlayHelp);
     const path = field('gamePath', 'Pasta do LoL (Game)', 'text');
     path.placeholder = 'Automática';
     path.parentElement.classList.add('s2-path');
@@ -239,8 +233,6 @@
       monitorAutoResumeTimeout: Number(fields.monitorAutoResumeTimeout.value),
       autostart: fields.autostart.checked,
       hideEmptyCategories: fields.hideEmptyCategories.checked,
-      goldOverlay: fields.goldOverlay.checked,
-      augmentsOverlay: fields.augmentsOverlay.checked,
       autoAccept: fields.autoAccept.checked,
       gamePath: fields.gamePath.value.trim(),
     };

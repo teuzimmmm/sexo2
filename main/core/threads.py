@@ -88,11 +88,6 @@ def initialize_threads(
     )
     thread_manager.register("LCU Monitor", t_lcu_monitor)
 
-    # Overlays switched on in Configurações (gold over the scoreboard, augment statistics)
-    from sexo2.overlay import runtime as overlay_runtime
-
-    overlay_runtime.setup(thread_manager, state, lcu)
-
     # Start all threads
     thread_manager.start_all()
 

@@ -12,9 +12,6 @@ block_cipher = None
 
 # Collect all data files for packages that need them
 datas = [('hosting-tools/cloudflared.exe','hosting-tools')]
-# PresentMon (MIT, Intel) for the overlay study; downloaded by the CI test build, optional elsewhere
-if Path('diagnostic-tools/PresentMon.exe').is_file():
-    datas += [('diagnostic-tools/PresentMon.exe', 'diagnostic-tools')]
 
 # Assets folder - verify and add entire directory
 import os
@@ -410,7 +407,7 @@ a = Analysis(
     pathex=[str(Path.cwd()), str(Path.cwd() / "build-dependencies")],  # Add current directory to Python path
     binaries=binaries,  # Include injection tool executables
     datas=datas,
-    hiddenimports=hiddenimports + collect_submodules('sexo2') + collect_submodules('winrt') + ['friends.room','friends.selection_guard','party.hosting.controller','party.hosting.friends_relay'],
+    hiddenimports=hiddenimports + collect_submodules('sexo2') + ['friends.room','friends.selection_guard','party.hosting.controller','party.hosting.friends_relay'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
