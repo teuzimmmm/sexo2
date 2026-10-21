@@ -188,6 +188,8 @@ def page_json(page: PageSpec | None) -> dict | None:
 
 
 SWIFT_SLOTS_PATH = "/lol-lobby/v1/lobby/members/localMember/player-slots"
+# The session id of the context built for a Swiftplay lobby champion (there is no champion select).
+SWIFT_SESSION = "swiftplay"
 SWIFT_PERK_KEYS = frozenset(("perkIds", "perkStyle", "perkSubStyle"))
 
 
@@ -207,6 +209,24 @@ def swift_perks(raw: Any, page: PageSpec) -> Any:
         "perkSubStyle": page.sub_style_id,
     }
     return json.dumps(value, separators=(",", ":")) if isinstance(raw, str) else value
+
+
+def slot_page(raw: Any) -> PageSpec | None:
+    """The rune page a Swiftplay slot holds (its ``perks`` value, a JSON string or an object)."""
+    try:
+        parsed = json.loads(raw) if isinstance(raw, str) else raw
+    except ValueError:
+        return None
+    if not isinstance(parsed, dict) or not SWIFT_PERK_KEYS <= parsed.keys():
+        return None
+    values = [
+        parsed["perkStyle"],
+        parsed["perkSubStyle"],
+        *(parsed["perkIds"] if isinstance(parsed["perkIds"], list) else [None]),
+    ]
+    if any(isinstance(v, bool) or not isinstance(v, int) for v in values):
+        return None
+    return PageSpec(parsed["perkStyle"], parsed["perkSubStyle"], tuple(parsed["perkIds"]))
 
 
 def page_from_json(payload: Any) -> PageSpec:
@@ -268,6 +288,8 @@ class AssistantService:
         self._favorite_wanted: tuple[int, ...] | None = None  # trio to put first in the next set
         self._favorite_unavailable: set[str] = set()  # "runes"/"items" pinned but not applicable
         self._swift_runes_done: set[tuple] = set()  # (lobby, champion) whose Swiftplay slot was filled
+        self._swift_context: ChampSelectContext | None = None  # the lobby champion opened in the Hub
+        self._swift_runes: dict = {"chosen": None, "applied": None, "pending": False, "error": None}
         self._ranked_team: list[dict] = []
         self._ranked_enemies: list[dict] = []
         self._ranked_session: str | None = None
@@ -296,14 +318,31 @@ class AssistantService:
             context = self._context
             self._lane = (context.session_id, lane) if context else None
             self._submit(self._refresh)
+        elif kind == "assistant-swiftplay-open":
+            champion = payload.get("championId")
+            if isinstance(champion, bool) or not isinstance(champion, int) or champion <= 0:
+                raise ValueError("championId must be a positive integer")
+            self._submit(lambda: self._swift_open(champion))
+        elif kind == "assistant-swiftplay-close":
+            self._submit(self._swift_close)
         elif kind == "assistant-runes-choose":
             self._choose(str(payload.get("selection") or ""), bool(payload.get("matchup")))
         elif kind == "assistant-runes-edit":
-            self._controller.edit(page_from_json(payload.get("page")))
+            page = page_from_json(payload.get("page"))
+            if self._is_swift():
+                self._submit(lambda: self._swift_apply(page))
+            else:
+                self._controller.edit(page)
         elif kind == "assistant-runes-confirm":
-            self._controller.confirm()
+            if self._is_swift():
+                self._submit(self._publish_state)  # a Swiftplay page is written as it is chosen
+            else:
+                self._controller.confirm()
         elif kind == "assistant-runes-back":
-            self._controller.back()
+            if self._is_swift():
+                self._submit(self._publish_state)
+            else:
+                self._controller.back()
         elif kind == "assistant-items-import":
             self._submit(self._import_items)
         elif kind == "assistant-items-choose":
@@ -448,6 +487,8 @@ class AssistantService:
     def _refresh(self) -> None:
         session = self._read_session()
         context = self._read_context(session)
+        if context is None and self._swift_context is not None:
+            context = self._swift_context  # Swiftplay lobby: no champion select, the opened champion
         self._context = context
         # The team's ranks do not depend on the local player having a champion.
         self._load_ranked(session)
@@ -460,7 +501,10 @@ class AssistantService:
             self._catalog = StyleCatalog.from_payload(self._lcu.get("/lol-perks/v1/styles"))
             self._controller.set_catalog(self._catalog)
         self._ensure_stats()
-        self._controller.set_session(SessionKey(context.session_id, context.champion_id))
+        # A Swiftplay page goes into the lobby slot, not into a live rune page: no controller
+        self._controller.set_session(
+            None if context.session_id == SWIFT_SESSION else SessionKey(context.session_id, context.champion_id)
+        )
         self._error = None
         if context.mode is None:
             self._runes = {}
@@ -500,7 +544,8 @@ class AssistantService:
         except Exception as error:
             log.info("[ASSISTANT] no alternatives for champion %s: %s", context.champion_id, error)
             self._alternatives = None
-        self._controller.display([page for _, page in general + matchup + keystone])
+        if context.session_id != SWIFT_SESSION:
+            self._controller.display([page for _, page in general + matchup + keystone])
         self._publish_state()
 
     def _keystone_ids(self) -> frozenset[int]:
@@ -537,7 +582,8 @@ class AssistantService:
         self._error = None
         self._runes["keystone"] = [(layout, page)]
         displayed = [page for _, page in self._runes.get("general", []) + self._runes.get("matchup", [])]
-        self._controller.display([*displayed, page])
+        if not self._is_swift():
+            self._controller.display([*displayed, page])
         self._publish_state()
 
     def _choose(self, selection: str, matchup: bool) -> None:
@@ -547,6 +593,9 @@ class AssistantService:
         if page is None:
             self._error = "unknown_recommendation"
             self._publish_state()
+            return
+        if self._is_swift():
+            self._submit(lambda: self._swift_apply(page))
             return
         self._controller.choose(page)
 
@@ -600,6 +649,14 @@ class AssistantService:
         return self._catalog
 
     def _apply_favorite_runes(self, context: ChampSelectContext, page: dict) -> None:
+        if context.session_id == SWIFT_SESSION:
+            try:
+                error = self._swift_apply(page_from_json(page))
+            except ValueError:
+                error = "invalid_page"
+            if error is not None:
+                self._favorite_unavailable.add("runes")
+            return
         try:
             self._ensure_catalog()
             self._controller.set_session(SessionKey(context.session_id, context.champion_id))
@@ -716,7 +773,7 @@ class AssistantService:
             self._publish_state()
             return
         if what == "runes":
-            applied = self._controller.snapshot().applied if action == "pin" else None
+            applied = self._applied_page() if action == "pin" else None
             if action == "pin" and applied is None:
                 self._error = "nothing_applied"
                 self._publish_state()
@@ -820,6 +877,94 @@ class AssistantService:
         }
         self._publish_state()
 
+    # Swiftplay: runes and items of one lobby champion --------------------------------
+
+    def _is_swift(self) -> bool:
+        context = self._context
+        return bool(context and context.session_id == SWIFT_SESSION)
+
+    def _applied_page(self) -> PageSpec | None:
+        return self._swift_runes["applied"] if self._is_swift() else self._controller.snapshot().applied
+
+    def _swift_open(self, champion: int) -> None:
+        """The player opened this lobby champion in the Hub: the panel works on it."""
+        queue_id = self._queue_id()
+        mode = QUEUE_MODES.get(queue_id) if isinstance(queue_id, int) else None
+        self._swift_context = ChampSelectContext(
+            session_id=SWIFT_SESSION,
+            champion_id=champion,
+            lane="all",
+            mode=mode,
+            enemies=(),
+            can_edit=True,
+            locked=True,
+        )
+        self._opponent = None
+        self._chosen_build = None
+        if self._items.get("championId") != champion:
+            self._items = {}
+        self._swift_runes = {"chosen": None, "applied": self._slot_page(champion), "pending": False, "error": None}
+        self._refresh()
+        context = self._context
+        if context is not None and context.session_id == SWIFT_SESSION and context.mode is not None:
+            if not self._items.get("blocks"):
+                self._write_items(context, None)  # as at a champion lock: the set is imported at once
+
+    def _swift_close(self) -> None:
+        self._swift_context = None
+        self._swift_runes = {"chosen": None, "applied": None, "pending": False, "error": None}
+        self._refresh()
+
+    def _slot_page(self, champion: int) -> PageSpec | None:
+        try:
+            slots = ((self._lcu.get("/lol-lobby/v2/lobby") or {}).get("localMember") or {}).get("playerSlots")
+            slot = next((s for s in slots or [] if isinstance(s, dict) and s.get("championId") == champion), None)
+            return slot_page(slot.get("perks")) if slot else None
+        except Exception as error:
+            log.info("[ASSISTANT] no Swiftplay slot page: %s", error)
+            return None
+
+    def _swift_apply(self, page: PageSpec) -> str | None:
+        """Write the page into the champion's lobby slot; returns an error code or None."""
+        context = self._context
+        if context is None or context.session_id != SWIFT_SESSION:
+            return "no_session"
+        previous = self._swift_runes["applied"]
+        self._swift_runes = {"chosen": page, "applied": previous, "pending": True, "error": None}
+        self._publish_state()
+        error = self._write_swift_slot(context.champion_id, page)
+        self._swift_runes = {
+            "chosen": page,
+            "applied": page if error is None else previous,
+            "pending": False,
+            "error": error,
+        }
+        self._publish_state()
+        return error
+
+    def _write_swift_slot(self, champion: int, page: PageSpec) -> str | None:
+        try:
+            if validate_page(page, self._ensure_catalog()):
+                return "invalid_page"
+            lobby = self._lcu.get("/lol-lobby/v2/lobby")
+            slots = ((lobby or {}).get("localMember") or {}).get("playerSlots")
+            slot = next((s for s in slots or [] if isinstance(s, dict) and s.get("championId") == champion), None)
+            if slot is None:
+                return "no_swiftplay_slot"
+            value = swift_perks(slot.get("perks"), page)
+            if value is None:
+                return "slot_format"
+            slot["perks"] = value
+            response = self._lcu.put(SWIFT_SLOTS_PATH, slots, 10, headers={"x-riot-source": "rcp-fe-lol-parties"})
+            if getattr(response, "status_code", None) not in (200, 201, 204):
+                return "slot_refused"
+            # What the player picks here is never overwritten by the automatic fill (D-137)
+            self._swift_runes_done.add((str((lobby or {}).get("partyId") or ""), champion))
+            return None
+        except Exception as error:
+            log.info("[ASSISTANT] Swiftplay rune page not written: %s", error)
+            return "slot_failed"
+
     # State -------------------------------------------------------------------
 
     def _on_runes(self, snapshot: RuneImportSnapshot) -> None:
@@ -838,11 +983,18 @@ class AssistantService:
         snapshot = snapshot or self._controller.snapshot()
         context = self._context
         runes = self._runes
+        swift = self._is_swift()
+        chosen, applied, pending, rune_error = (
+            (snapshot.chosen, snapshot.applied, snapshot.pending, snapshot.error)
+            if not swift
+            else tuple(self._swift_runes[k] for k in ("chosen", "applied", "pending", "error"))
+        )
         queue_id = self._queue_id()
         return {
             "type": "assistant-state",
             # False in queues without statistics: the panel then opens the mods directly
             "supported": isinstance(queue_id, int) and queue_id in QUEUE_MODES,
+            "swiftplay": swift,
             "championId": context.champion_id if context else None,
             "lane": context.lane if context else None,
             "mode": context.mode if context else None,
@@ -856,10 +1008,10 @@ class AssistantService:
                 "matchup": [layout_json(layout, page) for layout, page in runes.get("matchup", [])],
                 "keystone": [layout_json(layout, page) for layout, page in runes.get("keystone", [])],
                 "keystonePending": self._keystone_pending,
-                "chosen": page_json(snapshot.chosen),
-                "applied": page_json(snapshot.applied),
-                "pending": snapshot.pending,
-                "error": snapshot.error,
+                "chosen": page_json(chosen),
+                "applied": page_json(applied),
+                "pending": pending,
+                "error": rune_error,
             },
             "items": dict(self._items),
             "options": _options_json(self._alternatives),

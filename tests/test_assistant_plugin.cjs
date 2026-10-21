@@ -125,6 +125,15 @@ test('the default build shows only the first group as Inicial, Essenciais and Si
   assert.equal(A.defaultBuild([block('Itens iniciais', 4)]).inicial, null);
 });
 
+test('a tela do Swiftplay mostra só Runas e Itens e conhece os erros do espaço do lobby', () => {
+  assert.deepEqual(A.visibleTabs(false, false, true).map(([k]) => k), ['runes', 'items']);
+  assert.deepEqual(A.visibleTabs(false, true, true).map(([k]) => k), ['runes', 'items']);
+  assert.equal(A.runeError('invalid_page'), 'Página incompleta ou inválida.');
+  assert.equal(A.runeError('no_swiftplay_slot'), 'Esse campeão não está mais no lobby.');
+  assert.equal(A.runeError('slot_refused'), 'O cliente recusou a página.');
+  assert.equal(A.runeError('slot_format'), 'O cliente recusou a página.');
+});
+
 test('sem estatísticas só Equipe, Mods e Todas as configurações aparecem; Equipe só com elenco', () => {
   const keys = (noStats, hasTeam) => A.visibleTabs(noStats, hasTeam).map(([k]) => k);
   // Summoner's Rift (ranqueadas, normais): tudo

@@ -765,3 +765,138 @@ class SwiftplayRuneTests(unittest.TestCase):
             slot["perks"] = "something else"
         self.confirm()
         self.assertEqual(self.slot_puts(), [])
+
+
+class SwiftplayPanelTests(unittest.TestCase):
+    """The Hub's Swiftplay screen opens one lobby champion in the assistant: runes go into its slot."""
+
+    PERKS = '{"perkIds":[8005,9111,9104,8014,8226,8210,5005,5008,5001],"perkStyle":8000,"perkSubStyle":8200}'
+
+    def setUp(self):
+        from sexo2.services.favorite_builds import FavoriteBuilds
+
+        self.lcu = FakeLCU()
+        self.lcu.session = None  # a lobby: there is no champion select
+        self.lobby = {
+            "partyId": "p-1",
+            "localMember": {
+                "playerSlots": [
+                    {"championId": 103, "skinId": 103000, "perks": self.PERKS, "spell1": 4},
+                    {"championId": 86, "skinId": 86000, "perks": self.PERKS, "spell1": 4},
+                ]
+            },
+        }
+        get = self.lcu.get
+        self.lcu.get = lambda path, **kw: (
+            copy.deepcopy(self.lobby) if path == "/lol-lobby/v2/lobby" else get(path, **kw)
+        )
+        self.published = []
+        self.controller = FakeController()
+        self.favorites = FavoriteBuilds()
+
+        class WithBuilds(FakeStats):
+            with_builds = True
+
+        self.service = AssistantService(
+            self.lcu,
+            self.published.append,
+            queue_id=lambda: 480,
+            in_champ_select=lambda: False,
+            stats_factory=WithBuilds,
+            worker=InlineWorker(),
+            controller=self.controller,
+            schedule=lambda delay, action: None,
+            favorites=self.favorites,
+        )
+
+    def slot_puts(self):
+        return [p for p in self.lcu.puts if isinstance(p, list)]
+
+    def open(self, champion=103):
+        self.service.handle({"type": "assistant-swiftplay-open", "championId": champion})
+        return self.published[-1]
+
+    def test_opening_a_champion_publishes_its_swiftplay_state_with_the_slot_page(self):
+        state = self.open()
+        self.assertTrue(state["swiftplay"])
+        self.assertEqual((state["championId"], state["mode"], state["lane"]), (103, "swift", "all"))
+        self.assertEqual([r["selection"] for r in state["runes"]["general"]], ["win", "pick"])
+        applied = state["runes"]["applied"]
+        self.assertEqual((applied["primary"], applied["sub"], applied["perks"][0]), (8000, 8200, 8005))
+        self.assertEqual(self.controller.calls, [("set_catalog", self.service._catalog), ("set_session", None)])
+
+    def test_choosing_a_recommendation_writes_only_that_champions_slot(self):
+        self.open()
+        self.service.handle({"type": "assistant-runes-choose", "selection": "win", "matchup": False})
+        (slots,) = self.slot_puts()
+        self.assertEqual(json.loads(slots[0]["perks"])["perkIds"][0], 8112)
+        self.assertEqual(slots[1]["perks"], self.PERKS)  # the other champion keeps its page
+        self.assertEqual(slots[0]["spell1"], 4)
+        state = self.published[-1]
+        self.assertEqual(state["runes"]["applied"]["perks"][0], 8112)
+        self.assertFalse(state["runes"]["pending"])
+        self.assertIsNone(state["runes"]["error"])
+        self.assertNotIn("choose", [call[0] for call in self.controller.calls])  # no live rune page
+
+    def test_an_edited_page_is_written_when_valid_and_refused_when_not(self):
+        self.open()
+        valid = {"primary": 8100, "sub": 8200, "perks": [8112, 8139, 8140, 8106, 8226, 8210, 5005, 5008, 5001]}
+        self.service.handle({"type": "assistant-runes-edit", "page": valid})
+        self.assertEqual(len(self.slot_puts()), 1)
+        broken = {"primary": 8100, "sub": 8100, "perks": [8112, 8139, 8140, 8106, 8226, 8210, 5005, 5008, 5001]}
+        self.service.handle({"type": "assistant-runes-edit", "page": broken})
+        self.assertEqual(len(self.slot_puts()), 1)  # nothing sent for an invalid page
+        state = self.published[-1]
+        self.assertEqual(state["runes"]["error"], "invalid_page")
+        self.assertEqual(state["runes"]["applied"]["perks"][0], 8112)  # the last good page stays
+
+    def test_a_champion_that_left_the_lobby_has_no_slot(self):
+        self.open(1)
+        self.service.handle({"type": "assistant-runes-choose", "selection": "win", "matchup": False})
+        self.assertEqual(self.slot_puts(), [])
+        self.assertEqual(self.published[-1]["runes"]["error"], "no_swiftplay_slot")
+
+    def test_an_unknown_slot_format_is_not_overwritten(self):
+        for slot in self.lobby["localMember"]["playerSlots"]:
+            slot["perks"] = "something else"
+        self.open()
+        self.service.handle({"type": "assistant-runes-choose", "selection": "win", "matchup": False})
+        self.assertEqual(self.slot_puts(), [])
+        self.assertEqual(self.published[-1]["runes"]["error"], "slot_format")
+
+    def test_the_players_pick_is_never_filled_over_by_the_automatic_import(self):
+        self.open()
+        self.service.handle({"type": "assistant-runes-choose", "selection": "pick", "matchup": False})
+        self.assertIn(("p-1", 103), self.service._swift_runes_done)
+
+    def test_opening_a_champion_imports_its_item_set_like_a_lock_does(self):
+        state = self.open()
+        self.assertTrue(state["items"]["confirmed"])
+        self.assertEqual(state["items"]["championId"], 103)
+        self.assertTrue([p for p in self.lcu.puts if isinstance(p, dict) and "itemSets" in p])
+
+    def test_items_are_imported_for_the_opened_champion(self):
+        self.open()
+        self.service.handle({"type": "assistant-items-import"})
+        sets = [p for p in self.lcu.puts if isinstance(p, dict) and "itemSets" in p]
+        self.assertTrue(sets)
+        self.assertTrue(self.published[-1]["items"]["confirmed"])
+        self.assertEqual(self.published[-1]["items"]["championId"], 103)
+
+    def test_a_favourite_page_can_be_pinned_from_the_swiftplay_screen(self):
+        self.open()
+        self.service.handle({"type": "assistant-runes-choose", "selection": "win", "matchup": False})
+        self.service.handle({"type": "assistant-favorite", "what": "runes", "action": "pin"})
+        self.assertEqual(self.favorites.get("sr", 103)["runes"]["perks"][0], 8112)
+
+    def test_closing_goes_back_to_no_session(self):
+        self.open()
+        self.service.handle({"type": "assistant-swiftplay-close"})
+        state = self.published[-1]
+        self.assertFalse(state["swiftplay"])
+        self.assertIsNone(state["championId"])
+
+    def test_an_invalid_champion_is_rejected(self):
+        for bad in (0, -3, True, "103", None):
+            with self.assertRaises(ValueError):
+                self.service.handle({"type": "assistant-swiftplay-open", "championId": bad})

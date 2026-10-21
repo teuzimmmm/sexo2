@@ -221,10 +221,12 @@
   const RUNE_ERRORS = {
     cannot_edit: "A seleção terminou antes da confirmação.",
     no_free_page: "Sem espaço para a página do SEXO2. Apague uma página no cliente.",
+    invalid_page: "Página incompleta ou inválida.",
+    no_swiftplay_slot: "Esse campeão não está mais no lobby.",
   };
   function runeError(code) {
     if (!code) return "";
-    return RUNE_ERRORS[code] || (/^(lcu_|not_confirmed)/.test(code) ? "O cliente recusou a página." : "Falha ao importar.");
+    return RUNE_ERRORS[code] || (/^(lcu_|not_confirmed|slot_)/.test(code) ? "O cliente recusou a página." : "Falha ao importar.");
   }
   function itemError(code, champion) {
     if (!code) return "";
@@ -234,8 +236,9 @@
 
   // Sem estatísticas (Arena e outras filas) só Equipe, Mods e as configurações fazem sentido (decisão de 19/10/2026).
   // Equipe só existe com um elenco na seleção de campeões: não aparece no Swiftplay, que não tem.
-  function visibleTabs(noStats, hasTeam) {
+  function visibleTabs(noStats, hasTeam, embedded = false) {
     const all = [["runes", "Runas"], ["items", "Itens"], ["team", "Equipe"], ["mods", "Mods"], ["settings", "Todas as configurações"]];
+    if (embedded) return all.filter(([k]) => k === "runes" || k === "items"); // the Hub's Swiftplay screen
     return all.filter(([k]) => (k !== "team" || hasTeam) && (!noStats || k === "team" || k === "mods" || k === "settings"));
   }
   const hasTeamRows = (st) => !!(st && st.ranked && ((st.ranked.team || []).length || (st.ranked.enemies || []).length));
@@ -329,6 +332,10 @@
 #sexo2-assistant .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-2);height:100%;color:var(--s2-fg-2);text-align:center;padding:var(--sp-4);}
 #sexo2-assistant .skeleton{background:linear-gradient(90deg,#1b1d21 25%,#22252a 50%,#1b1d21 75%);background-size:200% 100%;animation:s2sk 1.2s infinite;}
 @keyframes s2sk{to{background-position:-200% 0}}
+#sexo2-assistant.embedded{position:static;width:100%;height:auto;box-shadow:none;border:0;background:transparent;}
+#sexo2-assistant.embedded .asst-head,#sexo2-assistant.embedded .s2-tabs{display:none;}
+#sexo2-assistant.embedded .asst-body{overflow:visible;padding:var(--sp-3) 0;}
+#sexo2-assistant.embedded .asst-foot{padding:0;}
 `;
 
   function start() {
@@ -356,6 +363,9 @@
     let button = null;
     let observer = null;
     let bridge = null;
+    // Swiftplay: the panel lives inside the Hub screen of one lobby champion
+    let embeddedHost = null;
+    let embeddedChampion = null;
 
     // Dados do cliente (uma vez por sessão do cliente).
     let loading = null;
@@ -451,10 +461,10 @@
       };
       return `<div class="rec-cards">${st.runes.general.map(card).join("")}</div>
         ${fav ? favRow() : ""}
-        <div class="section-head">
+        ${st.swiftplay ? "" : `<div class="section-head">
           <span class="t-heading">${opp ? "Contra " + esc(champName(opp)) : "Contra"}</span>
         </div>
-        ${vs.length ? vs.map(row).join("") : `<div class="s2-empty">${opp ? `Sem dados suficientes contra ${esc(champName(opp))}.` : "Adversário de rota incerto."}</div>`}
+        ${vs.length ? vs.map(row).join("") : `<div class="s2-empty">${opp ? `Sem dados suficientes contra ${esc(champName(opp))}.` : "Adversário de rota incerto."}</div>`}`}
         ${otherKeystones()}`;
     }
 
@@ -622,7 +632,7 @@
     function draw() {
       if (panel.hidden) return;
       const st = S.state;
-      const tabs = visibleTabs(S.noStats, hasTeamRows(st));
+      const tabs = visibleTabs(S.noStats, hasTeamRows(st), !!embeddedHost);
       if (!tabs.some(([k]) => k === S.tab)) S.tab = S.noStats ? "mods" : "runes"; // the tab it was on is gone (the team left)
       const lane = S.lanePending || (st && st.lane);
       const opp = st && st.opponentId;
@@ -655,7 +665,7 @@
     }
 
     function place() {
-      if (panel.hidden) return;
+      if (panel.hidden || embeddedHost) return;
       const size = { width: PANEL_WIDTH, height: PANEL_HEIGHT };
       const viewport = { width: window.innerWidth, height: window.innerHeight };
       const r = button && button.isConnected ? anchorRect(button) : null;
@@ -780,11 +790,12 @@
       }
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !panel.hidden) close();
+      if (e.key === "Escape" && !panel.hidden && !embeddedHost) close();
     });
 
     function receive(state) {
       if (!state || state.type !== "assistant-state") return;
+      if (!!embeddedHost !== !!state.swiftplay) return;
       const previous = S.state;
       if (previous && previous.championId !== state.championId) {
         S.screen = "home";
@@ -833,6 +844,40 @@
       },
       close,
       isOpen: () => !panel.hidden,
+      // The Hub's Swiftplay screen shows the runes and items of one lobby champion here.
+      embed(host, championId, tab = "runes") {
+        reattach();
+        connectBridge();
+        const same = embeddedHost && embeddedChampion === championId;
+        embeddedHost = host;
+        embeddedChampion = championId;
+        panel.classList.add("embedded");
+        panel.style.left = panel.style.top = panel.style.height = "";
+        host.appendChild(panel);
+        panel.hidden = false;
+        if (tab === "runes" || tab === "items") {
+          if (S.tab !== tab) S.screen = "home";
+          S.tab = tab;
+        }
+        if (!same) {
+          S.screen = "home";
+          S.draft = null;
+          S.state = null;
+          loadClientData();
+          send({ type: "assistant-swiftplay-open", championId });
+        }
+        render();
+      },
+      release() {
+        if (!embeddedHost) return;
+        embeddedHost = null;
+        embeddedChampion = null;
+        panel.classList.remove("embedded");
+        panel.hidden = true;
+        S.state = null;
+        if (panel.parentNode !== document.body) document.body.appendChild(panel);
+        send({ type: "assistant-swiftplay-close" });
+      },
     };
     console.log("[SEXO2-Assistant] ready");
     window.dispatchEvent(new Event("sexo2-assistant-ready"));
@@ -849,7 +894,7 @@
       bridge.subscribe("champion-locked", () => !panel.hidden && send({ type: "assistant-request" }));
       bridge.subscribe("phase-change", (d) => {
         if (d && d.phase === "ChampSelect") send({ type: "assistant-request" }); // know the queue before a click
-        else if (d && d.phase !== "FINALIZATION") close();
+        else if (d && d.phase !== "FINALIZATION" && !embeddedHost) close();
       });
       return true;
     }

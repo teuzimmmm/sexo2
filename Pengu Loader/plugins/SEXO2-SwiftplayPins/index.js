@@ -29,7 +29,7 @@
   }
   if (window.__sexo2SwiftplayPinsLoaded) return;
   window.__sexo2SwiftplayPinsLoaded = true;
-  let bridge, state = null, draft = {}, dirty = false, open = false, chooser = null;
+  let bridge, state = null, draft = {}, dirty = false, open = false, chooser = null, tab = "skins";
   let pending = null, saving = false, lastState = 0, message = "", sequence = 0, transportHidden = false, hubActive = null;
   const prefix = `swiftplay-r2-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const root = document.createElement("div");
@@ -51,6 +51,11 @@
 #sexo2-swiftplay-pins .rsp-close {border:0;background:transparent;padding:3px 5px;font-size:20px}
 #sexo2-swiftplay-pins .rsp-muted {color:var(--s2-fg-3);font-size:12px;margin:8px 0 12px}
 #sexo2-swiftplay-pins .rsp-sub {margin:14px 0 8px}
+#sexo2-swiftplay-pins .rsp-tabs {display:flex;margin:12px 0 0;border-bottom:1px solid var(--s2-line)}
+#sexo2-swiftplay-pins .rsp-tabs button {border:0;background:transparent;margin:0;padding:7px 12px 6px;font:500 13px var(--s2-font-display);letter-spacing:.05em;text-transform:uppercase;color:var(--s2-fg-3)}
+#sexo2-swiftplay-pins .rsp-tabs button:hover {color:var(--s2-fg-2)}
+#sexo2-swiftplay-pins .rsp-tabs button[aria-selected="true"] {color:var(--s2-fg);box-shadow:inset 0 -2px 0 var(--s2-fg)}
+#sexo2-swiftplay-pins .rsp-build {margin-top:8px}
 #sexo2-swiftplay-pins .rsp-champs {display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin-top:6px}
 #sexo2-swiftplay-pins .rsp-champ {display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;margin:0;min-width:0}
 #sexo2-swiftplay-pins .rsp-champ img {width:56px;height:56px;display:block;object-fit:cover}
@@ -73,7 +78,7 @@
 `;
   document.head.appendChild(style);
   document.body.appendChild(root);
-  window.addEventListener('sexo2-hub-friends',e=>{if(root.closest('#sexo2-hub')){hubActive=e.detail.tab==='Swiftplay';if(!hubActive)root.hidden=true;}});
+  window.addEventListener('sexo2-hub-friends',e=>{if(root.closest('#sexo2-hub')){hubActive=e.detail.tab==='Swiftplay';if(!hubActive){root.hidden=true;leaveBuild();}}});
   window.addEventListener('sexo2-hub-swiftplay',e=>{hubActive=true;e.detail.target.appendChild(root);open=true;render();});
   let announced = null;
   function announce() {
@@ -114,8 +119,13 @@
   }
   function editable() {return available() && state.editable && !saving && !state.error;}
   const plain = value => value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  // The runes and items page is the champion select assistant, shown inside this screen
+  const assistant = () => window.__sexo2Assistant;
+  function leaveBuild() {
+    try { assistant()?.release?.(); } catch (e) { /* the assistant is optional */ }
+  }
   function render() {
-    const viewKey = JSON.stringify([state?.championIds || [], chooser]);
+    const viewKey = JSON.stringify([state?.championIds || [], chooser, tab]);
     const sameView = root.dataset.viewKey === viewKey;
     const oldSearch = root.querySelector('.rsp-search');
     const position = sameView ? {
@@ -128,7 +138,8 @@
     root.dataset.viewKey = viewKey;
     root.hidden = !available();
     root.replaceChildren();
-    if (root.hidden) return;
+    if (root.hidden) { leaveBuild(); return; }
+    let buildHost = null;
     if (open) {
       const panel = el("section", "rsp-panel");
       panel.setAttribute("aria-label", "Skins fixadas de Swiftplay");
@@ -137,44 +148,58 @@
       panel.append(header);
       const c = chooser !== null ? state.champions.find(c => c.championId === chooser) : null;
       if (c) {
-        // One champion: its skins as cards; clicking pins or unpins and saves at once.
+        // One champion: Skins (cards; clicking pins or unpins and saves at once) and Runas e itens
         const head = el("div", "rsp-head");
         head.append(button("← Voltar", () => {chooser=null;render();}, ""), el("h3", "", c.name));
-        const search = el("input", "rsp-search");
-        search.type = "search"; search.placeholder = "Buscar skin";
-        search.setAttribute("aria-label", `Buscar skin de ${c.name}`);
-        search.value = position?.query || '';
-        const grid = el("div", "rsp-grid");
-        const draw = () => {
-          grid.replaceChildren();
-          const query = plain(search.value);
-          for (const skin of c.skins.filter(s => plain(s.name).includes(query))) {
-            const picked = draft[c.championId] === skin.skinId;
-            const card = el("div", "rsp-card");
-            const tile = button("", () => {
-              if (!editable()) return;
-              draft[c.championId] = picked ? null : skin.skinId;
-              dirty = true; message = "";
-              request(makeSave(state, draft));
-            }, "rsp-tile");
-            tile.disabled = !editable();
-            tile.setAttribute("aria-pressed", String(picked));
-            tile.setAttribute("aria-label", "Fixar " + skin.name);
-            if (asset(skin.tilePath)) tile.append(thumbnail(skin.tilePath, "", true));
-            tile.append(el("span", "", skin.name));
-            card.append(tile);
-            grid.append(card);
-          }
-          if (!grid.childElementCount) grid.append(el("p", "rsp-muted", "Nenhuma skin com esse nome."));
-        };
-        search.addEventListener("input", draw); draw();
-        panel.append(head, search, grid);
+        const tabs = el("div", "rsp-tabs");
+        tabs.setAttribute("role", "tablist");
+        for (const [key, label] of [["skins", "Skins"], ["runes", "Runas"], ["items", "Itens"]]) {
+          const tabButton = button(label, () => {tab=key; render();}, "");
+          tabButton.setAttribute("role", "tab");
+          tabButton.setAttribute("aria-selected", String(tab === key));
+          tabs.append(tabButton);
+        }
+        panel.append(head, tabs);
+        if (tab === "runes" || tab === "items") {
+          buildHost = el("div", "rsp-build");
+          panel.append(buildHost);
+        } else {
+          const search = el("input", "rsp-search");
+          search.type = "search"; search.placeholder = "Buscar skin";
+          search.setAttribute("aria-label", `Buscar skin de ${c.name}`);
+          search.value = position?.query || '';
+          const grid = el("div", "rsp-grid");
+          const draw = () => {
+            grid.replaceChildren();
+            const query = plain(search.value);
+            for (const skin of c.skins.filter(s => plain(s.name).includes(query))) {
+              const picked = draft[c.championId] === skin.skinId;
+              const card = el("div", "rsp-card");
+              const tile = button("", () => {
+                if (!editable()) return;
+                draft[c.championId] = picked ? null : skin.skinId;
+                dirty = true; message = "";
+                request(makeSave(state, draft));
+              }, "rsp-tile");
+              tile.disabled = !editable();
+              tile.setAttribute("aria-pressed", String(picked));
+              tile.setAttribute("aria-label", "Fixar " + skin.name);
+              if (asset(skin.tilePath)) tile.append(thumbnail(skin.tilePath, "", true));
+              tile.append(el("span", "", skin.name));
+              card.append(tile);
+              grid.append(card);
+            }
+            if (!grid.childElementCount) grid.append(el("p", "rsp-muted", "Nenhuma skin com esse nome."));
+          };
+          search.addEventListener("input", draw); draw();
+          panel.append(search, grid);
+        }
       } else {
-        panel.append(el("h3", "rsp-sub", "Skins fixadas por campeão"));
+        panel.append(el("h3", "rsp-sub", "Skins, runas e itens por campeão"));
         const champs = el("div", "rsp-champs");
         for (const c of state.champions) {
           const skin = c.skins.find(s => s.skinId === draft[c.championId]);
-          const pick = button("", () => {chooser=c.championId; render();}, "rsp-champ");
+          const pick = button("", () => {chooser=c.championId; tab="skins"; render();}, "rsp-champ");
           pick.disabled = !editable();
           pick.setAttribute("aria-label", c.name);
           pick.append(thumbnail(c.portrait, ""), el("span", "", c.name));
@@ -189,6 +214,11 @@
       root.append(panel);
     }
     root.append(button("SEXO2 · Fixar skins", () => {open=!open;render();}, "rsp-launch"));
+    if (buildHost && assistant()?.embed) assistant().embed(buildHost, chooser, tab);
+    else {
+      if (buildHost) buildHost.textContent = "Runas e itens indisponíveis.";
+      leaveBuild();
+    }
     if (position) {
       const search = root.querySelector('.rsp-search');
       if (position.focused && search) {
