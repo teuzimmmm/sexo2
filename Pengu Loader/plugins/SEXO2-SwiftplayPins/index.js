@@ -40,10 +40,11 @@
 #sexo2-swiftplay-pins {position:fixed;left:2.5%;bottom:110px;z-index:10001;width:min(32vw,410px);color:var(--s2-fg);font:13px var(--s2-font-text);pointer-events:none}
 #sexo2-swiftplay-pins[hidden] {display:none!important}
 #sexo2-swiftplay-pins * {box-sizing:border-box}
-#sexo2-swiftplay-pins button,#sexo2-swiftplay-pins input {font:inherit;color:var(--s2-fg);border:1px solid var(--s2-line);border-radius:0;background:var(--s2-surface-2);padding:8px 12px}
-#sexo2-swiftplay-pins button {cursor:pointer}
-#sexo2-swiftplay-pins button:hover {background:var(--s2-hover)}
-#sexo2-swiftplay-pins button:disabled {cursor:default;opacity:.45}
+/* the embedded assistant keeps its own (bare) icon buttons */
+#sexo2-swiftplay-pins button:not(#sexo2-assistant button),#sexo2-swiftplay-pins input {font:inherit;color:var(--s2-fg);border:1px solid var(--s2-line);border-radius:0;background:var(--s2-surface-2);padding:8px 12px}
+#sexo2-swiftplay-pins button:not(#sexo2-assistant button) {cursor:pointer}
+#sexo2-swiftplay-pins button:not(#sexo2-assistant button):hover {background:var(--s2-hover)}
+#sexo2-swiftplay-pins button:not(#sexo2-assistant button):disabled {cursor:default;opacity:.45}
 #sexo2-swiftplay-pins .rsp-launch {pointer-events:auto;font-weight:600}
 #sexo2-swiftplay-pins .rsp-panel {pointer-events:auto;background:var(--s2-surface);border:1px solid var(--s2-line);border-radius:0;padding:16px;margin-bottom:14px;max-height:calc(100vh - 280px);overflow:auto}
 #sexo2-swiftplay-pins header {display:flex;align-items:center;justify-content:space-between;gap:8px}

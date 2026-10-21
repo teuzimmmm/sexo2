@@ -22,8 +22,9 @@
   #sexo2-hub .hub-head{height:52px;flex:none;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--s2-line)}
   #sexo2-hub .hub-head .title{flex:1;font:500 18px/1.15 var(--s2-font-display);text-transform:uppercase;letter-spacing:.02em}
   #sexo2-hub .hub-head .hub-close{background:transparent;border:0;color:var(--s2-fg-2);cursor:pointer;font-size:14px;padding:4px 8px}
-  #sexo2-hub button,#sexo2-hub select,#sexo2-hub input{font:inherit;color:var(--s2-fg);background:var(--s2-surface-2);border:1px solid var(--s2-line);border-radius:0;padding:5px 10px;max-width:100%}
-  #sexo2-hub button{cursor:pointer;font-weight:600}#sexo2-hub button:disabled{opacity:.45;cursor:default}#sexo2-hub button:hover{background:var(--s2-hover)}
+  /* The assistant keeps its own button styles (its icon buttons are bare); the hub's box style would offset them */
+  #sexo2-hub button:not(#sexo2-assistant button),#sexo2-hub select,#sexo2-hub input{font:inherit;color:var(--s2-fg);background:var(--s2-surface-2);border:1px solid var(--s2-line);border-radius:0;padding:5px 10px;max-width:100%}
+  #sexo2-hub button:not(#sexo2-assistant button){cursor:pointer;font-weight:600}#sexo2-hub button:not(#sexo2-assistant button):disabled{opacity:.45;cursor:default}#sexo2-hub button:not(#sexo2-assistant button):hover{background:var(--s2-hover)}
   #sexo2-hub-content{flex:1;overflow:auto;padding:12px 16px}
   #sexo2-hub-content .hub-subnav{display:flex;margin-bottom:12px;border-bottom:1px solid var(--s2-line)}
   #sexo2-hub-content .hub-subnav button{border:0!important;background:transparent!important;padding:7px 12px 6px;font:500 13px var(--s2-font-display)!important;letter-spacing:.05em;text-transform:uppercase;color:var(--s2-fg-3)!important}
