@@ -39,6 +39,36 @@ class FavoriteBuildsTests(unittest.TestCase):
         self.path.write_text("{", encoding="utf-8")
         self.assertEqual(FavoriteBuilds(self.path).get("sr", 103), {"runes": None, "items": None})
 
+    def test_a_favourite_belongs_to_its_lane(self):
+        favorites = FavoriteBuilds(self.path)
+        favorites.set_items("sr", 103, [1001, 1002, 1003], "middle")
+        favorites.set_items("sr", 103, [2001, 2002, 2003], "top")
+        again = FavoriteBuilds(self.path)
+        self.assertEqual(again.get("sr", 103, "middle")["items"], [1001, 1002, 1003])
+        self.assertEqual(again.get("sr", 103, "top")["items"], [2001, 2002, 2003])
+        self.assertIsNone(again.get("sr", 103, "jungle")["items"])
+        self.assertIsNone(again.get("sr", 103)["items"])  # no lane is a different slot
+        self.assertEqual(sorted(json.loads(self.path.read_text())["sr"]), ["103:middle", "103:top"])
+
+    def test_unpinning_one_lane_keeps_the_others(self):
+        favorites = FavoriteBuilds(self.path)
+        favorites.set_runes("sr", 103, PAGE, "middle")
+        favorites.set_runes("sr", 103, PAGE, "top")
+        favorites.set_runes("sr", 103, None, "middle")
+        self.assertIsNone(favorites.get("sr", 103, "middle")["runes"])
+        self.assertEqual(favorites.get("sr", 103, "top")["runes"], PAGE)
+
+    def test_favourites_saved_before_lanes_still_read_as_no_lane(self):
+        self.path.write_text(json.dumps({"version": 1, "sr": {"103": {"items": [1001, 1002, 1003]}}}))
+        favorites = FavoriteBuilds(self.path)
+        self.assertEqual(favorites.get("sr", 103)["items"], [1001, 1002, 1003])
+        self.assertIsNone(favorites.get("sr", 103, "middle")["items"])
+
+    def test_an_unknown_lane_name_is_the_slot_without_a_lane(self):
+        favorites = FavoriteBuilds(self.path)
+        favorites.set_items("sr", 103, [1001, 1002, 1003], "everywhere")
+        self.assertEqual(favorites.get("sr", 103)["items"], [1001, 1002, 1003])
+
     def test_mode_groups(self):
         self.assertEqual([group_for(m) for m in ("ranked", "swift", "aram", None)], ["sr", "sr", "aram", None])
 

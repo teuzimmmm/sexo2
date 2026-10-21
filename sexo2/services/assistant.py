@@ -229,6 +229,12 @@ def slot_page(raw: Any) -> PageSpec | None:
     return PageSpec(parsed["perkStyle"], parsed["perkSubStyle"], tuple(parsed["perkIds"]))
 
 
+def favorite_lane(context: ChampSelectContext) -> str:
+    """The lane a favourite belongs to: the chosen lane in Summoner's Rift modes (D-148),
+    ``all`` (no lane) in ARAM and Swiftplay and while the lane is not known."""
+    return context.lane if context.mode == "ranked" and context.lane in POSITION_LANES.values() else "all"
+
+
 def page_from_json(payload: Any) -> PageSpec:
     if not isinstance(payload, dict):
         raise ValueError("page must be an object")
@@ -537,9 +543,7 @@ class AssistantService:
             "warnings": list(stats.warnings),
         }
         try:
-            self._alternatives = self._stats.alternatives(
-                context.champion_id, context.mode, context.lane, self._keystone_ids()
-            )
+            self._alternatives = self._fetch_alternatives(context)
             self._alternatives_key = (context.champion_id, context.mode, context.lane)
         except Exception as error:
             log.info("[ASSISTANT] no alternatives for champion %s: %s", context.champion_id, error)
@@ -630,7 +634,8 @@ class AssistantService:
             self._favorite_key = (context.session_id, champion_id)
             self._favorite_unavailable = set()
             group = group_for(context.mode)
-            favorite = self._favorites.get(group, champion_id) if group else {"runes": None, "items": None}
+            lane = favorite_lane(context)
+            favorite = self._favorites.get(group, champion_id, lane) if group else {"runes": None, "items": None}
             if not swiftplay:  # Swiftplay runes are set outside champion select
                 if favorite["runes"]:
                     self._apply_favorite_runes(context, favorite["runes"])
@@ -735,13 +740,16 @@ class AssistantService:
         except Exception as error:
             log.info("[ASSISTANT] no Swiftplay rune pages: %s", error)
 
+    def _fetch_alternatives(self, context: ChampSelectContext) -> Alternatives:
+        """Other builds and keystones (Solo/Duo data in every mode: the stats service decides, D-147)."""
+        keystones = self._keystone_ids_of(self._ensure_catalog())
+        return self._ensure_stats().alternatives(context.champion_id, context.mode, context.lane, keystones)
+
     def _ensure_alternatives(self, context: ChampSelectContext) -> Alternatives | None:
         key = (context.champion_id, context.mode, context.lane)
         if self._alternatives_key != key:
             try:
-                self._alternatives = self._ensure_stats().alternatives(
-                    context.champion_id, context.mode, context.lane, self._keystone_ids_of(self._ensure_catalog())
-                )
+                self._alternatives = self._fetch_alternatives(context)
                 self._alternatives_key = key
             except Exception as error:
                 log.info("[ASSISTANT] no alternatives for champion %s: %s", context.champion_id, error)
@@ -766,8 +774,13 @@ class AssistantService:
             self._publish_state()
             return
         champion = context.champion_id
+        lane = favorite_lane(context)
+        if action == "pin" and context.mode == "ranked" and lane == "all":
+            self._error = "no_lane"  # a favourite belongs to one lane (D-148): choose it first
+            self._publish_state()
+            return
         if what == "runes" and action == "apply":
-            page = self._favorites.get(group, champion)["runes"]
+            page = self._favorites.get(group, champion, lane)["runes"]
             if page:
                 self._apply_favorite_runes(context, page)
             self._publish_state()
@@ -778,14 +791,14 @@ class AssistantService:
                 self._error = "nothing_applied"
                 self._publish_state()
                 return
-            self._favorites.set_runes(group, champion, page_json(applied))
+            self._favorites.set_runes(group, champion, page_json(applied), lane)
         else:
             trio = self._top_trio() if action == "pin" else None
             if action == "pin" and trio is None:
                 self._error = "nothing_applied"
                 self._publish_state()
                 return
-            self._favorites.set_items(group, champion, list(trio) if trio else None)
+            self._favorites.set_items(group, champion, list(trio) if trio else None, lane)
         self._favorite_unavailable.discard(what)
         self._error = None
         self._publish_state()
@@ -1020,7 +1033,11 @@ class AssistantService:
 
     def _favorite_state(self, context: ChampSelectContext | None) -> dict:
         group = group_for(context.mode) if context else None
-        favorite = self._favorites.get(group, context.champion_id) if group else {"runes": None, "items": None}
+        favorite = (
+            self._favorites.get(group, context.champion_id, favorite_lane(context))
+            if group
+            else {"runes": None, "items": None}
+        )
         return {**favorite, "unavailable": sorted(self._favorite_unavailable)}
 
 

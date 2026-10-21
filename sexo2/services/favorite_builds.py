@@ -1,9 +1,11 @@
 """The build the player pinned for a champion: a rune page and an item trio (D-135).
 
 Kept apart for Summoner's Rift and ARAM, whose builds differ: ranked, normal and
-Swiftplay share ``sr``. Stored in ``assistant-favorites.json`` in the data folder,
-written whole through a temporary file so a crash never leaves half a file.
-Without a path (tests) the favourites live in memory only.
+Swiftplay share ``sr``. In Summoner's Rift modes a favourite belongs to one lane (D-148):
+its key is ``<champion>:<lane>``; the plain ``<champion>`` key is the one without a lane
+(Swiftplay, ARAM, and the favourites saved before lanes existed). Stored in
+``assistant-favorites.json`` in the data folder, written whole through a temporary file so a
+crash never leaves half a file. Without a path (tests) the favourites live in memory only.
 """
 
 from __future__ import annotations
@@ -18,6 +20,12 @@ log = logging.getLogger(__name__)
 
 FILE_NAME = "assistant-favorites.json"
 VERSION = 1
+LANES = ("top", "jungle", "middle", "bottom", "support")
+
+
+def _key(champion_id: int, lane: str) -> str:
+    """``<champion>:<lane>`` for a lane, the plain champion for none (``all``)."""
+    return f"{champion_id}:{lane}" if lane in LANES else str(champion_id)
 
 
 def group_for(mode: str | None) -> str | None:
@@ -53,26 +61,27 @@ class FavoriteBuilds:
         self._lock = threading.Lock()
         self._data: dict | None = None
 
-    def get(self, group: str, champion_id: int) -> dict:
-        """``{"runes": page or None, "items": [ids] or None}`` for this champion."""
+    def get(self, group: str, champion_id: int, lane: str = "all") -> dict:
+        """``{"runes": page or None, "items": [ids] or None}`` for this champion and lane."""
         with self._lock:
-            entry = self._load().get(group, {}).get(str(champion_id), {})
+            entry = self._load().get(group, {}).get(_key(champion_id, lane), {})
             return {"runes": entry.get("runes"), "items": entry.get("items")}
 
-    def set_runes(self, group: str, champion_id: int, page: dict | None) -> None:
-        self._set(group, champion_id, "runes", _clean_page(page) if page is not None else None)
+    def set_runes(self, group: str, champion_id: int, page: dict | None, lane: str = "all") -> None:
+        self._set(group, champion_id, "runes", _clean_page(page) if page is not None else None, lane)
 
-    def set_items(self, group: str, champion_id: int, items: list[int] | None) -> None:
-        self._set(group, champion_id, "items", _ids(items, 1, 6) if items is not None else None)
+    def set_items(self, group: str, champion_id: int, items: list[int] | None, lane: str = "all") -> None:
+        self._set(group, champion_id, "items", _ids(items, 1, 6) if items is not None else None, lane)
 
-    def _set(self, group: str, champion_id: int, key: str, value) -> None:
+    def _set(self, group: str, champion_id: int, key: str, value, lane: str = "all") -> None:
         with self._lock:
             data = self._load()
-            entry = data.setdefault(group, {}).setdefault(str(champion_id), {})
+            slot = _key(champion_id, lane)
+            entry = data.setdefault(group, {}).setdefault(slot, {})
             if value is None:
                 entry.pop(key, None)
                 if not entry:
-                    del data[group][str(champion_id)]
+                    del data[group][slot]
             else:
                 entry[key] = value
             self._save(data)

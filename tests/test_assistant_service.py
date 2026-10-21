@@ -602,7 +602,7 @@ class FavoriteBuildTests(unittest.TestCase):
         self.assertEqual(self.published[-1]["favorite"]["unavailable"], [])
 
     def test_a_trio_gone_from_the_statistics_keeps_the_default_and_says_so(self):
-        self.favorites.set_items("sr", 103, [1001, 1002, 1003])
+        self.favorites.set_items("sr", 103, [1001, 1002, 1003], "middle")
         self.confirm()
         self.assertNotEqual(self.top(), [1001, 1002, 1003])
         self.assertEqual(self.published[-1]["favorite"]["unavailable"], ["items"])
@@ -611,13 +611,13 @@ class FavoriteBuildTests(unittest.TestCase):
     def test_a_rune_page_the_client_refuses_is_reported(self):
         from sexo2.services.rune_import import RuneImportSnapshot
 
-        self.favorites.set_runes("sr", 103, {"primary": 8100, "sub": 8200, "perks": [1, 2, 3]})
+        self.favorites.set_runes("sr", 103, {"primary": 8100, "sub": 8200, "perks": [1, 2, 3]}, "middle")
         self.controller.snap = RuneImportSnapshot(None, (), None, None, False, "invalid_page")
         self.confirm()
         self.assertEqual(self.published[-1]["favorite"]["unavailable"], ["runes"])
 
     def test_sr_and_aram_are_apart(self):
-        self.favorites.set_items("sr", 103, [2503, 3158, 3100])
+        self.favorites.set_items("sr", 103, [2503, 3158, 3100], "middle")
         self.queue = 450
         self.confirm()
         self.assertIsNone(self.published[-1]["favorite"]["items"])
@@ -633,7 +633,7 @@ class FavoriteBuildTests(unittest.TestCase):
                 self.service.handle({"type": "assistant-favorite", **bad})
 
     def test_a_later_confirmation_keeps_the_players_own_pick(self):
-        self.favorites.set_items("sr", 103, [2503, 3158, 3100])
+        self.favorites.set_items("sr", 103, [2503, 3158, 3100], "middle")
         self.confirm()
         self.service.handle({"type": "assistant-items-default"})
         self.service.handle({"type": "assistant-opponent", "championId": 1})
@@ -641,6 +641,69 @@ class FavoriteBuildTests(unittest.TestCase):
         for action in timers:
             action()
         self.assertNotEqual(self.top(), [2503, 3158, 3100])
+
+
+class FavoriteLaneTests(FavoriteBuildTests):
+    """D-148: in Summoner's Rift modes a favourite is pinned for one lane."""
+
+    def pin(self, what):
+        self.service.handle({"type": "assistant-favorite", "what": what, "action": "pin"})
+
+    def test_a_favourite_is_for_one_lane_only(self):
+        self.service.handle({"type": "assistant-request"})  # the session is middle
+        self.service.handle({"type": "assistant-items-choose", "items": [2503, 3158, 3100]})
+        self.pin("items")
+        self.assertEqual(self.published[-1]["favorite"]["items"], [2503, 3158, 3100])
+        self.assertEqual(self.favorites.get("sr", 103, "middle")["items"], [2503, 3158, 3100])
+        self.assertIsNone(self.favorites.get("sr", 103, "top")["items"])
+        self.assertIsNone(self.favorites.get("sr", 103)["items"])
+        # the same champion on another lane has no favourite
+        self.lcu.session = session(position="top", session_id="cs-2")
+        self.service.handle({"type": "assistant-request"})
+        self.assertIsNone(self.published[-1]["favorite"]["items"])
+
+    def test_each_lane_keeps_its_own_runes_and_trio(self):
+        self.service.handle({"type": "assistant-request"})
+        self.pin("runes")
+        self.lcu.session = session(position="top", session_id="cs-2")
+        self.service.handle({"type": "assistant-request"})
+        self.service.handle({"type": "assistant-items-choose", "items": [2503, 3158, 3100]})
+        self.pin("items")
+        self.assertIsNotNone(self.favorites.get("sr", 103, "middle")["runes"])
+        self.assertIsNone(self.favorites.get("sr", 103, "middle")["items"])
+        self.assertEqual(self.favorites.get("sr", 103, "top")["items"], [2503, 3158, 3100])
+        self.assertIsNone(self.favorites.get("sr", 103, "top")["runes"])
+
+    def test_the_next_champion_select_applies_the_favourite_of_its_lane(self):
+        self.favorites.set_items("sr", 103, [2503, 3158, 3100], "top")
+        self.lcu.session = session(position="top")
+        self.confirm()
+        self.assertEqual(self.top(), [2503, 3158, 3100])
+
+    def test_pinning_needs_a_known_lane_in_summoners_rift(self):
+        self.lcu.session = session(position="")  # a blind pick: the lane is not known
+        self.service.handle({"type": "assistant-request"})
+        self.pin("runes")
+        self.assertEqual(self.published[-1]["error"], "no_lane")
+        self.pin("items")
+        self.assertEqual(self.published[-1]["error"], "no_lane")
+        self.assertEqual(self.favorites.get("sr", 103), {"runes": None, "items": None})
+
+    def test_choosing_the_lane_in_the_panel_lets_the_player_pin(self):
+        self.lcu.session = session(position="")
+        self.service.handle({"type": "assistant-request"})
+        self.service.handle({"type": "assistant-lane", "lane": "jungle"})
+        self.pin("runes")
+        self.assertIsNone(self.published[-1]["error"])
+        self.assertIsNotNone(self.favorites.get("sr", 103, "jungle")["runes"])
+        self.assertEqual(self.published[-1]["favorite"]["runes"], self.favorites.get("sr", 103, "jungle")["runes"])
+
+    def test_aram_has_no_lanes(self):
+        self.queue = 450
+        self.confirm()
+        self.pin("items")
+        self.assertIsNone(self.published[-1]["error"])
+        self.assertIsNotNone(self.favorites.get("aram", 103)["items"])
 
 
 class AutomaticRuneImportTests(FavoriteBuildTests):
@@ -665,7 +728,7 @@ class AutomaticRuneImportTests(FavoriteBuildTests):
         from sexo2.services.rune_import import RuneImportSnapshot
 
         self.controller.snap = RuneImportSnapshot(None, (), None, None, False, None)
-        self.favorites.set_runes("sr", 103, {"primary": 8000, "sub": 8100, "perks": [9923, 1, 2]})
+        self.favorites.set_runes("sr", 103, {"primary": 8000, "sub": 8100, "perks": [9923, 1, 2]}, "middle")
         self.confirm()
         self.assertEqual([p.perk_ids[0] for p in self.chosen_pages()], [9923])
 
@@ -673,7 +736,7 @@ class AutomaticRuneImportTests(FavoriteBuildTests):
         from sexo2.services.rune_import import RuneImportSnapshot
 
         self.controller.snap = RuneImportSnapshot(None, (), None, None, False, "invalid_page")
-        self.favorites.set_runes("sr", 103, {"primary": 8000, "sub": 8100, "perks": [1, 2, 3]})
+        self.favorites.set_runes("sr", 103, {"primary": 8000, "sub": 8100, "perks": [1, 2, 3]}, "middle")
         self.confirm()
         self.assertEqual([p.perk_ids[0] for p in self.chosen_pages()], [1, 8112])
 
@@ -797,6 +860,10 @@ class SwiftplayPanelTests(unittest.TestCase):
         class WithBuilds(FakeStats):
             with_builds = True
 
+            def alternatives(self, champion_id, mode, lane, keystones):
+                self.calls.append(("alternatives", mode, lane))
+                return super().alternatives(champion_id, mode, lane, keystones)
+
         self.service = AssistantService(
             self.lcu,
             self.published.append,
@@ -888,6 +955,22 @@ class SwiftplayPanelTests(unittest.TestCase):
         self.service.handle({"type": "assistant-runes-choose", "selection": "win", "matchup": False})
         self.service.handle({"type": "assistant-favorite", "what": "runes", "action": "pin"})
         self.assertEqual(self.favorites.get("sr", 103)["runes"]["perks"][0], 8112)
+
+    def test_other_builds_and_other_runes_are_offered_in_swiftplay(self):
+        state = self.open()
+        self.assertTrue(state["options"]["builds"])
+        self.assertEqual([k["id"] for k in state["options"]["keystones"]], [8112, 8128])
+        # the service asks with the game mode; the stats service turns it into Solo/Duo data (D-147)
+        self.assertIn(("alternatives", "swift", "all"), self.service._stats.calls)
+
+    def test_another_keystone_loads_its_page_and_goes_into_the_slot(self):
+        self.open()
+        self.service.handle({"type": "assistant-runes-keystone", "keystone": 8128})
+        self.assertIn(("keystone", 103, "swift", "all", 8128), self.service._stats.calls)
+        self.assertEqual(self.published[-1]["runes"]["keystone"][0]["page"]["perks"][0], 8128)
+        self.service.handle({"type": "assistant-runes-choose", "selection": "keystone", "matchup": False})
+        (slots,) = self.slot_puts()
+        self.assertEqual(json.loads(slots[0]["perks"])["perkIds"][0], 8128)
 
     def test_closing_goes_back_to_no_session(self):
         self.open()

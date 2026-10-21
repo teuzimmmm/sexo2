@@ -193,6 +193,9 @@
   }
   const sameIds = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => v === b[i]);
   const FAVORITE_UNAVAILABLE = "Favorita indisponível neste patch.";
+  const NO_LANE = "Escolha a rota para fixar.";
+  // Favourites belong to one lane in Summoner's Rift (D-148): name it next to the title
+  const laneTag = (st) => (st && st.mode === "ranked" && LANES[st.lane] ? ` · ${LANES[st.lane]}` : "");
 
   const TIERS = {
     IRON: "Ferro",
@@ -452,7 +455,7 @@
       const fav = (st.favorite || {}).runes;
       const favRow = () => {
         const p = fromPerks(data, fav);
-        return `<div class="section-head"><span class="t-heading">Favorita</span></div>
+        return `<div class="section-head"><span class="t-heading">Favorita${esc(laneTag(st))}</span></div>
         <div class="fav-row"><button class="rec-row" data-act="fav-runes-apply" aria-pressed="${samePage(st.runes.applied, fav)}">
           <img class="keystone s2-icon" src="${runeIcon(p.keystone)}" alt="" data-tip="${esc(perkName(p.keystone))}|${esc((data.styles[p.primary] || {}).name)}">
           ${p.secondary.map((s) => `<img class="minor s2-icon" src="${runeIcon(s.id)}" alt="" data-tip="${esc(perkName(s.id))}|${esc((data.styles[p.sub] || {}).name)}">`).join("")}
@@ -524,6 +527,7 @@
       else if (r.error) left = `<span class="err">${esc(runeError(r.error))}</span>`;
       else if (S.screen === "tree" && S.draft && data && validate(data, S.draft).length) left = `<span>Página incompleta</span>`;
       else if (S.state && S.state.error === "keystone_unavailable") left = `<span class="err">Sem página com essa runa.</span>`;
+      else if (S.state && S.state.error === "no_lane") left = `<span class="err">${NO_LANE}</span>`;
       else if (fav.unavailable && fav.unavailable.includes("runes")) left = `<span class="err">${FAVORITE_UNAVAILABLE}</span>`;
       const pin = r.applied && !samePage(r.applied, fav.runes) ? `<button class="s2-btn" data-act="fav-runes-pin">Fixar como favorita</button>` : "";
       const right = r.applied && data ? `<span class="t-small">Aplicada</span>${miniPage(r.applied)}${pin}` : `<span class="t-muted">Nenhuma página aplicada</span>`;
@@ -556,7 +560,7 @@
       const build = defaultBuild(it.blocks);
       const part = (label, block) =>
         block ? `<div class="ip-section"><div class="ip-sub"><span class="ip-title">${label}</span>${label === "Essenciais" ? `<span class="t-small num">${esc(block.type)}</span>` : ""}</div><div class="ip-items">${block.items.map((i) => icon(Number(i.id), i.count)).join("")}</div></div>` : "";
-      return `<div class="ip-page"><div class="section-head ip-head"><span class="t-heading">${favorite ? "Build favorita" : "Build padrão"}</span><span class="actions">${actions}</span></div>
+      return `<div class="ip-page"><div class="section-head ip-head"><span class="t-heading">${favorite ? "Build favorita" + esc(laneTag(st)) : "Build padrão"}</span><span class="actions">${actions}</span></div>
         ${part("Inicial", build.inicial)}${part("Essenciais", build.essenciais)}${part("Situacionais", build.situacionais)}</div>`;
     }
 
@@ -595,6 +599,7 @@
       if (it.pending) left = `<span class="s2-spinner"></span><span>Importando…</span>`;
       else if (it.error) left = `<span class="err">${esc(itemError(it.error, champName(S.state.championId)))}</span>`;
       else if (((S.state && S.state.favorite) || {}).unavailable?.includes("items")) left = `<span class="err">${FAVORITE_UNAVAILABLE}</span>`;
+      else if (S.state && S.state.error === "no_lane") left = `<span class="err">${NO_LANE}</span>`;
       else if (it.confirmed) left = `<span>Conjunto importado</span>`;
       const retry = it.error ? `<button class="s2-btn primary" data-act="items-import">Importar conjunto</button>` : "";
       return `<div class="asst-foot">${left}<span class="grow"></span>${retry}</div>`;
