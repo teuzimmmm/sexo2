@@ -37,35 +37,41 @@
   root.hidden = true;
   const style = document.createElement("style");
   style.textContent = `
-#sexo2-swiftplay-pins {position:fixed;left:2.5%;bottom:110px;z-index:10001;width:min(32vw,410px);color:#f0e6d2;font:13px Arial,sans-serif;pointer-events:none}
+#sexo2-swiftplay-pins {position:fixed;left:2.5%;bottom:110px;z-index:10001;width:min(32vw,410px);color:var(--s2-fg);font:13px var(--s2-font-text);pointer-events:none}
 #sexo2-swiftplay-pins[hidden] {display:none!important}
 #sexo2-swiftplay-pins * {box-sizing:border-box}
-#sexo2-swiftplay-pins button,#sexo2-swiftplay-pins input {font:inherit}
-#sexo2-swiftplay-pins button {cursor:pointer;color:#f0e6d2;border:1px solid #c89b3c;background:#07151d;padding:8px 12px}
-#sexo2-swiftplay-pins button:hover {border-color:#f0e6d2;background:#12333c}
-#sexo2-swiftplay-pins button:disabled {cursor:default;opacity:.5}
-#sexo2-swiftplay-pins .rsp-launch {pointer-events:auto;font-weight:bold;color:#cdbe91}
-#sexo2-swiftplay-pins .rsp-panel {pointer-events:auto;background:linear-gradient(145deg,#081e29,#010a10);border:1px solid #c89b3c;border-radius:8px;padding:16px;margin-bottom:14px;box-shadow:0 8px 30px #000a;max-height:calc(100vh - 280px);overflow:auto}
+#sexo2-swiftplay-pins button,#sexo2-swiftplay-pins input {font:inherit;color:var(--s2-fg);border:1px solid var(--s2-line);border-radius:0;background:var(--s2-surface-2);padding:8px 12px}
+#sexo2-swiftplay-pins button {cursor:pointer}
+#sexo2-swiftplay-pins button:hover {background:var(--s2-hover)}
+#sexo2-swiftplay-pins button:disabled {cursor:default;opacity:.45}
+#sexo2-swiftplay-pins .rsp-launch {pointer-events:auto;font-weight:600}
+#sexo2-swiftplay-pins .rsp-panel {pointer-events:auto;background:var(--s2-surface);border:1px solid var(--s2-line);border-radius:0;padding:16px;margin-bottom:14px;max-height:calc(100vh - 280px);overflow:auto}
 #sexo2-swiftplay-pins header {display:flex;align-items:center;justify-content:space-between;gap:8px}
-#sexo2-swiftplay-pins h3 {font: bold 16px Georgia,serif;margin:0;color:#f0e6d2}
-#sexo2-swiftplay-pins .rsp-close {border:0;padding:3px 5px;font-size:20px}
-#sexo2-swiftplay-pins .rsp-muted {color:#a09b8c;font-size:12px;margin:8px 0 12px}
-#sexo2-swiftplay-pins .rsp-row {display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1px solid #463e2c}
-#sexo2-swiftplay-pins .rsp-portrait {width:60px;height:60px;border:1px solid #a88948;object-fit:cover;background:#0c2834;flex-shrink:0}
+#sexo2-swiftplay-pins h3 {font:500 13px var(--s2-font-display);text-transform:uppercase;letter-spacing:.06em;margin:0;color:var(--s2-fg-2)}
+#sexo2-swiftplay-pins .rsp-close {border:0;background:transparent;padding:3px 5px;font-size:20px}
+#sexo2-swiftplay-pins .rsp-muted {color:var(--s2-fg-3);font-size:12px;margin:8px 0 12px}
+#sexo2-swiftplay-pins .rsp-row {display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1px solid var(--s2-line)}
+#sexo2-swiftplay-pins .rsp-row:first-of-type {border-top:0}
+#sexo2-swiftplay-pins .rsp-portrait {width:60px;height:60px;border:1px solid var(--s2-line);object-fit:cover;background:var(--s2-surface-2);flex-shrink:0}
 #sexo2-swiftplay-pins .rsp-info {flex:1;min-width:0;overflow-wrap:anywhere}
-#sexo2-swiftplay-pins .rsp-name {font:bold 16px Georgia,serif;margin-bottom:5px}
-#sexo2-swiftplay-pins .rsp-skin {color:#cdbe91;font-size:12px}
-#sexo2-swiftplay-pins .rsp-status {font-size:11px;color:#0ac8b9;margin-top:6px}
-#sexo2-swiftplay-pins .rsp-error {color:#f4a58a}
+#sexo2-swiftplay-pins .rsp-name {font:500 15px var(--s2-font-display);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px}
+#sexo2-swiftplay-pins .rsp-skin {color:var(--s2-fg-2);font-size:12px}
+#sexo2-swiftplay-pins .rsp-status {font-size:11px;color:var(--s2-fg-3);margin-top:6px}
+#sexo2-swiftplay-pins .rsp-error {color:#f3a090}
 #sexo2-swiftplay-pins .rsp-actions {display:flex;flex-direction:column;gap:6px}
-#sexo2-swiftplay-pins .rsp-remove {border:0;color:#a09b8c;padding:2px 0;font-size:11px}
-#sexo2-swiftplay-pins .rsp-save {width:100%;background:linear-gradient(#095264,#06252f);font-weight:bold;margin-top:10px}
-#sexo2-swiftplay-pins .rsp-message {font-size:12px;line-height:1.4;color:#cdbe91;margin-top:10px}
-#sexo2-swiftplay-pins .rsp-search {width:100%;background:#010a10;color:#f0e6d2;border:1px solid #66542d;padding:9px;margin:10px 0}
-#sexo2-swiftplay-pins .rsp-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:240px;overflow:auto}
-#sexo2-swiftplay-pins .rsp-tile {text-align:left;padding:6px;min-height:68px;font-size:12px}
-#sexo2-swiftplay-pins .rsp-tile img {width:100%;height:70px;object-fit:cover;margin-bottom:5px}
-#sexo2-swiftplay-pins .rsp-tile[aria-pressed=true] {border:2px solid #0ac8b9}
+#sexo2-swiftplay-pins .rsp-remove {border:0;background:transparent;color:var(--s2-fg-3);padding:2px 0;font-size:11px}
+#sexo2-swiftplay-pins .rsp-save {width:100%;font-weight:600;margin-top:10px}
+#sexo2-swiftplay-pins .rsp-message {font-size:12px;line-height:1.5;color:var(--s2-fg-2);margin-top:10px}
+#sexo2-swiftplay-pins .rsp-head {display:flex;align-items:center;gap:8px;margin-top:12px}
+#sexo2-swiftplay-pins .rsp-search {width:100%;margin:10px 0}
+#sexo2-swiftplay-pins .rsp-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:460px;overflow:auto}
+#sexo2-swiftplay-pins .rsp-tile {position:relative;display:flex;flex-direction:column;padding:0;overflow:hidden;text-align:left}
+#sexo2-swiftplay-pins .rsp-tile img {width:100%;aspect-ratio:1;object-fit:cover;display:block;filter:grayscale(.7) brightness(.6);transition:filter .12s}
+#sexo2-swiftplay-pins .rsp-tile:hover img {filter:grayscale(.2) brightness(.85)}
+#sexo2-swiftplay-pins .rsp-tile[aria-pressed=true] img {filter:none}
+#sexo2-swiftplay-pins .rsp-tile[aria-pressed=true] {outline:2px solid var(--s2-fg);outline-offset:-2px}
+#sexo2-swiftplay-pins .rsp-tile[aria-pressed=true]::after {content:'Fixada';position:absolute;top:6px;left:6px;font-size:11px;line-height:1;padding:4px 6px;background:rgba(0,0,0,.75);color:var(--s2-fg)}
+#sexo2-swiftplay-pins .rsp-tile span {padding:6px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 `;
   document.head.appendChild(style);
   document.body.appendChild(root);
@@ -129,7 +135,7 @@
       panel.setAttribute("aria-label", "Skins fixadas de Swiftplay");
       const header = el("header");
       header.append(el("h3", "", "SEXO2 · SKINS SWIFTPLAY"), button("×", () => {open=false; render();}, "rsp-close"));
-      panel.append(header, el("p", "rsp-muted", "Preferências salvas por campeão"));
+      panel.append(header);
       for (const c of state.champions) {
         const skin = c.skins.find(s => s.skinId === draft[c.championId]);
         const row = el("div", "rsp-row");
@@ -137,8 +143,8 @@
         const info = el("div", "rsp-info");
         info.append(el("div", "rsp-name", c.name), el("div", "rsp-skin", skin?.name || "Nenhuma skin fixada"));
         const changed = (draft[c.championId] ?? null) !== (c.pin?.skinId ?? null);
-        const status = changed ? "Alteração não salva" : c.pin ? "◆ Fixada" : "Sem skin fixada";
-        info.append(el("div", "rsp-status", status));
+        const status = changed ? "Alteração não salva" : c.pin ? "◆ Fixada" : "";
+        if (status) info.append(el("div", "rsp-status", status));
         if (!changed && c.pin && c.status?.message) info.append(el("div", "rsp-status" + (c.status.state === "error" ? " rsp-error" : ""), c.status.message));
         const actions = el("div", "rsp-actions");
         const choose = button(skin ? "Trocar" : "Escolher", () => {chooser=c.championId; render();}, "");
@@ -155,10 +161,12 @@
       if (chooser !== null) {
         const c = state.champions.find(c => c.championId === chooser);
         if (c) {
-          panel.append(button("← Voltar às escolhas", () => {chooser=null;render();}, ""));
+          const head = el("div", "rsp-head");
+          head.append(button("← Voltar", () => {chooser=null;render();}, ""), el("h3", "", c.name));
+          panel.append(head);
           const search = el("input", "rsp-search");
-          search.type = "search"; search.placeholder = `Buscar skin de ${c.name}`;
-          search.setAttribute("aria-label",search.placeholder);
+          search.type = "search"; search.placeholder = "Buscar skin";
+          search.setAttribute("aria-label",`Buscar skin de ${c.name}`);
           search.value = position?.query || '';
           const grid = el("div", "rsp-grid");
           const draw = () => {
@@ -182,7 +190,7 @@
       }
       const save = button(saving ? "Salvando…" : "Salvar e fixar", () => request(makeSave(state,draft)), "rsp-save");
       save.disabled = !editable() || !dirty;
-      panel.append(save, el("div", "rsp-muted", "Somente no Swiftplay · Salvo mesmo ao fechar o SEXO2"));
+      panel.append(save);
       if (!state.editable) panel.append(el("div", "rsp-message", "Busca em andamento. Cancele para alterar as escolhas."));
       if (state.error || message) panel.append(el("div", "rsp-message", state.error || message));
       root.append(panel);
@@ -231,7 +239,7 @@
     state=data; lastState=Date.now();
     announce();
     draft=reconcileDraft(draft,data.champions,wasSave || !dirty || !data.active);
-    if (wasSave) {dirty=false;message="Preferências salvas. Fixada significa escolha guardada; o preparo ocorre ao buscar partida.";chooser=null;}
+    if (wasSave) {dirty=false;message="Preferências salvas.";chooser=null;}
     else if (changed) {if (dirty) message="Os campeões mudaram. Confira as escolhas antes de salvar.";chooser=null;}
     if (!data.active) {open=false;dirty=false;chooser=null;}
     // Unchanged polls leave the DOM intact, including scrollbar dragging.

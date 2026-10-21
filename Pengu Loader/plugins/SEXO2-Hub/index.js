@@ -38,7 +38,7 @@
   #sexo2-hub-content #sexo2-amigos-panel,#sexo2-hub-content #sexo2-swiftplay-pins,#sexo2-hub-content #sexo2-party-panel,#sexo2-hub-content #sexo2-config-panel{position:static!important;inset:auto!important;transform:none!important;width:100%!important;max-height:none!important;height:auto!important;border:0!important;border-radius:0!important;background:transparent!important;padding:0!important;box-shadow:none!important;opacity:1!important;pointer-events:auto!important;display:block}
   #sexo2-hub-content #sexo2-amigos-panel>header,#sexo2-hub-content #sexo2-amigos-panel>.ra-tabs,#sexo2-hub-content #sexo2-amigos-panel>header+p,#sexo2-hub-content .rsp-close,#sexo2-hub-content .party-close-btn,#sexo2-hub-content .party-header,#sexo2-hub-content .party-description,#sexo2-hub-content .s3xo-room-badge{display:none!important}
   #sexo2-hub-content .rsp-panel{margin:0;padding:0;border:0;background:transparent;border-radius:0;box-shadow:none;max-height:none;overflow:visible}
-  #sexo2-hub-content .rsp-panel header{display:none}#sexo2-hub-content .rsp-grid{max-height:220px}
+  #sexo2-hub-content .rsp-panel header{display:none}#sexo2-hub-content .rsp-grid{max-height:460px}
   #sexo2-hub-content .ra-card{border-radius:0;padding:8px;margin:6px 0}#sexo2-hub-content .party-content{padding:0!important}
   #sexo2-hub-content #sexo2-config-panel>div:first-child{display:none!important}
   #sexo2-hub-content #sexo2-settings-flyout{position:static!important;inset:auto!important;transform:none!important;width:100%!important;max-width:100%!important;opacity:1!important;overflow:visible!important;margin:0!important}
