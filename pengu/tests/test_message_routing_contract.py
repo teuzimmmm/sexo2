@@ -19,6 +19,9 @@ ROUTES = {
     "assistant-items-default": "_handle_assistant",
     "assistant-runes-keystone": "_handle_assistant",
     "assistant-lane": "_handle_assistant",
+    "assistant-favorite": "_handle_assistant",
+    "assistant-swiftplay-open": "_handle_assistant",
+    "assistant-swiftplay-close": "_handle_assistant",
     "sexo2-library-request": "_handle_library",
     "sexo2-update-request": "_handle_sexo2_update",
     "sexo2-update-open": "_open_sexo2_updater",
@@ -78,6 +81,17 @@ ROUTES = {
 class MessageRoutingContractTests(unittest.TestCase):
     def setUp(self):
         self.handler = MessageHandler.__new__(MessageHandler)
+
+    def test_every_message_the_assistant_handles_is_routed(self):
+        import re
+        from pathlib import Path
+
+        from pengu.communication.message_handler import _ROUTES
+
+        source = (Path(__file__).parents[2] / "sexo2" / "services" / "assistant.py").read_text(encoding="utf-8")
+        handled = set(re.findall(r'kind == "(assistant-[a-z-]+)"', source))
+        self.assertTrue(handled)
+        self.assertEqual(sorted(handled - set(_ROUTES)), [])  # a message nobody routes is dropped silently
 
     def test_each_type_calls_its_handler_with_the_payload(self):
         for message_type, method in ROUTES.items():
