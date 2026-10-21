@@ -42,15 +42,21 @@ def _get_tools_dir() -> Path:
         return Path(__file__).parent.parent / "injection" / "tools"
 
 
-def _dll_dialog_text(reason: str, detail: str = ""):
-    """Return (title, status_title, status_body, steps) for an LTK patcher problem."""
-    source = "Get both files from LTK Manager."
+def _dll_dialog_text(reason: str, detail: str = "", html: bool = False):
+    """Return (title, status_title, status_body, steps) for an LTK patcher problem.
+
+    With ``html`` the link is a clickable anchor (the native task dialog); without it, the plain address.
+    """
+    from injection.tools.patcher_notice import LTK_PATCHER_FILES_URL
+
+    link = f'<a href="{LTK_PATCHER_FILES_URL}">{LTK_PATCHER_FILES_URL}</a>' if html else LTK_PATCHER_FILES_URL
+    source = f"Download both files from {link}"
     if reason == "expired":
         return (
             "SEXO2 - Patcher Outdated",
             "The LTK patcher has reached its end of life",
             f"The ltk_patcher_dll.dll in SEXO2's tools folder does not support game builds released after {detail}, and League has updated since.",
-            f"1. Update LTK Manager, then get both files from it.\n"
+            f"1. Download both files from {link} (or from an updated LTK Manager).\n"
             "2. Open SEXO2's tools folder.\n"
             "3. Replace both files, then restart SEXO2.",
         )
@@ -79,7 +85,7 @@ def _show_native_dll_dialog(tools_dir, reason="missing", detail=""):
     import subprocess
     import webbrowser
 
-    title, status_title, status_body, steps = _dll_dialog_text(reason, detail)
+    title, status_title, status_body, steps = _dll_dialog_text(reason, detail, html=True)
 
     class TaskDialogButton(ctypes.Structure):
         _pack_ = 1

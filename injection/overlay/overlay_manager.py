@@ -35,6 +35,7 @@ from contextvars import ContextVar
 
 _CURRENT_MATCH_CONTEXT = ContextVar("sexo2_match_context", default=None)
 from ..tools.patcher import check_ltk_patcher, describe_ltk_patcher_files
+from ..tools.patcher_notice import notify_patcher_outdated
 from config import (
     GAME_EXECUTABLE_NAMES,
     PROCESS_TERMINATE_TIMEOUT_S,
@@ -270,7 +271,7 @@ class OverlayManager:
         if patcher.expired_for(self.game_dir):
             eol = time.strftime("%Y-%m-%d %H:%M", time.localtime(patcher.eol))
             log.error(f"[INJECT] LTK patcher does not support game builds after {eol}")
-            self._report_ltk_patcher_eol(eol)
+            self._handle_expired_patcher(ltk_host.parent, eol)
             return 1
 
         # The DLL only overlays games launched after the scan started, so the
@@ -708,6 +709,12 @@ class OverlayManager:
             f"Injection failed: LTK patcher reached its end of life{since}.",
             hint="Update LTK Manager, copy its new ltk_patcher_host.exe and ltk_patcher_dll.dll into SEXO2's tools folder, then restart SEXO2.",
         )
+
+    def _handle_expired_patcher(self, tools_dir: Path, eol: str) -> None:
+        """League updated past the patcher's end of life while SEXO2 was open: list it in
+        Troubleshooting and warn the player on screen, with where the two files are (D-150)."""
+        self._report_ltk_patcher_eol(eol)
+        notify_patcher_outdated(tools_dir, eol)
 
     def _log_patcher_context(self, session: dict, resumed_at: float):
         """Log what the patcher and the game were doing when the injection failed.
