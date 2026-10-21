@@ -100,10 +100,6 @@
     return;
   }
 
-  // The opening is off by default (D-144): it stutters while the client is still loading.
-  // Set window.__sexo2AberturaOn = true before this script to play it again.
-  if (window.__sexo2AberturaOn !== true) return;
-
   // ---- client integration ----
   var BASE = "https://plugins/SEXO2-Startup/";
   var STYLE_ID = "sexo2-startup-style";

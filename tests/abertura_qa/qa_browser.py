@@ -54,7 +54,7 @@ def page_html(late):
         if late
         else div
     )
-    return f'<!doctype html><html><body style="margin:0">{body}<script>window.__sexo2AberturaOn=true</script><script src="file://{PLUGIN}/index.js"></script></body></html>'
+    return f'<!doctype html><html><body style="margin:0">{body}<script src="file://{PLUGIN}/index.js"></script></body></html>'
 
 
 class Qa:

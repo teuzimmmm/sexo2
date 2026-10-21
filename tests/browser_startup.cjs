@@ -6,7 +6,6 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
   const page=await browser.newPage();
   const old='div[id^=index_loading_div]:before{content:"";background-image:url(/lol-game-data/assets/v1/profile-icons/7.jpg);background-size:cover;width:144px;height:144px;border-radius:50%}div[id^=index_loading_div]:after{content:"Rose"}';
   await page.setContent('<html><head><style>'+old+'</style></head><body><div id="index_loading_div42"></div></body></html>');
-  await page.evaluate(()=>{window.__sexo2AberturaOn=true;});
   const script=fs.readFileSync('Pengu Loader/plugins/SEXO2-Startup/index.js','utf8');
   await page.addScriptTag({content:script});
   // The signed core may append its original CSS after our plugin.
