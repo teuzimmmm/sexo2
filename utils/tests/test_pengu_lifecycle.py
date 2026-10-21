@@ -24,6 +24,8 @@ class PenguLifecycleTests(unittest.TestCase):
         self.enterContext(patch.object(loader, "_process_running", side_effect=lambda names: bool(self.clients)))
         self.enterContext(patch.object(loader, "_is_league_running", side_effect=lambda: bool(self.clients)))
         self.enterContext(patch.object(loader, "_is_available", return_value=True))
+        # The real process list (a League client open on the developer machine) must not leak in.
+        self.enterContext(patch.object(loader, "_client_start_times", return_value=[]))
         self.other = self.enterContext(patch.object(loader, "_hook_of_another_loader", return_value=None))
         self.status = self.enterContext(patch.object(loader, "get_status", return_value=loader.PenguStatus.ACTIVE))
         self.deactivate = self.enterContext(patch.object(loader, "deactivate", return_value=True))
