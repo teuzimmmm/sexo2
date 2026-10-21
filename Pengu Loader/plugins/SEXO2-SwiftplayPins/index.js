@@ -50,22 +50,20 @@
 #sexo2-swiftplay-pins h3 {font:500 13px var(--s2-font-display);text-transform:uppercase;letter-spacing:.06em;margin:0;color:var(--s2-fg-2)}
 #sexo2-swiftplay-pins .rsp-close {border:0;background:transparent;padding:3px 5px;font-size:20px}
 #sexo2-swiftplay-pins .rsp-muted {color:var(--s2-fg-3);font-size:12px;margin:8px 0 12px}
-#sexo2-swiftplay-pins .rsp-row {display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1px solid var(--s2-line)}
-#sexo2-swiftplay-pins .rsp-row:first-of-type {border-top:0}
-#sexo2-swiftplay-pins .rsp-portrait {width:60px;height:60px;border:1px solid var(--s2-line);object-fit:cover;background:var(--s2-surface-2);flex-shrink:0}
-#sexo2-swiftplay-pins .rsp-info {flex:1;min-width:0;overflow-wrap:anywhere}
-#sexo2-swiftplay-pins .rsp-name {font:500 15px var(--s2-font-display);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px}
-#sexo2-swiftplay-pins .rsp-skin {color:var(--s2-fg-2);font-size:12px}
-#sexo2-swiftplay-pins .rsp-status {font-size:11px;color:var(--s2-fg-3);margin-top:6px}
-#sexo2-swiftplay-pins .rsp-error {color:#f3a090}
-#sexo2-swiftplay-pins .rsp-actions {display:flex;flex-direction:column;gap:6px}
-#sexo2-swiftplay-pins .rsp-remove {border:0;background:transparent;color:var(--s2-fg-3);padding:2px 0;font-size:11px}
-#sexo2-swiftplay-pins .rsp-save {width:100%;font-weight:600;margin-top:10px}
+#sexo2-swiftplay-pins .rsp-sub {margin:14px 0 8px}
+#sexo2-swiftplay-pins .rsp-champs {display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin-top:6px}
+#sexo2-swiftplay-pins .rsp-champ {display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;margin:0;min-width:0}
+#sexo2-swiftplay-pins .rsp-champ img {width:56px;height:56px;display:block;object-fit:cover}
+#sexo2-swiftplay-pins .rsp-champ span {font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sexo2-swiftplay-pins .rsp-champ small {font-size:11px;color:var(--s2-fg-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sexo2-swiftplay-pins .rsp-champ .rsp-error {color:#f3a090}
 #sexo2-swiftplay-pins .rsp-message {font-size:12px;line-height:1.5;color:var(--s2-fg-2);margin-top:10px}
-#sexo2-swiftplay-pins .rsp-head {display:flex;align-items:center;gap:8px;margin-top:12px}
-#sexo2-swiftplay-pins .rsp-search {width:100%;margin:10px 0}
-#sexo2-swiftplay-pins .rsp-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:460px;overflow:auto}
-#sexo2-swiftplay-pins .rsp-tile {position:relative;display:flex;flex-direction:column;padding:0;overflow:hidden;text-align:left}
+#sexo2-swiftplay-pins .rsp-head {display:flex;align-items:center;gap:8px}
+#sexo2-swiftplay-pins .rsp-head h3 {margin:0 0 0 6px}
+#sexo2-swiftplay-pins .rsp-search {margin:10px 0 0}
+#sexo2-swiftplay-pins .rsp-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:8px}
+#sexo2-swiftplay-pins .rsp-card {display:flex;flex-direction:column;gap:6px;min-width:0}
+#sexo2-swiftplay-pins .rsp-tile {position:relative;display:flex;flex-direction:column;padding:0;margin:0;overflow:hidden;text-align:left}
 #sexo2-swiftplay-pins .rsp-tile img {width:100%;aspect-ratio:1;object-fit:cover;display:block;filter:grayscale(.7) brightness(.6);transition:filter .12s}
 #sexo2-swiftplay-pins .rsp-tile:hover img {filter:grayscale(.2) brightness(.85)}
 #sexo2-swiftplay-pins .rsp-tile[aria-pressed=true] img {filter:none}
@@ -96,9 +94,10 @@
     if (path.toLowerCase().startsWith("/assets/")) return "/lol-game-data/assets" + path;
     return null;
   }
-  function thumbnail(path, cls) {
+  function thumbnail(path, cls, lazy) {
     const img = el("img", cls);
     img.alt = "";
+    if (lazy) img.loading = "lazy";
     const src = asset(path);
     if (src) img.src = src;
     img.addEventListener("error", () => { img.removeAttribute("src"); });
@@ -114,13 +113,13 @@
     return hubActive !== false && bridge?.ready && state?.active && Date.now() - lastState < 8000;
   }
   function editable() {return available() && state.editable && !saving && !state.error;}
+  const plain = value => value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   function render() {
     const viewKey = JSON.stringify([state?.championIds || [], chooser]);
     const sameView = root.dataset.viewKey === viewKey;
     const oldSearch = root.querySelector('.rsp-search');
     const position = sameView ? {
-      panel: root.querySelector('.rsp-panel')?.scrollTop || 0,
-      grid: root.querySelector('.rsp-grid')?.scrollTop || 0,
+      scroll: (root.closest('#sexo2-hub-content') || root.querySelector('.rsp-panel'))?.scrollTop || 0,
       query: oldSearch?.value || '',
       focused: oldSearch === document.activeElement,
       start: oldSearch?.selectionStart,
@@ -136,61 +135,55 @@
       const header = el("header");
       header.append(el("h3", "", "SEXO2 · SKINS SWIFTPLAY"), button("×", () => {open=false; render();}, "rsp-close"));
       panel.append(header);
-      for (const c of state.champions) {
-        const skin = c.skins.find(s => s.skinId === draft[c.championId]);
-        const row = el("div", "rsp-row");
-        row.append(thumbnail(skin?.tilePath || c.portrait, "rsp-portrait"));
-        const info = el("div", "rsp-info");
-        info.append(el("div", "rsp-name", c.name), el("div", "rsp-skin", skin?.name || "Nenhuma skin fixada"));
-        const changed = (draft[c.championId] ?? null) !== (c.pin?.skinId ?? null);
-        const status = changed ? "Alteração não salva" : c.pin ? "◆ Fixada" : "";
-        if (status) info.append(el("div", "rsp-status", status));
-        if (!changed && c.pin && c.status?.message) info.append(el("div", "rsp-status" + (c.status.state === "error" ? " rsp-error" : ""), c.status.message));
-        const actions = el("div", "rsp-actions");
-        const choose = button(skin ? "Trocar" : "Escolher", () => {chooser=c.championId; render();}, "");
-        choose.disabled = !editable();
-        actions.append(choose);
-        if (skin) {
-          const remove = button("Remover", () => {draft[c.championId]=null;dirty=true;render();}, "rsp-remove");
-          remove.disabled = !editable();
-          actions.append(remove);
+      const c = chooser !== null ? state.champions.find(c => c.championId === chooser) : null;
+      if (c) {
+        // One champion: its skins as cards; clicking pins or unpins and saves at once.
+        const head = el("div", "rsp-head");
+        head.append(button("← Voltar", () => {chooser=null;render();}, ""), el("h3", "", c.name));
+        const search = el("input", "rsp-search");
+        search.type = "search"; search.placeholder = "Buscar skin";
+        search.setAttribute("aria-label", `Buscar skin de ${c.name}`);
+        search.value = position?.query || '';
+        const grid = el("div", "rsp-grid");
+        const draw = () => {
+          grid.replaceChildren();
+          const query = plain(search.value);
+          for (const skin of c.skins.filter(s => plain(s.name).includes(query))) {
+            const picked = draft[c.championId] === skin.skinId;
+            const card = el("div", "rsp-card");
+            const tile = button("", () => {
+              if (!editable()) return;
+              draft[c.championId] = picked ? null : skin.skinId;
+              dirty = true; message = "";
+              request(makeSave(state, draft));
+            }, "rsp-tile");
+            tile.disabled = !editable();
+            tile.setAttribute("aria-pressed", String(picked));
+            tile.setAttribute("aria-label", "Fixar " + skin.name);
+            if (asset(skin.tilePath)) tile.append(thumbnail(skin.tilePath, "", true));
+            tile.append(el("span", "", skin.name));
+            card.append(tile);
+            grid.append(card);
+          }
+          if (!grid.childElementCount) grid.append(el("p", "rsp-muted", "Nenhuma skin com esse nome."));
+        };
+        search.addEventListener("input", draw); draw();
+        panel.append(head, search, grid);
+      } else {
+        panel.append(el("h3", "rsp-sub", "Skins fixadas por campeão"));
+        const champs = el("div", "rsp-champs");
+        for (const c of state.champions) {
+          const skin = c.skins.find(s => s.skinId === draft[c.championId]);
+          const pick = button("", () => {chooser=c.championId; render();}, "rsp-champ");
+          pick.disabled = !editable();
+          pick.setAttribute("aria-label", c.name);
+          pick.append(thumbnail(c.portrait, ""), el("span", "", c.name));
+          if (skin) pick.append(el("small", "", skin.name));
+          if (c.status?.message) pick.append(el("small", c.status.state === "error" ? "rsp-error" : "", c.status.message));
+          champs.append(pick);
         }
-        row.append(info, actions);
-        panel.append(row);
+        panel.append(champs);
       }
-      if (chooser !== null) {
-        const c = state.champions.find(c => c.championId === chooser);
-        if (c) {
-          const head = el("div", "rsp-head");
-          head.append(button("← Voltar", () => {chooser=null;render();}, ""), el("h3", "", c.name));
-          panel.append(head);
-          const search = el("input", "rsp-search");
-          search.type = "search"; search.placeholder = "Buscar skin";
-          search.setAttribute("aria-label",`Buscar skin de ${c.name}`);
-          search.value = position?.query || '';
-          const grid = el("div", "rsp-grid");
-          const draw = () => {
-            grid.replaceChildren();
-            const query = search.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            for (const skin of c.skins.filter(s => s.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(query))) {
-              const tile = button("", () => {
-                if (!editable()) return;
-                draft[c.championId]=skin.skinId; dirty=true; chooser=null; message="";render();
-              }, "rsp-tile");
-              tile.disabled = !editable();
-              tile.setAttribute("aria-pressed",String(draft[c.championId]===skin.skinId));
-              if (asset(skin.tilePath)) tile.append(thumbnail(skin.tilePath, ""));
-              tile.append(el("span", "", skin.name));
-              grid.append(tile);
-            }
-            if (!grid.childElementCount) grid.append(el("p", "rsp-muted", "Nenhuma skin encontrada"));
-          };
-          search.addEventListener("input",draw); draw(); panel.append(search,grid);
-        }
-      }
-      const save = button(saving ? "Salvando…" : "Salvar e fixar", () => request(makeSave(state,draft)), "rsp-save");
-      save.disabled = !editable() || !dirty;
-      panel.append(save);
       if (!state.editable) panel.append(el("div", "rsp-message", "Busca em andamento. Cancele para alterar as escolhas."));
       if (state.error || message) panel.append(el("div", "rsp-message", state.error || message));
       root.append(panel);
@@ -204,10 +197,10 @@
           search.setSelectionRange(position.start, position.end);
         }
       }
-      const panel = root.querySelector('.rsp-panel'), grid = root.querySelector('.rsp-grid');
-      if (panel) panel.scrollTop = position.panel;
-      if (grid) grid.scrollTop = position.grid;
     }
+    // One scroll only: the hub content, or the floating panel. A new view starts at the top.
+    const scroller = root.closest('#sexo2-hub-content') || root.querySelector('.rsp-panel');
+    if (scroller) scroller.scrollTop = position ? position.scroll : 0;
   }
   function request(payload) {
     if (!bridge?.ready || pending) return;
@@ -239,7 +232,7 @@
     state=data; lastState=Date.now();
     announce();
     draft=reconcileDraft(draft,data.champions,wasSave || !dirty || !data.active);
-    if (wasSave) {dirty=false;message="Preferências salvas.";chooser=null;}
+    if (wasSave) {dirty=false;message="";}
     else if (changed) {if (dirty) message="Os campeões mudaram. Confira as escolhas antes de salvar.";chooser=null;}
     if (!data.active) {open=false;dirty=false;chooser=null;}
     // Unchanged polls leave the DOM intact, including scrollbar dragging.

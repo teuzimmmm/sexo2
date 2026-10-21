@@ -38,10 +38,10 @@ const path=require('node:path'),fs=require('node:fs'),assert=require('node:asser
  assert.equal(await page.locator('#sexo2-amigos-launch').isVisible(),false);
  assert.equal(await page.locator('.rsp-launch').isVisible(),false);
  await page.locator('#sexo2-hub>nav').getByRole('button',{name:'Swiftplay',exact:true}).click();
- await page.getByRole('button',{name:'Escolher',exact:true}).click();
- await page.locator('.rsp-grid').evaluate(e=>e.scrollTop=e.scrollHeight);
- const scroll=await page.locator('.rsp-grid').evaluate(e=>e.scrollTop);assert.ok(scroll>0);
- await page.waitForTimeout(3200);assert.equal(await page.locator('.rsp-grid').evaluate(e=>e.scrollTop),scroll);
+ await page.getByRole('button',{name:'Master Yi',exact:true}).click();
+ await page.locator('#sexo2-hub-content').evaluate(e=>e.scrollTop=e.scrollHeight);
+ const scroll=await page.locator('#sexo2-hub-content').evaluate(e=>e.scrollTop);assert.ok(scroll>0);
+ await page.waitForTimeout(3200);assert.equal(await page.locator('#sexo2-hub-content').evaluate(e=>e.scrollTop),scroll);
  await page.evaluate(()=>{
    window.sample.libraryChampions=[{championId:11,name:'Master Yi'},{championId:22,name:'Ashe'}];
    const original=window.__sexo2Bridge.send;
