@@ -1,0 +1,902 @@
+[
+ {
+  "id": "B07.palco",
+  "desc": "Palco ocupa a janela 1280x720; client com nav, cena e faixa de simulação",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B07.semapp",
+  "desc": "Sem cabeçalho/rodapé de app fora do client; hub fechado ao iniciar",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B07.sim",
+  "desc": "Faixa de simulação fora do produto com Cliente/Seleção/Partida",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B07.cenaCliente",
+  "desc": "Estado Cliente mostra lobby e botão SEXO2 no cabeçalho do client",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B07.fonts",
+  "desc": "Oswald e Inter carregadas (document.fonts)",
+  "ok": true,
+  "info": "Oswald:loaded,Inter:loaded"
+ },
+ {
+  "id": "B07.familias",
+  "desc": "Só Oswald/Inter como primeira família",
+  "ok": true,
+  "info": "Inter|Oswald"
+ },
+ {
+  "id": "B07.semserifa",
+  "desc": "Nenhuma fonte serifada declarada",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.hub820",
+  "desc": "SEXO2 do cabeçalho abre o workspace 820x560 sobre o client",
+  "ok": true,
+  "info": "[820, 560, True]"
+ },
+ {
+  "id": "B01.entrada",
+  "desc": "Entrada mostra as 3 atividades",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.prep",
+  "desc": "Abrir Preparar partida (Antes da fila = client/lobby)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.step2",
+  "desc": "Etapa Na seleção troca a cena do client para champ select",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.step3",
+  "desc": "Etapa Em jogo mostra cena de partida",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.simSelecao",
+  "desc": "Faixa de simulação leva à seleção e abre o assistente ancorado",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.escqp",
+  "desc": "Esc fecha o assistente e devolve o foco ao botão SEXO2 inferior",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.preserva",
+  "desc": "Reabrir o hub mantém atividade, etapa, campeão e conjunto",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.eschub",
+  "desc": "Esc fecha o hub e devolve o foco ao botão SEXO2 do client",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.retomar",
+  "desc": "Entrada oferece retomar a etapa e o campeão",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.fechar",
+  "desc": "Botão Fechar fecha o hub",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.erro",
+  "desc": "Mod incompatível gera falha visível no assistente",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.suporte",
+  "desc": "Suporte (no hub) recebe o erro com origem",
+  "ok": true,
+  "info": "← Voltar para Preparar partida › Na seleção (assistente)Você veio de outra atividade; sua escolha foi mantida.Atividade 3Resolver problema\n  \n  Prontidão3 de 4 verificações✓ Cliente simulado disponíve"
+ },
+ {
+  "id": "B01.voltabtn",
+  "desc": "Botão voltar nomeia a origem",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.volta",
+  "desc": "Voltar restaura assistente, aba e etapa de origem",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.resolve",
+  "desc": "Desativar mod e verificar resolve o erro",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B01.semerro",
+  "desc": "Origem não mostra mais a falha",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.recnaoimporta",
+  "desc": "Ver recomendação não importa",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.trocafonte",
+  "desc": "Trocar fonte não importa nada",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.onetricksindisp",
+  "desc": "Fonte futura indisponível não mostra dados substitutos",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.compara",
+  "desc": "Comparação: Lolalytics com WR/amostra/patch",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.onetricksfuturo",
+  "desc": "Onetricks futuro/indisponível sem números",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.onesim",
+  "desc": "Simulação Onetricks separada, rotulada fictícia",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.importando",
+  "desc": "Estado importando",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.sucesso",
+  "desc": "Sucesso após clique, original imediatamente",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.falha",
+  "desc": "Estado falha sem alterar nada",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.nofree",
+  "desc": "no_free_page preserva páginas pessoais",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.editorinvalido",
+  "desc": "Edição inválida não importa",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B04.editoragrupa",
+  "desc": "Edições válidas agrupadas: 1 importação, a mais recente vence",
+  "ok": true,
+  "info": "{\"t\":\"Editor (3 edição(ões) agrupada(s))\",\"d\":\"Editada: Colheita Sombria + Feitiçaria importada\"}"
+ },
+ {
+  "id": "B05.ordem",
+  "desc": "Trios ordenados por partidas (desc)",
+  "ok": true,
+  "info": "[4280, 2610, 1840, 970]"
+ },
+ {
+  "id": "B05.icones",
+  "desc": "3 ícones por trio, WR conjunto e partidas",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B05.sem6",
+  "desc": "Texto deixa claro que não é build de 6 itens",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B05.busca",
+  "desc": "Busca por item filtra trios",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B05.escolhido",
+  "desc": "Trio escolhido vem antes do padrão",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B05.estado",
+  "desc": "Trocar aba e fechar/abrir assistente mantém trio",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B05.autoimport",
+  "desc": "Confirmar campeão (botão do client) simula importação com trio escolhido",
+  "ok": true,
+  "info": "{\"t\":\"Ao confirmar Ahri\",\"d\":\"runas da fonte Lolalytics · itens: trio escolhido\"}"
+ },
+ {
+  "id": "B05.restaurar",
+  "desc": "Voltar ao padrão desfaz",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.abre",
+  "desc": "Todas as configurações abre a partir do assistente",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.esc",
+  "desc": "Esc fecha e mantém rascunho",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.focoassist",
+  "desc": "Foco volta ao botão do assistente que abriu as configurações",
+  "ok": true,
+  "info": "<button type=\"button\" class=\"b p\" data-act=\"settings\">Todas as configurações…</b"
+ },
+ {
+  "id": "B06.rascunho",
+  "desc": "Rascunho reaparece ao reabrir",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.ouroenh",
+  "desc": "Ouro e aprimoramentos em seções separadas",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.idioma",
+  "desc": "Idioma aplica imediatamente, sem Salvar",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.cancelar",
+  "desc": "Cancelar descarta rascunho; salvo permanece",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.salvar",
+  "desc": "Salvar grava sem reiniciar e sem importar",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.rascunhosuporte",
+  "desc": "Ir ao suporte pelas configurações preserva o rascunho",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.retornoconfig",
+  "desc": "Voltar do suporte retorna ao assistente (aba Ajustes) com rascunho",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.elegib",
+  "desc": "Exalted + croma CTRL5 inelegível antes do ranking",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.sorteio",
+  "desc": "Sorteio só entre elegíveis, rotulado simulado",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.bravtexto",
+  "desc": "Texto da Bravura: só Arena, −3, revela em partida, encerra o executável uma vez, reconecta",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.tileBravura",
+  "desc": "Tile Bravura (−3) só existe na seleção do Arena",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.bravConfirmada",
+  "desc": "Confirmar Bravura na seleção não revela campeão",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.bravInicio",
+  "desc": "Em partida: aguardando revelação, sem campeão antes",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.bravCampeao",
+  "desc": "Campeão detectado só em partida",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.bravSkin",
+  "desc": "Skin escolhida: favorita ou aleatória com exclusões",
+  "ok": true,
+  "info": "{\"confirmed\":true,\"phase\":2,\"champ\":\"Akali\",\"skin\":\"Variante festiva (exemplo)\",\"how\":\"aleatória, exclusões respeitadas\",\"n\":1}"
+ },
+ {
+  "id": "B06.bravEncerra",
+  "desc": "Encerra o executável uma vez e reconecta (interrupção de carregamento)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.bravFim",
+  "desc": "Guard impede repetir; sem estatísticas/desafios",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.bravFav",
+  "desc": "Com favorita, o Bravura usa a favorita",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.bravsoarena",
+  "desc": "Fora do Arena, Bravura não faz nada",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.enhofertas",
+  "desc": "Aprimoramentos: apenas ofertas; app não escolhe",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B06.enhunrec",
+  "desc": "Aprimoramentos: não reconhecida distinto de sem dados",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B02.tabs",
+  "desc": "Coleção: por campeão, favoritas, conjuntos, arquivos",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B02.edita",
+  "desc": "Editar skin, croma e favorita por campeão",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B02.criaconj",
+  "desc": "Criar conjunto parte das escolhas visíveis",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B02.previa",
+  "desc": "Prévia mostra o que muda e sobrescrita da escolha manual",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B02.aplica",
+  "desc": "Aplicar conjunto muda escolhas e estado visível",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B02.favoritas",
+  "desc": "Aplicar favorita tem resultado observável",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B02.separa",
+  "desc": "Aplicar mods separado de administrar arquivos",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.categorias",
+  "desc": "Categorias legadas (Todas + 10)",
+  "ok": true,
+  "info": "11"
+ },
+ {
+  "id": "B03.busca",
+  "desc": "Busca filtra a biblioteca",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.importa",
+  "desc": "Importar exemplo (skin) exige campeão e skin-base",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.base",
+  "desc": "Vincular campeão/skin-base",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.edita",
+  "desc": "Editar mod",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.exporta",
+  "desc": "Exportar (simulado) marca o item",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.espera",
+  "desc": "Skin-mod espera o fim da seleção",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.aplicado",
+  "desc": "No fim da seleção a skin-mod é aplicada",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.removeconfirma",
+  "desc": "Remover pede confirmação",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.remove",
+  "desc": "Remover da lista (simulado)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.sala",
+  "desc": "Criar sala simulada com chave; lobby mostra o grupo",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.copiar",
+  "desc": "Copiar chave simulado registra efeito",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.queda",
+  "desc": "Queda simulada mostra reconectar",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.reconecta",
+  "desc": "Reconectar volta à sala",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.chaveinvalida",
+  "desc": "Chave inválida mostra erro",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.conectar",
+  "desc": "Conectar com chave válida",
+  "ok": true,
+  "info": "SX2-9AB1"
+ },
+ {
+  "id": "B03.aviso",
+  "desc": "Sorteio coordenado avisa que desativa conjunto",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.desativa",
+  "desc": "Entrar no sorteio coordenado desativa conjunto",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B03.bloqueia",
+  "desc": "Aplicar conjunto indisponível durante o sorteio coordenado",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B07.hub.1280",
+  "desc": "Hub dentro da janela 1280x720 (tamanho (820, 560))",
+  "ok": true,
+  "info": "{'inside': True, 'w': 820, 'h': 560, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.antes-fila.1280",
+  "desc": "Sem rolagem horizontal em antes-fila (1280)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 820, 'h': 560, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.biblioteca.1280",
+  "desc": "Sem rolagem horizontal em biblioteca (1280)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 820, 'h': 560, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.suporte.1280",
+  "desc": "Sem rolagem horizontal em suporte (1280)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 820, 'h': 560, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.azul.hub.1280",
+  "desc": "Nenhuma cor azul na UI SEXO2 (hub, 1280)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.clip.hub.1280",
+  "desc": "Textos sem corte (hub, 1280)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.dialog.1280",
+  "desc": "Diálogo de configurações cabe na janela (1280)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.imgs.1280",
+  "desc": "Imagens locais carregadas (1280)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.D017.1280",
+  "desc": "Assistente D-017 em 1280x720: direita alinhada ao botão, 8px acima, dentro, sem cobrir",
+  "ok": true,
+  "info": "{'rightAligned': True, 'gap': 8, 'inside': True, 'overlapsBtn': False, 'w': 452, 'h': 492, 'btn': [1190, 644, 1264, 680]}"
+ },
+ {
+  "id": "B07.azul.1280",
+  "desc": "Nenhuma cor azul no assistente/botão (1280)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.overflow.1280",
+  "desc": "Sem rolagem horizontal da página (1280)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B07.clip.1280",
+  "desc": "Textos sem corte (assistente, 1280)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.hub.820",
+  "desc": "Hub dentro da janela 820x560 (tamanho (820, 532))",
+  "ok": true,
+  "info": "{'inside': True, 'w': 820, 'h': 532, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.antes-fila.820",
+  "desc": "Sem rolagem horizontal em antes-fila (820)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 820, 'h': 532, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.biblioteca.820",
+  "desc": "Sem rolagem horizontal em biblioteca (820)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 820, 'h': 532, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.suporte.820",
+  "desc": "Sem rolagem horizontal em suporte (820)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 820, 'h': 532, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.azul.hub.820",
+  "desc": "Nenhuma cor azul na UI SEXO2 (hub, 820)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.clip.hub.820",
+  "desc": "Textos sem corte (hub, 820)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.dialog.820",
+  "desc": "Diálogo de configurações cabe na janela (820)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.imgs.820",
+  "desc": "Imagens locais carregadas (820)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.D017.820",
+  "desc": "Assistente D-017 em 820x560: direita alinhada ao botão, 8px acima, dentro, sem cobrir",
+  "ok": true,
+  "info": "{'rightAligned': True, 'gap': 8, 'inside': True, 'overlapsBtn': False, 'w': 452, 'h': 468, 'btn': [730, 484, 804, 520]}"
+ },
+ {
+  "id": "B07.azul.820",
+  "desc": "Nenhuma cor azul no assistente/botão (820)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.overflow.820",
+  "desc": "Sem rolagem horizontal da página (820)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B07.clip.820",
+  "desc": "Textos sem corte (assistente, 820)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.hub.452",
+  "desc": "Hub dentro da janela 452x492 (tamanho (452, 464))",
+  "ok": true,
+  "info": "{'inside': True, 'w': 452, 'h': 464, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.antes-fila.452",
+  "desc": "Sem rolagem horizontal em antes-fila (452)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 452, 'h': 464, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.biblioteca.452",
+  "desc": "Sem rolagem horizontal em biblioteca (452)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 452, 'h': 464, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.ov.suporte.452",
+  "desc": "Sem rolagem horizontal em suporte (452)",
+  "ok": true,
+  "info": "{'inside': True, 'w': 452, 'h': 464, 'hscroll': 0, 'pagex': 0}"
+ },
+ {
+  "id": "B07.azul.hub.452",
+  "desc": "Nenhuma cor azul na UI SEXO2 (hub, 452)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.clip.hub.452",
+  "desc": "Textos sem corte (hub, 452)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.dialog.452",
+  "desc": "Diálogo de configurações cabe na janela (452)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.imgs.452",
+  "desc": "Imagens locais carregadas (452)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.D017.452",
+  "desc": "Assistente D-017 em 452x492: direita alinhada ao botão, 8px acima, dentro, sem cobrir",
+  "ok": true,
+  "info": "{'rightAligned': True, 'gap': 8, 'inside': True, 'overlapsBtn': False, 'w': 428, 'h': 400, 'btn': [362, 416, 436, 452]}"
+ },
+ {
+  "id": "B07.azul.452",
+  "desc": "Nenhuma cor azul no assistente/botão (452)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B07.overflow.452",
+  "desc": "Sem rolagem horizontal da página (452)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B07.clip.452",
+  "desc": "Textos sem corte (assistente, 452)",
+  "ok": true,
+  "info": "[]"
+ },
+ {
+  "id": "B08.enterhub",
+  "desc": "Enter no botão SEXO2 abre o hub",
+  "ok": true,
+  "info": "<main id=\"main\" tabindex=\"-1\"><div class=\"col\" style=\"max-wi"
+ },
+ {
+  "id": "B08.enter",
+  "desc": "Enter em Configurações abre o diálogo",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.focoinicial",
+  "desc": "Foco inicial dentro do diálogo",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.tabtrap",
+  "desc": "Tab percorre sem sair do diálogo (14 passos)",
+  "ok": true,
+  "info": "[True, True, True, True, True, True, True, True, True, True, True, True, True, True]"
+ },
+ {
+  "id": "B08.shifttab",
+  "desc": "Shift+Tab percorre sem sair do diálogo",
+  "ok": true,
+  "info": "[True, True, True, True, True, True, True, True, True, True, True, True, True, True]"
+ },
+ {
+  "id": "B08.escmodal",
+  "desc": "Esc fecha só o diálogo; hub continua aberto",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.focorest",
+  "desc": "Foco volta ao botão Configurações do hub",
+  "ok": true,
+  "info": "<button type=\"button\" class=\"b sm\" data-act=\"settings\">Configurações</button>"
+ },
+ {
+  "id": "B08.eschub2",
+  "desc": "Segundo Esc fecha o hub e foca o botão SEXO2",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.focovisivelhub",
+  "desc": "Todos os focos no hub estão em elementos visíveis (30 Tab)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.fococlaro",
+  "desc": "Foco com contorno claro",
+  "ok": true,
+  "info": "solid rgb(236, 236, 236)"
+ },
+ {
+  "id": "B08.docktoggle",
+  "desc": "Botão SEXO2 inferior por teclado fecha o assistente",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.dockabre",
+  "desc": "Enter reabre e foca a aba do assistente",
+  "ok": true,
+  "info": "<button type=\"button\" data-act=\"ptab\" data-a=\"Runas\" aria-current=\"true\">Runas</button>"
+ },
+ {
+  "id": "B08.escpainel",
+  "desc": "Esc fecha o assistente e foca o botão",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.focovisivel",
+  "desc": "Todos os focos da seleção estão em elementos visíveis (40 Tab)",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.link.../sexo2-ux-a/index.html",
+  "desc": "Link existe: ../sexo2-ux-a/index.html",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.link.../sexo2-overlays/index.html",
+  "desc": "Link existe: ../sexo2-overlays/index.html",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.asset.oswald.woff2",
+  "desc": "Asset existe: oswald.woff2",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.asset.inter.woff2",
+  "desc": "Asset existe: inter.woff2",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.semfetch",
+  "desc": "Sem fetch/XHR/import remoto no HTML",
+  "ok": true,
+  "info": ""
+ },
+ {
+  "id": "B08.console",
+  "desc": "Sem erros de console/exceções",
+  "ok": true,
+  "info": "[]"
+ }
+]

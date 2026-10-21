@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo do padrão SEXO2</title>
+<link rel="stylesheet" href="../../tokens.css">
+<style>
+  /* Catálogo estático. Nada aqui está aprovado: cada item PENDENTE espera decisão (D-101 a D-103).
+     Os valores "proposto" repetem os do protótipo sexo2-v1; os "hoje" copiam o código atual (fonte em cada legenda). */
+  @font-face { font-family: "Beaufort for LOL"; src: url("../../../assets/BeaufortforLOL-Regular.ttf") format("truetype"); font-display: swap; }
+  :root {
+    --s2-bg: #0d0e10; --s2-surface: #15171a; --s2-surface-2: #1b1d21; --s2-hover: #22252a; --s2-line: #2a2d32;
+    --s2-line-soft: #202327; --s2-overlay: #0b0c0d;
+    --s2-fg: #ececec; --s2-fg-2: #a4a9b0; --s2-fg-3: #6e747b; --s2-ally: #4f8cff; --s2-enemy: #e5484d; --s2-focus: #ececec;
+    --s2-shadow: 0 8px 30px rgba(0,0,0,.55);
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --radius: 2px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #08090a; color: var(--s2-fg); font: 400 14px/1.4 var(--s2-font-text); padding: 32px 16px 64px; }
+  main { max-width: 1120px; margin: 0 auto; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  input, select { font: inherit; color: inherit; }
+  h1 { font: 600 34px/1 var(--s2-font-display); text-transform: uppercase; margin-bottom: 12px; }
+  .intro { color: var(--s2-fg-2); max-width: 760px; margin-bottom: 32px; }
+  .intro b { color: var(--s2-fg); }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 32px; font-size: 12px; color: var(--s2-fg-3); }
+  nav.toc a { color: var(--s2-fg-2); text-decoration: none; }
+  nav.toc a:hover { color: var(--s2-fg); }
+  section.item { border-top: 1px solid var(--s2-line); padding: 24px 0 32px; }
+  section.item > header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+  section.item h2 { font: 500 18px/1.15 var(--s2-font-display); text-transform: uppercase; letter-spacing: .02em; }
+  .id { font: 500 12px var(--s2-font-display); letter-spacing: .06em; color: var(--s2-fg-3); }
+  .tag { font-size: 11px; font-weight: 600; border: 1px solid var(--s2-line); padding: 1px 6px; color: var(--s2-fg-2); }
+  .tag.pend { color: #111; background: var(--s2-fg-2); border-color: var(--s2-fg-2); }
+  .why { color: var(--s2-fg-3); font-size: 12px; margin-bottom: 16px; max-width: 760px; }
+  .cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .col { background: var(--s2-surface); border: 1px solid var(--s2-line); }
+  .col > h3 { font: 500 12px var(--s2-font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--s2-fg-2); padding: 8px 12px; border-bottom: 1px solid var(--s2-line); }
+  .col.new > h3 { color: #111; background: var(--s2-fg); }
+  .stage { padding: 16px 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .stage.block { display: block; }
+  .src { font-size: 11px; color: var(--s2-fg-3); padding: 0 12px 10px; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sw { width: 92px; font-size: 11px; color: var(--s2-fg-2); }
+  .sw i { display: block; height: 36px; border: 1px solid #000; margin-bottom: 3px; }
+  .sw.nw i { outline: 1px dashed var(--s2-fg-2); outline-offset: 2px; }
+
+  /* ===== PROPOSTO (mesmos valores do protótipo sexo2-v1/css/styles.css:100-141) ===== */
+  .s2-btn { height: 28px; padding: 0 var(--sp-3); border: 1px solid var(--s2-line); background: var(--s2-surface-2); font-size: 13px; font-weight: 600; white-space: nowrap; border-radius: var(--radius); }
+  .s2-btn:hover { background: var(--s2-hover); }
+  .s2-btn.primary { background: var(--s2-fg); color: #111; border-color: var(--s2-fg); }
+  .s2-btn.ghost { background: transparent; border-color: transparent; color: var(--s2-fg-2); }
+  .s2-btn.danger { color: var(--s2-enemy); }
+  .s2-btn:disabled { opacity: .45; cursor: default; }
+  .s2-tabs { display: flex; border-bottom: 1px solid var(--s2-line); width: 100%; }
+  .s2-tabs button { padding: 7px var(--sp-3) 6px; font: 500 13px var(--s2-font-display); letter-spacing: .05em; text-transform: uppercase; color: var(--s2-fg-3); }
+  .s2-tabs button:hover { color: var(--s2-fg-2); }
+  .s2-tabs button[aria-selected="true"] { color: var(--s2-fg); box-shadow: inset 0 -2px 0 var(--s2-fg); }
+  .s2-select, .s2-input { height: 28px; background: var(--s2-surface-2); border: 1px solid var(--s2-line); padding: 0 var(--sp-2); font-size: 13px; border-radius: var(--radius); }
+  .s2-input { background: var(--s2-bg); }
+  .s2-input:focus, .s2-select:focus, .s2-focus { outline: 1px solid var(--s2-focus); outline-offset: -1px; }
+  .s2-row { display: flex; align-items: center; gap: var(--sp-2); width: 100%; padding: 6px var(--sp-2); border-bottom: 1px solid var(--s2-line-soft); text-align: left; font-size: 13px; }
+  .s2-row:hover { background: var(--s2-hover); }
+  .s2-row[aria-pressed="true"] { box-shadow: inset 2px 0 0 var(--s2-fg); background: var(--s2-surface-2); }
+  .s2-row .grow { flex: 1; }
+  .s2-row small, .s2-card small { color: var(--s2-fg-3); font-size: 12px; }
+  .s2-card { text-align: left; padding: var(--sp-2) var(--sp-3) var(--sp-3); border: 1px solid var(--s2-line); background: var(--s2-surface-2); width: 100%; border-radius: var(--radius); }
+  .s2-card:hover { border-color: #3a3e44; background: var(--s2-hover); }
+  .s2-card .lbl { font-size: 12px; color: var(--s2-fg-2); margin-bottom: 4px; }
+  .num { font-variant-numeric: var(--s2-numeric-stats); font-weight: 600; }
+  .s2-chip { display: inline-block; font-size: 11px; line-height: 1; padding: 3px 5px; border: 1px solid var(--s2-line); color: var(--s2-fg-2); border-radius: var(--radius); }
+  .s2-chip.solid { background: rgba(0,0,0,.75); border-color: transparent; color: var(--s2-fg); }
+  .s2-panel { background: var(--s2-surface); border: 1px solid var(--s2-line); border-radius: var(--radius); }
+  .s2-panel.float { box-shadow: var(--s2-shadow); }
+  .s2-panel .hd { font: 500 18px/1.15 var(--s2-font-display); text-transform: uppercase; letter-spacing: .02em; padding: 8px 12px; border-bottom: 1px solid var(--s2-line); }
+  .s2-panel .bd { padding: 12px; color: var(--s2-fg-2); font-size: 13px; }
+  .s2-empty { padding: var(--sp-4) var(--sp-3); color: var(--s2-fg-3); font-size: 13px; }
+  .s2-error { padding: var(--sp-4) var(--sp-3); color: var(--s2-enemy); font-size: 13px; }
+  .s2-spinner { width: 12px; height: 12px; border: 2px solid var(--s2-line); border-top-color: var(--s2-fg); border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .skeleton { height: 18px; width: 100%; background: linear-gradient(90deg,#1b1d21 25%,#22252a 50%,#1b1d21 75%); background-size: 200% 100%; animation: sk 1.2s infinite; }
+  @keyframes sk { to { background-position: -200% 0; } }
+  .s2-seg { display: inline-flex; border: 1px solid var(--s2-line); }
+  .s2-seg button { padding: 4px 10px; font-size: 12px; font-weight: 600; color: var(--s2-fg-2); }
+  .s2-seg button + button { border-left: 1px solid var(--s2-line); }
+  .s2-seg button[aria-pressed="true"] { background: var(--s2-fg); color: #111; }
+  .s2-switch { width: 30px; height: 16px; border-radius: 8px; background: var(--s2-line); position: relative; flex: none; }
+  .s2-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--s2-fg-2); }
+  .s2-switch.on { background: var(--s2-fg); }
+  .s2-switch.on::after { left: 16px; background: #111; }
+  .type-d { font: 600 34px/1 var(--s2-font-display); text-transform: uppercase; }
+  .type-h { font: 500 18px/1.15 var(--s2-font-display); text-transform: uppercase; letter-spacing: .02em; }
+  .type-c { font: 500 12px/1.2 var(--s2-font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--s2-fg-2); }
+
+  /* ===== HOJE (copiados do código atual; classes h-*) ===== */
+  /* ROSE-Amigos/index.js:19-23 */
+  .h-amigos { font: 13px Arial, sans-serif; color: #f0e6d2; background: #07151d; border: 1px solid #c89b3c; border-radius: 10px; padding: 16px; box-shadow: 0 15px 50px #000a; width: 100%; }
+  .h-amigos h3 { font: 16px Georgia; margin: 0 0 8px; }
+  .h-amigos button, .h-amigos input, .h-amigos select { font: inherit; border: 1px solid #725f32; border-radius: 4px; color: #f0e6d2; background: #10252e; padding: 8px; margin: 3px; }
+  .h-amigos button:hover { border-color: #d8b764; }
+  .h-amigos .muted { color: #a8aaa2; font-size: 12px; line-height: 1.5; }
+  .h-amigos .card { padding: 12px; margin: 8px 0; border: 1px solid #36474b; border-radius: 6px; }
+  .h-amigos .ok { color: #7bd5a7; } .h-amigos .err { color: #f3a090; }
+  /* ROSE-SwiftplayPins/index.js:40-58 */
+  .h-swift { font: 13px Arial, sans-serif; color: #f0e6d2; background: linear-gradient(145deg,#081e29,#010a10); border: 1px solid #c89b3c; border-radius: 8px; padding: 16px; box-shadow: 0 8px 30px #000a; width: 100%; }
+  .h-swift h3 { font: bold 16px Georgia, serif; margin: 0; }
+  .h-swift button { color: #f0e6d2; border: 1px solid #c89b3c; background: #07151d; padding: 8px 12px; cursor: pointer; }
+  .h-swift button:hover { border-color: #f0e6d2; background: #12333c; }
+  .h-swift .row { display: flex; align-items: center; gap: 10px; padding: 14px 0; border-top: 1px solid #463e2c; }
+  .h-swift .status { font-size: 11px; color: #0ac8b9; margin-top: 6px; }
+  /* SEXO2-Settings/index.js:21-35 e SEXO2-ModLibrary/index.js:13 */
+  .h-set { font: 13px 'Spiegel', Arial, sans-serif; color: #a09b8c; background: #010a13; padding: 12px; width: 100%; }
+  .h-set h2 { font-family: 'Beaufort for LOL', Georgia, serif; color: #cdbe91; font-weight: 500; letter-spacing: .06em; font-size: 18px; margin: 4px 0 14px; }
+  .h-set .line { display: flex; align-items: center; justify-content: space-between; min-height: 42px; border-bottom: 1px solid #1e282d; padding: 8px 0; }
+  .h-set .help { font-size: 11px; color: #78796d; margin: 8px 0; }
+  .h-set .err { color: #d9a796; }
+  .h-set select, .h-set button, .h-set input[type=text] { font: inherit; }
+  .h-mod { font: 13px 'Spiegel', Arial, sans-serif; color: #a09b8c; background: #010a13; padding: 12px; width: 100%; }
+  .h-mod .r { border-bottom: 1px solid #25343d; padding: 10px 0; }
+  .h-mod strong { display: block; color: #f0e6d2; font-weight: 400; }
+  .h-mod small { display: block; margin: 5px 0; }
+  /* ROSE-CustomWheel/index.js:679-705 */
+  .h-wheel { width: 100%; font: 13px Arial, sans-serif; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 8px; border: 1px solid #3c3c41; border-left: 3px solid #c8aa6e; background: linear-gradient(to right, rgba(30,35,40,.8), rgba(30,35,40,.5)); color: #cdbe91; }
+  .h-wheel.off { border-left-color: transparent; }
+  /* ROSE-Hub/index.js:21-22 (já usa tokens, mas com padding fora da grade) */
+  .h-hubbtn { font: 600 13px var(--s2-font-text); color: var(--s2-fg); background: var(--s2-surface-2); border: 1px solid var(--s2-line); border-radius: 0; padding: 5px 10px; }
+  .h-hubtab { padding: 7px 12px 6px; font: 500 13px var(--s2-font-display); letter-spacing: .05em; text-transform: uppercase; color: var(--s2-fg-3); }
+  .h-hubtab.on { color: var(--s2-fg); box-shadow: inset 0 -2px 0 var(--s2-fg); }
+  /* Assistente (SEXO2-Assistant/index.js:183-185) */
+  .h-asstrow { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 4px; border-bottom: 1px solid #202327; font-size: 13px; }
+  .h-asstrow.sel { box-shadow: inset 2px 0 0 var(--s2-fg); }
+  /* ROSE-Amigos .ra-tabs (oculta no Hub) */
+  .h-ratabs { display: flex; gap: 6px; width: 100%; }
+  .h-ratabs button { font: 13px Arial; color: #f0e6d2; background: #10252e; border: 1px solid #725f32; border-radius: 4px; padding: 8px 12px; }
+  .h-ratabs button.on { border-color: #d8b764; background: #1b3a47; }
+  /* Overlay Tk (gold_overlay.py:156-165) */
+  .ov { background: #1c1e22; padding: 14px 18px; display: flex; gap: 24px; align-items: center; width: 100%; justify-content: center; }
+  .ov-t { font-weight: 700; }
+  .ov .a { color: var(--s2-ally); } .ov .e { color: var(--s2-enemy); }
+  .tk { font-family: "Segoe UI", Arial, sans-serif; font-size: 15px; }
+  .inter { font-family: var(--s2-font-text); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .fonts-h .l { margin-bottom: 8px; }
+  .fonts-h .l small { display: block; color: var(--s2-fg-3); font: 11px var(--s2-font-text); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Catálogo do padrão</h1>
+  <p class="intro">Cada bloco mostra o que existe <b>hoje</b> no código e o que se <b>propõe</b>, para aprovar item por item
+    (P-01 a P-12). Os valores propostos repetem os do protótipo aprovado <b>sexo2-v1</b> (D-017); as cores ainda
+    dependem de D-102 e os componentes de D-103. Marcação <span class="tag pend">PENDENTE</span> = não existe no
+    protótipo ou não tem decisão. Nada aqui foi implementado nos plugins. Texto de exemplo apenas ilustra; os
+    textos visíveis reais seguem D-107.</p>
+  <nav class="toc">
+    <a href="#p01">P-01 Cores</a><a href="#p02">P-02 Fontes</a><a href="#p03">P-03 Botão</a><a href="#p04">P-04 Aba</a>
+    <a href="#p05">P-05 Seletor e campo</a><a href="#p06">P-06 Linha de lista</a><a href="#p07">P-07 Cartão</a>
+    <a href="#p08">P-08 Chip</a><a href="#p09">P-09 Painel</a><a href="#p10">P-10 Vazio, erro, carregando</a>
+    <a href="#p11">P-11 Segmentado e switch</a><a href="#p12">P-12 Overlay Tk</a>
+  </nav>
+
+  <section class="item" id="p01">
+    <header><span class="id">P-01</span><h2>Cores</h2><span class="tag pend">PENDENTE D-102</span></header>
+    <p class="why">Hoje há dois vocabulários: o neutro do protótipo (3 plugins) e o ouro/azul-marinho do cliente (16 plugins). Proposta: um só conjunto de papéis. Contorno tracejado = token novo.</p>
+    <div class="cmp">
+      <div class="col"><h3>Hoje (amostra dos painéis herdados)</h3>
+        <div class="stage block"><div class="swatches">
+          <div class="sw"><i style="background:#c8aa6e"></i>#c8aa6e ouro</div>
+          <div class="sw"><i style="background:#c89b3c"></i>#c89b3c ouro</div>
+          <div class="sw"><i style="background:#f0e6d2"></i>#f0e6d2 texto</div>
+          <div class="sw"><i style="background:#071d25"></i>#071d25 fundo</div>
+          <div class="sw"><i style="background:#010a13"></i>#010a13 fundo</div>
+          <div class="sw"><i style="background:#10252e"></i>#10252e botão</div>
+          <div class="sw"><i style="background:#25343d"></i>#25343d linha</div>
+          <div class="sw"><i style="background:#1e282d"></i>#1e282d linha</div>
+          <div class="sw"><i style="background:#7bd5a7"></i>#7bd5a7 ok</div>
+          <div class="sw"><i style="background:#4ade80"></i>#4ade80 ok</div>
+          <div class="sw"><i style="background:#f3a090"></i>#f3a090 erro</div>
+          <div class="sw"><i style="background:#ff6b6b"></i>#ff6b6b erro</div>
+        </div></div>
+        <p class="src">ROSE-Amigos:19-25; SEXO2-Settings:21-35; SEXO2-ModLibrary:13; ROSE-PartyMode:213-228; ROSE-SettingsPanel:773</p></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage block"><div class="swatches">
+          <div class="sw"><i style="background:#0d0e10"></i>--s2-bg</div>
+          <div class="sw"><i style="background:#15171a"></i>--s2-surface</div>
+          <div class="sw"><i style="background:#1b1d21"></i>--s2-surface-2</div>
+          <div class="sw"><i style="background:#22252a"></i>--s2-hover</div>
+          <div class="sw"><i style="background:#2a2d32"></i>--s2-line</div>
+          <div class="sw nw"><i style="background:#202327"></i>--s2-line-soft</div>
+          <div class="sw"><i style="background:#ececec"></i>--s2-fg</div>
+          <div class="sw"><i style="background:#a4a9b0"></i>--s2-fg-2</div>
+          <div class="sw"><i style="background:#6e747b"></i>--s2-fg-3</div>
+          <div class="sw"><i style="background:#4f8cff"></i>--s2-ally</div>
+          <div class="sw"><i style="background:#e5484d"></i>--s2-enemy</div>
+          <div class="sw nw"><i style="background:#0b0c0d"></i>--s2-overlay</div>
+          <div class="sw nw"><i style="background:#f2d27a"></i>--s2-highlight (overlay)</div>
+          <div class="sw nw"><i style="background:repeating-linear-gradient(45deg,#15171a 0 6px,#22252a 6px 12px)"></i>--s2-error / ok / warn: sem valor</div>
+        </div></div>
+        <p class="src">Cinzas e times: protótipo (styles.css:8-18). Erro, ok e aviso dependem da cor de sinal. O ouro #c8aa6e fica sem papel.</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p02">
+    <header><span class="id">P-02</span><h2>Fontes e escala</h2><span class="tag">D-007 aprovada</span><span class="tag pend">PENDENTE tamanhos 22, 13, 11</span></header>
+    <p class="why">D-007 permite só Oswald e Inter. Hoje há Beaufort, Georgia, Arial, Spiegel, LoL Display e LoL Body.</p>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block fonts-h">
+          <div class="l"><span style="font:18px 'Beaufort for LOL',Georgia,serif;color:#cdbe91;letter-spacing:.06em">Configurações</span><small>Beaufort 18 · SEXO2-Settings:22</small></div>
+          <div class="l"><span style="font:21px Georgia;color:#f0e6d2">Amigos e sala</span><small>Georgia 21 · ROSE-Amigos:25</small></div>
+          <div class="l"><span style="font:13px Arial;color:#f0e6d2">Texto do painel de Amigos</span><small>Arial 13 · ROSE-Amigos:19-21</small></div>
+          <div class="l"><span style="font:13px 'Spiegel',Arial;color:#a09b8c">Texto de Configurações</span><small>Spiegel (cai em Arial aqui) 13 · SEXO2-Settings:21</small></div>
+        </div></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage block">
+          <div class="type-d">Display 34</div>
+          <div class="type-h" style="margin-top:8px">Heading 18</div>
+          <div class="type-c" style="margin-top:8px">Category 12</div>
+          <div style="margin-top:8px">Body 14 (Inter) · <span style="font-size:13px;font-weight:600">controle 13/600</span> · <span style="font-size:12px;color:var(--s2-fg-2)">small 12</span> · <span style="font-size:11px;color:var(--s2-fg-3)">micro 11</span></div>
+          <div style="margin-top:8px"><span class="num" style="font-size:14px">54,3% · 1.284 partidas</span> &nbsp; <span style="font:500 30px/1 var(--s2-font-display);font-variant-numeric:tabular-nums">54,3</span></div>
+        </div>
+        <p class="src">Oswald para títulos, Inter para o resto, tabular-nums nas estatísticas (D-007). Escala do protótipo (D-014/D-101).</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p03">
+    <header><span class="id">P-03</span><h2>Botão</h2><span class="tag pend">PENDENTE D-103</span></header>
+    <p class="why">Sete estilos de botão. Proposta: um, com três variantes. A variante danger usa a cor de sinal (D-102).</p>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block">
+          <div class="h-amigos" style="padding:8px;border-radius:4px"><button>Amigos (ROSE-Amigos:19)</button><button disabled style="opacity:.45">desabilitado</button></div>
+          <div class="h-swift" style="margin-top:8px;padding:8px"><button>Pins (SwiftplayPins:44)</button></div>
+          <div style="margin-top:8px"><button class="h-hubbtn">Hub (5px 10px, raio 0)</button></div>
+          <div class="h-wheel off" style="margin-top:8px;display:block;border:1px solid #3c3c41">Roda (CustomWheel:679)</div>
+        </div></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage">
+          <button class="s2-btn">Padrão</button><button class="s2-btn primary">Primário</button><button class="s2-btn ghost">Fantasma</button><button class="s2-btn danger">Perigo</button><button class="s2-btn" disabled>Desabilitado</button>
+        </div>
+        <p class="src">28px, 1px --s2-line, 13px 600, raio 2px (styles.css:100-109). Falta danger no SEXO2-Style.</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p04">
+    <header><span class="id">P-04</span><h2>Aba</h2><span class="tag">D-017</span></header>
+    <p class="why">O protótipo já define a aba; o Hub a copia com !important e Amigos tem outra, oculta pelo Hub.</p>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block"><div class="h-ratabs"><button class="on">Preparo</button><button>Sala</button><button>Amigos</button></div>
+          <p class="src" style="padding:6px 0 0">ROSE-Amigos .ra-tabs (oculta no Hub, linha 35)</p>
+          <div style="display:flex;border-bottom:1px solid var(--s2-line);margin-top:8px"><button class="h-hubtab on">Seleção automática</button><button class="h-hubtab">Favoritas</button><button class="h-hubtab">Perfis</button></div>
+          <p class="src" style="padding:6px 0 0">Hub .hub-subnav (ROSE-Hub:24-26): igual ao proposto, mas duplicado</p></div></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage"><div class="s2-tabs" role="tablist"><button aria-selected="true">Seleção automática</button><button>Favoritas</button><button>Perfis</button></div></div>
+        <p class="src">Oswald 13 caixa alta, barra inferior de 2px na ativa (styles.css:111-114).</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p05">
+    <header><span class="id">P-05</span><h2>Seletor e campo</h2><span class="tag pend">PENDENTE: foco visível no plugin</span></header>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block"><div class="h-amigos" style="padding:8px"><select><option>Qualquer tema</option></select><input placeholder="Buscar campeão"></div>
+          <p class="src" style="padding:6px 0 0">Raio 4px, fundo #10252e, borda #725f32 (ROSE-Amigos:23). SEXO2-Style não tem :focus.</p></div></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage"><select class="s2-select"><option>Qualquer tema</option></select><input class="s2-input" placeholder="Buscar campeão" style="width:180px"><input class="s2-input s2-focus" value="Com foco" style="width:120px"></div>
+        <p class="src">28px, raio 2px, foco = contorno de 1px interno (styles.css:121-123).</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p06">
+    <header><span class="id">P-06</span><h2>Linha de lista</h2><span class="tag pend">PENDENTE D-103: unificar quatro linhas</span></header>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block">
+          <div class="h-asstrow sel"><span style="flex:1">Assistente (#202327)</span><span class="num">54,3%</span></div>
+          <div class="h-mod" style="padding:0 0 0 0"><div class="r"><strong>Mod de exemplo</strong><small>Skins · Ahri</small></div></div>
+          <div class="h-swift" style="padding:0 12px;border-radius:0"><div class="row" style="border-top:1px solid #463e2c"><div style="flex:1">Pin (#463e2c, 14px)</div><div class="status">Pronto</div></div></div>
+          <div class="h-wheel" style="margin-top:6px"><span>Roda (gradiente, borda ouro 3px)</span><span>12</span></div>
+        </div></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage block" style="padding:0">
+          <button class="s2-row" aria-pressed="true"><span class="grow">Linha selecionada</span><span class="num">54,3%</span></button>
+          <button class="s2-row"><span class="grow">Linha comum<br><small>Skins · Ahri</small></span><span class="num">1.284</span></button>
+          <button class="s2-row"><span class="grow">Hover mostra --s2-hover</span></button>
+        </div>
+        <p class="src">Borda inferior --s2-line-soft (novo), seleção com barra interna de 2px (assistente e Hub).</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p07">
+    <header><span class="id">P-07</span><h2>Cartão</h2><span class="tag pend">PENDENTE: token de borda de hover</span></header>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block"><div class="h-amigos" style="padding:8px"><div class="card">Cartão de Amigos (raio 6, #36474b)<div class="muted">Detalhe em #a8aaa2</div></div></div></div></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage"><button class="s2-card"><div class="lbl">Maior WR</div><span class="num" style="font-size:14px">54,3%</span> <small>1.284 partidas</small></button></div>
+        <p class="src">surface-2, 1px --s2-line, hover com borda mais clara (hoje #3a3e44 fixo, Assistant:174).</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p08">
+    <header><span class="id">P-08</span><h2>Chip e selo</h2><span class="tag pend">PENDENTE: componente novo</span></header>
+    <p class="why">Não existe padrão. O contador do assistente e o selo da sala são soltos. Proposta mínima, sem cor decorativa.</p>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage"><span style="font-size:10px;line-height:1;padding:1px 2px;background:rgba(0,0,0,.75);color:#ececec">x2</span><span style="font:12px Arial;color:#7bd5a7">Conectado</span></div>
+        <p class="src">SEXO2-Assistant .ip-count (215); ROSE-Amigos .ra-ok (25)</p></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage"><span class="s2-chip">Contorno</span><span class="s2-chip solid">x2</span><span class="s2-chip">12 de 20</span></div></div>
+    </div>
+  </section>
+
+  <section class="item" id="p09">
+    <header><span class="id">P-09</span><h2>Painel, raio, borda e sombra</h2><span class="tag pend">PENDENTE: --s2-shadow</span></header>
+    <p class="why">Raio aprovado 2px. Em uso: 4, 5, 6, 8 e 10px, gradientes e duas sombras diferentes.</p>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block"><div class="h-amigos"><h3>Painel de Amigos</h3><div class="muted">Raio 10px, borda ouro, sombra 0 15px 50px</div></div>
+          <div class="h-swift" style="margin-top:8px"><h3>Pins</h3><div style="font-size:12px;color:#a09b8c;margin-top:6px">Raio 8px, gradiente 145deg</div></div></div></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage block"><div class="s2-panel float"><div class="hd">Painel</div><div class="bd">1px --s2-line, raio 2px, sombra só em flutuantes.</div></div></div>
+        <p class="src">Mesma aparência do assistente e do Hub (Assistant:162, Hub:9).</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p10">
+    <header><span class="id">P-10</span><h2>Vazio, erro e carregando</h2><span class="tag pend">PENDENTE: cor do erro (D-102)</span></header>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block">
+          <p style="font:13px Arial;color:#a09b8c">Nenhum mod nesta busca.</p>
+          <p style="font:13px Arial;color:#f3a090;margin-top:8px">Erro em #f3a090 (Amigos), #d9a796 (Settings), #ff6b6b (Rose)</p>
+          <p style="font:13px Arial;color:#a09b8c;margin-top:8px">Carregando biblioteca…</p>
+        </div>
+        <p class="src">SEXO2-ModLibrary:43,20; ROSE-Amigos:25; SEXO2-Settings:33</p></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage block" style="padding:0">
+          <div class="s2-empty">Nenhum mod nesta busca.</div>
+          <div class="s2-error">Não foi possível carregar. Tente de novo.</div>
+          <div class="s2-empty" style="display:flex;gap:8px;align-items:center"><span class="s2-spinner"></span>Carregando</div>
+          <div style="padding:0 12px 12px"><div class="skeleton"></div></div>
+        </div>
+        <p class="src">Textos só ilustram (D-107). Erro usa --s2-enemy até a cor de sinal ser decidida.</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p11">
+    <header><span class="id">P-11</span><h2>Segmentado e switch</h2><span class="tag">no protótipo</span><span class="tag pend">PENDENTE: levar ao SEXO2-Style</span></header>
+    <p class="why">Hoje as Configurações usam checkbox nativo com accent #c8aa6e (SEXO2-Settings:28), e o Hub força um checkbox cinza (Hub:50).</p>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage"><label style="font:13px Arial;color:#a09b8c;display:flex;gap:8px;align-items:center"><input type="checkbox" checked style="accent-color:#c8aa6e"> Iniciar com Windows</label></div></div>
+      <div class="col new"><h3>Proposto</h3>
+        <div class="stage"><span class="s2-switch on"></span><span class="s2-switch"></span>
+          <span class="s2-seg"><button aria-pressed="true">Maior WR</button><button>Mais comum</button></span></div>
+        <p class="src">styles.css:115-127.</p></div>
+    </div>
+  </section>
+
+  <section class="item" id="p12">
+    <header><span class="id">P-12</span><h2>Overlays sobre o jogo</h2><span class="tag pend">PENDENTE: fonte dos aprimoramentos e cores de time</span></header>
+    <p class="why">O ouro (D-119, visual Blitz) é deliberadamente fora do estilo do app e já usa Inter Bold; esta proposta não o altera. Dois pontos: os aprimoramentos ainda usam Segoe UI (D-007 só a permite em componentes nativos) e as cores de time do ouro (#4db0fc, #e8404f) diferem dos tokens do app (#4f8cff, #e5484d) sem nome próprio.</p>
+    <div class="cmp">
+      <div class="col"><h3>Hoje</h3>
+        <div class="stage block"><div class="ov"><span class="inter" style="color:#4db0fc">12480</span><span class="inter" style="color:#a4a9b0">+1240</span><span class="inter" style="color:#e8404f">11240</span></div>
+          <p class="src" style="padding:6px 0 0">Ouro: gold_overlay.py:29-31,163 (Inter Bold, cores só de texto; o losango e a moldura bronze não são reproduzidos aqui)</p>
+          <div class="ov" style="margin-top:8px"><span class="tk" style="color:#ececec;font-weight:700">Dica 54,3%</span><span class="tk" style="color:#f2d27a;font-weight:700">Melhor 61,0%</span><span class="tk" style="color:#a4a9b0;font-size:12px">Nome lido</span></div>
+          <p class="src" style="padding:6px 0 0">Aprimoramentos: augment_overlay.py:30-33,142-143 (Segoe UI; aproximação em navegador)</p></div></div>
+      <div class="col new"><h3>Proposto (a decidir)</h3>
+        <div class="stage block"><div class="ov"><span class="inter" style="color:#ececec">Dica 54,3%</span><span class="inter" style="color:#f2d27a">Melhor 61,0%</span><span class="inter" style="color:#a4a9b0;font-size:12px">Nome lido</span></div>
+          <p class="src" style="padding:6px 0 0">Aprimoramentos em Inter, como o ouro. Cores de time do ouro viram tokens de overlay com os valores atuais (nenhuma mudança visual).</p></div></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

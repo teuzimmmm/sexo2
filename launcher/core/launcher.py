@@ -1,5 +1,5 @@
 """
-Native Win32 startup dialog used to prepare Rose before launching.
+Native Win32 startup dialog used to prepare SEXO2 before launching.
 
 This replaces the former PyQt-based launcher with a lightweight Steam-style
 progress window that:
@@ -95,7 +95,7 @@ def _with_ui_updates(dialog: UpdateDialog) -> tuple[Callable[[str], None], Calla
 
 
 def _confirm_update(dialog: UpdateDialog, remote_version: str, local_version: str) -> bool:
-    """Ask whether the user wants to download an available Rose update."""
+    """Ask whether the user wants to download an available SEXO2 update."""
     dialog.set_marquee(False)
     dialog.set_detail("Update available")
     dialog.set_status(f"SEXO2 {remote_version} is ready to install.")

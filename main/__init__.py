@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Main entry point for Rose
+Main entry point for SEXO2
 """
 
 import argparse
@@ -281,7 +281,7 @@ def _show_dll_dialog(tools_dir, reason="missing", detail="") -> bool:
 
 
 def _sync_cslol_stub(tools_dir: Path) -> None:
-    """Replace cslol-dll.dll with Rose's stand-in when they differ.
+    """Replace cslol-dll.dll with SEXO2's stand-in when they differ.
 
     Updaters before this change skip cslol-dll.dll, so an update leaves the
     user's own copy in place. The stand-in ships again as cslol-dll.stub,
@@ -301,6 +301,13 @@ def _sync_cslol_stub(tools_dir: Path) -> None:
         pass  # The tools check reports a missing DLL when injection needs it
 
 
+def _recover_ltk_patcher(tools_dir: Path) -> None:
+    from injection.tools.patcher import previous_install_tools, recover_ltk_patcher
+    from utils.core.paths import get_user_data_dir
+
+    recover_ltk_patcher(tools_dir, get_user_data_dir() / "tools", previous_install_tools())
+
+
 def _check_dll_present() -> bool:
     """Check that the user-provided LTK patcher is present and supports the installed game."""
     import sys
@@ -314,13 +321,14 @@ def _check_dll_present() -> bool:
 
     tools_dir = _get_tools_dir()
     _sync_cslol_stub(tools_dir)
+    _recover_ltk_patcher(tools_dir)
     status = check_ltk_patcher(tools_dir)
     if status.missing:
         return _show_dll_dialog(tools_dir, reason="missing", detail=" and ".join(status.missing))
     if status.eol is None:
         return _show_dll_dialog(tools_dir, reason="invalid")
     # The DLL keeps working past its end of life until League updates, so only
-    # block when the game Rose last found is a build it refuses
+    # block when the game SEXO2 last found is a build it refuses
     league_path = get_config_option("General", "leaguePath")
     if status.expired_for(Path(league_path) if league_path else None):
         eol = datetime.fromtimestamp(status.eol).strftime("%Y-%m-%d %H:%M")
@@ -364,9 +372,9 @@ log = get_logger()
 
 
 def _warn_pengu_activation_failed() -> None:
-    """Tell the user Rose will not show in the client because Pengu Loader is not active.
+    """Tell the user SEXO2 will not show in the client because Pengu Loader is not active.
 
-    Rose's own Troubleshooting panel lives in the client plugins, the part that
+    SEXO2's own Troubleshooting panel lives in the client plugins, the part that
     failed, so this has to be a Windows dialog. It runs on its own thread so
     startup goes on while it is open.
     """
@@ -462,31 +470,12 @@ def _setup_pengu_and_injection(lcu, injection_manager, activate_pengu: bool = Tr
     injection_manager.initialize_when_ready()
 
 
-def _update_registry_version() -> None:
-    """Update the DisplayVersion in Windows registry to match the current app version.
-
-    After an auto-update the Inno Setup registry entry still shows the version
-    that was originally installed.  Writing the current ``APP_VERSION`` on every
-    startup keeps "Apps & features" in sync.
-    """
-    if FORK_BUILD or sys.platform != "win32" or not getattr(sys, "frozen", False):
-        return
-    try:
-        import winreg
-
-        key_path = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Rose"
-        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path, 0, winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "DisplayVersion", 0, winreg.REG_SZ, APP_VERSION)
-    except Exception:
-        pass
-
-
 def _schedule_restart() -> bool:
-    """Spawn a detached helper that relaunches Rose after this process exits.
+    """Spawn a detached helper that relaunches SEXO2 after this process exits.
 
     The new instance cannot start while the current one is still alive because
     of the single-instance mutex, so a small batch file waits for this PID to
-    exit and then starts Rose again.
+    exit and then starts SEXO2 again.
     """
     import os
     import subprocess
@@ -504,7 +493,7 @@ def _schedule_restart() -> bool:
             workdir = Path(__file__).parent.parent
             launch_cmd = f'start "" /D "{workdir}" "{exe_path}" "main.py"'
 
-        batch_path = Path(tempfile.gettempdir()) / f"rose_restart_{pid}.bat"
+        batch_path = Path(tempfile.gettempdir()) / f"sexo2_restart_{pid}.bat"
 
         batch_content = (
             "@echo off\n"
@@ -535,12 +524,11 @@ def _schedule_restart() -> bool:
 
 
 def run_league_unlock(args: Optional[argparse.Namespace] = None, injection_threshold: Optional[float] = None) -> None:
-    """Run the core Rose application startup and main loop."""
+    """Run the core SEXO2 application startup and main loop."""
     # Check for single instance before doing anything else
     check_single_instance()
 
     # Keep the Windows "Apps & features" version in sync after auto-updates
-    _update_registry_version()
 
     # Safety net: recover a previous session before startup. If League still owns
     # the loaded module, cleanup_if_dirty adopts the active session instead.
@@ -652,7 +640,7 @@ def run_league_unlock(args: Optional[argparse.Namespace] = None, injection_thres
         tray_manager.quit_callback = updated_tray_quit_callback
 
         def updated_tray_restart_callback():
-            """Callback for tray restart - relaunch Rose after this process exits"""
+            """Callback for tray restart - relaunch SEXO2 after this process exits"""
             log.info("Restart requested from tray - scheduling relaunch")
             if not _schedule_restart():
                 log.warning("Restart scheduling failed; SEXO2 will quit without relaunching")
@@ -705,7 +693,7 @@ def run_league_unlock(args: Optional[argparse.Namespace] = None, injection_thres
     )
 
     # Activate Pengu now rather than once a client runs: a client started after
-    # Rose then loads the plugins itself instead of starting without them and
+    # SEXO2 then loads the plugins itself instead of starting without them and
     # waiting for a restart. A running client is restarted (the bridge is up).
     log.info("Activating Pengu Loader...")
     pengu_active = pengu_loader.activate_on_start(get_config_option("General", "clientPath"))
@@ -741,9 +729,9 @@ def run_league_unlock(args: Optional[argparse.Namespace] = None, injection_thres
 
 
 def main() -> None:
-    """Program entry point that prepares and launches Rose."""
+    """Program entry point that prepares and launches SEXO2."""
     args = setup_arguments()
-    # Update before checking the DLL: a Rose that refuses to start still
+    # Update before checking the DLL: a SEXO2 that refuses to start still
     # receives the version that fixes its check
     if sys.platform == "win32":
         if not args.dev:

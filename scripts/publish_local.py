@@ -15,7 +15,7 @@ result = subprocess.run(
 credential = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
 session = requests.Session()
 session.headers.update({"Authorization": "Bearer " + credential["password"], "Accept": "application/vnd.github+json"})
-import argparse, re, sys
+import argparse, re
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--version", required=True)

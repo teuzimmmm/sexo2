@@ -38,6 +38,8 @@ class FakeLCU:
         self.session = session()
         self.item_sets = {"accountId": 1, "itemSets": [copy.deepcopy(PERSONAL)], "timestamp": 1}
         self.puts = []
+        self.ranked = {}
+        self.ranked_calls = []
 
     def get(self, path, **kwargs):
         if path == "/lol-item-sets/v1/item-sets/7/sets":
@@ -56,6 +58,13 @@ class FakeLCU:
         self.puts.append(copy.deepcopy(json_data))
         self.item_sets = copy.deepcopy(json_data)
         return MagicMock(status_code=204)
+
+    def ranked_stats(self, puuid, timeout=1.0):
+        self.ranked_calls.append(puuid)
+        value = self.ranked.get(puuid)
+        if isinstance(value, Exception):
+            raise value
+        return copy.deepcopy(value)
 
 
 class FakeStats:
@@ -90,6 +99,21 @@ class FakeStats:
 
         pages = tuple(ahri_pages()) + ((annie_matchup(),) if opponent_id else ())
         return BuildStats(pages=pages)
+
+    def alternatives(self, champion_id, mode, lane, keystones):
+        from sexo2.services.stats import Alternatives, ItemCombo, KeystoneStat
+
+        self.keystone_ids = keystones
+        return Alternatives(
+            (ItemCombo((3118, 3020, 4645), 53.64, 17.45, 29091), ItemCombo((2503, 3158, 3100), 56.8, 4.5, 7505)),
+            (KeystoneStat(8112, 52.8, 60.0, 143965), KeystoneStat(8128, 54.0, 3.0, 4000)),
+        )
+
+    def keystone_layout(self, champion_id, mode, lane, keystone):
+        self.calls.append(("keystone", champion_id, mode, lane, keystone))
+        from dataclasses import replace
+
+        return replace(layout("pick", keystone, 54.0, 4000), selection="keystone")
 
 
 class InlineWorker:
@@ -185,6 +209,11 @@ class AssistantServiceTests(unittest.TestCase):
         self.queue = 1700
         self.service.handle({"type": "assistant-request"})
         self.assertEqual(self.published[-1]["error"], "unsupported_mode")
+        self.assertFalse(self.published[-1]["supported"])
+        self.queue = 3140  # Practice Tool uses the ranked statistics
+        self.service.handle({"type": "assistant-request"})
+        self.assertTrue(self.published[-1]["supported"])
+        self.assertEqual(self.stats.calls[-1][2], "ranked")
         self.queue = 420
         self.service.handle({"type": "assistant-request"})
         self.stats.fail = StatsError("unknown_champion", "x")
@@ -214,6 +243,71 @@ class AssistantServiceTests(unittest.TestCase):
         self.service.handle({"type": "assistant-request"})
         self.service.handle({"type": "assistant-items-import"})
         self.assertEqual(self.published[-1]["items"], {"error": "no_builds"})
+
+
+class AlternativeChoicesTests(unittest.TestCase):
+    def setUp(self):
+        FakeStats.with_builds = True
+        self.addCleanup(setattr, FakeStats, "with_builds", False)
+        self.lcu = FakeLCU()
+        self.published = []
+        self.controller = FakeController()
+        self.service = AssistantService(
+            self.lcu,
+            self.published.append,
+            queue_id=lambda: 420,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=self.controller,
+        )
+        self.service.handle({"type": "assistant-request"})
+
+    def managed(self):
+        return next(s for s in self.lcu.item_sets["itemSets"] if s["uid"] == "sexo2-managed")
+
+    def test_state_lists_other_builds_and_keystones(self):
+        options = self.published[-1]["options"]
+        self.assertEqual(
+            options["builds"][0], {"items": [3118, 3020, 4645], "winRate": 53.64, "pickRate": 17.45, "games": 29091}
+        )
+        self.assertEqual([k["id"] for k in options["keystones"]], [8112, 8128])
+        self.assertIn(8112, self.service._stats.keystone_ids)  # keystones are the first slot of each tree
+        self.assertNotIn(5008, self.service._stats.keystone_ids)
+
+    def test_a_chosen_build_heads_the_set_and_the_default_comes_back(self):
+        default_blocks = None
+        self.service.handle({"type": "assistant-items-import"})
+        default_blocks = self.managed()["blocks"]
+        self.service.handle({"type": "assistant-items-choose", "items": [2503, 3158, 3100]})
+        blocks = self.managed()["blocks"]
+        self.assertEqual(blocks[0]["type"], "56,8% — 7.505 partidas")
+        self.assertEqual([i["id"] for i in blocks[0]["items"]], ["2503", "3158", "3100"])
+        self.assertEqual(blocks[1:], default_blocks)
+        self.assertEqual(self.published[-1]["items"]["chosen"], [2503, 3158, 3100])
+        self.assertTrue(self.published[-1]["items"]["confirmed"])
+        self.service.handle({"type": "assistant-items-default"})
+        self.assertEqual(self.managed()["blocks"], default_blocks)
+        self.assertIsNone(self.published[-1]["items"]["chosen"])
+
+    def test_unknown_or_malformed_builds_are_refused(self):
+        self.service.handle({"type": "assistant-items-choose", "items": [1, 2, 3]})
+        self.assertEqual(self.published[-1]["items"]["error"], "unknown_build")
+        for bad in ([], [True], ["3118"], list(range(1, 9))):
+            with self.assertRaises(ValueError):
+                self.service.handle({"type": "assistant-items-choose", "items": bad})
+
+    def test_a_keystone_page_is_loaded_then_chosen_like_the_others(self):
+        self.service.handle({"type": "assistant-runes-keystone", "keystone": 8128})
+        runes = self.published[-1]["runes"]
+        self.assertIsNone(runes["keystonePending"])
+        self.assertEqual(runes["keystone"][0]["selection"], "keystone")
+        self.assertEqual(runes["keystone"][0]["page"]["perks"][0], 8128)
+        self.service.handle({"type": "assistant-runes-choose", "selection": "keystone"})
+        self.assertEqual(self.controller.calls[-1][0], "choose")
+        self.assertEqual(self.controller.calls[-1][1].perk_ids[0], 8128)
+        with self.assertRaises(ValueError):
+            self.service.handle({"type": "assistant-runes-keystone", "keystone": "8128"})
 
 
 class AutomaticItemImportTests(unittest.TestCase):
@@ -318,5 +412,356 @@ class AutomaticItemImportTests(unittest.TestCase):
         self.assertEqual(types[6], "Counter Annie — 49,57% — 1.852 partidas")
 
 
+def ranked_payload(queue, tier, division, league_points):
+    return {
+        "queueMap": {
+            queue: {"queueType": queue, "tier": tier, "division": division, "leaguePoints": league_points},
+        }
+    }
+
+
+def ranked_session(session_id, my_team, their_team=()):
+    return {
+        "id": session_id,
+        "localPlayerCellId": 2,
+        "myTeam": list(my_team),
+        "theirTeam": list(their_team),
+        "timer": {"phase": "BAN_PICK"},
+    }
+
+
+def player(cell_id, position, puuid, champion=1):
+    return {"cellId": cell_id, "assignedPosition": position, "championId": champion, "puuid": puuid}
+
+
+class RankedTeamTests(unittest.TestCase):
+    def setUp(self):
+        self.lcu = FakeLCU()
+        self.published = []
+        self.service = AssistantService(
+            self.lcu,
+            self.published.append,
+            queue_id=lambda: 420,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=FakeController(),
+        )
+
+    def test_team_prefers_solo_then_flex_and_caches_each_puuid(self):
+        self.lcu.session = ranked_session(
+            "cs-rank",
+            [
+                player(1, "top", "p-top", 86),
+                player(2, "middle", "p-mid", 103),
+                player(3, "utility", "p-sup", 1),
+            ],
+        )
+        self.lcu.ranked = {
+            "p-top": ranked_payload("RANKED_SOLO_5x5", "PLATINUM", "IV", 77),
+            "p-mid": ranked_payload("RANKED_FLEX_SR", "GOLD", "II", 45),
+        }
+        self.service.handle({"type": "assistant-request"})
+        rows = {row["position"]: row for row in self.published[-1]["ranked"]["team"]}
+        self.assertEqual(
+            rows["top"]["elo"],
+            {"queue": "RANKED_SOLO_5x5", "tier": "PLATINUM", "division": "IV", "leaguePoints": 77},
+        )
+        self.assertEqual(rows["middle"]["elo"]["queue"], "RANKED_FLEX_SR")
+        self.assertIsNone(rows["support"]["elo"])  # no rank: the panel shows a dash
+        calls = list(self.lcu.ranked_calls)
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(self.lcu.ranked_calls, calls)
+
+    def test_enemies_are_read_only_when_the_client_exposes_a_puuid(self):
+        self.lcu.session = ranked_session(
+            "cs-enemy",
+            [player(2, "middle", "p-mid", 103)],
+            [{"cellId": 6, "assignedPosition": "top", "championId": 1}],
+        )
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(self.published[-1]["ranked"]["enemies"], [])
+        self.assertEqual(self.lcu.ranked_calls, ["p-mid"])
+
+        self.lcu.session["theirTeam"][0]["puuid"] = "p-enemy"
+        self.lcu.ranked["p-enemy"] = ranked_payload("RANKED_SOLO_5x5", "DIAMOND", "III", 4)
+        self.service.handle({"type": "assistant-ranked"})
+        enemies = self.published[-1]["ranked"]["enemies"]
+        self.assertEqual(len(enemies), 1)
+        self.assertEqual(enemies[0]["elo"]["tier"], "DIAMOND")
+        self.assertIn("p-enemy", self.lcu.ranked_calls)
+
+    def test_a_failed_read_is_a_dash_and_does_not_raise(self):
+        self.lcu.session = ranked_session("cs-fail", [player(2, "middle", "p-mid", 103)])
+        self.lcu.ranked["p-mid"] = RuntimeError("client closed")
+        self.service.handle({"type": "assistant-request"})
+        self.assertIsNone(self.published[-1]["ranked"]["team"][0]["elo"])
+
+    def test_the_cap_is_five_puuids_per_side(self):
+        team = [player(i, "", f"p{i}", 1) for i in range(1, 7)]
+        team[1] = player(2, "middle", "p2", 103)  # local player
+        enemies = [player(10 + i, "", f"e{i}", 1) for i in range(1, 7)]
+        self.lcu.session = ranked_session("cs-cap", team, enemies)
+        for i in range(1, 7):
+            self.lcu.ranked[f"p{i}"] = ranked_payload("RANKED_SOLO_5x5", "GOLD", "I", i)
+            self.lcu.ranked[f"e{i}"] = ranked_payload("RANKED_SOLO_5x5", "SILVER", "I", i)
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(len(self.lcu.ranked_calls), 10)
+        self.assertNotIn("p6", self.lcu.ranked_calls)
+        self.assertNotIn("e6", self.lcu.ranked_calls)
+        self.assertEqual(len(self.published[-1]["ranked"]["team"]), 6)
+        self.assertIsNone(self.published[-1]["ranked"]["team"][-1]["elo"])
+
+    def test_ranks_show_before_the_local_player_picks_a_champion(self):
+        self.lcu.session = ranked_session("cs-pick", [player(2, "middle", "p-mid", 0)])
+        self.lcu.ranked["p-mid"] = ranked_payload("RANKED_SOLO_5x5", "MASTER", None, 312)
+        self.service.handle({"type": "assistant-request"})
+        state = self.published[-1]
+        self.assertIsNone(state["championId"])
+        self.assertEqual(state["ranked"]["team"][0]["elo"]["tier"], "MASTER")
+        self.assertIsNone(state["ranked"]["team"][0]["elo"]["division"])
+
+    def test_a_new_champion_select_reads_the_same_player_again(self):
+        self.lcu.session = ranked_session("cs-1", [player(2, "middle", "p-mid", 103)])
+        self.lcu.ranked["p-mid"] = ranked_payload("RANKED_SOLO_5x5", "GOLD", "II", 10)
+        self.service.handle({"type": "assistant-request"})
+        self.lcu.session = ranked_session("cs-2", [player(2, "middle", "p-mid", 103)])
+        self.service.handle({"type": "assistant-request"})
+        self.assertEqual(self.lcu.ranked_calls, ["p-mid", "p-mid"])
+
+
 if __name__ == "__main__":
     unittest.main()
+
+
+class FavoriteBuildTests(unittest.TestCase):
+    """D-135: the build pinned for a champion, apart for SR and ARAM."""
+
+    def setUp(self):
+        from sexo2.services.favorite_builds import FavoriteBuilds
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        FakeStats.with_builds = True
+        self.addCleanup(setattr, FakeStats, "with_builds", False)
+        self.lcu = FakeLCU()
+        self.published = []
+        self.queue = 420
+        self.timers = []
+        self.controller = FakeController()
+        self.page = PageSpec(8100, 8200, (8112, 8139, 8140, 8106, 8226, 8210, 5005, 5008, 5001))
+        self.controller.snap = RuneImportSnapshot(None, (), None, self.page, False, None)
+        self.favorites = FavoriteBuilds()
+        self.service = AssistantService(
+            self.lcu,
+            self.published.append,
+            queue_id=lambda: self.queue,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=self.controller,
+            schedule=lambda delay, action: self.timers.append(action),
+            favorites=self.favorites,
+        )
+
+    def confirm(self, champion=103):
+        self.service.champion_confirmed(champion)
+        timers, self.timers = self.timers, []
+        for action in timers:
+            action()
+
+    def top(self):
+        managed = next(s for s in self.lcu.item_sets["itemSets"] if s.get("uid") == "sexo2-managed")
+        return [int(i["id"]) for i in managed["blocks"][0]["items"][:3]]
+
+    def test_pinned_runes_and_trio_are_applied_on_the_next_confirmation(self):
+        self.service.handle({"type": "assistant-request"})
+        self.service.handle({"type": "assistant-items-choose", "items": [2503, 3158, 3100]})
+        self.service.handle({"type": "assistant-favorite", "what": "items", "action": "pin"})
+        self.service.handle({"type": "assistant-favorite", "what": "runes", "action": "pin"})
+        favorite = self.published[-1]["favorite"]
+        self.assertEqual(favorite["items"], [2503, 3158, 3100])
+        self.assertEqual(favorite["runes"]["perks"][0], 8112)
+        # A new champion select with the same champion
+        self.lcu.session = session(session_id="cs-2")
+        self.service._chosen_build = None
+        self.controller.calls.clear()
+        self.confirm()
+        self.assertEqual(self.top(), [2503, 3158, 3100])
+        chosen = [c for c in self.controller.calls if c[0] == "choose"]
+        self.assertEqual(chosen[-1][1], self.page)
+        self.assertEqual(self.published[-1]["favorite"]["unavailable"], [])
+
+    def test_the_default_build_can_be_pinned_too(self):
+        self.confirm()
+        default_top = self.top()
+        self.service.handle({"type": "assistant-favorite", "what": "items", "action": "pin"})
+        self.assertEqual(self.published[-1]["favorite"]["items"], default_top)
+        self.lcu.session = session(session_id="cs-2")
+        self.confirm()
+        self.assertEqual(self.top(), default_top)
+        self.assertEqual(self.published[-1]["favorite"]["unavailable"], [])
+
+    def test_a_trio_gone_from_the_statistics_keeps_the_default_and_says_so(self):
+        self.favorites.set_items("sr", 103, [1001, 1002, 1003])
+        self.confirm()
+        self.assertNotEqual(self.top(), [1001, 1002, 1003])
+        self.assertEqual(self.published[-1]["favorite"]["unavailable"], ["items"])
+        self.assertEqual(self.published[-1]["favorite"]["items"], [1001, 1002, 1003])  # kept
+
+    def test_a_rune_page_the_client_refuses_is_reported(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.favorites.set_runes("sr", 103, {"primary": 8100, "sub": 8200, "perks": [1, 2, 3]})
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, "invalid_page")
+        self.confirm()
+        self.assertEqual(self.published[-1]["favorite"]["unavailable"], ["runes"])
+
+    def test_sr_and_aram_are_apart(self):
+        self.favorites.set_items("sr", 103, [2503, 3158, 3100])
+        self.queue = 450
+        self.confirm()
+        self.assertIsNone(self.published[-1]["favorite"]["items"])
+        self.assertNotEqual(self.top(), [2503, 3158, 3100])
+
+    def test_unpin_and_malformed_requests(self):
+        self.service.handle({"type": "assistant-request"})
+        self.service.handle({"type": "assistant-favorite", "what": "runes", "action": "pin"})
+        self.service.handle({"type": "assistant-favorite", "what": "runes", "action": "unpin"})
+        self.assertIsNone(self.published[-1]["favorite"]["runes"])
+        for bad in ({"what": "skins", "action": "pin"}, {"what": "runes", "action": "delete"}):
+            with self.assertRaises(ValueError):
+                self.service.handle({"type": "assistant-favorite", **bad})
+
+    def test_a_later_confirmation_keeps_the_players_own_pick(self):
+        self.favorites.set_items("sr", 103, [2503, 3158, 3100])
+        self.confirm()
+        self.service.handle({"type": "assistant-items-default"})
+        self.service.handle({"type": "assistant-opponent", "championId": 1})
+        timers, self.timers = self.timers, []
+        for action in timers:
+            action()
+        self.assertNotEqual(self.top(), [2503, 3158, 3100])
+
+
+class AutomaticRuneImportTests(FavoriteBuildTests):
+    """D-136: without a favourite, the highest win rate page is imported on confirmation."""
+
+    def chosen_pages(self):
+        return [c[1] for c in self.controller.calls if c[0] == "choose"]
+
+    def test_the_highest_win_rate_page_is_imported_when_nothing_was_chosen(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, None)
+        self.confirm()
+        (page,) = self.chosen_pages()
+        self.assertEqual(page.perk_ids[0], 8112)  # "win" layout of FakeStats
+
+    def test_a_page_the_player_chose_is_kept(self):
+        self.confirm()  # the snapshot already has a page applied
+        self.assertEqual(self.chosen_pages(), [])
+
+    def test_the_favourite_wins_over_the_default(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, None)
+        self.favorites.set_runes("sr", 103, {"primary": 8000, "sub": 8100, "perks": [9923, 1, 2]})
+        self.confirm()
+        self.assertEqual([p.perk_ids[0] for p in self.chosen_pages()], [9923])
+
+    def test_a_favourite_the_client_refuses_falls_back_to_the_default(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, "invalid_page")
+        self.favorites.set_runes("sr", 103, {"primary": 8000, "sub": 8100, "perks": [1, 2, 3]})
+        self.confirm()
+        self.assertEqual([p.perk_ids[0] for p in self.chosen_pages()], [1, 8112])
+
+    def test_swiftplay_imports_no_runes(self):
+        from sexo2.services.rune_import import RuneImportSnapshot
+
+        self.controller.snap = RuneImportSnapshot(None, (), None, None, False, None)
+        self.queue = 480
+        self.lcu.session = None
+        self.service.champion_confirmed(103, swiftplay=True)
+        for action in self.timers:
+            action()
+        self.assertEqual(self.chosen_pages(), [])
+
+
+class SwiftplayRuneTests(unittest.TestCase):
+    """D-137: in Swiftplay each lobby slot gets its rune page once per champion and lobby."""
+
+    PERKS = '{"perkIds":[8005,9111,9104,8014,8226,8210,5005,5008,5001],"perkStyle":8000,"perkSubStyle":8200}'
+
+    def setUp(self):
+        from sexo2.services.favorite_builds import FavoriteBuilds
+
+        self.lcu = FakeLCU()
+        self.lcu.session = None
+        self.lobby = {
+            "partyId": "p-1",
+            "localMember": {
+                "playerSlots": [
+                    {"championId": 103, "skinId": 103000, "perks": self.PERKS, "spell1": 4},
+                    {"championId": 86, "skinId": 86000, "perks": self.PERKS, "spell1": 4},
+                ]
+            },
+        }
+        get = self.lcu.get
+        self.lcu.get = lambda path, **kw: (
+            copy.deepcopy(self.lobby) if path == "/lol-lobby/v2/lobby" else get(path, **kw)
+        )
+        self.timers = []
+        self.favorites = FavoriteBuilds()
+        self.service = AssistantService(
+            self.lcu,
+            lambda state: None,
+            queue_id=lambda: 480,
+            in_champ_select=lambda: False,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=FakeController(),
+            schedule=lambda delay, action: self.timers.append(action),
+            favorites=self.favorites,
+        )
+
+    def confirm(self):
+        self.service.champion_confirmed(103, swiftplay=True)
+        timers, self.timers = self.timers, []
+        for action in timers:
+            action()
+
+    def slot_puts(self):
+        return [p for p in self.lcu.puts if isinstance(p, list)]
+
+    def test_both_champions_get_the_highest_win_rate_page_in_the_clients_format(self):
+        self.confirm()
+        (slots,) = self.slot_puts()
+        for slot in slots:
+            perks = json.loads(slot["perks"])
+            self.assertEqual(perks["perkIds"][0], 8112)  # "win" layout
+            self.assertEqual((perks["perkStyle"], perks["perkSubStyle"]), (8100, 8200))
+            self.assertEqual(slot["spell1"], 4)  # the rest of the slot untouched
+
+    def test_a_valid_favourite_wins(self):
+        page = {"primary": 8100, "sub": 8200, "perks": [8128, 8139, 8140, 8106, 8226, 8210, 5005, 5008, 5001]}
+        self.favorites.set_runes("sr", 103, page)
+        self.confirm()
+        (slots,) = self.slot_puts()
+        self.assertEqual(json.loads(slots[0]["perks"])["perkIds"][0], 8128)
+        self.assertEqual(json.loads(slots[1]["perks"])["perkIds"][0], 8112)
+
+    def test_each_champion_is_filled_once_per_lobby(self):
+        self.confirm()
+        self.lobby["localMember"]["playerSlots"][1] = {"championId": 1, "skinId": 1000, "perks": self.PERKS}
+        self.confirm()  # only the new champion is written; the first keeps what the player set
+        self.assertEqual(len(self.slot_puts()), 2)
+        self.assertEqual(self.slot_puts()[1][0]["perks"], self.PERKS)
+        self.assertEqual(json.loads(self.slot_puts()[1][1]["perks"])["perkIds"][0], 8112)
+
+    def test_an_unknown_perks_format_is_left_alone(self):
+        for slot in self.lobby["localMember"]["playerSlots"]:
+            slot["perks"] = "something else"
+        self.confirm()
+        self.assertEqual(self.slot_puts(), [])

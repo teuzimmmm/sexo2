@@ -10,12 +10,10 @@ Manages ChromaUI and UnownedFrame as separate components
 import threading
 
 # Local imports
-from ui.chroma.ui import ChromaUI
 from utils.core.logging import get_logger
 
 from ui.handlers.historic_mode_handler import HistoricModeHandler
 from ui.handlers.randomization_handler import RandomizationHandler
-from ui.handlers.skin_display_handler import SkinDisplayHandler
 from ui.core.lifecycle_manager import UILifecycleManager
 
 log = get_logger()

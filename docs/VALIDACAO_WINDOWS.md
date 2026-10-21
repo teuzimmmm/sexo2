@@ -5,11 +5,19 @@ cliente e dados simulados.
 
 ## Executável de teste
 
-O CI gera a build sem assinatura `SEXO2-teste-<commit>` (aba Actions, run da `sexoatividade`,
+O CI gera a build sem assinatura `SEXO2-teste-<commit>` (aba Actions, run da `galinacio`,
 seção Artifacts). Feche o SEXO2 instalado, extraia a pasta e rode `SEXO2.exe`. Na primeira abertura, a pasta
 `%LOCALAPPDATA%\Rose` é movida para `%LOCALAPPDATA%\SEXO2` (com o cliente do LoL fechado), com
 preferências e mods. Ela não se
 atualiza sozinha para a 1.6.4.
+
+Na branch `galinacio`, o mesmo executável fica em Actions > run da branch > Artifacts,
+sem publicar uma release. Para validar a correção dos menus, feche o LoL e o SEXO2 antigo,
+abra a nova build e depois o LoL. Confira o menu; feche/reabra só o SEXO2 e confira de novo,
+inclusive durante a seleção de uma partida personalizada. O cliente não deve ser reiniciado
+durante a seleção nem durante a partida. Fechar o SEXO2 com o LoL aberto conserva a ativação
+do Pengu e o registro de recuperação; na próxima abertura, o SEXO2 adota essa ativação ou
+a limpa se o LoL já estiver fechado.
 
 ## Roteiro
 
@@ -49,7 +57,7 @@ atualiza sozinha para a 1.6.4.
    anote as erradas e "Não reconhecida", e a resolução e a escala do HUD. Confirme também que o
    cliente responde `/lol-game-data/assets/v1/cherry-augments.json` e `augment-lists.json` (o log
    mostra quantos aprimoramentos e ícones foram carregados) e as filas 1700 (Arena) e 2400 (Mayhem).
-9. **Valor dos itens no placar:** acrescente em `%LOCALAPPDATA%\Rose\config.ini`:
+9. **Valor dos itens no placar:** acrescente em `%LOCALAPPDATA%\SEXO2\config.ini`:
    ```
    [Overlay]
    gold_enabled = true
@@ -59,4 +67,24 @@ atualiza sozinha para a 1.6.4.
      `gold_row_step`, frações da altura da tela);
    - se a ordem das linhas corresponde à do placar;
    - se o modo tela cheia também mostra o overlay.
+   As coordenadas padrão foram calibradas com uma captura real em 1920×1080:
+   primeira linha em y=346, passo de 76,5 px e totais em y=234. Outras escalas de
+   HUD e resoluções ainda precisam de conferência. Compare também os FPS com o
+   overlay desligado/ligado, segurando Tab por alguns segundos em cada caso.
+   A janela foi limitada à coluna central e as leituras idênticas não redesenham
+   o conteúdo; isso não substitui a medição de FPS em partida.
+   A conexão local agora é reaproveitada e o nome do jogador só é consultado uma vez
+   por partida. Confira também soltar Tab durante uma leitura, alternar para outra
+   janela segurando Tab, retornar ao jogo e iniciar outra partida: não deve aparecer
+   uma leitura atrasada nem reaproveitar a identidade anterior. O mostrar/ocultar
+   sem `deiconify` foi conferido com Tk real em um desktop separado; o efeito na
+   composição do LoL ainda depende dessa comparação de FPS no jogo.
+   O usuário confirmou FPS estáveis no pacote `36ec753`. A revisão seguinte corrige
+   a nitidez: Segoe UI em 12 px nas linhas e 14 px nos totais, suavização em escala
+   maior e transparência por pixel, sem recorte por cor. Confira as bordas dos dígitos
+   sobre o placar e repita a comparação de FPS após essa troca do bitmap.
+   A [prévia para aprovação visual](../design/propostas/ouro-placar.html) usa o bitmap
+   real do renderizador com valores demonstrativos, em tamanho natural e ampliado 3×.
 10. **Linha de base de desempenho:** `docs/MEDICAO.md`, cenários 1, 2, 3 e 5.
+
+11. **Upgrade a partir de uma instalação com nomes antigos (M5b):** `%LOCALAPPDATA%\Rose` migrada para `%LOCALAPPDATA%\SEXO2` com o conteúdo preservado; plugins habilitados/desabilitados continuam como estavam (pastas `SEXO2-*`); tarefa agendada e instância única funcionam; sala com amigo em versão anterior (código `ROSE:`, link `#rose=`). Ver `docs/PROGRESSO-M5B.md`.

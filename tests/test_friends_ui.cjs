@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict');
-const {memberStatus,profileSelections}=require('../Pengu Loader/plugins/ROSE-Amigos/index.js');
+const {memberStatus,profileSelections}=require('../Pengu Loader/plugins/SEXO2-Amigos/index.js');
 test('status never claims injection success and separates other lobbies',()=>{
  assert.equal(memberStatus({connected:true,sameLobby:false}),'Em outro lobby');
  assert.equal(memberStatus({connected:true,sameLobby:true,supportsTools:false}),'Atualize o SEXO2 deste participante');

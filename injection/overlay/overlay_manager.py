@@ -27,13 +27,13 @@ except ImportError:
     PSUTIL_AVAILABLE = False
     psutil = None
 
-from utils.core.logging import get_logger, log_action, log_success, log_event
+from utils.core.logging import get_logger, log_success, log_event
 from utils.core.issue_reporter import report_issue
 from .. import result_codes
 from .match_context import MatchContext
 from contextvars import ContextVar
 
-_CURRENT_MATCH_CONTEXT = ContextVar("rose_match_context", default=None)
+_CURRENT_MATCH_CONTEXT = ContextVar("sexo2_match_context", default=None)
 from ..tools.patcher import check_ltk_patcher, describe_ltk_patcher_files
 from config import (
     GAME_EXECUTABLE_NAMES,
@@ -60,7 +60,7 @@ DISK_SPACE_ERROR_MARKERS = (
 )
 
 # LTK patcher host settings (see ltk-manager patcher/host/protocol.rs).
-# Flag 4 = CSLOL_HOOK_OPT_OUT_AH_V1: Rose replaces skin0 with the selected
+# Flag 4 = CSLOL_HOOK_OPT_OUT_AH_V1: SEXO2 replaces skin0 with the selected
 # skin, which the DLL's base-skin check rejects and then disables the whole
 # overlay; opting out downgrades that to a warning (same as LTK Manager's
 # "enforce skinhack scan" setting turned off). Log level 0x10 = Info.
@@ -69,11 +69,16 @@ LTK_PATCHER_LOG_LEVEL = 0x10
 # Printed by the DLL when the game build is newer than its end-of-life date
 END_OF_LIFE_MESSAGE = "end of life reached"
 LATE_JOIN_MESSAGE = "joined too late"
-# Session error Rose records when the DLL reports a late join
+# Session error SEXO2 records when the DLL reports a late join
 LATE_JOIN_ERROR = "the game started before the patcher, overlay not applied"
 
 # WAD v3 header: magic + version (4), RSA signature (256), checksum (8)
 WAD_HEADER_SIZE = 268
+
+
+# Seconds the game may be gone while the client still says the match is on (normal end:
+# Reconnect for ~8 s, then the results) before SEXO2 reports it lost
+GAME_EXIT_GRACE_S = 30.0
 
 
 class OverlayManager:
@@ -260,7 +265,7 @@ class OverlayManager:
             )
             return 1
 
-        # League may have updated past the DLL's end of life since Rose started
+        # League may have updated past the DLL's end of life since SEXO2 started
         patcher = check_ltk_patcher(ltk_host.parent)
         if patcher.expired_for(self.game_dir):
             eol = time.strftime("%Y-%m-%d %H:%M", time.localtime(patcher.eol))
@@ -597,7 +602,7 @@ class OverlayManager:
             seen = game_pids()
             if seen:
                 ctx.report.jogo_visto(seen)
-            missing_polls = 0
+            missing_since = None
             exit_reported = False
             no_game_reported = False
 
@@ -612,10 +617,13 @@ class OverlayManager:
                 if live:
                     seen.update(live)
                     ctx.report.jogo_visto(live)
-                    missing_polls = 0
+                    missing_since = None
                 elif seen and ctx.in_active_phase:
-                    missing_polls += 1
-                    if missing_polls >= 6 and not exit_reported:
+                    # At a normal end the game closes and the client stays a few seconds in
+                    # Reconnect before the results: only a game gone that long is lost
+                    if missing_since is None:
+                        missing_since = time.monotonic()
+                    if time.monotonic() - missing_since >= GAME_EXIT_GRACE_S and not exit_reported:
                         ctx.report.jogo_perdido()
                         ctx.report_issue(
                             "GAME_EXIT",
@@ -665,8 +673,8 @@ class OverlayManager:
                 self._report_ltk_patcher_failure(session["error"])
                 return 1
             if not game_ended and proc.returncode not in (0, None):
-                if getattr(proc, "stopped_by_rose", False):
-                    # Rose's own cleanup killed it (end of game, lobby, shutdown)
+                if getattr(proc, "stopped_by_app", False):
+                    # SEXO2's own cleanup killed it (end of game, lobby, shutdown)
                     log.info(f"[INJECT] LTK patcher stopped by SEXO2 (exit code {proc.returncode})")
                     return 0
                 log.error(
@@ -719,11 +727,19 @@ class OverlayManager:
     @staticmethod
     def _ltk_failure_hint(reason: str) -> str:
         """What the user can do about a patcher failure, by the cause it reported."""
-        logs = "Details are in rose_runoverlay_*.log."
+        logs = "Details are in sexo2_runoverlay_*.log."
         if "SetWindowsHookEx" in reason:
             return (
                 "The patcher could not attach to the game this time. Retry the next game; "
-                f"if it fails every game, report it with rose_*.log and rose_runoverlay_*.log. {logs}"
+                f"if it fails every game, report it with sexo2_*.log and sexo2_runoverlay_*.log. {logs}"
+            )
+        if "never attached" in reason:
+            # The host waited for its DLL inside the game and it never arrived: the DLL is
+            # usually blocked by an antivirus, or the LTK files no longer match the game.
+            return (
+                "The patcher's DLL did not reach the game. Check that your antivirus did not block or "
+                "remove ltk_patcher_dll.dll (allow SEXO2's tools folder), then update the LTK files "
+                f"from LTK Manager if it keeps happening. {logs}"
             )
         if reason == LATE_JOIN_ERROR:
             return f"The game started before the patcher was ready. Retry the next game. {logs}"
@@ -800,7 +816,7 @@ class OverlayManager:
             logs_dir = get_user_data_dir() / "logs"
             logs_dir.mkdir(parents=True, exist_ok=True)
             timestamp = time.strftime("%d-%m-%Y_%H-%M-%S")
-            return open(logs_dir / f"rose_runoverlay_{timestamp}.log", "w+", encoding="utf-8", errors="replace")
+            return open(logs_dir / f"sexo2_runoverlay_{timestamp}.log", "w+", encoding="utf-8", errors="replace")
         except Exception as e:
             log.debug(f"[INJECT] Could not create runoverlay log: {e}")
             return None

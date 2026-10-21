@@ -106,6 +106,13 @@ def base_slots_ready(lcu, ids, pins):
     return True
 
 
+def chroma_rarity(chroma):
+    """The client's integer rarity of a chroma (riot region preferred), or None."""
+    rows = [r for r in chroma.get("rarities") or [] if isinstance(r, dict) and type(r.get("rarity")) is int]
+    rows.sort(key=lambda r: r.get("region") != "riot")
+    return rows[0]["rarity"] if rows else None
+
+
 class SwiftplayPanelService:
     def __init__(self, state, lcu):
         self.state, self.lcu = state, lcu
@@ -122,7 +129,12 @@ class SwiftplayPanelService:
                 sid = skin.get("id")
                 if type(sid) is int and sid // 1000 == cid:
                     skins.append(
-                        {"skinId": sid, "name": str(skin.get("name") or sid), "tilePath": skin.get("tilePath")}
+                        {
+                            "skinId": sid,
+                            "name": str(skin.get("name") or sid),
+                            "tilePath": skin.get("tilePath"),
+                            "rarity": skin.get("rarity"),
+                        }
                     )
                     for chroma in skin.get("chromas", []) or []:
                         if not isinstance(chroma, dict) or chroma.get("disabled"):
@@ -138,6 +150,7 @@ class SwiftplayPanelService:
                                     "tilePath": chroma.get("chromaPath") or skin.get("tilePath"),
                                     "chroma": True,
                                     "baseSkinId": sid,
+                                    "chromaRarity": chroma_rarity(chroma),
                                 }
                             )
             if not skins:

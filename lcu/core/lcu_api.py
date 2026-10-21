@@ -6,6 +6,7 @@ Handles HTTP requests to LCU API
 """
 
 from typing import Any, Optional
+from urllib.parse import quote
 
 import threading
 import time
@@ -133,6 +134,21 @@ class LCUAPI:
             except requests.exceptions.RequestException as e:
                 log.debug(f"[LCU] GET {path} failed after reconnecting: {e}")
                 return None
+
+    def ranked_stats(self, puuid: str, timeout: float = 1.0) -> Optional[dict]:
+        """Ranked queues of one player, as the client reports them.
+
+        The response carries ``queueMap`` and ``queues``; the caller chooses the
+        queue. Uncached: the champion-select assistant keeps its own per-session
+        cache so a player is read once per selection.
+        """
+        if not isinstance(puuid, str) or not puuid.strip():
+            return None
+        return self.get(
+            f"/lol-ranked/v1/ranked-stats/{quote(puuid.strip(), safe='')}",
+            timeout=timeout,
+            use_cache=False,
+        )
 
     def get_bytes(self, path: str, timeout: float = 2.0) -> Optional[bytes]:
         """Raw body of a GET, uncached (game data assets such as icons); None when unavailable."""

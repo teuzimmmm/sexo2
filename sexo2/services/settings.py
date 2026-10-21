@@ -7,11 +7,13 @@ from config import get_config_float, get_config_option, set_config_options
 
 
 class SettingsService:
-    def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path):
+    def __init__(self, *, validate_path, autostart_status, set_autostart, infer_client_path, on_auto_accept=None):
         self.validate_path = validate_path
         self.autostart_status = autostart_status
         self.set_autostart = set_autostart
         self.infer_client_path = infer_client_path
+        # Switches the running match acceptance at once (it reads the setting only at start)
+        self.on_auto_accept = on_auto_accept
 
     def snapshot(self):
         path = get_config_option("General", "leaguePath", "") or ""
@@ -23,6 +25,7 @@ class SettingsService:
             == "true",
             "gamePath": path,
             "gamePathValid": bool(path and self.validate_path(path)),
+            "autoAccept": _auto_accept_enabled(),
             "version": RELEASE_VERSION,
         }
 
@@ -39,6 +42,10 @@ class SettingsService:
         for key in ("autostart", "hideEmptyCategories"):
             if type(payload.get(key)) is not bool:
                 raise ValueError("Confira as opções das configurações.")
+        # Moved here from Suporte; a panel from an older build does not send it.
+        auto_accept = payload.get("autoAccept", _auto_accept_enabled())
+        if type(auto_accept) is not bool:
+            raise ValueError("Confira as opções das configurações.")
         path = payload.get("gamePath")
         if not isinstance(path, str):
             raise ValueError("Confira a pasta do League of Legends.")
@@ -55,7 +62,8 @@ class SettingsService:
                 "hide_empty_categories": "true" if payload["hideEmptyCategories"] else "false",
                 "leaguePath": path,
                 "clientPath": client_path,
-            }
+                "autoaccept": "true" if auto_accept else "false",
+            },
         }
         if changed_autostart:
             self.set_autostart(payload["autostart"])
@@ -70,6 +78,8 @@ class SettingsService:
                         "A gravação falhou e a inicialização com Windows pode ter mudado. Confira essa opção ao reconectar."
                     ) from error
             raise
+        if self.on_auto_accept is not None:
+            self.on_auto_accept(auto_accept)
         return {
             "threshold": threshold,
             "monitorAutoResumeTimeout": int(timeout),
@@ -77,5 +87,10 @@ class SettingsService:
             "hideEmptyCategories": payload["hideEmptyCategories"],
             "gamePath": path,
             "gamePathValid": bool(path),
+            "autoAccept": auto_accept,
             "version": RELEASE_VERSION,
         }
+
+
+def _auto_accept_enabled():
+    return (get_config_option("General", "autoaccept", "false") or "").lower() == "true"

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data:; connect-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:">
+  <title>SEXO2 — proposta de outras builds</title>
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="sexo2-v1/css/styles.css">
+  <style>
+    html,body{min-height:100%;height:auto;overflow:auto}
+    body{margin:0;background:var(--s2-bg)}
+    .proto-bar{height:auto;min-height:48px;flex-wrap:wrap;padding:8px 20px}
+    .proto-bar .note{color:var(--s2-fg-2)}
+    .presentation{max-width:1320px;margin:28px auto 20px;padding:0 20px}
+    .context{display:flex;justify-content:space-between;gap:20px;align-items:baseline;margin-bottom:14px;color:var(--s2-fg-2);font-size:12px}
+    .viewport{height:720px;width:1280px;transform-origin:top left;position:relative;overflow:hidden;background:var(--s2-bg);border:1px solid var(--s2-line)}
+    .canvas-wrap{position:relative;overflow:hidden;width:100%;height:720px}
+    .cs{background:var(--s2-bg)}
+    .guide{position:absolute;left:48px;top:160px;max-width:392px;color:var(--s2-fg)}
+    .guide h1{margin-bottom:var(--sp-2)}
+    .guide>p{font-size:var(--t-small);line-height:1.6;color:var(--s2-fg-2);margin-bottom:var(--sp-4)}
+    .guide .examples{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-4)}
+    .guide .source-note{font-size:11px;line-height:1.6;color:var(--s2-fg-3);margin-top:var(--sp-4)}
+    .guide .source-note summary{cursor:pointer;color:var(--s2-fg-2);width:max-content}
+    .guide .source-note p{margin-top:var(--sp-2)}
+    .asst{left:auto;top:auto;right:24px;bottom:68px;width:452px;height:492px}
+    .asst-head .champ{object-fit:cover}
+    .asst-body{min-height:0;scrollbar-width:thin;scrollbar-color:var(--s2-line) var(--s2-surface)}
+    .asst-body.is-explore{display:flex;flex-direction:column;overflow:hidden}
+    .asst-head [data-action="close"]{width:28px;padding:0;font-size:20px;font-weight:400}
+    .asst-foot{flex-shrink:0}
+    .page-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin:0 0 var(--sp-2)}
+    .page-head .s2-btn{flex-shrink:0}
+    .item-icon{width:34px;height:34px;object-fit:cover;flex:none}
+    .filters{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:var(--sp-2);margin-bottom:var(--sp-2);flex-shrink:0}
+    .filter-field{display:grid;gap:var(--sp-1);min-width:0;font-size:var(--t-small);color:var(--s2-fg-2)}
+    .filter-field input{min-width:0}
+    #minimum{font-variant-numeric:tabular-nums}
+    #results{display:flex;flex-direction:column;flex:1;min-height:0}
+    .result-bar{display:flex;align-items:center;justify-content:space-between;min-height:24px;gap:var(--sp-2)}
+    .result-count{font-size:var(--t-small);color:var(--s2-fg-3)}
+    .result-bar .s2-btn{height:24px;padding:0 var(--sp-1);font-size:var(--t-small);font-weight:400}
+    .columns,.build-row{display:grid;grid-template-columns:minmax(0,1fr) 68px 74px;gap:var(--sp-2);align-items:center}
+    .columns{font:500 11px var(--s2-font-display);letter-spacing:.06em;text-transform:uppercase;color:var(--s2-fg-3);padding:6px var(--sp-1);border-bottom:1px solid var(--s2-line)}
+    .columns span:not(:first-child){text-align:right}
+    .columns button{color:inherit;font:inherit;text-align:right;white-space:nowrap}
+    .columns button[aria-pressed="true"]{color:var(--s2-fg)}
+    .columns button:hover{color:var(--s2-fg)}
+    .columns button:focus-visible,.orders-toggle:focus-visible{outline:1px solid var(--s2-focus);outline-offset:2px}
+    .build-list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--s2-line) var(--s2-surface);scrollbar-gutter:stable}
+    .columns{padding-right:14px}
+    .build-group{position:relative}
+    .build-row:focus-visible{outline:1px solid var(--s2-focus);outline-offset:-1px}
+    .combo-icons{display:flex;gap:4px;align-items:center}
+    .combo-icons .between{font-size:10px;color:var(--s2-fg-3);width:7px;text-align:center}
+    .build-row .wr{width:auto}
+    .build-row .n{width:auto}
+    .orders-toggle{position:absolute;left:146px;top:9px;font-size:var(--t-small);color:var(--s2-fg-3);padding:4px 2px;line-height:20px;text-decoration:underline;text-underline-offset:3px}
+    .orders-toggle:hover,.orders-toggle[aria-expanded="true"]{color:var(--s2-fg)}
+    .order-rows{border-left:1px solid var(--s2-line);margin-left:var(--sp-2)}
+    .order-rows .build-row{padding-left:var(--sp-2)}
+    .load-more{display:flex;justify-content:center;margin:var(--sp-3) 0 var(--sp-1)}
+    .preview-items{display:grid;margin:var(--sp-2) 0 var(--sp-4)}
+    .preview-item{display:flex;align-items:center;gap:var(--sp-2);padding:6px var(--sp-1);border-bottom:1px solid #202327;font-size:var(--t-small)}
+    .preview-item .order{width:var(--sp-3);color:var(--s2-fg-3);font-size:var(--t-small)}
+    .preview-label{margin-top:var(--sp-4)}
+    .preview-metrics{margin:var(--sp-4) 0 var(--sp-2)}
+    .preview-metrics th:not(:first-child),.preview-metrics td:not(:first-child){text-align:right}
+    .empty{display:flex;align-items:center;justify-content:center;min-height:130px;text-align:center;font-size:13px;color:var(--s2-fg-2)}
+    .review-note{font-size:12px;color:var(--s2-fg-2);line-height:1.65;margin-top:14px;display:flex;gap:24px;flex-wrap:wrap}
+    .review-note a{color:var(--s2-fg);text-underline-offset:3px}
+    [hidden]{display:none!important}
+    #status-log{color:var(--s2-fg-3);font-size:11px;min-height:18px;margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="proto-bar">
+    <strong>SEXO2 · proposta</strong>
+    <nav aria-label="Estados do protótipo">
+      <button type="button" data-scene="default" aria-current="true">Padrão atual</button>
+      <button type="button" data-scene="explore">Outras builds</button>
+      <button type="button" data-scene="preview">Prévia</button>
+    </nav>
+    <span class="spacer"></span>
+    <span class="note">Protótipo local · nenhuma importação real</span>
+  </div>
+  <main class="presentation">
+    <div class="context"><span>Seleção de campeões / Itens</span><span>Revisão D-118 · painel 452 × 492</span></div>
+    <div class="canvas-wrap">
+      <div class="viewport">
+        <div class="cs"></div>
+        <aside class="guide" aria-label="Orientações da proposta, fora do produto">
+          <h1 class="t-heading">Outras builds, quando você quiser</h1>
+          <p>Busque os itens, compare as combinações e confira a prévia. O conjunto atual só muda ao importar.</p>
+          <div class="examples">
+            <button class="s2-btn" type="button" data-demo="ap">Buscar Chama Sombria</button>
+            <button class="s2-btn ghost" type="button" data-demo="reset">Recomeçar</button>
+          </div>
+          <details class="source-note"><summary>Dados da demonstração</summary><p>Cho’Gath Selva, patch 16.20: 519 combinações históricas de três itens. As porcentagens são de cada trio. Agrupar ordens não soma amostras.</p></details>
+        </aside>
+        <section class="asst s2" id="assistant" aria-label="Assistente de itens — protótipo"></section>
+        <div class="cs-right-buttons"><button class="cs-btn s2-entry" type="button" id="open-panel">SEXO2</button></div>
+      </div>
+    </div>
+    <div class="review-note"><span>Fontes, cores e componentes reutilizados do protótipo aprovado <b>sexo2-v1</b>.</span><a href="../../docs/PROPOSTA_OUTRAS_BUILDS.md">Ler o projeto completo</a></div>
+    <div id="status-log" role="status">Você está avaliando uma proposta. O aplicativo e os dados do LoL não são alterados.</div>
+  </main>
+  <script src="outras-builds-dados.js"></script>
+  <script>
+    (()=>{
+      'use strict';
+      const D=window.S2BuildPrototype;
+      const panel=document.getElementById('assistant');
+      const nf=new Intl.NumberFormat('pt-BR');
+      const pct=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const S={screen:'default',query:'',minimum:0,sort:'games',limit:20,scroll:0,preview:null,applied:null,closed:false};
+      const expanded=new Set();
+      const index=new Map();
+      D.rows.forEach((r,i)=>{r.id=String(i);index.set(r.id,r)});
+      const itemName=id=>D.items[String(id)]?.name||String(id);
+      const icon=id=>`<img class="item-icon s2-icon sq" src="${D.items[String(id)]?.icon||''}" alt="${esc(itemName(id))}" title="${esc(itemName(id))}" width="34" height="34">`;
+      const core=r=>`<span class="combo-icons">${r.ids.map((id,i)=>(i?'<span class="between" aria-hidden="true">→</span>':'')+icon(id)).join('')}</span>`;
+      const tooltip=r=>`${r.ids.map(itemName).join(' → ')}\nWR do trio: ${pct.format(r.wr)}% · ${nf.format(r.games)} partidas\nTaxa de escolha: ${pct.format(r.pr)}%\nCho’Gath · Selva · 16.20 · Esmeralda+ · Todas as regiões`;
+      function groups(){
+        const tokens=S.query.toLocaleLowerCase('pt-BR').split(',').map(s=>s.trim()).filter(Boolean);
+        const map=new Map();
+        for(const r of D.rows){
+          if(r.games<S.minimum||!tokens.every(token=>r.ids.some(id=>itemName(id).toLocaleLowerCase('pt-BR').includes(token)||String(id)===token)))continue;
+          const key=[...r.ids].sort((a,b)=>a-b).join('_');
+          if(!map.has(key))map.set(key,[]);
+          map.get(key).push(r);
+        }
+        const result=[...map.entries()].map(([key,orders])=>{orders.sort((a,b)=>b.games-a.games||a.id.localeCompare(b.id));return {key,row:orders[0],orders}});
+        result.sort((a,b)=>(S.sort==='wr'?b.row.wr-a.row.wr:0)||b.row.games-a.row.games||a.row.id.localeCompare(b.row.id));
+        return result;
+      }
+      function row(r){return `<button type="button" class="rec-row build-row" data-preview="${r.id}" title="${esc(tooltip(r))}" aria-label="${esc(tooltip(r))}" aria-pressed="${S.applied?.id===r.id}">${core(r)}<span class="wr num">${pct.format(r.wr)}%</span><span class="n num">${nf.format(r.games)}</span></button>`}
+      function mainBody(){
+        const blocks=S.applied?[{type:`${pct.format(S.applied.wr)}% — ${nf.format(S.applied.games)} partidas`,items:S.applied.ids.map(id=>({id,count:1}))}]:D.defaults.blocks;
+        return `<div class="page-head"><h2 class="t-heading">${esc(D.defaults.title)}</h2><button class="s2-btn" type="button" data-action="explore">Outras builds</button></div>${blocks.map(b=>`<div class="ip-section"><div class="ip-title">${esc(b.type)}</div><div class="ip-items">${b.items.map(i=>icon(i.id)).join('')}</div></div>`).join('')}`;
+      }
+      function listBody(){
+        return `<div class="page-head"><h2 class="t-heading">Outras builds</h2><button class="s2-btn ghost" type="button" data-action="home">Voltar</button></div>
+          <div class="filters"><label class="filter-field" for="search">Item<input class="s2-input" id="search" type="text" inputmode="search" placeholder="Nome do item" title="Use vírgulas para buscar mais de um item." value="${esc(S.query)}" autocomplete="off" spellcheck="false"></label>
+          <label class="filter-field" for="minimum">Partidas mínimas<input class="s2-input num" id="minimum" type="text" inputmode="numeric" pattern="[0-9]*" value="${S.minimum}" autocomplete="off"></label></div>
+          <div id="results"></div>`;
+      }
+      function renderResults(resetScroll=false){
+        const target=document.getElementById('results');if(!target)return;
+        S.scroll=resetScroll?0:(target.querySelector('.build-list')?.scrollTop??S.scroll);
+        const list=groups();
+        target.innerHTML=`<div class="result-bar"><span class="result-count num">${nf.format(list.length)} combinações</span>${S.query||S.minimum?'<button type="button" class="s2-btn ghost" data-action="clear">Limpar filtros</button>':''}</div>
+          <div class="columns"><span>Itens</span><button type="button" data-sort="wr" aria-label="Ordenar por maior WR" aria-pressed="${S.sort==='wr'}">WR${S.sort==='wr'?' ↓':''}</button><button type="button" data-sort="games" aria-label="Ordenar por mais partidas" aria-pressed="${S.sort==='games'}">Partidas${S.sort==='games'?' ↓':''}</button></div>
+          <div class="build-list" aria-label="Combinações de itens">${list.length?list.slice(0,S.limit).map(g=>`<div class="build-group">${row(g.row)}${g.orders.length>1?`<button type="button" class="orders-toggle" data-toggle-orders="${g.key}" aria-expanded="${expanded.has(g.key)}" aria-controls="orders-${g.key}" aria-label="${expanded.has(g.key)?'Recolher':'Ver'} ${g.orders.length} ordens destes itens">${g.orders.length} ordens</button><div class="order-rows" id="orders-${g.key}" ${expanded.has(g.key)?'':'hidden'}>${expanded.has(g.key)?g.orders.slice(1).map(row).join(''):''}</div>`:''}</div>`).join(''):'<div class="empty">Nenhuma combinação encontrada.</div>'}${list.length>S.limit?'<div class="load-more"><button type="button" class="s2-btn ghost" data-action="more">Mais combinações</button></div>':''}</div>`;
+        target.querySelector('.build-list').scrollTop=S.scroll;
+      }
+      function previewBody(){
+        const r=S.preview;
+        return `<div class="page-head"><h2 class="t-heading">Prévia</h2><button class="s2-btn ghost" type="button" data-action="back">Voltar</button></div>
+          <table class="s2-table preview-metrics"><thead><tr><th>WR</th><th>Escolha</th><th>Partidas</th></tr></thead><tbody><tr><td class="num" title="WR da combinação de três itens">${pct.format(r.wr)}%</td><td class="num">${pct.format(r.pr)}%</td><td class="num">${nf.format(r.games)}</td></tr></tbody></table>
+          <h3 class="t-category preview-label">Ordem dos itens</h3><div class="preview-items">${r.ids.map((id,i)=>`<div class="preview-item"><span class="order num">${i+1}</span>${icon(id)}<span>${esc(itemName(id))}</span></div>`).join('')}</div>`;
+      }
+      function render(){
+        panel.hidden=S.closed;
+        document.querySelectorAll('[data-scene]').forEach(b=>b.setAttribute('aria-current',String(b.dataset.scene===S.screen)));
+        const body=S.screen==='explore'?listBody():S.screen==='preview'?previewBody():mainBody();
+        const foot=S.screen==='preview'?'<span>Prévia</span><span class="grow"></span><button class="s2-btn primary" type="button" data-action="import">Importar conjunto</button>':`<span>Conjunto importado</span><span class="grow"></span>${S.applied?'<button class="s2-btn ghost" type="button" data-action="restore">Voltar ao padrão</button>':''}`;
+        panel.innerHTML=`<div class="asst-head"><img class="champ" src="${D.championIcon}" alt="" width="32" height="32"><span class="name">Cho’Gath</span><select class="s2-select" aria-label="Rota"><option>Selva</option></select><span class="grow"></span><button class="s2-btn ghost" type="button" data-action="close" aria-label="Fechar">×</button></div><div class="s2-tabs" role="tablist"><button type="button" role="tab" aria-selected="false" disabled>Runas</button><button type="button" role="tab" aria-selected="true">Itens</button><button type="button" role="tab" aria-selected="false" disabled>Mods</button></div><div class="asst-body${S.screen==='explore'?' is-explore':''}">${body}</div><div class="asst-foot">${foot}</div>`;
+        renderResults();
+      }
+      function setScene(scene){S.screen=scene;S.closed=false;if(scene==='preview'&&!S.preview)S.preview=D.rows.find(r=>r.ids.includes(4645))||D.rows[0];render()}
+      document.addEventListener('click',e=>{
+        const scene=e.target.closest('[data-scene]');if(scene){setScene(scene.dataset.scene);return}
+        const demo=e.target.closest('[data-demo]');if(demo){
+          if(demo.dataset.demo==='ap'){S.query=itemName(4645);S.minimum=0;S.limit=20;S.scroll=0;setScene('explore')}
+          else {Object.assign(S,{screen:'default',query:'',minimum:0,sort:'games',limit:20,scroll:0,preview:null,applied:null,closed:false});expanded.clear();render();document.getElementById('status-log').textContent='Simulação reiniciada. Nenhuma importação real.'}return;
+        }
+        const order=e.target.closest('[data-toggle-orders]');if(order){const key=order.dataset.toggleOrders;expanded.has(key)?expanded.delete(key):expanded.add(key);renderResults();panel.querySelector(`[data-toggle-orders="${key}"]`)?.focus({preventScroll:true});return}
+        const sort=e.target.closest('[data-sort]');if(sort){S.sort=sort.dataset.sort;S.limit=20;renderResults(true);panel.querySelector(`[data-sort="${S.sort}"]`)?.focus();return}
+        const choice=e.target.closest('[data-preview]');if(choice){S.scroll=panel.querySelector('.build-list')?.scrollTop??S.scroll;S.preview=index.get(choice.dataset.preview);setScene('preview');return}
+        const action=e.target.closest('[data-action]')?.dataset.action;
+        if(action==='explore'){S.limit=20;S.scroll=0;setScene('explore')}
+        if(action==='home')setScene('default');
+        if(action==='back')setScene('explore');
+        if(action==='close'){S.closed=true;render()}
+        if(action==='more'){S.limit+=20;renderResults()}
+        if(action==='clear'){S.query='';S.minimum=0;S.limit=20;S.scroll=0;render();panel.querySelector('#search').focus()}
+        if(action==='import'){S.applied=S.preview;setScene('default');document.getElementById('status-log').textContent='Importação simulada: somente o trio escolhido. O LoL não foi alterado.'}
+        if(action==='restore'){S.applied=null;setScene('default');document.getElementById('status-log').textContent='Retorno ao padrão simulado. O LoL não foi alterado.'}
+      });
+      panel.addEventListener('input',e=>{
+        if(e.target.id==='search'){S.query=e.target.value;S.limit=20;renderResults(true)}
+        if(e.target.id==='minimum'){e.target.value=e.target.value.replace(/[^0-9]/g,'');S.minimum=Number(e.target.value)||0;S.limit=20;renderResults(true)}
+      });
+      document.getElementById('open-panel').addEventListener('click',()=>{S.closed=!S.closed;render()});
+      document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(S.screen==='preview')setScene('explore');else if(S.screen==='explore')setScene('default');else{S.closed=true;render()}}});
+      function resize(){const wrap=document.querySelector('.canvas-wrap');const scale=Math.min(1,wrap.clientWidth/1280);document.querySelector('.viewport').style.transform=`scale(${scale})`;wrap.style.height=`${720*scale}px`}
+      window.addEventListener('resize',resize);
+      if(location.hash==='#explorar')S.screen='explore';
+      if(location.hash==='#ap'){S.query=itemName(4645);S.screen='explore'}
+      if(location.hash==='#previa'){S.screen='preview';S.preview=D.rows.find(r=>r.ids.includes(4645))||D.rows[0]}
+      render();resize();
+    })();
+  </script>
+</body>
+</html>

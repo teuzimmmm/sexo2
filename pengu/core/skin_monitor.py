@@ -4,7 +4,7 @@
 Pengu Skin Monitor
 ------------------
 
-Receives skin hover notifications from the Pengu Loader `ROSE-SkinMonitor` plugin
+Receives skin hover notifications from the Pengu Loader `SEXO2-SkinMonitor` plugin
 over WebSocket and updates the shared application state accordingly. This
 replaces the legacy UIA-based skin detection pipeline.
 """
@@ -33,7 +33,7 @@ logging.getLogger("websockets.server").setLevel(logging.WARNING)
 logging.getLogger("websockets.protocol").setLevel(logging.WARNING)
 
 # The bridge takes the first free one of these ports. The plugins look for it on
-# the same ones (DISCOVERY_*_PORT in ROSE-SkinMonitor and ROSE-PartyMode)
+# the same ones (DISCOVERY_*_PORT in SEXO2-SkinMonitor and SEXO2-PartyMode)
 BRIDGE_FIRST_PORT = 50000
 BRIDGE_PORT_COUNT = 100
 
@@ -181,6 +181,10 @@ class PenguSkinMonitorThread(threading.Thread):
     def _broadcast_champion_locked(self, locked: bool) -> None:
         """Broadcast champion lock state (delegates to broadcaster)"""
         self.broadcaster.broadcast_champion_locked(locked)
+
+    def _broadcast_assistant_roster(self) -> None:
+        """Broadcast a champion-select roster change (delegates to broadcaster)"""
+        self.broadcaster.broadcast_assistant_roster()
 
     def _broadcast_random_mode_state(self) -> None:
         """Broadcast random mode state (delegates to broadcaster)"""

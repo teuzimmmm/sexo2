@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const A = require('../Pengu Loader/plugins/SEXO2-Assistant/index.js');
-const wheel = require('../Pengu Loader/plugins/ROSE-CustomWheel/index.js');
+const wheel = require('../Pengu Loader/plugins/SEXO2-CustomWheel/index.js');
 
 const styles = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/lcu/perks-styles-representative.json'), 'utf8')).styles;
 const perks = [{ id: 8112, name: 'Eletrocutar', iconPath: '/i/8112.png', shortDesc: 'x' }, { id: 5008, name: 'Força Adaptativa', iconPath: '/i/5008.png' }];
@@ -63,9 +63,94 @@ test('same anchor rule as the CustomWheel button', () => {
   assert.deepEqual([a.left, a.top, a.maxHeight], [w.left, w.top, w.maxHeight]);
 });
 
+test('ranked entries from the client become the Equipe line', () => {
+  const ranked = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/lcu/ranked-stats-representative.json'), 'utf8'));
+  const solo = ranked.queueMap.RANKED_SOLO_5x5;
+  const flex = ranked.queueMap.RANKED_FLEX_SR;
+  assert.equal(A.eloText({ queue: solo.queueType, tier: solo.tier, division: solo.division, leaguePoints: solo.leaguePoints }), 'Platina IV · 77 PDL');
+  assert.equal(A.eloText({ queue: flex.queueType, tier: flex.tier, division: flex.division, leaguePoints: flex.leaguePoints }), 'Flex · Ouro II · 45 PDL');
+  assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: null, leaguePoints: 312 }), 'Mestre · 312 PDL');
+  assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: 'I', leaguePoints: 312 }), 'Mestre · 312 PDL');
+});
+
+test('a player without ranked, or an unknown tier, is a dash', () => {
+  assert.equal(A.eloText(null), '—');
+  assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: '', division: 'NA', leaguePoints: 0 }), '—');
+  assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: 'NOT_A_TIER', division: 'I', leaguePoints: 1 }), '—');
+});
+
 test('error codes become the approved texts', () => {
   assert.equal(A.runeError('no_free_page'), 'Sem espaço para a página do SEXO2. Apague uma página no cliente.');
   assert.equal(A.runeError('lcu_rejected'), 'O cliente recusou a página.');
   assert.equal(A.itemError('no_builds', 'Ahri'), 'Sem dados para Ahri.');
   assert.equal(A.itemError('concurrent_edit', 'Ahri'), 'O cliente recusou o conjunto.');
+});
+
+test('a button that measures 0x0 anchors by its content, else the panel stays on screen', () => {
+  const box = (width, height) => ({ getBoundingClientRect: () => ({ left: 1150, right: 1150 + width, top: 660, bottom: 660 + height, width, height }) });
+  const inner = box(106, 34);
+  const button = { ...box(0, 0), children: [inner], parentElement: box(300, 40) };
+  assert.equal(A.anchorRect(button).width, 106);
+  assert.equal(A.anchorRect({ ...box(0, 0), children: [], parentElement: box(0, 0) }), null);
+  const pos = A.fallbackAnchor({ width: 1280, height: 720 }, { width: 452, height: 492 });
+  assert.ok(pos.left >= 0 && pos.left + 452 <= 1280);
+  assert.ok(pos.top >= 0 && pos.top + pos.maxHeight <= 720);
+});
+
+test('other builds are filtered by item name, ignoring accents and case', () => {
+  const names = { 3118: 'Chama Sombria', 3020: 'Sapatos do Feiticeiro', 6653: 'Tormento de Liandry' };
+  const builds = [{ items: [3118, 3020, 6653] }, { items: [6653, 3020, 3157] }];
+  const name = (id) => names[id] || '';
+  assert.equal(A.filterBuilds(builds, '', name).length, 2);
+  assert.deepEqual(A.filterBuilds(builds, 'chama', name), [builds[0]]);
+  assert.deepEqual(A.filterBuilds(builds, 'FEITICEIRO', name).length, 2);
+  assert.deepEqual(A.filterBuilds(builds, 'liándry', name).length, 2);
+  assert.deepEqual(A.filterBuilds(builds, 'zzz', name), []);
+});
+
+test('the default build shows only the first group as Inicial, Essenciais and Situacionais', () => {
+  const block = (type, ...ids) => ({ type, items: ids.map((id) => ({ id: String(id), count: 1 })) });
+  const blocks = [
+    block('56,3% — 1.200 partidas', 1, 2, 3),
+    block('Itens iniciais', 4),
+    block('Alternativas', 5),
+    block('54,0% — 3.000 partidas', 6),
+    block('Itens iniciais', 7),
+  ];
+  const build = A.defaultBuild(blocks);
+  assert.equal(build.essenciais.type, '56,3% — 1.200 partidas');
+  assert.equal(build.inicial.items[0].id, '4');
+  assert.equal(build.situacionais.items[0].id, '5');
+  assert.deepEqual(A.defaultBuild([]), { inicial: null, essenciais: null, situacionais: null });
+  assert.equal(A.defaultBuild([block('Itens iniciais', 4)]).inicial, null);
+});
+
+test('sem estatísticas só Equipe, Mods e Todas as configurações aparecem; Equipe só com elenco', () => {
+  const keys = (noStats, hasTeam) => A.visibleTabs(noStats, hasTeam).map(([k]) => k);
+  // Summoner's Rift (ranqueadas, normais): tudo
+  assert.deepEqual(keys(false, true), ['runes', 'items', 'team', 'mods', 'settings']);
+  // ARAM tem estatísticas e elenco
+  assert.deepEqual(keys(false, true), ['runes', 'items', 'team', 'mods', 'settings']);
+  // Arena (sem estatísticas): Equipe, Mods e configurações
+  assert.deepEqual(keys(true, true), ['team', 'mods', 'settings']);
+  // Swiftplay (sem seleção de campeões com elenco): nada de Equipe
+  assert.deepEqual(keys(false, false), ['runes', 'items', 'mods', 'settings']);
+  assert.deepEqual(keys(true, false), ['mods', 'settings']);
+  assert.ok(!keys(false, true).includes('prefs'));
+  assert.equal(A.hasTeamRows(null), false);
+  assert.equal(A.hasTeamRows({ ranked: { team: [], enemies: [] } }), false);
+  assert.equal(A.hasTeamRows({ ranked: { team: [{ position: 'top' }], enemies: [] } }), true);
+  assert.equal(A.hasTeamRows({ ranked: { team: [], enemies: [{ position: 'top' }] } }), true);
+});
+
+test('build favorita: o trio do topo do conjunto e a comparação com o fixado', () => {
+  const blocks = [
+    { type: '56,8% — 7.505 partidas', items: [{ id: '2503' }, { id: '3158' }, { id: '3100' }, { id: '3089' }] },
+    { type: 'Itens iniciais', items: [{ id: '1056' }] },
+  ];
+  assert.deepEqual(A.topTrio(blocks), [2503, 3158, 3100]);
+  assert.deepEqual(A.topTrio([]), []);
+  assert.equal(A.sameIds([2503, 3158, 3100], A.topTrio(blocks)), true);
+  assert.equal(A.sameIds(null, A.topTrio(blocks)), false);
+  assert.equal(A.sameIds([2503, 3158], A.topTrio(blocks)), false);
 });

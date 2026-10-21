@@ -1,0 +1,810 @@
+from cdp import *
+import json
+
+URL = "file:///Users/matheus/Documents/tremdolol/sexo2-lab/a/design/propostas/sexo2-ux-a/index.html"
+EV = "/Users/matheus/Documents/tremdolol/sexo2-lab/a/design/propostas/sexo2-ux-a/evidencias/"
+b = Br(1280, 820)
+b.size(1280, 820)
+b.go(URL)
+R = []
+tx = b.js
+
+
+def ck(n, c, extra=""):
+    R.append((n, bool(c)))
+    print(("OK  " if c else "FAIL"), n, extra)
+
+
+def clk(k):
+    r = tx(
+        f"(()=>{{const e=document.querySelector('[data-k=\"{k}\"]');if(!e)return 'none';if(e.disabled)return 'dis';e.focus();e.click();return 'ok'}})()"
+    )
+    if r != "ok":
+        print("  click", k, r)
+    return r
+
+
+def w(t=0.15):
+    time.sleep(t)
+
+
+def sets(sel, val, ev="change"):
+    tx(
+        f"(()=>{{const i=document.querySelector('{sel}');i.value={json.dumps(val)};i.dispatchEvent(new Event('{ev}',{{bubbles:true}}))}})()"
+    )
+
+
+def ak():
+    return tx(
+        "(document.activeElement.dataset&&document.activeElement.dataset.k)||document.activeElement.id||document.activeElement.tagName"
+    )
+
+
+def sh(n):
+    b.shot(EV + n + ".png")
+
+
+def box(sel):
+    return json.loads(
+        tx(
+            f"JSON.stringify((()=>{{const r=document.querySelector('{sel}').getBoundingClientRect(),s=document.getElementById('stage').getBoundingClientRect();return {{x:r.x-s.x,y:r.y-s.y,w:r.width,h:r.height,r:r.right-s.x,b:r.bottom-s.y}}}})())"
+        )
+    )
+
+
+RAD = """(()=>{const bad=[];document.querySelectorAll('#stage *,#sim *,#dlg *').forEach(e=>{if(e.classList.contains('swatch'))return;const c=getComputedStyle(e);['borderTopLeftRadius','borderTopRightRadius','borderBottomLeftRadius','borderBottomRightRadius'].forEach(k=>{if(parseFloat(c[k])>0)bad.push(e.tagName+'.'+e.className+':'+c[k])})});return bad.length?bad.slice(0,5).join(';'):true})()"""
+# ---- cliente base
+sb = box("#stage")
+ck("R2 palco 1280x720", round(sb["w"]) in (1280, 1282) and round(sb["h"]) in (720, 722))
+ck(
+    "R2 faixa de simulacao fora do palco",
+    tx(
+        "!document.getElementById('stage').contains(document.getElementById('sim'))&&document.getElementById('sim').innerText.toLowerCase().includes('fora do produto')"
+    ),
+)
+sh("r3-01-client-lobby")
+clk("hubToggle|")
+w()
+ck("R3 painel abre em Sala", tx("S.page==='Sala'&&document.querySelector('#main h1').textContent==='Sala'"))
+hb = box("#hub")
+ck(
+    "R2 painel 820x560 sobre o client",
+    round(hb["w"]) == 820 and round(hb["h"]) == 560 and hb["y"] >= 56 and hb["r"] <= sb["w"] and hb["b"] <= sb["h"],
+    str(hb),
+)
+ck(
+    "R3 menus na ordem Sala/Favoritas/Configurações/Suporte",
+    tx("JSON.stringify([...document.querySelectorAll('#nav button')].map(x=>x.firstChild.textContent))")
+    == '["Sala","Favoritas","Configurações","Suporte"]',
+)
+ck(
+    "R3 cabecalho do painel so SEXO2 + Fechar",
+    tx("document.querySelector('#hub .hh').innerText.replace(/\\s+/g,' ').trim()") == "SEXO2 Fechar",
+    tx("document.querySelector('#hub .hh').innerText"),
+)
+ck(
+    "R3 nenhum texto/aria Hub ou Demonstracao no produto",
+    tx(
+        "(()=>{const st=document.getElementById('stage');let t=st.innerText.toLowerCase();st.querySelectorAll('[aria-label],[title],[alt]').forEach(e=>{t+=' '+(e.getAttribute('aria-label')||'')+' '+(e.title||'')+' '+(e.alt||'')});return !/hub|demonstra/i.test(t)})()"
+    ),
+)
+ck("R3 sem cantos arredondados (Sala)", tx(RAD), str(tx(RAD)))
+sh("r3-02-painel-sala")
+tx("[...document.querySelectorAll('#nav button')].find(x=>x.textContent.startsWith('Sala'))&&0")
+clk("roomCreate|")
+w()
+ck("A03 sala criada", tx("S.room.on"))
+clk("roomCopy|")
+w()
+ck("A03 copiar chave", tx("S.room.copied&&document.body.innerText.includes('Chave copiada')"))
+clk("roomAdd|")
+w()
+sh("r3-03-sala-conectada")
+clk("roomLeave|")
+w()
+ck("A03 sair", tx("!S.room.on&&S.room.last"))
+clk("roomRejoin|")
+w()
+ck("A03 reconectar", tx("S.room.on&&S.room.key===S.room.last"))
+clk("roomLeave|")
+w()
+sets("#roomKey", "abc", "input")
+clk("roomJoin|")
+w()
+ck("A03 chave invalida", tx("S.room.err.length>0"))
+sets("#roomKey", "sx2-aaaa-1234", "input")
+clk("roomJoin|")
+w()
+ck("A03 conectar por chave", tx("S.room.on&&S.room.key==='SX2-AAAA-1234'"))
+ck("R3 Sala sem sorteio/conjunto", tx("!/sorteio|conjunto/i.test(document.getElementById('main').innerText)"))
+# ---- Favoritas
+clk("nav|Favoritas")
+w()
+ck(
+    "R3 Favoritas: todos os campeoes na grade",
+    tx("document.querySelectorAll('#champGrid .ctile').length===CHAMPS.length&&CHAMPS.length>=165"),
+    str(tx("CHAMPS.length")),
+)
+ck(
+    "R3 retratos locais x placeholder",
+    tx(
+        "document.querySelectorAll('#champGrid .ctile img').length===CHAMPS.filter(hasImg).length&&CHAMPS.filter(hasImg).length===24&&document.querySelectorAll('#champGrid .ctile .phd').length===CHAMPS.length-24"
+    ),
+)
+ck(
+    "R3 retratos locais resolvem (24 imagens ok)",
+    tx("[...document.querySelectorAll('#champGrid img')].every(i=>i.naturalWidth>0)"),
+)
+ck(
+    "R3 busca por nome no lugar de conjunto/skin aplicada",
+    tx(
+        "!!document.getElementById('favQ')&&!/Conjunto ativo|Skin aplicada|ao sorteio/i.test(document.getElementById('main').innerText)"
+    ),
+)
+sh("r3-04-favoritas-grade")
+sets("#favQ", "lee", "input")
+ck(
+    "R3 busca filtra por nome",
+    tx(
+        "[...document.querySelectorAll('#champGrid .cn')].map(x=>x.textContent).includes('Lee Sin')&&document.querySelectorAll('#champGrid .ctile').length<5"
+    ),
+)
+sets("#favQ", "kai", "input")
+ck(
+    "R3 busca ignora apostrofo/caixa",
+    tx("[...document.querySelectorAll('#champGrid .cn')].map(x=>x.textContent).includes(\"Kai'Sa\")"),
+)
+sets("#favQ", "florescer", "input")
+ck(
+    "R4 busca de skin existente lista a skin e o campeao",
+    tx(
+        "!!document.querySelector('#skinHits [data-k=\"favSkinGo|Ahri|1\"]')&&document.querySelectorAll('#skinHits .list > div').length>=1"
+    ),
+)
+sets("#favQ", "zzzxyz", "input")
+ck(
+    "R4 busca inexistente: nada encontrado",
+    tx(
+        "document.querySelectorAll('#skinHits .list > div').length===0&&document.querySelectorAll('#champGrid .ctile').length===0&&document.getElementById('champGrid').innerText.includes('Nenhum campeão ou skin encontrado')"
+    ),
+)
+sets("#favQ", "elementalista", "input")
+sh("r4-01-busca-skin")
+clk("favSkinGo|Lux|2")
+w()
+ck(
+    "R4 resultado leva ao campeao com skin destacada",
+    tx(
+        "S.favChamp==='Lux'&&document.querySelector('#main h1').textContent==='Lux'&&document.querySelectorAll('.skin.hit').length===1&&document.querySelector('.skin.hit').innerText.includes('Elementalista Exaltada')&&S.fsel.skin===2"
+    ),
+)
+sh("r4-02-skin-destacada")
+clk("favBack|")
+w()
+sets("#favQ", "", "input")
+clk("favOpen|Ahri")
+w()
+ck(
+    "R3 pagina de skins do campeao com 3 snippets placeholder",
+    tx(
+        "document.querySelectorAll('.skin').length===3&&document.querySelectorAll('.skin .snip').length===3&&document.querySelector('.snip').getAttribute('aria-label').includes('indisponível')"
+    ),
+)
+ck(
+    "R3 so Favoritar (sem Aplicar skin)",
+    tx(
+        "(t=>t.includes('Favoritar')&&!/Aplicar/i.test(t))(document.querySelector('#main .bar').innerText+document.getElementById('main').innerText)&&document.querySelectorAll('#main .bar .btn').length===1"
+    ),
+)
+ck(
+    "R3 skin selecionada expande cromas",
+    tx(
+        "document.querySelectorAll('.skin.on .swatch').length===3&&document.querySelectorAll('.skin:not(.on) .swatch').length===0"
+    ),
+)
+tx("S.fav=new Set()")
+clk("fskin|2")
+w()
+ck("R3 skin Exalted expande 2 cromas", tx("document.querySelectorAll('.skin.on .swatch').length===2"))
+clk("ffav|")
+w()
+ck(
+    "R3 favoritar skin NAO favorita cromas",
+    tx("S.fav.has('Ahri|2|-1')&&![...S.fav].some(k=>k.startsWith('Ahri|2|')&&!k.endsWith('|-1'))"),
+)
+clk("fchroma|2:0")
+w()
+ck(
+    "R3 croma selecionado nao esta favoritado",
+    tx("!S.fav.has('Ahri|2|0')&&document.querySelector('[data-k=\"ffav|\"]').getAttribute('aria-pressed')==='false'"),
+)
+clk("ffav|")
+w()
+ck("R3 favoritar croma especifico", tx("S.fav.has('Ahri|2|0')&&S.fav.has('Ahri|2|-1')&&!S.fav.has('Ahri|2|1')"))
+sh("r3-05-favoritas-skins-cromas")
+clk("ffav|")
+w()
+ck("R3 desfavoritar croma mantem skin", tx("!S.fav.has('Ahri|2|0')&&S.fav.has('Ahri|2|-1')"))
+clk("fskin|2")
+w()
+clk("ffav|")
+w()
+ck("R3 desfavoritar skin mantem estados separados", tx("!S.fav.has('Ahri|2|-1')"))
+clk("fchroma|2:1")
+w()
+clk("ffav|")
+w()
+ck("R3 outro croma independente", tx("S.fav.has('Ahri|2|1')&&!S.fav.has('Ahri|2|0')"))
+clk("favBack|")
+w()
+ck(
+    "R3 voltar a grade com badge de favoritas",
+    tx("!!document.getElementById('champGrid')&&!!document.querySelector('.ctile .cb')"),
+)
+clk("favOpen|Zilean")
+w()
+ck(
+    "R3 campeao sem retrato abre skins",
+    tx("document.querySelectorAll('.skin').length===3&&document.querySelector('#main h1').textContent==='Zilean'"),
+)
+sh("r3-06-favoritas-sem-retrato")
+# ---- Config / Suporte
+clk("nav|Configurações")
+w()
+clk("tab|cfg:Seleção")
+w()
+tx("document.getElementById('pref-autoaceite').click()")
+w()
+ck("A06 rascunho", tx("dirty()===1"))
+clk("nav|Favoritas")
+clk("nav|Configurações")
+w()
+clk("tab|cfg:Seleção")
+w()
+ck("A06 rascunho persiste", tx("dirty()===1"))
+clk("cfgCancel|")
+w()
+ck("A06 cancelar", tx("dirty()===0"))
+tx("document.getElementById('pref-autoaceite').click()")
+w()
+clk("cfgSave|")
+w()
+ck("A06 salvar", tx("S.prefs.autoaceite===false&&dirty()===0"))
+tx("S.prefs.autoaceite=true;rerender()")
+clk("tab|cfg:Overlays")
+w()
+ck(
+    "A06 ouro e aprimoramentos separados",
+    tx(
+        "(t=>t.includes('ouro no placar')&&t.includes('aprimoramentos'))(document.getElementById('main').innerText.toLowerCase())"
+    ),
+)
+sh("r3-07-config-overlays")
+clk("tab|cfg:Bravura")
+w()
+t = tx("document.getElementById('main').innerText")
+ck(
+    "Bravura texto correto",
+    all(x in t for x in ["Só no Arena", "campeão -3", "já em partida", "uma vez", "não é instantâneo"])
+    and "antes da seleção" not in t.lower(),
+)
+clk("bravStep|1")
+clk("bravStep|2")
+w()
+ck("Bravura etapa 2", tx("S.brav.step===2&&!!S.brav.champ"))
+tx("S.fav=new Set(['Ahri|1|2']);S.brav={step:2,champ:'Ahri',res:null};rerender()")
+clk("bravStep|3")
+w()
+ck("Bravura favorita prioritaria", tx("S.brav.res.src==='favorita'&&S.brav.res.label.includes('Jade')"))
+ck(
+    "Bravura aleatoria respeita exclusao",
+    tx(
+        "(()=>{S.fav=new Set();let ok=true;for(let i=0;i<40;i++){S.brav={step:2,champ:'Lux',res:null};A.bravStep('3');if(S.brav.res.src!=='aleatória'||S.brav.res.label.includes('Obsidiana'))ok=false}return ok})()"
+    ),
+)
+sh("r3-08-config-bravura")
+tx("S.fav=new Set(['Ahri|1|-1']);rerender()")
+clk("nav|Suporte")
+w()
+clk("report|")
+w()
+ck("A01 relatorio", tx("!!S.report"))
+sh("r3-09-suporte")
+ck(
+    "R3 sem cantos arredondados (todas as paginas)",
+    all(tx(f"(go('{p}'),{RAD})") is True for p in ["Sala", "Favoritas", "Configurações", "Suporte"]),
+)
+for p in ["Sala", "Favoritas", "Configurações", "Suporte"]:
+    tx(f"go('{p}')")
+    w(0.1)
+    ck(f"A07 painel {p} sem estouro", tx("(m=>m.scrollWidth<=m.clientWidth)(document.getElementById('main'))"))
+# ---- Swiftplay
+clk("hubClose|")
+w()
+clk("sim|selecao")
+w()
+clk("mode|swiftplay")
+w()
+clk("hubToggle|")
+w()
+ck(
+    "R3 Swiftplay aparece como 5o menu so no modo",
+    tx("JSON.stringify([...document.querySelectorAll('#nav button')].map(x=>x.firstChild.textContent))")
+    == '["Sala","Favoritas","Configurações","Suporte","Swiftplay"]',
+)
+ck(
+    "R4 simulacao: 2 campeoes travados distintos",
+    tx("!!document.getElementById('swc0')&&!!document.getElementById('swc1')&&S.swc[0]!==S.swc[1]&&S.swc.length===2"),
+)
+clk("nav|Swiftplay")
+w()
+ck(
+    "R4 Swiftplay mostra os dois campeoes travados",
+    tx(
+        "(m=>m.querySelectorAll('section.card').length===2&&m.innerText.includes('Campeão travado 1 de 2')&&m.innerText.includes('Campeão travado 2 de 2')&&m.innerText.includes('Ahri')&&m.innerText.includes('Lux'))(document.getElementById('main'))"
+    ),
+)
+ck(
+    "R4 ambos nada tocado",
+    tx("S.sw.every(w=>w.skin===null)&&document.querySelectorAll('#main section.card .tag.warn').length===2"),
+)
+sh("r4-03-swiftplay-nenhum-tocado")
+tx("S.fav=new Set(['Ahri|1|-1']);rerender()")
+clk("swStart|")
+w()
+ck(
+    "R4 nenhum tocado: ambos sorteio Bravura (favorita do 1o, aleatoria no 2o)",
+    tx(
+        "S.sw[0].res.src.includes('Bravura')&&S.sw[0].res.src.includes('favorita')&&S.sw[0].res.label.includes('Florescer Espiritual')&&S.sw[1].res.src.includes('Bravura')&&S.sw[1].res.src.includes('aleatória')"
+    ),
+)
+clk("swSkin|0:2")
+w()
+clk("swChroma|0:2:0")
+w()
+ck(
+    "R4 so um tocado: 1o manual, 2o intocado",
+    tx("S.sw[0].skin===2&&S.sw[0].chroma===0&&S.sw[1].skin===null&&S.sw[0].res===null"),
+)
+clk("swStart|")
+w()
+ck(
+    "R4 so um tocado: manual vence no 1o e sorteio no 2o",
+    tx(
+        "S.sw[0].res.src==='escolhida manualmente'&&S.sw[0].res.label.includes('Rainha Exaltada')&&S.sw[0].res.label.includes('Aurora')&&S.sw[1].res.src.includes('Bravura')"
+    ),
+)
+sh("r4-04-swiftplay-um-tocado")
+clk("swSkin|1:1")
+w()
+clk("swStart|")
+w()
+ck(
+    "R4 ambos tocados: dois manuais",
+    tx(
+        "S.sw[1].res.src==='escolhida manualmente'&&S.sw[1].res.label.includes('Guardiã')&&S.sw[0].res.src==='escolhida manualmente'"
+    ),
+)
+sh("r4-05-swiftplay-ambos")
+clk("swClear|0")
+w()
+ck("R4 limpar um nao afeta o outro", tx("S.sw[0].skin===null&&S.sw[1].skin===1"))
+sets("#swc1", "Ahri")
+w()
+ck("R4 campeoes travados distintos (rejeita igual)", tx("S.swc[1]==='Lux'"))
+sets("#swc1", "Jinx")
+w()
+ck(
+    "R4 trocar campeao reinicia a escolha dele",
+    tx("S.swc[1]==='Jinx'&&S.sw[1].skin===null&&document.getElementById('main').innerText.includes('Jinx')"),
+)
+tx("S.fail=true;rerender()")
+clk("swStart|")
+w()
+ck("A01 Swiftplay erro contextual", tx("!!document.querySelector('[role=alert]')"))
+clk("toSupport|")
+w()
+ck(
+    "A01 vai ao suporte com origem",
+    tx("S.page==='Suporte'&&document.getElementById('main').innerText.includes('Origem: Swiftplay')"),
+)
+clk("recheck|")
+w()
+clk("back|")
+w()
+ck("A01 retorna ao Swiftplay", tx("S.page==='Swiftplay'&&S.swc[0]==='Ahri'"))
+clk("mode|normal")
+w()
+ck(
+    "R3 sair do modo remove Swiftplay",
+    tx("S.page==='Sala'||!S.hub")
+    and tx("![...document.querySelectorAll('#nav button')].some(x=>x.textContent.startsWith('Swiftplay'))"),
+)
+b.key("Escape")
+w()
+# ---- Selecao
+clk("sim|selecao")
+w()
+ab = box(".asst")
+lb = box("#launcher")
+g = dict(
+    w=ab["w"],
+    h=ab["h"],
+    right=abs(ab["r"] - lb["r"]),
+    gap=lb["y"] - ab["b"],
+    inside=ab["x"] >= 0 and ab["y"] >= 56 and ab["r"] <= sb["w"] and ab["b"] <= sb["h"],
+    overlap=not (ab["b"] <= lb["y"] or ab["y"] >= lb["b"] or ab["r"] <= lb["x"] or ab["x"] >= lb["r"]),
+)
+ck(
+    "A07 D-017 assistente 452x492 ancorado",
+    g["w"] == 452 and g["h"] == 492 and g["right"] < 1 and abs(g["gap"] - 8) < 1 and g["inside"] and not g["overlap"],
+    str(g),
+)
+ck(
+    "R3 assistente: header Rota/Confronto/Fonte sem nome do campeao",
+    tx(
+        "(a=>[...a.querySelectorAll('label')].map(l=>l.firstChild.textContent).join()==='Rota,Confronto,Fonte'&&!a.querySelector('h2'))(document.querySelector('.asst .ah'))"
+    ),
+)
+ck(
+    "R3 abas Runas/Itens/Mods/Prefs rapidas/Todas config (sem Skins)",
+    tx("JSON.stringify([...document.querySelectorAll('.asst .tabs button')].map(x=>x.textContent.replace(' •','')))")
+    == '["Runas","Itens","Mods","Preferências rápidas","Todas as configurações"]',
+)
+ck("R3 abas cabem na largura", tx("(t=>t.scrollWidth<=t.clientWidth)(document.querySelector('.asst .tabs'))"))
+ck("R3 texto inutil removido", tx("!document.querySelector('.asst').innerText.includes('Ver a recomendação')"))
+ck(
+    "R3 layout antigo: Maior WR / Mais comum / Contra / Outras runas",
+    tx(
+        "(t=>['Maior WR','Mais comum','CONTRA ZED','OUTRAS RUNAS'].every(x=>t.toUpperCase().includes(x.toUpperCase())))(document.querySelector('.asst').innerText)"
+    ),
+)
+ck(
+    "R2 selecao: cena com campeoes/confirmar/botao inferior",
+    tx(
+        "document.querySelectorAll('.cs-grid button').length===24&&!!document.getElementById('confirm-champ')&&!!document.getElementById('launcher')"
+    ),
+)
+ck("R3 sem cantos arredondados (selecao)", tx(RAD), str(tx(RAD)))
+sh("r3-12-selecao-runas")
+clk("pick|Jinx")
+w()
+ck("R2 escolher campeao na cena", tx("S.sel.champ==='Jinx'"))
+clk("pick|Ahri")
+clk("runeImport|r1")
+w(0.1)
+ck("A04 importando", tx("S.run.status==='importing'"))
+w(0.9)
+ck("A04 sucesso", tx("S.run.status==='success'&&document.querySelector('.astat').innerText.includes('Sucesso')"))
+sets("#simRes", "no_free_page")
+w()
+clk("runeImport|r2")
+w(1)
+ck(
+    "A04 no_free_page",
+    tx(
+        "S.run.status==='no_free_page'&&document.querySelector('.astat').innerText.toLowerCase().includes('nenhuma página pessoal foi apagada')"
+    ),
+)
+sh("r3-13-runas-no-free-page")
+sets("#simRes", "failed")
+w()
+clk("runeImport|r2")
+w(1)
+ck(
+    "A04 falha com Abrir Suporte",
+    tx("S.run.status==='failed'&&!!document.querySelector('.astat [data-act=toSupport]')"),
+)
+clk("toSupport|")
+w()
+ck(
+    "A01 runas->suporte",
+    tx("S.hub&&S.page==='Suporte'&&document.getElementById('main').innerText.includes('Origem: seleção de campeões')"),
+)
+clk("recheck|")
+w()
+clk("back|")
+w()
+ck("A01 retorna ao assistente", tx("S.sim==='selecao'&&!S.hub&&!!document.querySelector('.asst')"))
+clk("runeEdit|")
+clk("runeKey|8229")
+clk("runeKey|8230")
+w()
+ck(
+    "A04 editor agrupa",
+    tx("S.run.edits===2&&document.body.innerText.includes('2 edição(ões) agrupada(s) em 1 importação')"),
+)
+clk("runeEdit|")
+tx("S.run.status='idle';rerender()")
+sets("#a-src", "Onetricks")
+w()
+ck(
+    "A04 Onetricks indisponivel honesto, sem importar",
+    tx(
+        "S.run.status==='idle'&&document.querySelector('.asst').innerText.includes('sem dados')&&[...document.querySelectorAll('.rcard')].every(c=>c.disabled)"
+    ),
+)
+sets("#otMode", "simulado")
+w()
+ck(
+    "A04 Onetricks simulado marcado",
+    tx(
+        "document.querySelector('.asst').innerText.includes('simulados')&&[...document.querySelectorAll('.rcard')].every(c=>!c.disabled)"
+    ),
+)
+sets("#a-src", "Lolalytics")
+w()
+clk("compare|")
+w()
+ck("A04 comparacao lado a lado", tx("S.compare&&document.querySelectorAll('.asst .grid.g2 .card').length===2"))
+sets("#otMode", "indisponivel")
+w()
+ck("A04 onetricks indisponivel na comparacao", tx("document.body.innerText.includes('Sem dados. Não substituímos')"))
+sets("#otMode", "simulado")
+w()
+ck(
+    "A04 amostras/patch separados",
+    tx(
+        "(t=>t.includes('12.480')&&t.includes('740')&&t.includes('15.20')&&t.includes('15.19')&&t.includes('simulados'))(document.querySelector('.asst').innerText)"
+    ),
+)
+sh("r3-14-comparar-fontes")
+clk("compare|")
+sets("#otMode", "indisponivel")
+clk("tab|asst:Itens")
+w()
+ck(
+    "R3 Build padrao Inicial/Essenciais/Situacionais mantida",
+    tx(
+        "(t=>['Build padrão','Inicial','Essenciais','Situacionais','Outras builds'].every(x=>t.includes(x)||t.toUpperCase().includes(x.toUpperCase())))(document.querySelector('.asst').innerText)"
+    ),
+)
+ck(
+    "A05 ordenados por partidas",
+    tx(
+        "(()=>{const n=[...document.querySelectorAll('#trioList .st')].map(x=>+x.innerText.match(/([\\d.]+) partidas/)[1].replace('.',''));return n.length===6&&n.every((v,i)=>i==0||n[i-1]>=v)})()"
+    ),
+)
+ck(
+    "A05 icones+WR",
+    tx(
+        "document.querySelectorAll('#trioList .trio')[0].querySelectorAll('img').length===3&&document.querySelector('#trioList').innerText.includes('54,2%')"
+    ),
+)
+sets("#itemQ", "Zhonya", "input")
+ck("A05 busca nome", tx("document.querySelectorAll('#trioList .trio').length===3"))
+sets("#itemQ", "6653", "input")
+ck("A05 busca id", tx("document.querySelectorAll('#trioList .trio').length===2"))
+sets("#itemQ", "", "input")
+clk("trioUse|t2")
+w()
+ck(
+    "A05 trio antes do padrao",
+    tx("S.trio==='t2'&&document.querySelector('#abody').innerText.toLowerCase().includes('trio escolhido')"),
+)
+clk("confirmChamp|")
+w()
+ck(
+    "A05 confirmar campeao simula importacao",
+    tx(
+        "S.confirmed&&S.itemMsg.includes('trio')&&document.querySelector('#abody').innerText.includes('Itens importados')"
+    ),
+)
+sh("r3-15-itens")
+clk("trioReset|")
+w()
+ck("A05 restaurar", tx("S.trio===null"))
+clk("tab|asst:Mods")
+w()
+ck(
+    "R3 aba Mods so mods (sem skins)",
+    tx(
+        "!/skins de/i.test(document.querySelector('#abody').innerText)&&document.querySelectorAll('#modList > div').length===10"
+    ),
+)
+ck(
+    "A03 10 categorias legadas",
+    tx(
+        "[...document.querySelectorAll('#modCat option')].length===11&&CATS.every(c=>document.querySelector('#modCat').innerText.includes(c))"
+    ),
+)
+sets("#modQ", "noturno", "input")
+ck("A03 busca", tx("document.querySelectorAll('#modList > div').length===1"))
+sets("#modQ", "", "input")
+sets("#modCat", "Fontes")
+w()
+ck("A03 filtro categoria", tx("document.querySelectorAll('#modList > div').length===1"))
+sets("#modCat", "Todas")
+w()
+sh("r3-16-mods")
+clk("impOpen|")
+w()
+ck(
+    "A03 importar exige campeao/skin-base",
+    tx(
+        "document.querySelector('[data-act=impGo]').disabled&&document.getElementById('dlgB').innerText.includes('campeão e skin-base')"
+    ),
+)
+sets("#impChamp", "Jinx")
+w()
+sets("#impState", "selecao")
+w()
+sh("r3-17-importar-mod")
+clk("impGo|")
+w(0.3)
+ck(
+    "A03 fila ate fim da selecao",
+    tx(
+        "S.mods.at(-1).st.startsWith('Na fila')&&document.querySelector('#abody').innerText.includes('aguardando o fim da seleção')"
+    ),
+)
+clk("endSel|")
+w()
+ck("A03 fim da selecao", tx("S.mods.at(-1).st==='Pronto'"))
+mid = str(tx("S.mods.at(-1).id"))
+clk("modEdit|" + mid)
+w()
+sets("#impName", "Jinx Editada", "input")
+clk("impGo|")
+w(0.3)
+ck("A03 editar", tx("S.mods.at(-1).name==='Jinx Editada'"))
+clk("modExp|" + mid)
+w()
+ck("A03 exportar", tx("S.lastExport==='jinx-editada.fantome'"))
+clk("modRm|" + mid)
+w()
+clk("modRmGo|" + mid)
+w(0.3)
+ck("A03 remover", tx("!S.mods.find(m=>m.name==='Jinx Editada')"))
+clk("impErr|")
+w()
+ck("A01 erro em Mods", tx("!!document.querySelector('.asst [role=alert]')"))
+clk("toSupport|")
+w()
+clk("back|")
+w()
+ck("A01 retorna e mantem aba Mods", tx("S.sim==='selecao'&&S.tab.asst==='Mods'&&!!document.querySelector('.asst')"))
+clk("tab|asst:Preferências rápidas")
+w()
+tx("document.getElementById('pref-autoaceite').click()")
+w()
+ck("A06 prefs rapidas em aba, rascunho", tx("dirty()===1&&!!document.querySelector('#abody .dbar')"))
+sh("r3-18-prefs-rapidas")
+clk("toCfg|")
+w()
+ck(
+    "A06 todas as configuracoes preserva rascunho",
+    tx(
+        "S.page==='Configurações'&&S.hub&&dirty()===1&&!document.querySelector('.asst')&&document.getElementById('main').innerText.includes('Rascunho e escolhas foram preservados')"
+    ),
+)
+sh("r3-19-painel-a-partir-da-selecao")
+clk("back|")
+w()
+ck(
+    "A06 volta a selecao",
+    tx("S.sim==='selecao'&&!S.hub&&dirty()===1&&!!document.querySelector('.asst')") and ak() == "panelToggle|",
+    ak(),
+)
+clk("tab|asst:Preferências rápidas")
+w()
+clk("cfgCancel|")
+w()
+ck("A06 cancelar", tx("dirty()===0"))
+# teclado
+b.key("Escape")
+w()
+ck("A08 Escape fecha assistente e foca botao", tx("!document.querySelector('.asst')") and ak() == "panelToggle|", ak())
+b.key("Enter")
+w()
+ck("A08 Enter reabre assistente", tx("!!document.querySelector('.asst')"))
+b.key("Tab")
+w(0.1)
+ck(
+    "A07 anel de foco claro",
+    tx(
+        "(c=>c.outlineStyle==='solid'&&c.outlineColor==='rgb(236, 236, 236)'&&parseFloat(c.outlineWidth)>=2)(getComputedStyle(document.activeElement))"
+    ),
+)
+clk("sim|cliente")
+w()
+tx("document.getElementById('hub-launch').focus()")
+b.key("Enter")
+w(0.2)
+ck(
+    "A08 Enter abre painel com foco dentro",
+    tx("!!document.getElementById('hub')&&!!document.activeElement.closest('#hub')"),
+    ak(),
+)
+inside = []
+seq = []
+for i in range(14):
+    b.key("Tab")
+    w(0.04)
+    inside.append(tx("!!document.activeElement.closest('#hub')"))
+    seq.append(ak())
+for i in range(14):
+    b.key("Tab", 8)
+    w(0.04)
+    inside.append(tx("!!document.activeElement.closest('#hub')"))
+ck("A08 Tab/Shift+Tab ciclam no painel", all(inside) and len(set(seq)) >= 6, str(seq))
+clk("nav|Sala")
+w()
+clk("nav|Configurações")
+w()
+clk("tab|cfg:Avançado")
+w()
+tx("S.modal={type:'rm',id:1};openModal(S.modal,document.querySelector('[data-k=\"tab|cfg:Avançado\"]'))")
+w(0.3)
+ins = []
+for i in range(6):
+    b.key("Tab")
+    w(0.04)
+    ins.append(tx("!!document.activeElement.closest('#dlg')"))
+for i in range(6):
+    b.key("Tab", 8)
+    w(0.04)
+    ins.append(tx("!!document.activeElement.closest('#dlg')"))
+ck("A08 foco preso no modal", all(ins), str(ins))
+sh("r3-20-modal-foco")
+b.key("Escape")
+w(0.3)
+ck(
+    "A08 Escape fecha modal (painel continua) e devolve foco",
+    tx("!document.getElementById('dlg').open&&!!document.getElementById('hub')") and ak() == "tab|cfg:Avançado",
+    ak(),
+)
+b.key("Escape")
+w()
+ck("A08 Escape fecha painel e foca botao SEXO2", tx("!document.getElementById('hub')") and ak() == "hubToggle|", ak())
+clk("sim|partida")
+w()
+ck("R2 partida: sem client/painel", tx("!document.getElementById('hub-launch')&&!document.getElementById('hub')"))
+sh("r3-21-partida")
+clk("sim|cliente")
+w()
+clk("hubToggle|")
+w()
+clk("sim|selecao")
+w()
+ck(
+    "R4 SEXO2 em Oswald (botao inferior, botao do cabecalho, marca)",
+    tx(
+        "(()=>{const ok=['#launcher','#hub-launch'].every(q=>/Oswald/.test(getComputedStyle(document.querySelector(q)).fontFamily));return ok&&document.fonts.check('14px Oswald','SEXO2')})()"
+    ),
+)
+ck(
+    "R4 todo texto SEXO2 de marca no palco usa Oswald",
+    tx(
+        "(()=>{const bad=[];document.querySelectorAll('#stage *').forEach(e=>{const own=[...e.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('');if(/SEXO2/.test(own)&&!/^Oswald/.test(getComputedStyle(e).fontFamily.replace(/\"/g,'')))bad.push(e.tagName+e.id)});return bad.length===0||bad.join()})()"
+    ),
+)
+sh("r4-06-selecao-sexo2-oswald")
+clk("hubToggle|")
+w()
+ck(
+    "R4 marca SEXO2 do painel em Oswald",
+    tx(
+        "/Oswald/.test(getComputedStyle(document.querySelector('#hub .brand')).fontFamily)&&document.fonts.status==='loaded'"
+    ),
+)
+clk("hubClose|")
+w()
+clk("sim|cliente")
+w()
+clk("hubToggle|")
+w()
+ck(
+    "A07 fontes carregadas",
+    tx(
+        "document.fonts.check('16px Oswald')&&document.fonts.check('16px Inter')&&[...document.fonts].every(f=>f.status==='loaded')"
+    ),
+)
+ck(
+    "A07 sem serif/azul na UI SEXO2",
+    tx(
+        """(()=>{const bad=[];document.querySelectorAll('#hub *,#sim *,.asst *,#launcher,#hub-launch').forEach(e=>{const c=getComputedStyle(e);if(!/Oswald|Inter/.test(c.fontFamily))bad.push(e.tagName+c.fontFamily);[c.color,c.backgroundColor,c.borderTopColor,c.outlineColor].forEach(x=>{const m=x.match(/rgba?\\((\\d+), (\\d+), (\\d+)/);if(m&&+m[3]>+m[1]+25&&+m[3]>+m[2]+25)bad.push('blue '+e.tagName+x)})});return bad.length===0||bad.slice(0,5).join(';')})()"""
+    ),
+)
+print(sum(1 for r in R if not r[1]), "falhas de", len(R))
+b.close()

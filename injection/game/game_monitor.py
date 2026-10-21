@@ -7,7 +7,7 @@ Handles game process monitoring, suspension, and resumption
 
 import threading
 import time
-from typing import Callable, Optional
+from typing import Callable
 
 # Import psutil with fallback for development environments
 try:
@@ -32,7 +32,6 @@ from config import (
     PERSISTENT_MONITOR_IDLE_INTERVAL_S,
     GAME_RESUME_MAX_ATTEMPTS,
     GAME_RESUME_VERIFICATION_WAIT_S,
-    get_config_float,
 )
 from utils.core.logging import get_logger, log_section, log_event, log_success
 from utils.core.issue_reporter import report_issue
@@ -66,9 +65,9 @@ def make_game_ended_callback(state) -> Callable[[], bool]:
 
 
 def resume_orphaned_game() -> int:
-    """Resume a game left suspended by a Rose that died mid-injection.
+    """Resume a game left suspended by a SEXO2 that died mid-injection.
 
-    Only one Rose runs at a time and nothing else suspends the game, so a
+    Only one SEXO2 runs at a time and nothing else suspends the game, so a
     suspended game at startup would otherwise stay frozen until the user
     killed it. Returns how many game processes were resumed.
     """
@@ -377,7 +376,7 @@ class GameMonitor:
         # deactivates itself when runoverlay starts (see the top of the while)
         # without clearing the reference, so by the time cleanup calls stop()
         # the flag is already False while the game is still suspended. Gating
-        # on the flag left the game frozen until the user closed Rose.
+        # on the flag left the game frozen until the user closed SEXO2.
         self._release_suspended_process("cleanup")
 
     def get_suspended_game_process(self):
@@ -494,5 +493,5 @@ class GameMonitor:
     def _report_issue_async(self, code, summary, detail):
         if self.issue_callback:
             threading.Thread(
-                target=self.issue_callback, args=(code, summary, detail), daemon=True, name="RoseIssue"
+                target=self.issue_callback, args=(code, summary, detail), daemon=True, name="SEXO2Issue"
             ).start()

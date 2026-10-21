@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {reconcileDraft,makeSave} = require('../Pengu Loader/plugins/ROSE-SwiftplayPins/index.js');
+const {reconcileDraft,makeSave} = require('../Pengu Loader/plugins/SEXO2-SwiftplayPins/index.js');
 const a={championId:234,pin:{skinId:234001},skins:[{skinId:234001},{skinId:234002}]};
 const b={championId:555,pin:null,skins:[{skinId:555001}]};
 test('reorder preserves unsaved choice by champion',()=>assert.deepEqual(reconcileDraft({234:234002,555:null},[b,a],false),{234:234002,555:null}));
@@ -12,7 +12,7 @@ test('save uses current slot order and explicit removals',()=>assert.deepEqual(m
 
 const vm = require('node:vm');
 const fs = require('node:fs');
-const pluginSource=fs.readFileSync(require('node:path').join(__dirname,'../Pengu Loader/plugins/ROSE-SwiftplayPins/index.js'),'utf8');
+const pluginSource=fs.readFileSync(require('node:path').join(__dirname,'../Pengu Loader/plugins/SEXO2-SwiftplayPins/index.js'),'utf8');
 function harness(loading, legacyModule=false) {
   let readyListener=null, timers=0;
   const nodes=[];

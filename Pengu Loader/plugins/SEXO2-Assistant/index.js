@@ -1,10 +1,10 @@
 /**
  * @name SEXO2-Assistant
- * @description Assistente da seleção de campeões: Runas e Itens (protótipo aprovado, D-017/D-018), Mods.
+ * @description Assistente da seleção de campeões: Runas, Itens, Mods e Todas as configurações (D-017, D-018, D-117).
  *
- * Abre acima do botão SEXO2 (ROSE-CustomWheel chama window.__sexo2Assistant.toggle). Os dados e as
+ * Abre acima do botão SEXO2 (SEXO2-CustomWheel chama window.__sexo2Assistant.toggle). Os dados e as
  * importações vêm do SEXO2 pela ponte (mensagens assistant-*); nomes e ícones de runas, itens e
- * campeões vêm do próprio cliente. A aba Mods abre o painel de mods existente, com todas as funções.
+ * campeões vêm do próprio cliente. A aba Mods embute a biblioteca de mods (SEXO2-ModLibrary).
  */
 (function () {
   "use strict";
@@ -122,13 +122,100 @@
     },
   };
 
-  // Mesma regra de ROSE-CustomWheel/index.js (computeAnchor).
+  // Mesma regra de SEXO2-CustomWheel/index.js (computeAnchor).
   function computeAnchor(buttonRect, panelSize, viewport, gap = 8, margin = 8) {
     const room = Math.max(0, buttonRect.top - gap - margin);
     const height = Math.min(panelSize.height, room);
     let left = buttonRect.right - panelSize.width;
     left = Math.max(margin, Math.min(left, viewport.width - margin - panelSize.width));
     return { left: Math.round(left), top: Math.round(buttonRect.top - gap - height), maxHeight: Math.floor(room) };
+  }
+
+  // The client's lol-uikit-flat-button can measure 0x0 itself while its content is visible:
+  // the first box with a size among the button, its children and its parent anchors the panel.
+  function anchorRect(button) {
+    if (!button) return null;
+    const candidates = [button, ...Array.from(button.children || []), button.parentElement];
+    for (const el of candidates) {
+      if (!el || typeof el.getBoundingClientRect !== "function") continue;
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) return r;
+    }
+    return null;
+  }
+
+  // Without a usable button the panel sits at the bottom right, where the button is.
+  function fallbackAnchor(viewport, panelSize, margin = 16) {
+    const height = Math.min(panelSize.height, viewport.height - 2 * margin);
+    return {
+      left: Math.max(margin, viewport.width - margin - panelSize.width),
+      top: Math.max(margin, viewport.height - 80 - height),
+      maxHeight: height,
+    };
+  }
+
+  // "Outras builds": builds with an item whose name contains the search (accents and case ignored).
+  function fold(text) {
+    return String(text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+  function filterBuilds(builds, query, itemName) {
+    const q = fold(query);
+    if (!q) return builds;
+    return builds.filter((b) => b.items.some((id) => fold(itemName(id)).includes(q)));
+  }
+
+  // "Build padrão": the first group of the managed set (highest win rate, or the build picked in
+  // "Outras builds"), shown as Inicial, Essenciais and Situacionais.
+  const STARTING_LABEL = "Itens iniciais";
+  const ALTERNATIVES_LABEL = "Alternativas";
+  function defaultBuild(blocks) {
+    const out = { inicial: null, essenciais: null, situacionais: null };
+    let seen = false;
+    for (const block of blocks || []) {
+      if (block.type === STARTING_LABEL) {
+        if (seen && !out.inicial) out.inicial = block;
+      } else if (block.type === ALTERNATIVES_LABEL) {
+        if (seen && !out.situacionais) out.situacionais = block;
+      } else if (seen) {
+        break; // the next group starts here
+      } else {
+        out.essenciais = block;
+        seen = true;
+      }
+    }
+    return out;
+  }
+
+  // Build favorita (D-135): the trio on top of the set is the first three items of its first block.
+  function topTrio(blocks) {
+    const first = (blocks || [])[0];
+    return first ? first.items.slice(0, 3).map((i) => Number(i.id)) : [];
+  }
+  const sameIds = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => v === b[i]);
+  const FAVORITE_UNAVAILABLE = "Favorita indisponível neste patch.";
+
+  const TIERS = {
+    IRON: "Ferro",
+    BRONZE: "Bronze",
+    SILVER: "Prata",
+    GOLD: "Ouro",
+    PLATINUM: "Platina",
+    EMERALD: "Esmeralda",
+    DIAMOND: "Diamante",
+    MASTER: "Mestre",
+    GRANDMASTER: "Grão-Mestre",
+    CHALLENGER: "Desafiante",
+  };
+  const APEX_TIERS = new Set(["MASTER", "GRANDMASTER", "CHALLENGER"]);
+  function eloText(elo) {
+    if (!elo || typeof elo.tier !== "string") return "—";
+    const upper = elo.tier.toUpperCase();
+    const tier = TIERS[upper];
+    if (!tier) return "—";
+    const division = !APEX_TIERS.has(upper) && elo.division && /^(I|II|III|IV)$/.test(elo.division) ? ` ${elo.division}` : "";
+    const points = Number.isInteger(elo.leaguePoints) ? ` · ${elo.leaguePoints} PDL` : "";
+    const queue = elo.queue === "RANKED_FLEX_SR" ? "Flex · " : "";
+    return `${queue}${tier}${division}${points}`;
   }
 
   const RUNE_ERRORS = {
@@ -145,8 +232,16 @@
     return "O cliente recusou o conjunto.";
   }
 
+  // Sem estatísticas (Arena e outras filas) só Equipe, Mods e as configurações fazem sentido (decisão de 19/10/2026).
+  // Equipe só existe com um elenco na seleção de campeões: não aparece no Swiftplay, que não tem.
+  function visibleTabs(noStats, hasTeam) {
+    const all = [["runes", "Runas"], ["items", "Itens"], ["team", "Equipe"], ["mods", "Mods"], ["settings", "Todas as configurações"]];
+    return all.filter(([k]) => (k !== "team" || hasTeam) && (!noStats || k === "team" || k === "mods" || k === "settings"));
+  }
+  const hasTeamRows = (st) => !!(st && st.ranked && ((st.ranked.team || []).length || (st.ranked.enemies || []).length));
+
   if (typeof window === "undefined" && typeof module !== "undefined" && module.exports) {
-    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, runeError, itemError, LANES };
+    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, topTrio, sameIds, visibleTabs, hasTeamRows, runeError, itemError, eloText, TIERS, LANES };
     return;
   }
 
@@ -161,9 +256,13 @@
   const CSS = `
 #sexo2-assistant{box-sizing:border-box;position:fixed;z-index:10001;width:${PANEL_WIDTH}px;height:${PANEL_HEIGHT}px;display:flex;flex-direction:column;background:var(--s2-surface);border:1px solid var(--s2-line);box-shadow:0 8px 30px rgba(0,0,0,.55);}
 #sexo2-assistant[hidden]{display:none;}
-#sexo2-assistant .asst-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);}
-#sexo2-assistant .asst-head .champ{width:32px;height:32px;border-radius:2px;}
-#sexo2-assistant .asst-head .name{font:600 22px/1 var(--s2-font-display);text-transform:uppercase;letter-spacing:.01em;}
+#sexo2-assistant .asst-head{display:flex;align-items:flex-end;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);}
+#sexo2-assistant .asst-head label{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font:500 11px var(--s2-font-display);letter-spacing:.05em;text-transform:uppercase;color:var(--s2-fg-3);}
+#sexo2-assistant .asst-head select{width:100%;min-width:0;}
+#sexo2-assistant .s2-tabs button{flex:auto;min-width:0;padding:8px 4px 7px;font-size:11px;white-space:nowrap;}
+#sexo2-assistant #sexo2-mod-library{margin-top:0;border-top:0;padding-top:0;}
+#sexo2-assistant #sexo2-mod-library>button:nth-child(2){display:none;}
+#sexo2-assistant .ip-sub{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-2);}
 #sexo2-assistant .grow{flex:1;}
 #sexo2-assistant .asst-body{flex:1;overflow-y:auto;padding:var(--sp-3);}
 #sexo2-assistant .asst-foot{height:36px;border-top:1px solid var(--s2-line);display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-3);font-size:12px;color:var(--s2-fg-2);}
@@ -188,6 +287,20 @@
 #sexo2-assistant .rec-row .lbl{font-size:var(--t-small);color:var(--s2-fg-3);margin-left:var(--sp-1);}
 #sexo2-assistant .rec-row .wr{width:52px;text-align:right;}
 #sexo2-assistant .rec-row .n{width:56px;text-align:right;font-size:var(--t-small);color:var(--s2-fg-3);font-variant-numeric:tabular-nums;}
+#sexo2-assistant .rec-row .items{display:flex;gap:3px;}
+#sexo2-assistant .rec-row .items img{width:26px;height:26px;}
+#sexo2-assistant .rec-row .name{font-size:13px;color:var(--s2-fg);}
+#sexo2-assistant .fav-row{display:flex;align-items:center;gap:var(--sp-2);}
+#sexo2-assistant .fav-row .rec-row{flex:1;min-width:0;}
+#sexo2-assistant .rank-row{display:flex;align-items:center;gap:var(--sp-2);padding:6px var(--sp-1);border-bottom:1px solid var(--s2-line);}
+#sexo2-assistant .rank-row .champ{width:20px;height:20px;border-radius:2px;}
+#sexo2-assistant .rank-row .champ.empty{background:var(--s2-surface-2);}
+#sexo2-assistant .rank-row .pos{font-size:13px;color:var(--s2-fg);}
+#sexo2-assistant .rank-row .elo{font-size:13px;color:var(--s2-fg);font-variant-numeric:tabular-nums;}
+#sexo2-assistant .list-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-1) 4px;font-size:var(--t-small);color:var(--s2-fg-3);}
+#sexo2-assistant .list-head .wr{width:52px;text-align:right;}
+#sexo2-assistant .list-head .n{width:56px;text-align:right;}
+#sexo2-assistant .actions{display:flex;gap:var(--sp-2);}
 #sexo2-assistant .tree-bar{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);}
 #sexo2-assistant .tree-bar .stat{display:flex;align-items:baseline;gap:6px;}
 #sexo2-assistant .tree{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);}
@@ -235,7 +348,8 @@
     panel.setAttribute("aria-label", "SEXO2");
     document.body.appendChild(panel);
 
-    const S = { tab: "runes", screen: "home", draft: null, source: null, state: null, lanePending: null };
+    const S = { tab: "runes", screen: "home", draft: null, source: null, state: null, lanePending: null, buildQuery: "", keystoneWanted: null, noStats: false };
+    const modsHost = document.createElement("div");
     let game = null;
     let data = null;
     const names = { champions: {}, items: {} };
@@ -289,7 +403,8 @@
     }
 
     function recFor(selection, matchup) {
-      const list = (S.state.runes || {})[matchup ? "matchup" : "general"] || [];
+      const group = matchup ? "matchup" : selection === "keystone" ? "keystone" : "general";
+      const list = (S.state.runes || {})[group] || [];
       return list.find((r) => r.selection === selection);
     }
 
@@ -313,7 +428,6 @@
         </button>`;
       };
       const opp = st.opponentId;
-      const enemyOptions = (st.enemies || []).map((id) => `<option value="${id}" ${opp === id ? "selected" : ""}>${esc(champName(id))}</option>`).join("");
       const row = (rec) => {
         const p = fromPerks(data, rec.page);
         return `<button class="rec-row" data-act="rune-open" data-sel="${rec.selection}" data-matchup="1" aria-pressed="${samePage(chosen, rec.page)}">
@@ -325,12 +439,37 @@
         </button>`;
       };
       const vs = st.runes.matchup || [];
+      const fav = (st.favorite || {}).runes;
+      const favRow = () => {
+        const p = fromPerks(data, fav);
+        return `<div class="section-head"><span class="t-heading">Favorita</span></div>
+        <div class="fav-row"><button class="rec-row" data-act="fav-runes-apply" aria-pressed="${samePage(st.runes.applied, fav)}">
+          <img class="keystone s2-icon" src="${runeIcon(p.keystone)}" alt="" data-tip="${esc(perkName(p.keystone))}|${esc((data.styles[p.primary] || {}).name)}">
+          ${p.secondary.map((s) => `<img class="minor s2-icon" src="${runeIcon(s.id)}" alt="" data-tip="${esc(perkName(s.id))}|${esc((data.styles[p.sub] || {}).name)}">`).join("")}
+          <span class="name">${esc(perkName(p.keystone))}</span><span class="grow"></span>
+        </button><button class="s2-btn ghost" data-act="fav-runes-unpin">Desafixar</button></div>`;
+      };
       return `<div class="rec-cards">${st.runes.general.map(card).join("")}</div>
+        ${fav ? favRow() : ""}
         <div class="section-head">
           <span class="t-heading">${opp ? "Contra " + esc(champName(opp)) : "Contra"}</span>
-          <select class="s2-select" data-act="opponent" aria-label="Adversário">${opp ? "" : `<option value="">Escolher</option>`}${enemyOptions}</select>
         </div>
-        ${vs.length ? vs.map(row).join("") : `<div class="s2-empty">${opp ? `Sem dados suficientes contra ${esc(champName(opp))}.` : "Adversário de rota incerto."}</div>`}`;
+        ${vs.length ? vs.map(row).join("") : `<div class="s2-empty">${opp ? `Sem dados suficientes contra ${esc(champName(opp))}.` : "Adversário de rota incerto."}</div>`}
+        ${otherKeystones()}`;
+    }
+
+    // "Outras runas": every keystone with its own numbers; a click loads its most played page.
+    function otherKeystones() {
+      const keystones = ((S.state.options || {}).keystones || []).filter((k) => data.perks[k.id]);
+      if (!keystones.length) return "";
+      const pending = S.state.runes.keystonePending;
+      const row = (k) => `<button class="rec-row" data-act="keystone-open" data-id="${k.id}">
+          <img class="keystone s2-icon" src="${runeIcon(k.id)}" alt="" data-tip="${esc(perkName(k.id))}|${esc((data.styles[data.perks[k.id].style] || {}).name)}">
+          <span class="name">${esc(perkName(k.id))}</span><span class="grow"></span>
+          ${pending === k.id ? `<span class="s2-spinner"></span>` : `<span class="wr t-stat" data-tip="Win rate da runa-chave|${nf0.format(k.games)} partidas.">${k.winRate == null ? "—" : pct(k.winRate)}</span>`}
+          <span class="n">${nf0.format(k.games)}</span>
+        </button>`;
+      return `<div class="section-head"><span class="t-heading">Outras runas</span></div>${keystones.map(row).join("")}`;
     }
 
     function runeTree() {
@@ -369,11 +508,15 @@
 
     function runesFoot() {
       const r = (S.state && S.state.runes) || {};
+      const fav = (S.state && S.state.favorite) || {};
       let left = "";
       if (r.pending) left = `<span class="s2-spinner"></span><span>Importando…</span>`;
       else if (r.error) left = `<span class="err">${esc(runeError(r.error))}</span>`;
       else if (S.screen === "tree" && S.draft && data && validate(data, S.draft).length) left = `<span>Página incompleta</span>`;
-      const right = r.applied && data ? `<span class="t-small">Aplicada</span>${miniPage(r.applied)}` : `<span class="t-muted">Nenhuma página aplicada</span>`;
+      else if (S.state && S.state.error === "keystone_unavailable") left = `<span class="err">Sem página com essa runa.</span>`;
+      else if (fav.unavailable && fav.unavailable.includes("runes")) left = `<span class="err">${FAVORITE_UNAVAILABLE}</span>`;
+      const pin = r.applied && !samePage(r.applied, fav.runes) ? `<button class="s2-btn" data-act="fav-runes-pin">Fixar como favorita</button>` : "";
+      const right = r.applied && data ? `<span class="t-small">Aplicada</span>${miniPage(r.applied)}${pin}` : `<span class="t-muted">Nenhuma página aplicada</span>`;
       return `<div class="asst-foot">${left}<span class="grow"></span>${right}</div>`;
     }
 
@@ -390,8 +533,50 @@
         const item = names.items[id] || {};
         return `<span class="ip-item"><img class="s2-icon sq" width="34" height="34" src="${esc(item.icon || "")}" alt="${esc(item.name || id)}" data-tip="${esc(item.name || id)}|${nf0.format(item.gold || 0)} de ouro">${count > 1 ? `<span class="ip-count num">${count}</span>` : ""}</span>`;
       };
-      return `<div class="ip-page"><div class="ip-head t-heading">${esc(it.title || "")}</div>
-        ${it.blocks.map((b) => `<div class="ip-section"><div class="ip-title">${esc(b.type)}</div><div class="ip-items">${b.items.map((i) => icon(Number(i.id), i.count)).join("")}</div></div>`).join("")}</div>`;
+      if (S.screen === "builds") return otherBuilds();
+      const builds = (st.options || {}).builds || [];
+      const favorite = sameIds((st.favorite || {}).items, topTrio(it.blocks));
+      const actions = [
+        it.chosen ? `<button class="s2-btn ghost" data-act="items-default">Voltar ao padrão</button>` : "",
+        builds.length ? `<button class="s2-btn" data-act="builds-open">Outras builds</button>` : "",
+        favorite
+          ? `<button class="s2-btn ghost" data-act="fav-items-unpin">Desafixar</button>`
+          : `<button class="s2-btn" data-act="fav-items-pin">Fixar</button>`,
+      ].join("");
+      const build = defaultBuild(it.blocks);
+      const part = (label, block) =>
+        block ? `<div class="ip-section"><div class="ip-sub"><span class="ip-title">${label}</span>${label === "Essenciais" ? `<span class="t-small num">${esc(block.type)}</span>` : ""}</div><div class="ip-items">${block.items.map((i) => icon(Number(i.id), i.count)).join("")}</div></div>` : "";
+      return `<div class="ip-page"><div class="section-head ip-head"><span class="t-heading">${favorite ? "Build favorita" : "Build padrão"}</span><span class="actions">${actions}</span></div>
+        ${part("Inicial", build.inicial)}${part("Essenciais", build.essenciais)}${part("Situacionais", build.situacionais)}</div>`;
+    }
+
+    // "Outras builds": the observed trios, most played first; a click puts one first in the set.
+    const itemName = (id) => (names.items[id] || {}).name || "";
+    function buildRows() {
+      const builds = filterBuilds((S.state.options || {}).builds || [], S.buildQuery, itemName).slice(0, 80);
+      if (!builds.length) return `<div class="s2-empty">Nenhuma build com esse item.</div>`;
+      const chosen = ((S.state.items || {}).chosen || []).join();
+      return builds
+        .map((b) => {
+          const icons = b.items
+            .map((id) => {
+              const item = names.items[id] || {};
+              return `<img class="s2-icon sq" src="${esc(item.icon || "")}" alt="${esc(item.name || id)}" data-tip="${esc(item.name || id)}|${nf0.format(item.gold || 0)} de ouro">`;
+            })
+            .join("");
+          return `<button class="rec-row" data-act="build-pick" data-items="${b.items.join(",")}" aria-pressed="${b.items.join() === chosen}">
+          <span class="items">${icons}</span><span class="grow"></span>
+          <span class="wr t-stat" data-tip="Win rate dos três itens juntos|${nf0.format(b.games)} partidas.">${b.winRate == null ? "—" : pct(b.winRate)}</span>
+          <span class="n">${nf0.format(b.games)}</span>
+        </button>`;
+        })
+        .join("");
+    }
+    function otherBuilds() {
+      return `<div class="tree-bar"><button class="s2-btn ghost" data-act="builds-back">← Voltar</button><span class="t-small">Outras builds</span><span class="grow"></span></div>
+        <input class="s2-input" data-act="builds-search" type="text" placeholder="Buscar item" aria-label="Buscar item" value="${esc(S.buildQuery)}">
+        <div class="list-head"><span>Itens</span><span class="grow"></span><span class="wr">WR</span><span class="n">Partidas</span></div>
+        <div class="builds-list">${buildRows()}</div>`;
     }
 
     function itemsFoot() {
@@ -399,49 +584,104 @@
       let left = "";
       if (it.pending) left = `<span class="s2-spinner"></span><span>Importando…</span>`;
       else if (it.error) left = `<span class="err">${esc(itemError(it.error, champName(S.state.championId)))}</span>`;
+      else if (((S.state && S.state.favorite) || {}).unavailable?.includes("items")) left = `<span class="err">${FAVORITE_UNAVAILABLE}</span>`;
       else if (it.confirmed) left = `<span>Conjunto importado</span>`;
       const retry = it.error ? `<button class="s2-btn primary" data-act="items-import">Importar conjunto</button>` : "";
       return `<div class="asst-foot">${left}<span class="grow"></span>${retry}</div>`;
     }
 
+    // ----------------------------------------------------------- equipe
+    function teamTab() {
+      const st = S.state;
+      if (!st) return dataState();
+      const ranked = st.ranked || {};
+      const row = (p) => {
+        const icon = p.championId
+          ? `<img class="champ s2-icon" src="/lol-game-data/assets/v1/champion-icons/${p.championId}.png" alt="">`
+          : `<span class="champ empty"></span>`;
+        return `<div class="rank-row">${icon}<span class="pos">${esc(LANES[p.position] || champName(p.championId))}</span><span class="grow"></span><span class="elo">${esc(eloText(p.elo))}</span></div>`;
+      };
+      const section = (title, rows) =>
+        rows.length ? `<div class="section-head"><span class="t-heading">${title}</span></div>${rows.map(row).join("")}` : "";
+      const team = ranked.team || [];
+      const enemies = ranked.enemies || [];
+      if (!team.length && !enemies.length) return `<div class="state">—</div>`;
+      return `${section("Meu time", team)}${section("Adversário", enemies)}`;
+    }
+
     // ----------------------------------------------------------- painel
     function render() {
+      try {
+        draw();
+      } catch (error) {
+        console.error("[SEXO2-Assistant] render failed", error);
+      }
+      place();
+    }
+
+    function draw() {
       if (panel.hidden) return;
       const st = S.state;
-      const cid = st && st.championId;
-      const tabs = [["runes", "Runas"], ["items", "Itens"], ["mods", "Mods"]];
+      const tabs = visibleTabs(S.noStats, hasTeamRows(st));
+      if (!tabs.some(([k]) => k === S.tab)) S.tab = S.noStats ? "mods" : "runes"; // the tab it was on is gone (the team left)
       const lane = S.lanePending || (st && st.lane);
-      const body = S.tab === "runes" ? runesTab() : itemsTab();
+      const opp = st && st.opponentId;
+      const laneOptions = (LANES[lane] ? "" : `<option value="" selected disabled>—</option>`) + Object.entries(LANES).map(([k, v]) => `<option value="${k}" ${k === lane ? "selected" : ""}>${v}</option>`).join("");
+      const enemyOptions = (opp ? "" : `<option value="" selected>Nenhum</option>`) + ((st && st.enemies) || []).map((id) => `<option value="${id}" ${opp === id ? "selected" : ""}>${esc(champName(id))}</option>`).join("");
       const keep = panel.querySelector(".asst-body");
       const scroll = keep ? keep.scrollTop : 0;
+      const modsShown = modsHost.isConnected; // the library keeps its own state: reopen it only when it was not shown
+      const body = S.tab === "runes" ? runesTab() : S.tab === "items" ? itemsTab() : S.tab === "team" ? teamTab() : "";
+      const foot = S.tab === "runes" ? runesFoot() : S.tab === "items" ? itemsFoot() : "";
       panel.innerHTML = `
         <div class="asst-head">
-          ${cid ? `<img class="champ" src="/lol-game-data/assets/v1/champion-icons/${cid}.png" alt="">` : ""}
-          <span class="name">${esc(champName(cid))}</span>
-          ${lane && LANES[lane] ? `<select class="s2-select" data-act="lane" aria-label="Rota">${Object.entries(LANES).map(([k, v]) => `<option value="${k}" ${k === lane ? "selected" : ""}>${v}</option>`).join("")}</select>` : ""}
-          <span class="grow"></span>
+          ${S.noStats ? `<span class="grow"></span>` : `<label>Rota<select class="s2-select" data-act="lane" aria-label="Rota">${laneOptions}</select></label>
+          <label>Confronto<select class="s2-select" data-act="opponent" aria-label="Confronto">${enemyOptions}</select></label>
+          <label>Fonte<select class="s2-select" data-act="source" aria-label="Fonte"><option value="lolalytics" selected>Lolalytics</option></select></label>`}
           <button class="s2-btn ghost" data-act="close" aria-label="Fechar">✕</button>
         </div>
         <div class="s2-tabs" role="tablist">${tabs.map(([k, v]) => `<button role="tab" data-act="tab" data-tab="${k}" aria-selected="${S.tab === k}">${v}</button>`).join("")}</div>
         <div class="asst-body">${body}</div>
-        ${S.tab === "runes" ? runesFoot() : itemsFoot()}`;
+        ${foot}`;
+      if (S.tab === "mods") {
+        panel.querySelector(".asst-body").appendChild(modsHost);
+        if (!modsShown) {
+          if (window.__sexo2ModLibrary) window.__sexo2ModLibrary.open(modsHost, "all");
+          else modsHost.textContent = "A biblioteca de mods não está disponível.";
+        }
+      }
       const fresh = panel.querySelector(".asst-body");
       if (fresh) fresh.scrollTop = scroll;
-      place();
     }
 
     function place() {
-      if (panel.hidden || !button || !button.isConnected) return;
-      const r = button.getBoundingClientRect();
-      if (!r.width) return;
-      const pos = computeAnchor(r, { width: PANEL_WIDTH, height: PANEL_HEIGHT }, { width: window.innerWidth, height: window.innerHeight });
+      if (panel.hidden) return;
+      const size = { width: PANEL_WIDTH, height: PANEL_HEIGHT };
+      const viewport = { width: window.innerWidth, height: window.innerHeight };
+      const r = button && button.isConnected ? anchorRect(button) : null;
+      const pos = r ? computeAnchor(r, size, viewport) : fallbackAnchor(viewport, size);
+      if (!r) console.log("[SEXO2-Assistant] button not measurable; panel at the bottom right");
       panel.style.left = pos.left + "px";
       panel.style.top = pos.top + "px";
       panel.style.height = Math.min(PANEL_HEIGHT, pos.maxHeight) + "px";
     }
 
+    // The client can rebuild the page after plugins load, leaving this panel (and its
+    // style) out of the document while an empty copy stays: put them back before showing.
+    function reattach() {
+      const other = document.getElementById("sexo2-assistant");
+      if (other && other !== panel) other.remove();
+      if (!style.isConnected) document.head.appendChild(style);
+      if (!panel.isConnected) {
+        document.body.appendChild(panel);
+        console.log("[SEXO2-Assistant] panel reattached");
+      }
+    }
+
     function open(anchor) {
       button = anchor;
+      reattach();
+      if (!connectBridge()) console.log("[SEXO2-Assistant] SEXO2 not connected yet");
       panel.hidden = false;
       loadClientData();
       send({ type: "assistant-request" });
@@ -463,13 +703,14 @@
       switch (name) {
         case "close": close(); return;
         case "tab":
-          if (el.dataset.tab === "mods") {
-            // O painel de mods existente, com todas as categorias, abre no mesmo lugar.
+          if (el.dataset.tab === "settings") {
+            // O painel do SEXO2 abre em Configurações; o assistente fecha.
             close();
-            if (window.__sexo2Mods) window.__sexo2Mods.open();
+            if (window.__sexo2Hub) window.__sexo2Hub.show("Configurações");
             return;
           }
           S.tab = el.dataset.tab;
+          S.screen = "home";
           break;
         case "retry": send({ type: "assistant-request" }); break;
         case "rune-open": {
@@ -491,6 +732,22 @@
         case "s-rune": S.draft = edit.secondaryRune(data, S.draft, +el.dataset.row, +el.dataset.id); sendEdit(); break;
         case "shard": S.draft = edit.shard(data, S.draft, +el.dataset.row, +el.dataset.id); sendEdit(); break;
         case "items-import": send({ type: "assistant-items-import" }); break;
+        case "items-default": send({ type: "assistant-items-default" }); break;
+        case "fav-runes-pin": send({ type: "assistant-favorite", what: "runes", action: "pin" }); break;
+        case "fav-runes-unpin": send({ type: "assistant-favorite", what: "runes", action: "unpin" }); break;
+        case "fav-runes-apply": send({ type: "assistant-favorite", what: "runes", action: "apply" }); break;
+        case "fav-items-pin": send({ type: "assistant-favorite", what: "items", action: "pin" }); break;
+        case "fav-items-unpin": send({ type: "assistant-favorite", what: "items", action: "unpin" }); break;
+        case "builds-open": S.screen = "builds"; break;
+        case "builds-back": S.screen = "home"; break;
+        case "build-pick":
+          send({ type: "assistant-items-choose", items: el.dataset.items.split(",").map(Number) });
+          S.screen = "home";
+          break;
+        case "keystone-open":
+          S.keystoneWanted = Number(el.dataset.id);
+          send({ type: "assistant-runes-keystone", keystone: S.keystoneWanted });
+          break;
         default: return;
       }
       render();
@@ -507,6 +764,12 @@
       if (!el || el.disabled || el.tagName === "SELECT") return;
       e.stopPropagation();
       act(el.dataset.act, el);
+    });
+    panel.addEventListener("input", (e) => {
+      if (e.target.dataset.act !== "builds-search") return;
+      S.buildQuery = e.target.value;
+      const list = panel.querySelector(".builds-list");
+      if (list) list.innerHTML = buildRows();
     });
     panel.addEventListener("change", (e) => {
       const t = e.target;
@@ -529,30 +792,68 @@
       }
       S.lanePending = null;
       S.state = state;
+      setStatsMode(state.supported === false);
+      openWantedKeystone(state);
       render();
+    }
+
+    // The page for the keystone clicked in "Outras runas" arrived: open it like the others.
+    function openWantedKeystone(state) {
+      const wanted = S.keystoneWanted;
+      if (!wanted || !data) return;
+      if (state.error === "keystone_unavailable") {
+        S.keystoneWanted = null;
+        return;
+      }
+      const rec = ((state.runes || {}).keystone || []).find((r) => r.page.perks[0] === wanted);
+      if (!rec) return;
+      S.keystoneWanted = null;
+      S.tab = "runes";
+      S.source = { ...rec, label: perkName(wanted) };
+      S.draft = fromPerks(data, rec.page);
+      S.screen = "tree";
+      send({ type: "assistant-runes-choose", selection: "keystone", matchup: false }); // importação antecipada
+    }
+
+    // In queues without statistics (Arena and others) the assistant shows only Mods and settings (see visibleTabs).
+    function setStatsMode(noStats) {
+      S.noStats = noStats;
+      if (noStats && S.tab !== "mods" && S.tab !== "team") {
+        S.tab = "mods";
+        S.screen = "home";
+      }
     }
 
     window.__sexo2Assistant = {
       toggle(anchor) {
-        if (panel.hidden) open(anchor);
-        else close();
+        console.log("[SEXO2-Assistant] toggle", { open: !panel.hidden, supported: S.state ? S.state.supported : null });
+        if (!panel.hidden) return close();
+        setStatsMode(!!(S.state && S.state.supported === false));
+        open(anchor);
       },
       close,
       isOpen: () => !panel.hidden,
     };
+    console.log("[SEXO2-Assistant] ready");
+    window.dispatchEvent(new Event("sexo2-assistant-ready"));
 
-    const attach = setInterval(() => {
-      const b = window.__roseBridge;
-      if (!b) return;
-      clearInterval(attach);
+    // The bridge object appears once SEXO2-SkinMonitor knows the SEXO2 port, which can be
+    // long after the client loaded (SEXO2 started later): the panel also connects on open.
+    function connectBridge() {
+      const b = window.__sexo2Bridge;
+      if (bridge || !b) return !!bridge;
       bridge = b;
       bridge.subscribe("assistant-state", receive);
       bridge.subscribe("assistant-error", () => render());
+      bridge.subscribe("assistant-roster", () => !panel.hidden && send({ type: "assistant-ranked" }));
       bridge.subscribe("champion-locked", () => !panel.hidden && send({ type: "assistant-request" }));
       bridge.subscribe("phase-change", (d) => {
-        if (d && d.phase !== "ChampSelect" && d.phase !== "FINALIZATION") close();
+        if (d && d.phase === "ChampSelect") send({ type: "assistant-request" }); // know the queue before a click
+        else if (d && d.phase !== "FINALIZATION") close();
       });
-    }, 250);
+      return true;
+    }
+    const attach = setInterval(() => connectBridge() && clearInterval(attach), 250);
     setTimeout(() => clearInterval(attach), 30000);
   }
 

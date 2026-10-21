@@ -11,7 +11,7 @@ import shutil
 from pathlib import Path
 from typing import Callable, List, Optional
 
-from utils.core.logging import get_logger, log_action, log_success
+from utils.core.logging import get_logger
 from utils.core.paths import get_classic_skins_dir, get_skins_dir, get_injection_dir
 from utils.core.issue_reporter import report_issue
 from .. import result_codes

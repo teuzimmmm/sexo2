@@ -1,13 +1,7 @@
 import unittest
 
 
-import io
-
-
 import json
-
-
-import subprocess
 
 
 import tempfile
@@ -31,21 +25,7 @@ from injection.core.injector import SkinInjector
 from injection.game.match_recovery import MatchRecovery, game_pids
 
 
-from injection.game.game_monitor import GameMonitor
-
-
-from injection.overlay.overlay_manager import OverlayManager
-
-
 from injection.overlay.match_context import MatchContext
-
-
-from party.core.party_manager import (
-    PartyManager,
-    PERMANENT_PARTY_ROOM_KEY,
-    PERMANENT_PARTY_NAME,
-    get_party_room,
-)
 
 
 from utils.core.match_report import MatchReport

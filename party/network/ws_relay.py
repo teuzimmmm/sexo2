@@ -14,11 +14,10 @@ import ssl
 import time
 from typing import Callable, List, Optional
 
-import websockets
 from websockets.exceptions import ConnectionClosed
 
 from config import APP_VERSION
-from .private_server_config import relay_settings
+from .private_server_config import relay_settings, relay_url_from_environment
 from .tunnel_connection import connect_with_dns_fallback
 from urllib.parse import urlencode
 from utils.core.logging import get_logger
@@ -30,7 +29,7 @@ try:
 except ImportError:
     _CONFIGURED_URL = ""
 
-RELAY_URL = os.environ.get("ROSE_RELAY_URL", _CONFIGURED_URL)
+RELAY_URL = relay_url_from_environment() or _CONFIGURED_URL
 PING_INTERVAL = 25.0
 CONNECT_TIMEOUT = 15.0
 # Wait before each reconnect attempt, in seconds
@@ -41,9 +40,9 @@ RECONNECT_DELAYS = (1.0, 2.0, 5.0, 10.0, 20.0, 30.0)
 # pings never get through (a firewall...) otherwise reconnected every 100s all day
 STABLE_CONNECTION_S = 300.0
 # The relay closes a connection with this reason when the same player joins the
-# room again: another connection (a second Rose, another PC) now has our place
+# room again: another connection (a second SEXO2, another PC) now has our place
 REPLACED_REASON = "replaced"
-# The relay refuses a Rose too old for it with this status: no point retrying
+# The relay refuses a SEXO2 too old for it with this status: no point retrying
 UPDATE_REQUIRED_STATUS = 426
 
 _ssl_contexts_cache: Optional[List[ssl.SSLContext]] = None
@@ -137,7 +136,7 @@ class PartyRelay:
         # Reconnecting stopped (see _run) until resume()
         self._stopped = False
         # The last connection attempt was refused because the room is full,
-        # or because the relay needs a newer Rose
+        # or because the relay needs a newer SEXO2
         self._room_full = False
         self._update_required = False
 
@@ -252,7 +251,7 @@ class PartyRelay:
             log.warning("[RELAY] No relay URL configured")
             return False
 
-        # The version tells the relay's logs which Rose a looping connection comes from
+        # The version tells the relay's logs which SEXO2 a looping connection comes from
         params = {"key": self.room_key, "v": APP_VERSION}
         if access:
             params["access"] = access
@@ -263,7 +262,7 @@ class PartyRelay:
         error: Optional[BaseException] = None
 
         for context in contexts:
-            transport_logger = logging.getLogger("rose.relay.transport")
+            transport_logger = logging.getLogger("sexo2.relay.transport")
             transport_logger.setLevel(logging.WARNING)
             kwargs = {"max_size": 65536, "logger": transport_logger}
             if context is not None:

@@ -36,12 +36,15 @@ def get(lcu: Any, state: Any):
     with _lock:
         if _service is None:
             from sexo2.services.assistant import AssistantService
+            from sexo2.services.favorite_builds import FILE_NAME, FavoriteBuilds
+            from utils.core.paths import get_user_data_dir
 
             _service = AssistantService(
                 lcu,
                 _publish,
                 queue_id=lambda: getattr(state, "current_queue_id", None),
                 in_champ_select=lambda: getattr(state, "phase", None) in ("ChampSelect", "FINALIZATION"),
+                favorites=FavoriteBuilds(get_user_data_dir() / FILE_NAME),
             )
         return _service
 

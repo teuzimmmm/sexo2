@@ -1,4 +1,4 @@
-import io, json, queue, tempfile, unittest, zipfile
+import io, queue, tempfile, unittest, zipfile
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -61,7 +61,7 @@ class SelectionTests(unittest.TestCase):
         self.phase = "None"
         self.ids = []
         self.lcu.get.side_effect = lambda path: (
-            [{"id": 11, "name": "Master Yi"}, {"id": 22, "name": "Ashe"}]
+            [{"id": 11, "name": "Master Yi"}, {"id": 22, "name": "Ashe"}, {"id": 60022, "name": "Ashe"}]
             if path.endswith("champion-summary.json")
             else self.get(path)
         )
@@ -80,6 +80,24 @@ class SelectionTests(unittest.TestCase):
         count = self.lcu.set_my_selection_skin.call_count
         self.service.snapshot()
         self.assertEqual(self.lcu.set_my_selection_skin.call_count, count)
+
+    def test_automatic_draw_uses_the_weighted_selector_and_remembers_in_memory(self):
+        self.service.preferences.favorite(11, 11002, True)
+        with patch("friends.service.select_skin", side_effect=lambda skins, **kw: skins[0]) as select:
+            self.service.handle({"action": "automatic", "mode": "random"})
+        self.assertEqual(select.call_args.kwargs["favorites"], {11002})
+        self.assertEqual(select.call_args.kwargs["recent"], [])
+        self.assertEqual(self.service.recents(11), [self.state.historic_skin_id])
+        self.assertFalse(list(self.service.directory.glob("*recent*")))
+
+    def test_recent_memory_is_short_newest_first_and_deduplicated(self):
+        for sid in range(11001, 11020):
+            self.service.record(11, sid)
+        self.service.record(11, 11015)
+        recent = self.service.recents(11)
+        self.assertEqual(recent[0], 11015)
+        self.assertEqual(len(recent), len(set(recent)))
+        self.assertLessEqual(len(recent), 10)
 
     def test_favorites_only(self):
         self.service.preferences.favorite(11, 11002, True)

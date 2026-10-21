@@ -5,7 +5,7 @@ Registro estruturado de uma tentativa de aplicar skin.
 
 POR QUE ISTO EXISTE
 
-O log do Rose é um fluxo de linhas de várias threads ao mesmo tempo. Dá para
+O log do SEXO2 é um fluxo de linhas de várias threads ao mesmo tempo. Dá para
 descobrir o que houve, mas só lendo tudo e reconstruindo a ordem na cabeça. Foi
 exatamente o que aconteceu com a skin 11116 em 24/09: sobrou "forte associação,
 não prova" porque ninguém tinha, num lugar só, a linha do tempo de *uma*
@@ -28,7 +28,7 @@ REGRAS DE OURO
 - Nunca levanta exceção. Diagnóstico que derruba o programa que ele deveria
   diagnosticar é pior do que diagnóstico nenhum. Tudo aqui é best-effort.
 - Não muda comportamento. Só observa.
-- Não guarda nada identificável além do que já vai para o log do Rose.
+- Não guarda nada identificável além do que já vai para o log do SEXO2.
 """
 
 from __future__ import annotations

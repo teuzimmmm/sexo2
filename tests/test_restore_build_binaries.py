@@ -1,6 +1,5 @@
 """Build-only binaries come back from a previous SEXO2 folder; source plugins are untouched."""
 
-import os
 import sys
 import tempfile
 import unittest
@@ -17,20 +16,29 @@ class RestoreBuildBinariesTests(unittest.TestCase):
             internal = root / "baseline" / "SEXO2" / "_internal"
             for rel in (
                 "Pengu Loader/Pengu Loader.exe",
-                "Pengu Loader/core.dll",
+                "Pengu Loader/other.dll",
                 "injection/tools/mod-tools.exe",
                 "hosting-tools/cloudflared.exe",
-                "Pengu Loader/plugins/ROSE-UI/index.js",
+                "Pengu Loader/plugins/SEXO2-UI/index.js",
             ):
                 (internal / rel).parent.mkdir(parents=True, exist_ok=True)
                 (internal / rel).write_text(rel)
             target = root / "repo"
-            (target / "Pengu Loader/plugins/ROSE-UI").mkdir(parents=True)
-            (target / "Pengu Loader/plugins/ROSE-UI/index.js").write_text("source")
+            (target / "Pengu Loader/plugins/SEXO2-UI").mkdir(parents=True)
+            (target / "Pengu Loader/plugins/SEXO2-UI/index.js").write_text("source")
             copied = restore(root / "baseline", target)
             self.assertEqual(len(copied), 4)
             self.assertTrue((target / "injection/tools/mod-tools.exe").is_file())
-            self.assertEqual((target / "Pengu Loader/plugins/ROSE-UI/index.js").read_text(), "source")
+            self.assertEqual((target / "Pengu Loader/plugins/SEXO2-UI/index.js").read_text(), "source")
+
+    def test_a_core_dll_that_cannot_be_patched_stops_the_build(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            core = root / "baseline" / "SEXO2" / "_internal" / "Pengu Loader" / "core.dll"
+            core.parent.mkdir(parents=True)
+            core.write_bytes(b"not a dll")
+            with self.assertRaises(SystemExit):
+                restore(root / "baseline", root / "repo")
 
     def test_missing_baseline_fails(self):
         with tempfile.TemporaryDirectory() as temp, self.assertRaises(SystemExit):

@@ -18,8 +18,7 @@ se a identificação ou o arquivo da skin não vierem, não encerrar o jogo.
 
 Escolha: skin local disponível, exclusões respeitadas. Se a preferência é
 favorita/favoritas, usar favoritas quando presentes; sem favorita, aleatória.
-Não proibir repetições. Sorteio com peso por preço e chroma aleatório é proposta
-posterior, ainda não implementada.
+Não proibir repetições. Sorteio ponderado implementado (`friends/skin_selector.py`): categoria da skin, favoritas com prioridade máxima, cromas pela raridade que o cliente informa e memória curta de escolhas recentes (só em memória). Não validado em partida real.
 
 Preparo/reconexão: adquirir a trava existente de aplicação, conferir caminho/PID
 real do jogo, gravar gameId em arena-bravery-match.json antes de terminar esse

@@ -11,8 +11,8 @@ from .controller import HostController
 async def exchange(link):
     p = urlsplit(link)
     token = parse_qs(p.fragment)["rose"][0]
-    url = "wss://" + p.netloc + "/room?" + urlencode({"key": "rose-packaged-test-room", "access": token, "v": "1.4.7"})
-    logger = logging.getLogger("rose.host.selftest")
+    url = "wss://" + p.netloc + "/room?" + urlencode({"key": "sexo2-packaged-test-room", "access": token, "v": "1.4.7"})
+    logger = logging.getLogger("sexo2.host.selftest")
     logger.setLevel(logging.WARNING)
     kwargs = {
         "ssl": ssl.create_default_context(cafile=certifi.where()),

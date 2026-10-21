@@ -38,7 +38,7 @@ def eligible(skins, theme, excluded, available):
     result = []
     for skin in skins:
         sid = skin["skinId"]
-        if sid % 1000 == 0 or skin.get("chroma") or sid in excluded:
+        if sid % 1000 == 0 or sid in excluded:
             continue
         if aliases and not any(word in normalized(skin["name"]) for word in aliases):
             continue

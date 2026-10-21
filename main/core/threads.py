@@ -88,29 +88,6 @@ def initialize_threads(
     )
     thread_manager.register("LCU Monitor", t_lcu_monitor)
 
-    # Item value over the scoreboard: off unless enabled in config.ini (row positions need calibration)
-    if (get_config_option("Overlay", "gold_enabled", "false") or "").lower() == "true":
-        from sexo2.overlay.gold_overlay import Geometry, GoldOverlayThread
-
-        geometry = Geometry(
-            rows_top=get_config_float("Overlay", "gold_rows_top", Geometry.rows_top),
-            row_step=get_config_float("Overlay", "gold_row_step", Geometry.row_step),
-        )
-        t_gold = GoldOverlayThread(state, lcu, geometry)
-        thread_manager.register("Gold overlay", t_gold, stop_method=t_gold.stop)
-
-    # Statistics under augment cards (Arena, ARAM Mayhem): off unless enabled in config.ini
-    if (get_config_option("Overlay", "augments_enabled", "false") or "").lower() == "true":
-        from sexo2.augments.vision import Layout
-        from sexo2.overlay.augment_overlay import AugmentOverlayThread
-
-        layout = Layout(
-            card_top=get_config_float("Overlay", "augments_card_top", Layout.card_top),
-            icon_top=get_config_float("Overlay", "augments_icon_top", Layout.icon_top),
-        )
-        t_augments = AugmentOverlayThread(state, lcu, layout)
-        thread_manager.register("Augment overlay", t_augments, stop_method=t_augments.stop)
-
     # Start all threads
     thread_manager.start_all()
 

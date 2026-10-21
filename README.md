@@ -1,5 +1,7 @@
 # SEXO2
 
+> **Branch oficial: `galinacio`.** A `amolula` e a `sexoatividade` são histórico e não recebem mais trabalho (ver `docs/BRANCH-OFICIAL.md`).
+
 Aplicativo personalizado para nosso grupo no League of Legends, baseado em Rose.
 Um ponto de entrada no HUD reúne seleção de skins, favoritas, perfis, sorteio,
 sala privada e configurações. Configurações e skins pessoais ficam fora do programa.
@@ -21,7 +23,7 @@ Python 3.14; dependências em `requirements.txt`. Binários Pengu/LTK/mod-tools 
 cloudflared são recursos de build/distribuição, não segredos ou fontes próprias.
 Builds seguintes recuperam esses binários da baseline anterior do projeto.
 
-`python -m unittest discover -s tests -q` valida serviços e recuperação.
+`python scripts/run_tests.py -q` (Python) e `node --test tests/test_*.cjs` (plugins) validam serviços e recuperação.
 Os testes de navegador usam cliente e servidor simulados. A aparência e o uso
 real ainda precisam ser observados no cliente LoL.
 
@@ -31,8 +33,11 @@ Coletor independente com CLI, builds/runas, matchups, cache e filtro de risco.
 Consulte [como executar e os limites](docs/lolalytics/README.md).
 Esta integração não adiciona overlay nem importação no cliente LoL.
 
+## Documentação
+
+Índice em [docs/README.md](docs/README.md). Regras do projeto em [CLAUDE.md](CLAUDE.md).
+
 ## Créditos
 
 Base Rose, Pengu Loader, LTK e dependências mantêm suas licenças/atribuições.
-BORK é da Riot Games; o escudo do Galo é do Clube Atlético Mineiro.
-Veja `LICENSE` e as fontes em `assets/visual-provenance.json`.
+Veja `LICENSE`.

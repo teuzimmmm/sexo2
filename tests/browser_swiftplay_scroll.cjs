@@ -9,10 +9,10 @@ const path=require('node:path'),assert=require('node:assert/strict');
  await page.evaluate(()=>{
   window.callbacks={};window.pendingRequest=null;
   window.sample={type:'swiftplay-pins-state',active:true,editable:true,championIds:[1,2],champions:[1,2].map(id=>({championId:id,name:'Campeão '+id,pin:null,skins:Array.from({length:80},(_,i)=>({skinId:id*1000+i,name:'Skin '+String(i).padStart(2,'0')}))}))};
-  window.__roseBridge={ready:true,subscribe(t,cb){window.callbacks[t]=cb;},send(p){window.pendingRequest=p;}};
+  window.__sexo2Bridge={ready:true,subscribe(t,cb){window.callbacks[t]=cb;},send(p){window.pendingRequest=p;}};
   window.reply=()=>{const p=window.pendingRequest;window.pendingRequest=null;if(p)window.callbacks['swiftplay-pins-state']({...structuredClone(window.sample),requestId:p.requestId});};
  });
- await page.addScriptTag({path:path.resolve('Pengu Loader/plugins/ROSE-SwiftplayPins/index.js')});
+ await page.addScriptTag({path:path.resolve('Pengu Loader/plugins/SEXO2-SwiftplayPins/index.js')});
  await page.evaluate(()=>window.reply());
  await page.getByRole('button',{name:'SEXO2 · Fixar skins',exact:true}).click();
  await page.getByRole('button',{name:'Escolher',exact:true}).first().click();

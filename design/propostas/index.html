@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEXO2 · Laboratório UX</title>
+<style>
+@font-face{font-family:Oswald;src:url(sexo2-shared/oswald.woff2) format("woff2");font-weight:200 700}
+@font-face{font-family:Inter;src:url(sexo2-shared/inter.woff2) format("woff2");font-weight:100 900}
+*{box-sizing:border-box}
+body{margin:0;background:#0d0e10;color:#ececec;font:15px/1.5 Inter,"Segoe UI",sans-serif}
+main{max-width:880px;margin:0 auto;padding:48px 20px}
+h1,h2{font-family:Oswald,"Segoe UI",sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0}
+h1{font-size:36px}h2{font-size:22px;margin-bottom:6px}
+p{color:#b4b6ba;margin:6px 0}
+.grid{display:grid;gap:16px;margin-top:28px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+a.card{display:block;background:#15171a;border:1px solid #2a2d32;border-radius:8px;padding:20px;color:inherit;text-decoration:none}
+a.card:hover{background:#22252a}a.card:focus-visible{outline:2px solid #ececec;outline-offset:2px}
+small{color:#8d9096}
+</style></head><body><main>
+<h1>SEXO2 · Laboratório UX</h1>
+<p>Protótipos HTML offline com dados fictícios. Nenhum deles é aprovação de produto; só o overlay modo B é a referência aprovada.</p>
+<div class="grid">
+<a class="card" href="sexo2-ux-a/index.html"><h2>Proposta A</h2><p>Painel SEXO2 dentro do client: client base e seleção de campeões.</p></a>
+<a class="card" href="sexo2-overlays/index.html#b"><h2>Overlays</h2><p>Modo B aprovado; Blitz e Original A como estudo.</p></a>
+</div>
+<p style="margin-top:28px"><small>O painel de acompanhamento roda no terminal: <code>python3 sexo2-operacao/painel.py ver</code>. Veja <a href="sexo2-operacao/CONEXAO.md" style="color:#ececec">CONEXAO.md</a>.</small></p>
+</main></body></html>

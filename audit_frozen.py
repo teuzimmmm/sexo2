@@ -1,12 +1,12 @@
-"""Check compiled implementation matches source without launching Rose or LoL."""
+"""Check compiled implementation matches source without launching SEXO2 or LoL."""
 
 import types, sys
 from pathlib import Path
 from PyInstaller.archive.readers import CArchiveReader
 
 root = Path(__file__).resolve().parent
-bundle = root / (sys.argv[1] if len(sys.argv) > 1 else "dist-r6-release/Rose")
-archive = CArchiveReader(str(bundle / ("SEXO2.exe" if (bundle / "SEXO2.exe").exists() else "Rose.exe")))
+bundle = root / (sys.argv[1] if len(sys.argv) > 1 else "dist-r6-release/SEXO2")
+archive = CArchiveReader(str(bundle / "SEXO2.exe"))
 pyz = archive.open_embedded_archive("PYZ.pyz")
 
 
@@ -77,6 +77,6 @@ for file in (root / "Pengu Loader/plugins").rglob("*"):
 assert (bundle / "_internal/hosting-tools/cloudflared.exe").is_file()
 print("PASS: compiled modules and every plugin match source; integrated tunnel binary exists.")
 
-for name in ["galo.png", "galo.ico", "bork-black-v3.png", "sexo2.ico", "golden_rose.png", "update-source.json"]:
+for name in ["icon.png", "icon.ico", "sexo2.svg", "sexo2.ico", "update-source.json"]:
     assert (bundle / "_internal/assets" / name).read_bytes() == (root / "assets" / name).read_bytes(), name
 print("PASS: release visual assets and update source match.")

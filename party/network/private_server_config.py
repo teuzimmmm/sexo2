@@ -3,8 +3,14 @@
 import os
 import re
 from urllib.parse import urlsplit, urlunsplit, parse_qs
-from config import get_config_option, set_config_option
+from config import get_config_option
 from .relay_config import RELAY_URL
+
+
+def relay_url_from_environment():
+    """The relay address set in the environment (ROSE_RELAY_URL is the name older versions read)"""
+    return os.environ.get("SEXO2_RELAY_URL") or os.environ.get("ROSE_RELAY_URL") or None
+
 
 TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,128}$")
 
@@ -20,7 +26,9 @@ def parse_server_link(link):
         raise ValueError("Use o endereço completo da sala, copiado pelo anfitrião.")
     if parts.port not in (None, 443):
         raise ValueError("O endereço da sala deve usar a conexão segura padrão.")
-    token = parse_qs(parts.fragment).get("rose", [""])[0]
+    # "rose" is the fragment links already shared carry, and the one written; "sexo2" is also read
+    fragment = parse_qs(parts.fragment)
+    token = (fragment.get("rose") or fragment.get("sexo2") or [""])[0]
     if parts.fragment and not TOKEN_PATTERN.fullmatch(token):
         raise ValueError("A chave da sala está incompleta. Copie o endereço novamente.")
     endpoint = urlunsplit(("wss", parts.netloc.lower(), "", "", ""))
@@ -38,6 +46,6 @@ def save_server_link(link):
 
 
 def relay_settings():
-    endpoint = os.environ.get("ROSE_RELAY_URL") or get_config_option("Party", "relay_url", RELAY_URL) or RELAY_URL
+    endpoint = relay_url_from_environment() or get_config_option("Party", "relay_url", RELAY_URL) or RELAY_URL
     token = get_config_option("Party", "relay_access", "") or ""
     return endpoint.rstrip("/"), token

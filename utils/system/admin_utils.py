@@ -84,21 +84,41 @@ def request_admin_elevation():
     return True
 
 
+AUTOSTART_TASK_NAME = "SEXO2"
+# The task older versions created. It is still honoured, replaced on the next
+# registration and removed on unregistration.
+LEGACY_AUTOSTART_TASK_NAME = "Rose"
+
+
+def _task_exists(name):
+    result = subprocess.run(
+        ["schtasks", "/Query", "/TN", name],
+        capture_output=True,
+        text=True,
+        creationflags=subprocess.CREATE_NO_WINDOW,
+    )
+    return result.returncode == 0
+
+
+def _delete_task(name):
+    return subprocess.run(
+        ["schtasks", "/Delete", "/TN", name, "/F"],  # /F: without confirmation
+        capture_output=True,
+        text=True,
+        creationflags=subprocess.CREATE_NO_WINDOW,
+    )
+
+
 def is_registered_for_autostart():
     """
     Check if the application is registered in Task Scheduler for auto-start
+    (under its name or under the one older versions used)
 
     Returns:
         bool: True if registered, False otherwise
     """
     try:
-        result = subprocess.run(
-            ["schtasks", "/Query", "/TN", "Rose"],
-            capture_output=True,
-            text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-        return result.returncode == 0
+        return _task_exists(AUTOSTART_TASK_NAME) or _task_exists(LEGACY_AUTOSTART_TASK_NAME)
     except (subprocess.SubprocessError, OSError) as e:
         log.debug(f"Failed to check autostart registration: {e}")
         return False
@@ -107,7 +127,7 @@ def is_registered_for_autostart():
 def register_autostart():
     """
     Register the application in Windows Task Scheduler to auto-start at logon with admin rights.
-    This avoids UAC prompts on every startup.
+    This avoids UAC prompts on every startup. A task left by an older version is replaced.
 
     Returns:
         tuple: (success: bool, message: str)
@@ -121,19 +141,16 @@ def register_autostart():
     else:
         exe_path = Path(sys.argv[0]).resolve()
 
-    exe_dir = Path(exe_path).parent
-
-    # Check if already registered
-    if is_registered_for_autostart():
-        return True, "Already registered for auto-start"
-
     try:
+        if _task_exists(AUTOSTART_TASK_NAME):
+            return True, "Already registered for auto-start"
+
         # Create a scheduled task that runs at logon with highest privileges
         cmd = [
             "schtasks",
             "/Create",
             "/TN",
-            "Rose",  # Task name
+            AUTOSTART_TASK_NAME,
             "/TR",
             f'"{exe_path}"',  # Task to run
             "/SC",
@@ -146,6 +163,9 @@ def register_autostart():
         result = subprocess.run(cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
 
         if result.returncode == 0:
+            # The old task pointed at an executable that may no longer exist
+            if _task_exists(LEGACY_AUTOSTART_TASK_NAME):
+                _delete_task(LEGACY_AUTOSTART_TASK_NAME)
             return True, "Successfully registered for auto-start with admin rights"
         else:
             return False, f"Failed to register: {result.stderr}"
@@ -156,7 +176,8 @@ def register_autostart():
 
 def unregister_autostart():
     """
-    Remove the application from Windows Task Scheduler auto-start.
+    Remove the application from Windows Task Scheduler auto-start
+    (the task with its name and the one older versions created).
 
     Returns:
         tuple: (success: bool, message: str)
@@ -164,26 +185,22 @@ def unregister_autostart():
     if not is_admin():
         return False, "Administrator privileges required to unregister auto-start"
 
-    # Check if registered
-    if not is_registered_for_autostart():
-        return True, "Not registered for auto-start"
-
     try:
-        # Delete the scheduled task
-        cmd = [
-            "schtasks",
-            "/Delete",
-            "/TN",
-            "Rose",  # Task name
-            "/F",  # Force delete without confirmation
-        ]
+        failures = []
+        found = False
+        for name in (AUTOSTART_TASK_NAME, LEGACY_AUTOSTART_TASK_NAME):
+            if not _task_exists(name):
+                continue
+            found = True
+            result = _delete_task(name)
+            if result.returncode != 0:
+                failures.append(result.stderr)
 
-        result = subprocess.run(cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
-
-        if result.returncode == 0:
-            return True, "Successfully unregistered from auto-start"
-        else:
-            return False, f"Failed to unregister: {result.stderr}"
+        if not found:
+            return True, "Not registered for auto-start"
+        if failures:
+            return False, f"Failed to unregister: {failures[0]}"
+        return True, "Successfully unregistered from auto-start"
 
     except Exception as e:
         return False, f"Failed to unregister auto-start: {e}"

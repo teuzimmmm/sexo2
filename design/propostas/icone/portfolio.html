@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfólio de ícones</title>
+<style>
+@font-face{font-family:Oswald;src:url(../../fonts/oswald-latin-wght-normal.woff2) format("woff2");font-weight:200 700}
+@font-face{font-family:Inter;src:url(../../fonts/inter-latin-wght-normal.woff2) format("woff2");font-weight:100 900}
+*{box-sizing:border-box;margin:0}
+body{background:#0d0e10;color:#ececec;font:14px/1.5 Inter,sans-serif;padding:24px 16px 48px;max-width:1200px;margin:auto}
+h1,h2{font-family:Oswald;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+h1{font-size:26px}h2{font-size:18px;margin:26px 0 4px}
+p,li{color:#a4a9b0;font-size:13px}.lead{margin:8px 0 14px;max-width:800px}
+ul{margin:6px 0 0 18px}
+.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:10px}
+.card{background:#15171a;border:1px solid #2a2d32;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.card b{font:600 15px Oswald;text-transform:uppercase;letter-spacing:.03em}
+.card span{font-size:12px;color:#a4a9b0;text-align:center}
+.sizes{display:flex;gap:8px;align-items:flex-end}
+a{color:#a4a9b0}
+.light{background:#f3f3f3;border-radius:6px;padding:6px 10px;display:flex;gap:8px;align-items:center}
+</style>
+<h1>Portfólio de ícones · rodada 2</h1>
+<p class="lead">As duas direções de que você gostou, refeitas: o traço mais sério e ameaçador, e o galo angular mais simples. Cada opção aparece grande, em 48, 32 e 16 px e numa barra clara. Nada aqui está aprovado; para usar uma, eu gero o .ico e troco com <code>scripts/apply_icon.py</code>.</p>
+<h2>O que a pesquisa trouxe</h2>
+<ul>
+<li>Para parecer ameaçador e não fofo: sobrancelha que corta o olho, olho em fenda e com ângulo, bico afiado, formas retas no lugar de redondas, traço mais grosso e poucas linhas internas (<a href="https://scalebranding.com/product/409007">exemplo em traço único</a>, <a href="https://madegooddesigns.com/esports-logo-design/">logos de e-sports</a>).</li>
+<li>Para simplificar mascote angular: poucos planos, detalhe por espaço vazio em vez de penas desenhadas, olho como único detalhe, 2 ou 3 cores (<a href="https://scalebranding.com/product/420774">exemplo</a>; o falcão do Atlanta Hawks reduzido a um perfil é a referência clássica, <a href="https://www.sportslogos.net/logos/view/22084522016/Atlanta-Hawks-Logo/2016/Alternate-Logo">aqui</a>).</li>
+<li>DraftGap: o site não abriu daqui e o repositório não tem o ícone, então não deu para usar como referência visual.</li>
+</ul>
+<h2>Traço, sério</h2>
+<div class="row" id="t"></div>
+<h2>Angular, simples</h2>
+<div class="row" id="a"></div>
+<script>
+const R="#d2412f",W="#f2efe9",K="#141518";
+const tile=`<rect width="256" height="256" rx="58" fill="${K}"/>`;
+const ln=(d,w=16)=>`<path d="${d}" fill="none" stroke="${W}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+// --- Traço, sério
+const T1=ln("M86 102 L94 66 L114 88 L128 56 L144 86 L166 66 L168 100")+ln("M168 100 C130 86 82 98 72 142 C62 192 104 214 140 206 C164 200 174 182 178 160")+ln("M178 116 L222 136 L178 150")+ln("M118 118 L160 130",14)+`<path d="M138 132 L160 134 L146 146 Z" fill="${R}"/>`;
+const T2=ln("M80 104 L90 62 L112 86 L128 50 L146 84 L170 62 L170 104")+ln("M170 104 C128 88 80 100 70 146 C62 190 100 214 138 206")+ln("M176 112 L228 128 L180 148 L176 172")+ln("M112 116 L166 132",16)+`<path d="M136 136 L164 138 L146 152 Z" fill="${R}"/>`;
+const T3=ln("M84 106 L96 60 L120 92 L140 56 L156 96","20")+ln("M156 96 L186 110 L230 128 L186 146 L170 180 L120 214 L74 196 L60 150 L84 106","20")+`<path d="M118 132 L170 122 L150 148 Z" fill="${R}"/>`;
+const T4=ln("M92 98 L100 62 L120 84 L132 54 L148 84 L168 66 L170 102",14)+ln("M170 102 C126 86 76 104 70 150 C66 188 98 210 136 204",14)+ln("M174 110 L224 132 L176 150",14)+ln("M104 112 L170 134",14)+`<circle cx="146" cy="142" r="9" fill="${R}"/>`;
+// --- Angular, simples
+const crest=c=>`<path fill="${c}" d="M96 98 L80 46 L114 76 L122 28 L146 72 L176 40 L176 90 Z"/>`;
+const head=`<path fill="${W}" d="M86 102 L178 92 L198 112 L204 136 L184 160 L134 178 L92 172 L72 140 Z"/>`;
+const beak=`<path fill="${W}" d="M198 110 L244 130 L202 144 Z"/>`;
+const eye=`<path fill="${K}" d="M138 118 L178 108 L168 130 Z"/>`;
+const wattle=`<path fill="${R}" d="M180 162 L194 192 L174 214 L158 190 L164 170 Z"/>`;
+const neck=`<path fill="${W}" d="M72 140 L134 178 L124 222 L102 200 L78 226 L72 194 L50 202 Z"/>`;
+const A1=crest(R)+head+beak+eye+wattle;
+const A2=crest(R)+head+beak+eye+wattle+neck;
+const A3=crest(R)+head+beak+eye;
+const A4=`<g transform="translate(-4 8)">${crest(R)}<path fill="${W}" d="M86 102 L178 92 L246 128 L190 150 L150 182 L96 176 L68 134 Z"/><path fill="${K}" d="M134 116 L180 108 L166 132 Z"/></g>`;
+const A5=`<g transform="translate(-4 8)"><path fill="${W}" d="M96 98 L80 46 L114 76 L122 28 L146 72 L176 40 L176 90 L178 92 L246 128 L190 150 L150 182 L96 176 L68 134 L86 102 Z"/><path fill="${R}" d="M134 116 L180 108 L166 132 Z"/></g>`;
+
+const sv=(v,s)=>`<svg width="${s}" height="${s}" viewBox="0 0 256 256">${tile}${v}</svg>`;
+const card=([id,name,text,v])=>`<div class="card">${sv(v,150)}<b>${id} · ${name}</b><span>${text}</span><div class="sizes">${sv(v,48)}${sv(v,32)}${sv(v,16)}</div><div class="light">${sv(v,24)}${sv(v,16)}</div></div>`;
+document.getElementById('t').innerHTML=[
+ ["T1","Sobrancelha","Crista em zigue-zague, sobrancelha descendo sobre o olho vermelho em fenda.",T1],
+ ["T2","Bico de gancho","Mais tenso: bico que desce em gancho e cabeça aberta embaixo.",T2],
+ ["T3","Contorno angular","A cabeça inteira em linha reta e grossa, olho vermelho em lâmina. O mais ameaçador.",T3],
+ ["T4","Olhar fixo","Traço mais fino, sobrancelha longa e olho vermelho redondo.",T4],
+].map(card).join('');
+document.getElementById('a').innerHTML=[
+ ["A1","Galo e barbela","Crista, cabeça, bico, olho e barbela; sem as penas do pescoço.",A1],
+ ["A2","Com pescoço","O A1 com o pescoço em três pontas.",A2],
+ ["A3","Só a cabeça","Crista vermelha e cabeça branca, nada mais.",A3],
+ ["A4","Cabeça e bico juntos","Cabeça e bico numa peça só, crista vermelha.",A4],
+ ["A5","Silhueta","Crista, cabeça e bico numa silhueta branca; só o olho é vermelho. O mais simples.",A5],
+].map(card).join('');
+</script>
+</html>

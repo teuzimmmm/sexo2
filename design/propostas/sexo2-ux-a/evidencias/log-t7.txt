@@ -1,0 +1,22 @@
+['nav|Mods', 'nav|Sala', 'nav|Configurações', 'nav|Suporte', 'nav|Seleção', 'roomCopy|', 'roomAdd|', 'roomLeave|']
+OK   A08 Tab percorre navegacao e conteudo 
+OK   A08 Shift+Tab volta nav|Seleção
+file:///Users/matheus/Documents/tremdolol/sexo2-lab/a/design/propostas/sexo2-ux-a/index.html#sala|complete|true|53701
+OK   A08 Enter abre modal 
+OK   A08 foco preso no modal (Tab/Shift+Tab) [True, True, True, True, True, True, True, True, True, True, True, True]
+OK   A08 Escape fecha modal 
+OK   A08 foco restaurado ao abridor coordAsk|
+OK   A08 foco mantido apos acao roomAdd|
+OK   A08 drawer abre e foca primeiro controle pref-autoaceite
+OK   A08 Escape fecha drawer e devolve foco qpToggle|
+OK   A07 anel de foco claro 
+{"w":452,"h":492,"sx":452,"sy":492,"compact":true}
+OK   A07 compacto 452x492 sem rolagem de pagina 
+OK   A06 compacto -> config completa e volta 
+OK   A06 volta ao compacto 
+OK   A07 820x560 Skins sem estouro horizontal 
+OK   A07 820x560 Mods sem estouro horizontal 
+OK   A07 820x560 Sala sem estouro horizontal 
+OK   A07 820x560 Configurações sem estouro horizontal 
+OK   A07 820x560 Suporte sem estouro horizontal 
+0 falhas de 18

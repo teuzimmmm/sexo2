@@ -19,17 +19,20 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
+import logging
 import re
+from time import sleep
 from typing import Any
 
 from lcu.features.lcu_item_sets import ItemSetsError, LCUItemSets, validate_document
 from lolalytics.builds import BuildPage
 from lolalytics.item_pages import plan_assistant_page
 
+log = logging.getLogger(__name__)
+
 MANAGED_UID = "sexo2-managed"
 MANAGED_TITLE_PREFIX = "SEXO2"
 _LEGACY_UID = re.compile(r"sexo2-\d+-\d+")
-_COMPARED_FIELDS = ("uid", "title", "associatedChampions", "associatedMaps", "blocks")
 
 
 def is_managed(item_set: Any) -> bool:
@@ -95,8 +98,44 @@ def _others(document: dict) -> list[dict]:
     return [item for item in document["itemSets"] if not is_managed(item)]
 
 
-def _essentials(item_set: dict) -> dict:
-    return {name: item_set.get(name) for name in _COMPARED_FIELDS}
+def _content(item_set: dict) -> tuple:
+    """What a set shows in the shop, as the client returns it after a write.
+
+    The client fills in defaults on what it stores (block fields such as
+    ``hideIfSummonerSpell``, ids as strings or numbers), so a read-back is
+    compared on this rather than field for field.
+    """
+
+    def number(value: Any) -> Any:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return value
+
+    blocks = item_set.get("blocks") or []
+    return (
+        item_set.get("uid"),
+        item_set.get("title"),
+        tuple(sorted(number(c) for c in item_set.get("associatedChampions") or [])),
+        tuple(sorted(number(m) for m in item_set.get("associatedMaps") or [])),
+        tuple(
+            (
+                block.get("type"),
+                tuple((number(i.get("id")), number(i.get("count", 1))) for i in block.get("items") or []),
+            )
+            for block in blocks
+            if isinstance(block, dict)
+        ),
+    )
+
+
+def _confirmed(after: dict, before: dict, new_set: dict) -> bool:
+    managed = [item for item in after["itemSets"] if is_managed(item)]
+    return (
+        [_content(item) for item in _others(after)] == [_content(item) for item in _others(before)]
+        and len(managed) == 1
+        and _content(managed[0]) == _content(new_set)
+    )
 
 
 def import_item_set(api: LCUItemSets, new_set: dict) -> ItemSetImportResult:
@@ -126,14 +165,20 @@ def import_item_set(api: LCUItemSets, new_set: dict) -> ItemSetImportResult:
         api.write(summoner_id, merged)
         written = True
         after = api.read(summoner_id)
+        if not _confirmed(after, before, new_set):
+            sleep(0.5)  # the client can answer a read right after a write with the old document
+            after = api.read(summoner_id)
     except ItemSetsError as error:
         return ItemSetImportResult(confirmed=False, written=written, error=f"lcu_{error.code}")
     except ValueError:
         return ItemSetImportResult(confirmed=False, written=written, error="invalid_sets")
-    managed_after = [item for item in after["itemSets"] if is_managed(item)]
-    confirmed = (
-        _others(after) == _others(before)
-        and len(managed_after) == 1
-        and _essentials(managed_after[0]) == _essentials(new_set)
-    )
+    confirmed = _confirmed(after, before, new_set)
+    if not confirmed:
+        managed = [item for item in after["itemSets"] if is_managed(item)]
+        log.info(
+            "[ITEM_SETS] read-back differs: %d managed sets, sent %s, read %s",
+            len(managed),
+            _content(new_set),
+            _content(managed[0]) if managed else None,
+        )
     return ItemSetImportResult(confirmed=confirmed, written=True, error=None if confirmed else "not_confirmed")

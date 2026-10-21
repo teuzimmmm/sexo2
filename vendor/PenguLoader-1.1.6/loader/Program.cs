@@ -8,7 +8,7 @@ namespace PenguLoader
 {
     public static class Program
     {
-        public static string Name => "Rose Loader";
+        public static string Name => "SEXO2 Loader";
         public static string HomepageUrl => "https://ko-fi.com/roseapp";
         public static string DiscordUrl => "https://discord.gg/roseskins";
         public static string GithubRepo => "Alban1911/Rose";
@@ -61,7 +61,7 @@ namespace PenguLoader
                         case "--help":
                         case "-h":
                         case "/?":
-                            return Notify("Rose Loader " + VERSION + "\n\nCommands: --install, --uninstall, --status, --set-league-path <path>, --restart-client", silent, MessageBoxImage.None);
+                            return Notify("SEXO2 Loader " + VERSION + "\n\nCommands: --install, --uninstall, --status, --set-league-path <path>, --restart-client", silent, MessageBoxImage.None);
                         default:
                             return RunApplication(createdNew);
                     }
@@ -96,7 +96,7 @@ namespace PenguLoader
         private static int HandleInstall(bool createdNew, bool active, bool silent)
         {
             // Activation must not replace a module that is already loaded.
-            // Deactivation is safe here: Rose removes IFEO first, then restarts
+            // Deactivation is safe here: the app removes IFEO first, then restarts
             // the League client so the loaded module is unloaded.
             if (!createdNew || (active && Module.IsLoaded))
             {
@@ -106,7 +106,7 @@ namespace PenguLoader
             }
 
             if (!Module.SetActive(active))
-                return Notify("Failed to " + (active ? "activate" : "deactivate") + " Rose.", silent, MessageBoxImage.Error, 1);
+                return Notify("Failed to " + (active ? "activate" : "deactivate") + " SEXO2.", silent, MessageBoxImage.Error, 1);
 
             return Notify("Pengu has been " + (active ? "activated" : "deactivated") + ".",
                 silent, MessageBoxImage.Information);

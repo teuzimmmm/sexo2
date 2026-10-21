@@ -16,7 +16,6 @@ try:
 except ImportError:
     Image = None
 
-from config import APP_VERSION
 from utils.core.logging import get_named_logger
 from utils.core.paths import get_asset_path
 from utils.system.win32_base import (
@@ -46,7 +45,7 @@ class UpdateDialog(Win32Window):
 
     def __init__(self) -> None:
         super().__init__(
-            class_name="RoseUpdateDialog",
+            class_name="SEXO2UpdateDialog",
             window_title="SEXO2",
             width=420,
             height=120,
@@ -235,11 +234,11 @@ class UpdateDialog(Win32Window):
     def _prepare_window_icon(self) -> Optional[str]:
         png_path: Optional[Path] = None
         try:
-            png_candidate = get_asset_path("galo.png")
+            png_candidate = get_asset_path("icon.png")
             if png_candidate.exists():
                 png_path = png_candidate
         except Exception as exc:  # noqa: BLE001
-            updater_log.warning(f"Failed to resolve tray_ready.png icon: {exc}")
+            updater_log.warning(f"Failed to resolve icon.png: {exc}")
 
         if png_path is not None and Image is not None:
             try:

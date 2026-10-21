@@ -7,8 +7,7 @@ Chroma Panel Manager - Coordinates chroma panel and button widgets
 
 import threading
 from typing import Callable, List, Dict
-from utils.core.logging import get_logger, log_event, log_action, log_success
-from utils.core.utilities import is_default_skin, is_owned, is_base_skin_owned
+from utils.core.logging import get_logger, log_event
 
 log = get_logger()
 
@@ -18,7 +17,7 @@ class ChromaPanelManager:
 
     NOTE: The legacy PyQt6 visual chroma panel has been removed.
     This manager now only tracks chroma state for the JavaScript plugins
-    (ROSE-ChromaWheel, ROSE-RandomSkin, ROSE-HistoricMode, etc.) and no longer
+    (SEXO2-ChromaWheel, SEXO2-RandomSkin, SEXO2-HistoricMode, etc.) and no longer
     creates or shows any Qt widgets.
     """
 
@@ -305,7 +304,6 @@ class ChromaPanelManager:
         """Clean up resources (called on app exit or UI destruction)"""
         try:
             # Try to acquire lock with timeout to avoid deadlock
-            import time
 
             lock_acquired = False
             try:

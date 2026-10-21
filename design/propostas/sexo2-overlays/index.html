@@ -1,0 +1,82 @@
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SEXO2 — laboratório de overlays</title>
+<style>
+@font-face{font-family:Inter;src:url('../sexo2-shared/inter.woff2') format('woff2');font-weight:100 900}
+@font-face{font-family:Oswald;src:url('../sexo2-shared/oswald.woff2') format('woff2');font-weight:200 700}
+*{box-sizing:border-box}
+:root{--bg:#0d0e10;--surf:#15171a;--hover:#22252a;--line:#2a2d32;--txt:#ececec;--mut:#9a9da3;--focus:#ececec}
+body{margin:0;background:var(--bg);color:var(--txt);font:13px Inter,Arial,sans-serif}
+header{padding:12px 24px;display:flex;align-items:center;gap:8px 22px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+h1{font:500 24px Oswald,Arial,sans-serif;margin:0;letter-spacing:.02em}
+h2{font:500 16px Oswald,Arial,sans-serif;margin:0 0 8px;letter-spacing:.03em;text-transform:uppercase}
+a{color:var(--txt);text-decoration:underline;text-underline-offset:3px}
+button,select,input{font:inherit}
+button,select{background:var(--surf);color:var(--txt);border:1px solid var(--line);padding:8px 12px;border-radius:5px;cursor:pointer;min-height:36px}
+button:hover,select:hover{background:var(--hover)}
+button[aria-pressed=true]{background:var(--hover);border-color:var(--txt);font-weight:600}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+main{padding:16px 24px 28px;max-width:1280px;margin:auto}
+.controls{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-bottom:12px}
+.controls label{display:flex;align-items:center;gap:6px}
+.small{font-size:12px;color:var(--mut)}
+.tag{display:inline-block;font:500 12px Oswald,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border:1px solid var(--line);border-radius:3px;margin-right:8px;color:var(--txt)}
+.tag.ok{border-color:var(--txt)}
+/* Palco do overlay: cores da exceção aprovada (overlay-aprovado.png), não do Hub. */
+.stage{width:100%;overflow:auto;background:radial-gradient(ellipse at center,#243c35,#0c181c 75%);border:1px solid #35464d}
+.stage svg{width:100%;min-width:760px;height:auto;display:block}
+@media(min-width:901px){.stage{aspect-ratio:16/9;overflow:hidden}.stage svg{height:100%}}
+#feedback{margin-top:10px;min-height:18px}
+.notes{display:grid;grid-template-columns:1.2fr 1fr;gap:20px;margin-top:14px}
+.notes p{line-height:1.5;margin:0 0 8px}
+.reference{height:132px;max-width:100%;object-fit:contain;object-position:left top}
+.cmp{margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+.cmp .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cmp figure{margin:0}.cmp figcaption{margin-bottom:6px;min-height:34px}
+.cmp .stage{aspect-ratio:1356/760;overflow:hidden}.cmp .stage svg{min-width:0;height:100%}.cmp img{width:100%;aspect-ratio:1356/760;object-fit:fill;display:block;border:1px solid #35464d}
+@media(max-width:900px){main{padding:12px 16px 24px}.notes,.cmp .pair{grid-template-columns:1fr}header{padding:10px 16px}}
+</style>
+<header><h1>Overlays / ouro em itens</h1><span class="small">LABORATÓRIO · dados fictícios · placar reconstituído</span><a href="../sexo2-ux-a/index.html">Proposta A</a></header>
+<main><div class="controls" role="group" aria-label="Modo da prévia"><button data-mode="b" aria-pressed="true">Original B · aprovado</button><button data-mode="blitz" aria-pressed="false">Estudo · Reprodução Blitz</button><button data-mode="a" aria-pressed="false">Estudo · Original A</button></div>
+<div class="controls" role="group" aria-label="Dados e exibição"><label>Cenário <select id="scenario"><option value="normal">Vantagens mistas (imagem aprovada)</option><option value="adv">Vantagem da sua equipe</option><option value="dis">Desvantagem da sua equipe</option><option value="tie">Empate</option><option value="missing">Preço indisponível</option></select></label><label>Sua equipe <select id="side"><option value="right">À direita</option><option value="left">À esquerda</option></select></label><label>Fonte <select id="font"><option value="Inter">Inter Bold</option><option value="Oswald">Oswald</option><option value="Arial">Arial Bold</option></select></label><label><input id="visible" type="checkbox" checked> Exibir no placar</label><span class="small">Esc oculta o overlay</span></div>
+<div class="stage" id="stage" aria-label="Prévia de placar de 1280 por 720"></div>
+<div id="feedback" role="status"></div><div class="notes"><div><p id="description"></p><p class="small">Valores representam ouro investido em itens, não ouro disponível nem força total do campeão. Diferença = ouro em itens da sua equipe menos o do adversário na rota; positivo (vantagem) vai para o lado da sua equipe, negativo (desvantagem) para o lado oposto. Azul: sua equipe; vermelho: adversários. “—” significa preço de item indisponível: a rota e o total ficam indisponíveis, nunca zero.</p><p class="small">Escala da prévia: <b>1280 × 720</b> (viewBox). Geometria reconstituída; a posição no cliente real depende de resolução, escala de HUD e calibração no Windows. Não há validação no Windows, em partida real nem de FPS. Os números 16 e 8 no topo são fixos da imagem aprovada (fictícios, sem cálculo).</p></div><div><a href="blitz-reference.webp" target="_blank" rel="noopener" aria-label="Abrir referência oficial do Blitz em tamanho original"><img class="reference" src="blitz-reference.webp" alt="Referência oficial Blitz: totais 20125 e 23950, diferença 3825, losango e seta azul"></a><p class="small">Referência visual (estudo): <a href="https://blitz.gg/overlays" target="_blank" rel="noopener">Blitz / Item Value Difference</a>. A reprodução conserva faixa, losango, seta e diferença inferior; não é equivalência pixel a pixel. A fonte original não foi identificada.</p></div></div>
+<section class="cmp" aria-labelledby="cmph"><h2 id="cmph">Comparação lado a lado · mesma escala</h2><div class="pair"><figure><figcaption class="small">Imagem aprovada (evidencias/overlay-aprovado.png)</figcaption><img src="evidencias/overlay-aprovado.png" alt="Imagem aprovada do overlay modo B: total ITENS -210 ouro e diferenças -340, +770, -640, +540, -540"></figure><figure><figcaption class="small">Render do laboratório (recorte de 1167×654 do viewBox, mesmo enquadramento da imagem): modo B, Inter, vantagens mistas, equipe à direita</figcaption><div class="stage" id="stage2" aria-label="Render de referência do modo B"></div></figure></div></section></main>
+<script>
+const $=s=>document.querySelector(s),stage=$('#stage'),feedback=$('#feedback'),MODES=['a','b','blitz'];
+const KEY='sexo2.overlays.prefs';
+const store={get(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return{}}},set(o){try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}};
+const ENEMY=[9350,8230,10750,11200,6320],ALLY0=[9010,9000,10110,11740,5780];
+const OFF={normal:[0,0,0,0,0],adv:[300,500,200,650,420],dis:[-300,-500,-200,-650,-420]};
+// Cálculo puro: gold = null significa preço indisponível (não vira zero).
+function calc(enemy,ally){const d=enemy.map((e,i)=>ally[i]==null||e==null?null:ally[i]-e),ok=d.every(x=>x!==null);return{d,total:ok?d.reduce((a,b)=>a+b,0):null,enemyTotal:ok?enemy.reduce((a,b)=>a+b,0):null,allyTotal:ok?ally.reduce((a,b)=>a+b,0):null}}
+function scenarioData(sc){let ally,enemy=ENEMY.slice();if(sc==='tie')ally=ENEMY.slice();else if(sc==='adv'||sc==='dis')ally=ENEMY.map((e,i)=>e+OFF[sc][i]);else ally=ALLY0.slice();if(sc==='missing')ally[2]=null;return calc(enemy,ally)}
+window.sexo2Calc={calc,scenarioData};
+const sg=v=>v>0?'+'+v:String(v);
+const desc={b:'Original B — aprovado: diferenças numéricas assinadas com barra discreta por rota e total no topo. Composição, cores e tipografia da imagem aprovada; modo inicial.',blitz:'ESTUDO, não aprovado — Reprodução Blitz: faixa de totais, moldura dourada, losango central com seta para o lado em vantagem e diferença absoluta abaixo. Inter Bold aproxima a massa dos números da referência; Oswald é mais estreita e fica disponível para comparação.',a:'ESTUDO, não aprovado — Original A: caixa compacta por rota com seta e diferença, mais rápida de ler, com menos informação que o B.'};
+function build(p,vb='0 0 1280 720'){const{mode,font,scenario,on,side}=p,R=side==='right',X=x=>R?x:1280-x,RX=(x,w)=>R?x:1280-x-w,AN=a=>R?a:(a==='start'?'end':a==='end'?'start':a),DX=R?1:-1;
+const{d,total,enemyTotal,allyTotal}=scenarioData(scenario),blue='#68b8ee',red='#e8534d',miss=total===null;
+const txt=(x,y,s,color='#cbd3d9',size=17,anchor='middle')=>`<text x="${X(x)}" y="${y}" text-anchor="${AN(anchor)}" dominant-baseline="middle" fill="${color}" font-family="${font},Arial" font-weight="700" font-size="${size}">${s}</text>`;
+const raw=(x,y,t,c,z)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="${c}" font-family="${font},Arial" font-weight="700" font-size="${z}">${t}</text>`;
+const diamond=(x,y,v,large=false)=>{const r=large?27:21,c=v>=0?blue:red,dir=(v>0?1:-1)*DX;return `<path d="M${x-r-5} ${y}L${x} ${y-r-5}L${x+r+5} ${y}L${x} ${y+r+5}Z" fill="#070d10"/><path d="M${x-r} ${y}L${x} ${y-r}L${x+r} ${y}L${x} ${y+r}Z" fill="#14252c" stroke="#696548" stroke-width="3"/>${v?`<path d="M${x-6*dir} ${y-10}L${x+8*dir} ${y}L${x-6*dir} ${y+10}Z" fill="${c}"/>`:txt(640,y,'=',c,19)}${txt(640,y+r+17,Math.abs(v),v===0?'#b5bec7':c,large?24:19)}`};
+let svg=`<rect x="150" y="92" width="980" height="542" rx="3" fill="#0a181e" stroke="#9b8656" stroke-width="3"/><path d="M153 178H1127M640 180V630" stroke="#5d5b42"/><path d="M610 94L640 64L670 94" fill="#14252b" stroke="#9b8656" stroke-width="4"/>${txt(640,95,'◆','#b6a16c',34)}${txt(440,159,'16',blue,27)}${txt(840,159,'8',red,27)}`;
+const allyN=['Garen','Vi','Ahri','Jinx','Thresh'],enemyN=['Darius','Lee Sin','Zed','Kai’Sa','Lulu'],ic=['#714c39','#36596e','#6c536a'],ic2=['#36596e','#6c536a','#714c39'];
+for(let i=0;i<5;i++){const y=226+i*82;svg+=`<rect x="164" y="${y-31}" width="952" height="65" fill="${i%2?'#11242b':'#142931'}"/>`+txt(190,y,enemyN[i],'#e6b4ae',17,'start')+txt(1090,y,allyN[i],'#a9cfed',17,'end');for(let j=0;j<3;j++)svg+=`<rect x="${RX(340+j*39,31)}" y="${y-17}" width="31" height="31" rx="3" fill="${ic[j]}" stroke="#9e8b55"/><rect x="${RX(825+j*39,31)}" y="${y-17}" width="31" height="31" rx="3" fill="${ic2[j]}" stroke="#9e8b55"/>`;svg+=txt(500,y,'3/2/6','#aab7bc',14)+txt(780,y,'4/2/5','#aab7bc',14);
+if(on){const v=d[i];if(v===null)svg+=txt(640,y,'—','#acb5bc',24);else if(mode==='blitz')svg+=diamond(640,y-10,v);else if(mode==='a'){svg+=`<rect x="597" y="${y-16}" width="86" height="32" rx="5" fill="#101d2b" stroke="#344861"/>`+txt(640,y,v===0?'0':`${(v>0)===R?'▸':'◂'}${v>0?' +':' −'}${Math.abs(v)}`,v>=0?blue:red,17)}else{const bar=Math.min(58,Math.abs(v)/12);svg+=`<path d="M570 ${y+15}H710" stroke="#3c494b" stroke-width="4"/>`+(v?`<path d="M${X(640)} ${y+15}h${(v>0?1:-1)*DX*bar}" stroke="${v>0?'#97d1b8':'#edaf8c'}" stroke-width="4"/>`:'')+txt(640,y-5,v===0?'0':sg(v),'#e4eadf',17)}}}
+if(on){if(mode==='blitz'){svg+=`<rect x="478" y="102" width="324" height="38" fill="#090e11" stroke="#090d0e" stroke-width="5"/><rect x="483" y="106" width="314" height="29" fill="#182c31" stroke="#817a55"/>`;svg+=miss?txt(640,122,'— TOTAL INDISPONÍVEL','#acb5bc',17):raw(498,121,'●','#bca05d',22)+raw(553,122,R?enemyTotal:allyTotal,R?red:blue,23)+raw(706,121,'●','#bca05d',22)+raw(757,122,R?allyTotal:enemyTotal,R?blue:red,23)+diamond(640,120,total,true)}
+else svg+=`<rect x="510" y="102" width="260" height="35" rx="5" fill="${mode==='a'?'#101d2b':'#253b35'}"/>`+txt(640,120,miss?'TOTAL INDISPONÍVEL':total===0?'0':sg(total),mode==='a'?blue:'#c4dfba',19)}
+return `<svg viewBox="${vb}" role="img" aria-label="${on?'Comparação demonstrativa de ouro em itens por rota, modo '+mode:'Placar sem overlay'}">${svg}</svg>`}
+function parseHash(){const parts=location.hash.slice(1).split('&'),m=parts[0],o={mode:MODES.includes(m)?m:'b'};parts.slice(1).forEach(kv=>{const[k,v]=kv.split('=');o[k]=decodeURIComponent(v||'')});return o}
+let mode='b';
+function applyHash(){const h=parseHash();mode=h.mode;const set=(id,v)=>{const el=$('#'+id);if(v!==undefined&&[...el.options].some(o=>o.value===v))el.value=v};set('scenario',h.cenario);set('side',h.lado);set('font',h.fonte);if(h.oculto!==undefined)$('#visible').checked=h.oculto!=='1';render(false)}
+function render(save=true){const p={mode,font:$('#font').value,scenario:$('#scenario').value,side:$('#side').value,on:$('#visible').checked};
+document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode));
+$('#description').innerHTML=`<span class="tag ${mode==='b'?'ok':''}">${mode==='b'?'Aprovado':'Estudo'}</span>`+desc[mode];
+stage.innerHTML=build(p);$('#stage2').innerHTML=build({mode:'b',font:'Inter',scenario:'normal',side:'right',on:true},'76 21 1167 654');
+const sd=scenarioData(p.scenario);
+feedback.textContent=!p.on?'Overlay oculto. Marque “Exibir no placar” para exibir de novo; cenário, lado e modo são mantidos.':p.scenario==='missing'?'Preço de item desconhecido: a rota sem preço e o total estão indisponíveis (não são zero).':'Simulação: nenhuma conexão com o jogo. '+(sd.total===0?'Empate em ouro de itens.':sd.total>0?'Sua equipe em vantagem de ouro em itens ('+sg(sd.total)+').':'Sua equipe em desvantagem de ouro em itens ('+sd.total+').');
+if(save)store.set({scenario:p.scenario,font:p.font,side:p.side,visible:p.on})}
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{location.hash=b.dataset.mode});
+document.querySelectorAll('select,input').forEach(e=>e.onchange=()=>render());
+window.addEventListener('hashchange',applyHash);
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#visible').checked){$('#visible').checked=false;render()}});
+(()=>{const s=store.get(),set=(id,v)=>{const el=$('#'+id);if(v&&[...el.options].some(o=>o.value===v))el.value=v};set('scenario',s.scenario);set('side',s.side);set('font',s.font);if(typeof s.visible==='boolean')$('#visible').checked=s.visible;if(!location.hash)history.replaceState(null,'','#b');applyHash()})();
+</script></html>

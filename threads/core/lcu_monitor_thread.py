@@ -88,7 +88,7 @@ class LCUMonitorThread(threading.Thread):
                     self.ws_connected = True
 
                     # A client that started without a loader (a standalone Pengu
-                    # disabled while Rose runs) gets Rose's. Only once the
+                    # disabled while SEXO2 runs) gets SEXO2's. Only once the
                     # WebSocket is up: at lockfile time the client refuses the
                     # restart. The first connection is handled by startup.
                     if self._initial_ws_done and not self.state.stop:
@@ -109,7 +109,7 @@ class LCUMonitorThread(threading.Thread):
                     # Check initial champion select state (for issue #29: app starting after lock)
                     self._check_initial_champion_state()
 
-                    # Refresh Rose's injection/UI state after a full LCU
+                    # Refresh SEXO2's injection/UI state after a full LCU
                     # disconnect/reconnect cycle (account swap), not on a simple
                     # WebSocket blip. Pengu stays active through this transition.
                     if self._initial_ws_done and self._lcu_reconnected and self.reconnect_callback:

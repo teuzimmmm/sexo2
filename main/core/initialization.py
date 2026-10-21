@@ -9,11 +9,11 @@ import sys
 from typing import Optional, Tuple
 
 from lcu import LCU, LCUSkinScraper
-from state import SharedState, AppStatus
+from state import SharedState
 from injection import InjectionManager
 from injection.game.game_monitor import resume_orphaned_game
 from injection.mods.storage import ModStorageService
-from utils.core.logging import get_logger, log_success
+from utils.core.logging import get_logger
 from utils.system.admin_utils import ensure_admin_rights
 from utils.threading.thread_manager import create_daemon_thread
 from config import APP_VERSION, set_config_option

@@ -11,11 +11,3 @@ zstandard==0.25.0
 certifi==2026.7.22
 PyInstaller==6.22.3
 cryptography==50.0.2
-# Windows OCR for the augment card titles (D-115); Windows only, MIT (pywinrt).
-winrt-runtime==3.2.1; sys_platform == "win32"
-winrt-Windows.Foundation==3.2.1; sys_platform == "win32"
-winrt-Windows.Foundation.Collections==3.2.1; sys_platform == "win32"
-winrt-Windows.Globalization==3.2.1; sys_platform == "win32"
-winrt-Windows.Graphics.Imaging==3.2.1; sys_platform == "win32"
-winrt-Windows.Media.Ocr==3.2.1; sys_platform == "win32"
-winrt-Windows.Storage.Streams==3.2.1; sys_platform == "win32"

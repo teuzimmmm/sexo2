@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const plugin = require('../Pengu Loader/plugins/ROSE-CustomWheel/index.js');
+const plugin = require('../Pengu Loader/plugins/SEXO2-CustomWheel/index.js');
 const proto = require('../design/propostas/sexo2-v1/js/anchor.js');
 
 const view = { width: 1280, height: 720 };

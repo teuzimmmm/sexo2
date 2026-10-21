@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Main entry point for Rose (delegates to main package)
+Main entry point for SEXO2 (delegates to main package)
 """
 
 import sys
@@ -14,6 +14,12 @@ if not getattr(sys, "frozen", False):
     _project_root = Path(__file__).parent.absolute()
     if str(_project_root) not in sys.path:
         sys.path.insert(0, str(_project_root))
+
+# 1.7.0 starts clean once: the old data folders go before anything uses them
+if getattr(sys, "frozen", False) and sys.platform == "win32":
+    from sexo2 import fresh_start
+
+    fresh_start.main()
 
 # Import from the modularized main package
 from main import main

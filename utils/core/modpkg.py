@@ -12,7 +12,7 @@ folder layout mod-tools builds overlays from:
 
 Files are named by their path hash, the key the game and mod-tools use inside
 a WAD, so no path stored in a package ever becomes a file name. Only the base
-layer is unpacked: other layers are optional content Rose cannot toggle.
+layer is unpacked: other layers are optional content SEXO2 cannot toggle.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ _HEX_NAME = re.compile(r"[0-9a-fA-F]{16}")
 
 
 class ModpkgError(ValueError):
-    """The file is not a .modpkg package Rose can read"""
+    """The file is not a .modpkg package SEXO2 can read"""
 
 
 class _Record(NamedTuple):

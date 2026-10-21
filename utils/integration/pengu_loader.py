@@ -5,12 +5,13 @@ Helper utilities for interacting with Pengu Loader's command-line interface.
 
 The Pengu Loader CLI manages Pengu's IFEO activation and optionally
 restart the League client when required. This module provides a small wrapper
-around the executable bundled alongside Rose.
+around the executable bundled alongside SEXO2.
 """
 
 from __future__ import annotations
 
 import configparser
+import hashlib
 import json
 import os
 import re
@@ -18,6 +19,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -38,16 +40,44 @@ log = get_logger("pengu_loader")
 _SESSION_FILE = get_state_dir() / "pengu_session.json"
 # core.dll reads its hook switch (disabled, loaderpath) from this file
 _CONFIG_FILE = get_config_file_path()
-# The loader runs elevated: when Rose was elevated with another account's
+# The loader runs elevated: when SEXO2 was elevated with another account's
 # credentials, its own LocalApplicationData isn't the desktop user's config.ini
+os.environ["SEXO2_CONFIG_PATH"] = str(_CONFIG_FILE)
+# The loader executable built before the rename reads this older name
 os.environ["ROSE_CONFIG_PATH"] = str(_CONFIG_FILE)
 
 _ACTIVE_FLAG = get_state_dir() / "pengu_active.flag"
+# What the plugins were when SEXO2 last saw them, and since when: a client that started
+# before that has older plugins loaded
+_PLUGINS_FILE = get_state_dir() / "pengu_plugins.json"
 _LEGACY_PENGU_LOGS = (
     "rose.log",
     "rose.log.old",
     "crash.log",
 )
+# The bundled plugins were named ROSE-<name> before the rename. Pengu keeps whether a
+# plugin is enabled in the folder itself (index.js or index.js_), so the folder moves
+# to its new name with that state; a user's own ROSE-* plugin is not on this list.
+PLUGIN_PREFIX = "SEXO2-"
+LEGACY_PLUGIN_PREFIX = "ROSE-"
+RENAMED_PLUGINS = (
+    "Amigos",
+    "ChromaWheel",
+    "CustomSkinSelector",
+    "CustomWheel",
+    "FormsWheel",
+    "HistoricMode",
+    "Hub",
+    "I18n",
+    "Jade",
+    "PartyMode",
+    "RandomSkin",
+    "SettingsPanel",
+    "SkinMonitor",
+    "SwiftplayPins",
+    "UI",
+)
+LEGACY_PLUGIN_NAMES = frozenset((LEGACY_PLUGIN_PREFIX + name).casefold() for name in RENAMED_PLUGINS)
 _PLUGIN_ENTRYPOINT = "index.js"
 _PLUGIN_ENTRYPOINT_DISABLED = "index.js_"
 _PLUGIN_ENTRYPOINT_BUNDLED_BACKUP = "index.js.bundled"
@@ -68,7 +98,7 @@ def _sanitize_plugin_entrypoints(pengu_dir: Path) -> None:
 
     Background:
     - Disabling a plugin renames `index.js` -> `index.js_`
-    - In frozen builds, Rose overlays the bundled `Pengu Loader` onto the runtime directory.
+    - In frozen builds, SEXO2 overlays the bundled `Pengu Loader` onto the runtime directory.
       `copytree(..., dirs_exist_ok=True)` does not delete extra files, so a disabled plugin
       can end up with BOTH `index.js_` and a freshly-copied `index.js`, effectively re-enabling
       (or duplicating) the plugin on next launch.
@@ -119,8 +149,54 @@ def _sanitize_plugin_entrypoints(pengu_dir: Path) -> None:
                             exc,
                         )
     except Exception as exc:
-        # Non-fatal: never block Rose launch for a best-effort cleanup.
+        # Non-fatal: never block SEXO2 launch for a best-effort cleanup.
         log.warning("Failed to sanitize plugin entrypoints: %s", exc)
+
+
+def _migrate_renamed_plugins(pengu_dir: Path) -> None:
+    """
+    Give the plugins of an earlier version their SEXO2 folder name, keeping their state.
+
+    Run before the bundled files are laid over the runtime folder, so the enabled or
+    disabled state (index.js or index.js_) travels with the folder. When the new folder
+    already exists, the old one is a leftover: its disabled state is carried over and it
+    is removed. Safe to run any number of times; a failure leaves the old folder for
+    the next start.
+    """
+    try:
+        plugins_dir = pengu_dir / "plugins"
+        if not plugins_dir.is_dir():
+            return
+        present = {entry.name.casefold(): entry for entry in plugins_dir.iterdir() if entry.is_dir()}
+        for name in RENAMED_PLUGINS:
+            old = present.get((LEGACY_PLUGIN_PREFIX + name).casefold())
+            if old is None:
+                continue
+            new = plugins_dir / (PLUGIN_PREFIX + name)
+            try:
+                if not (PLUGIN_PREFIX + name).casefold() in present:
+                    old.rename(new)
+                    log.info("Renamed plugin folder %s -> %s", old.name, new.name)
+                    continue
+                if (old / _PLUGIN_ENTRYPOINT_DISABLED).exists():
+                    entry = new / _PLUGIN_ENTRYPOINT
+                    if entry.exists() and not (new / _PLUGIN_ENTRYPOINT_DISABLED).exists():
+                        entry.rename(new / _PLUGIN_ENTRYPOINT_DISABLED)
+                shutil.rmtree(old)
+                log.info("Removed the old plugin folder %s (%s exists)", old.name, new.name)
+            except OSError as exc:
+                log.warning("Could not move plugin %s to the new name (retried at the next start): %s", old.name, exc)
+    except Exception as exc:
+        log.warning("Failed to rename the plugins of an earlier version: %s", exc)
+
+
+def _runtime_sync_ignore(directory: str, names: list[str]) -> set[str]:
+    """What the bundle must not copy to the runtime folder: the datastore, and the old plugin
+    folders an installation over an earlier version may have left in the bundle."""
+    ignored = set(shutil.ignore_patterns("datastore")(directory, names))
+    if Path(directory).name == "plugins":
+        ignored.update(name for name in names if name.casefold() in LEGACY_PLUGIN_NAMES)
+    return ignored
 
 
 def _snapshot_plugin_enable_state(pengu_dir: Path) -> tuple[set[str], set[str]]:
@@ -269,6 +345,9 @@ def _resolve_pengu_dir() -> Path:
         # Deleting the runtime directory on each launch wipes those user-installed plugins.
         runtime_dir.mkdir(parents=True, exist_ok=True)
 
+        # Plugins renamed since the version that created this folder move first, with their state.
+        _migrate_renamed_plugins(runtime_dir)
+
         # Snapshot plugin enabled/disabled state BEFORE overlaying bundled files.
         enabled_plugins, disabled_plugins = _snapshot_plugin_enable_state(runtime_dir)
 
@@ -281,7 +360,7 @@ def _resolve_pengu_dir() -> Path:
             bundled_dir,
             runtime_dir,
             dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns("datastore"),
+            ignore=_runtime_sync_ignore,
         )
 
         # If this is a fresh runtime directory (no datastore yet), seed it once from bundled.
@@ -297,7 +376,7 @@ def _resolve_pengu_dir() -> Path:
         # Restore plugin enable/disable state after the overlay sync.
         _restore_plugin_enable_state(runtime_dir, enabled_plugins, disabled_plugins)
 
-        # Remove logs from versions that used separate Rose/crash diagnostics.
+        # Remove logs from versions that used separate SEXO2/crash diagnostics.
         _remove_legacy_pengu_logs(runtime_dir)
 
     except Exception as exc:
@@ -313,7 +392,7 @@ PENGU_EXE = PENGU_DIR / "Pengu Loader.exe"
 _PENGU_LOG = PENGU_DIR / "pengu.log"
 # The CLI normally answers in well under a second. A hung client, a locked
 # handle or a slow disk can block it forever, and on the cleanup path that
-# leaves Rose unable to exit with the game still suspended.
+# leaves SEXO2 unable to exit with the game still suspended.
 _CLI_TIMEOUT_S = 15.0
 _LEAGUE_PROCESSES: set[str] = {
     "LeagueClient.exe",
@@ -324,7 +403,7 @@ _LEAGUE_PROCESSES: set[str] = {
 }
 _CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 _operation_lock = threading.RLock()
-# The clients (LeagueClientUx.exe PIDs) Rose's loader waits to restart until a
+# The clients (LeagueClientUx.exe PIDs) SEXO2's loader waits to restart until a
 # safe phase (see retry_deferred_restart). A client started since then loads it.
 _restart_pending: frozenset[int] = frozenset()
 
@@ -492,7 +571,7 @@ def _close_loader_menu() -> None:
         for proc in psutil.process_iter(["pid", "name"]):
             if proc.info.get("name") != PENGU_EXE.name or proc.info.get("pid") == current:
                 continue
-            log.info("Closing the open Pengu Loader window (PID %s) so Rose can toggle Pengu.", proc.info["pid"])
+            log.info("Closing the open Pengu Loader window (PID %s) so SEXO2 can toggle Pengu.", proc.info["pid"])
             try:
                 proc.terminate()
                 proc.wait(timeout=3)
@@ -677,13 +756,15 @@ def _read_session() -> Optional[dict[str, object]]:
         return None
 
 
-def _write_session(was_active: bool, rose_activated: bool) -> bool:
+def _write_session(was_active: bool, app_activated: bool, clients_with_plugins: Iterable[int] = ()) -> bool:
     record = {
         "version": 1,
-        "rose_pid": os.getpid(),
-        "pengu_was_active_before_rose": was_active,
-        "rose_activated_pengu": rose_activated,
+        "app_pid": os.getpid(),
+        "pengu_was_active_before_app": was_active,
+        "app_activated_pengu": app_activated,
         "activated_at": datetime.now().astimezone().isoformat(),
+        # LeagueClientUx processes that already run SEXO2's plugins (left open when SEXO2 quit)
+        "clients_with_plugins": sorted(clients_with_plugins),
     }
     temporary = _SESSION_FILE.with_suffix(f"{_SESSION_FILE.suffix}.tmp")
     try:
@@ -703,15 +784,22 @@ def _clear_session() -> None:
         log.warning("Failed to clear Pengu session state %s: %s", _SESSION_FILE, exc)
 
 
+def _session_value(session: dict[str, object], key: str, legacy_key: str) -> bool:
+    """A flag of the session file; versions before the rename wrote it under another key."""
+    return bool(session.get(key, session.get(legacy_key)))
+
+
 def _session_requires_deactivation(session: dict[str, object]) -> bool:
-    return bool(session.get("rose_activated_pengu")) and not bool(session.get("pengu_was_active_before_rose"))
+    return _session_value(session, "app_activated_pengu", "rose_activated_pengu") and not _session_value(
+        session, "pengu_was_active_before_app", "pengu_was_active_before_rose"
+    )
 
 
 def recover_stale_session(*, adopt_active: bool = False) -> bool:
-    """Recover a previous Rose session.
+    """Recover a previous SEXO2 session.
 
     During startup, an active Pengu session may still belong to the League
-    process left behind by a crashed Rose instance. If that process is still
+    process left behind by a crashed SEXO2 instance. If that process is still
     running, keep the activation in place so the next startup does not try to
     deactivate and immediately reactivate against a loaded core.dll.
     """
@@ -765,7 +853,7 @@ def _registered_pengu_core() -> Optional[Path]:
         import winreg
 
         key_path = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LeagueClientUx.exe"
-        # The 64-bit view, where Pengu registers it, whatever Rose's own bitness
+        # The 64-bit view, where Pengu registers it, whatever SEXO2's own bitness
         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path, 0, winreg.KEY_READ | winreg.KEY_WOW64_64KEY) as key:
             debugger, _ = winreg.QueryValueEx(key, "Debugger")
         match = re.fullmatch(r'rundll32(?:\.exe)?\s+"([^"]+)",\s*#6000\s*', debugger, re.IGNORECASE)
@@ -780,7 +868,7 @@ def _registered_pengu_core() -> Optional[Path]:
 
 
 def _hook_of_another_loader() -> Optional[Path]:
-    """The core.dll the registered hook runs when it isn't ours (another Rose,
+    """The core.dll the registered hook runs when it isn't ours (another SEXO2,
     a standalone Pengu), or None."""
     core = _registered_pengu_core()
     if core is None or core.parent.resolve() == PENGU_DIR.resolve():
@@ -788,26 +876,30 @@ def _hook_of_another_loader() -> Optional[Path]:
     return core
 
 
-def _external_pengu_with_rose_plugins() -> Optional[Path]:
+def _external_pengu_with_app_plugins() -> Optional[Path]:
     """Keep an already configured standalone Pengu installation in place."""
     core = _hook_of_another_loader()
     if core is None:
         return None
     external = core.parent
-    if (
-        (external / "Pengu Loader.exe").is_file()
-        and (external / "plugins" / "ROSE-SkinMonitor" / "index.js").is_file()
-        and (external / "plugins" / "ROSE-UI" / "index.js").is_file()
-    ):
+    if not (external / "Pengu Loader.exe").is_file():
+        return None
+    # Only a set with the current plugin names: ROSE-* plugins mean Rose itself or a SEXO2
+    # from before the rename, whose core.dll and plugins don't match this version (no SEXO2
+    # menu, Rose's dialog). SEXO2's own loader takes the hook over from those.
+    plugins = external / "plugins"
+    if (plugins / f"{PLUGIN_PREFIX}SkinMonitor" / "index.js").is_file() and (
+        plugins / f"{PLUGIN_PREFIX}UI" / "index.js"
+    ).is_file():
         return external
     return None
 
 
 def ensure_active_for_client() -> None:
-    """The client just started: enable Rose's loader if none is active any more
-    (a standalone Pengu disabled while Rose runs). Runs on that event, no polling."""
+    """The client just started: enable SEXO2's loader if none is active any more
+    (a standalone Pengu disabled while SEXO2 runs). Runs on that event, no polling."""
     with _operation_lock:
-        if _external_pengu_with_rose_plugins() is not None:
+        if _external_pengu_with_app_plugins() is not None:
             return
         core = _registered_pengu_core()
         if core is not None and core.parent.resolve() == PENGU_DIR.resolve():
@@ -818,17 +910,17 @@ def ensure_active_for_client() -> None:
         # the user has open, try again at the next client start
         if _process_running((PENGU_EXE.name,)):
             log.info(
-                "No active Pengu Loader, but its window is open; Rose enables its loader at the next client start."
+                "No active Pengu Loader, but its window is open; SEXO2 enables its loader at the next client start."
             )
             return
         from config import get_config_option
 
-        log.info("No active Pengu Loader; enabling the loader bundled with Rose.")
+        log.info("No active Pengu Loader; enabling the loader bundled with SEXO2.")
         activate_on_start(get_config_option("General", "clientPath"))
 
 
 def retry_deferred_restart() -> None:
-    """The client reached a safe phase: restart it if Rose's loader still waits
+    """The client reached a safe phase: restart it if SEXO2's loader still waits
     for that (the client wasn't ready yet, or a champ select was on)."""
     if not _restart_pending:
         return
@@ -850,26 +942,33 @@ def retry_deferred_restart() -> None:
 def activate_on_start(league_path: Optional[str] = None) -> bool:
     global _restart_pending
     with _operation_lock:
-        external = _external_pengu_with_rose_plugins()
+        external = _external_pengu_with_app_plugins()
         if external is not None:
-            log.info("Using existing external Pengu Loader with Rose plugins: %s", external)
-            # This activation belongs to the user, so Rose must not remove it
+            log.info("Using existing external Pengu Loader with SEXO2 plugins: %s", external)
+            # This activation belongs to the user, so SEXO2 must not remove it
             # on exit or replace its registry entry with the bundled loader.
-            return _write_session(was_active=True, rose_activated=False)
+            written = _write_session(was_active=True, app_activated=False)
+            # Left on by an earlier SEXO2 (its own runtime folder): an open client may still run
+            # the plugins of that version
+            if written and external.resolve() == PENGU_DIR.resolve() and _client_has_older_plugins(external):
+                log.info("The running League client has older SEXO2 plugins; restarting it to load these.")
+                _restart_pending = frozenset() if restart_client() else _process_ids(("LeagueClientUx.exe",))
+            return written
         if not _is_available():
             log.error("Pengu Loader executable is unavailable: %s", PENGU_EXE)
             return False
 
-        stale_rose_owned = False
+        stale_app_owned = False
+        session = None
         if _SESSION_FILE.exists() or _ACTIVE_FLAG.exists():
             session = _read_session()
-            stale_rose_owned = _session_requires_deactivation(session) if session is not None else _ACTIVE_FLAG.exists()
+            stale_app_owned = _session_requires_deactivation(session) if session is not None else _ACTIVE_FLAG.exists()
             if not recover_stale_session(adopt_active=True):
                 return False
 
         initial = get_status()
         if initial is PenguStatus.UNKNOWN:
-            log.error("Cannot start Rose Pengu integration because initial status is unknown.")
+            log.error("Cannot start SEXO2 Pengu integration because initial status is unknown.")
             return False
         if league_path and not set_league_path(league_path):
             log.warning(
@@ -879,25 +978,34 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
             )
 
         # A running client loads Rose's plugins only when it starts, so it restarts
-        # whatever state an earlier Rose left the loader in
+        # whatever state an earlier Rose left the loader in, unless the previous
+        # SEXO2 left this very client running with the plugins loaded.
         restart_needed = _process_running(("LeagueClientUx.exe",))
+        if (
+            restart_needed
+            and stale_app_owned
+            and _clients_still_have_plugins(session)
+            and not _client_has_older_plugins(PENGU_DIR)
+        ):
+            log.info("The running League client still has SEXO2's plugins; no restart needed.")
+            restart_needed = False
         activated_now = False
         if initial is PenguStatus.INACTIVE:
             log.info("Activating Pengu through official CLI (restart League: %s).", restart_needed)
             if not activate():
                 return False
             activated_now = True
-        elif stale_rose_owned:
+        elif stale_app_owned:
             log.info(
-                "Adopted the active Pengu session from the previous Rose process (restart League: %s).", restart_needed
+                "Adopted the active Pengu session from the previous SEXO2 process (restart League: %s).", restart_needed
             )
         else:
             # --status only reports this loader's own core.dll as active, so an
-            # earlier Rose left it on: it's Rose's, and goes when Rose quits
-            log.info("Rose's Pengu Loader was already active; adopting it (restart League: %s).", restart_needed)
+            # earlier SEXO2 left it on: it's SEXO2's, and goes when SEXO2 quits
+            log.info("SEXO2's Pengu Loader was already active; adopting it (restart League: %s).", restart_needed)
         _ensure_loader_config()
 
-        if not _write_session(was_active=False, rose_activated=True):
+        if not _write_session(was_active=False, app_activated=True):
             if activated_now:
                 log.error("Could not persist session state; reverting activation.")
                 deactivate()
@@ -907,11 +1015,11 @@ def activate_on_start(league_path: Optional[str] = None) -> bool:
         if restart_needed:
             _restart_pending = frozenset() if restart_client() else _process_ids(("LeagueClientUx.exe",))
             if _restart_pending:
-                log.info("Rose Loader enabled; client restart deferred until the client is ready.")
+                log.info("SEXO2 Loader enabled; client restart deferred until the client is ready.")
         return True
 
 
-def restore_after_rose() -> bool:
+def restore_after_app() -> bool:
     with _operation_lock:
         session = _read_session()
         legacy = _ACTIVE_FLAG.exists()
@@ -944,5 +1052,91 @@ def restore_after_rose() -> bool:
         return True
 
 
+def _clients_still_have_plugins(session: Optional[dict[str, object]]) -> bool:
+    recorded = (session or {}).get("clients_with_plugins")
+    if not isinstance(recorded, list) or not recorded:
+        return False
+    running = _process_ids(("LeagueClientUx.exe",))
+    return bool(running) and running <= {pid for pid in recorded if isinstance(pid, int)}
+
+
+def _client_start_times() -> list[float]:
+    if psutil is None:
+        return []
+    try:
+        return [
+            proc.info["create_time"]
+            for proc in psutil.process_iter(["name", "create_time"])
+            if (proc.info.get("name") or "").lower() == "leagueclientux.exe" and proc.info.get("create_time")
+        ]
+    except (psutil.Error, OSError):
+        return []
+
+
+def _plugins_changed_at(pengu_dir: Path) -> Optional[float]:
+    """When the plugin files last changed in content, as SEXO2 saw it (now, the first time)."""
+    try:
+        digest = hashlib.sha256()
+        plugins = pengu_dir / "plugins"
+        for file in sorted(path for path in plugins.rglob("*") if path.is_file()):
+            digest.update(file.relative_to(plugins).as_posix().encode("utf-8"))
+            digest.update(file.read_bytes())
+        known = digest.hexdigest()
+    except OSError as exc:
+        log.debug("Could not read the plugins to compare them: %s", exc)
+        return None
+    try:
+        record = json.loads(_PLUGINS_FILE.read_text(encoding="utf-8"))
+        if record.get("digest") == known and isinstance(record.get("changed_at"), (int, float)):
+            return float(record["changed_at"])
+    except (OSError, ValueError, AttributeError):
+        pass
+    changed_at = time.time()
+    try:
+        _PLUGINS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _PLUGINS_FILE.write_text(json.dumps({"digest": known, "changed_at": changed_at}) + "\n", encoding="utf-8")
+    except OSError as exc:
+        log.debug("Could not save the plugins record: %s", exc)
+    return changed_at
+
+
+def _client_has_older_plugins(pengu_dir: Path) -> bool:
+    """A League client loads the plugins when it starts: one older than their last change has old ones."""
+    started = _client_start_times()
+    if not started:
+        return False
+    changed_at = _plugins_changed_at(pengu_dir)
+    return changed_at is not None and changed_at > min(started)
+
+
 def deactivate_on_exit() -> bool:
-    return restore_after_rose()
+    """SEXO2 quits: switch its loader off, unless a League client is running with the plugins.
+
+    Switching off with the client open means restarting it, which takes the player out of
+    the queue or champion select; reopening SEXO2 would restart it again. So the activation
+    and its recovery record stay, with the client processes that have the plugins: the next
+    start adopts them without a restart, or cleans up once League is closed.
+    """
+    global _restart_pending
+    with _operation_lock:
+        restart_was_pending = bool(_restart_pending)
+        _restart_pending = frozenset()  # a queued restart must not run after SEXO2 exits
+        session = _read_session()
+        clients = _process_ids(("LeagueClientUx.exe",))
+        if (
+            session is not None
+            and _session_requires_deactivation(session)
+            and clients
+            and not restart_was_pending  # the running client was restarted and has the plugins
+            and _hook_of_another_loader() is None
+            and get_status() is PenguStatus.ACTIVE
+        ):
+            if _write_session(was_active=False, app_activated=True, clients_with_plugins=clients):
+                log.info("Keeping Pengu active for the running League client; recovery state retained.")
+                return True
+    return restore_after_app()
+
+
+def end_of_windows_session() -> bool:
+    """Windows is shutting down: League goes too, so nothing is kept."""
+    return restore_after_app()
