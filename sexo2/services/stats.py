@@ -154,6 +154,13 @@ class Alternatives:
 _BUILD_TABLES = ("payload.builtBootSet3[", "payload.builtItemSet3[")
 
 
+def _int_or_none(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def alternatives_from(snapshot: Any, keystones: frozenset[int], limit: int = 300) -> Alternatives:
     builds = []
     stats = []
@@ -162,18 +169,19 @@ def alternatives_from(snapshot: Any, keystones: frozenset[int], limit: int = 300
         if not isinstance(games, int) or games <= 0:
             continue
         if record.category == "item_combination" and record.source_path.startswith(_BUILD_TABLES):
-            if len(record.identifiers) == 3:
+            items = tuple(_int_or_none(i) for i in record.identifiers)
+            if len(items) == 3 and None not in items:
                 builds.append(
                     ItemCombo(
-                        tuple(int(i) for i in record.identifiers),
+                        items,
                         record.metrics.get("win_rate"),
                         record.metrics.get("pick_rate"),
                         games,
                     )
                 )
-        elif record.category == "rune_statistics" and record.identifiers[1] == "0":
-            rune = int(record.identifiers[0])
-            if rune in keystones:
+        elif record.category == "rune_statistics" and len(record.identifiers) >= 2 and record.identifiers[1] == "0":
+            rune = _int_or_none(record.identifiers[0])
+            if rune is not None and rune in keystones:
                 stats.append(KeystoneStat(rune, record.metrics.get("win_rate"), record.metrics.get("pick_rate"), games))
     builds.sort(key=lambda combo: (-combo.games, combo.items))
     stats.sort(key=lambda stat: (-stat.games, stat.keystone))
@@ -197,6 +205,19 @@ def _layouts(snapshot: Any) -> tuple[RuneLayout, ...]:
             )
         )
     return tuple(result)
+
+
+# D-147: whatever the game mode, the statistics are always the Solo/Duo queue ones. LoLalytics'
+# "ranked" pages are queue 420 (the parser rejects a page with any other queue).
+SOLO_QUEUE_MODE = "ranked"
+SUPPORTED_MODES = ("ranked", "aram", "swift")
+
+
+def solo_queue_mode(mode: str) -> str:
+    """The data mode to query for a game mode: always the Solo/Duo queue; unsupported modes fail."""
+    if mode not in SUPPORTED_MODES:
+        raise StatsError("unsupported_mode", f"statistics are not available for {mode}")
+    return SOLO_QUEUE_MODE
 
 
 class StatsService:
@@ -235,9 +256,8 @@ class StatsService:
     def runes(
         self, champion_id: int, mode: str = "ranked", lane: str = "all", opponent_id: int | None = None
     ) -> RuneStats:
-        """The two LoLalytics layouts (win and pick) and, in ranked, those against an opponent."""
-        if mode not in ("ranked", "aram", "swift"):
-            raise StatsError("unsupported_mode", f"rune statistics are not available for {mode}")
+        """The two LoLalytics layouts (win and pick) and those against an opponent: Solo/Duo data (D-147)."""
+        mode = solo_queue_mode(mode)
         query = self._query(champion_id, mode, lane)
         snapshot = self._client.collect(query)
         warnings = ["keystone_level_metrics"]
@@ -270,7 +290,8 @@ class StatsService:
     def builds(
         self, champion_id: int, mode: str = "ranked", lane: str = "all", opponent_id: int | None = None
     ) -> BuildStats:
-        """Keystone-conditioned win and pick builds, plus the opponent build in ranked."""
+        """Keystone-conditioned win and pick builds, plus the opponent build: Solo/Duo data (D-147)."""
+        mode = solo_queue_mode(mode)
         pages = list(self._client.collect_builds(self._query(champion_id, mode, lane)).pages)
         warnings = []
         if opponent_id is not None:
@@ -285,18 +306,13 @@ class StatsService:
 
     def alternatives(self, champion_id: int, mode: str, lane: str, keystones: frozenset[int]) -> Alternatives:
         """Other observed builds and keystones, from the same (cached) page as the recommendations."""
-        if mode not in ("ranked", "aram", "swift"):
-            raise StatsError("unsupported_mode", f"statistics are not available for {mode}")
+        mode = solo_queue_mode(mode)
         snapshot = self._client.collect(self._query(champion_id, mode, lane))
-        found = alternatives_from(snapshot, keystones)
-        if mode == "swift":  # LoLalytics filters by keystone only in ranked and ARAM
-            found = Alternatives(found.builds, ())
-        return found
+        return alternatives_from(snapshot, keystones)
 
     def keystone_layout(self, champion_id: int, mode: str, lane: str, keystone: int) -> RuneLayout:
         """The most played complete page with this keystone (falls back to its highest win rate)."""
-        if mode not in ("ranked", "aram"):
-            raise StatsError("unsupported_mode", f"keystone pages are not available for {mode}")
+        mode = solo_queue_mode(mode)
         snapshot = self._client.collect(self._query(champion_id, mode, lane, keystone=keystone))
         layouts = {layout.selection: layout for layout in _layouts(snapshot)}
         layout = layouts.get("pick") or layouts.get("win")

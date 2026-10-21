@@ -147,13 +147,87 @@ class AlternativesTests(unittest.TestCase):
         found = alternatives_from(snapshot, frozenset({8112, 8128}))
         self.assertEqual([(k.keystone, k.games) for k in found.keystones], [(8128, 4000), (8112, 900)])
 
+    def test_an_identifier_that_is_not_an_integer_skips_its_row_instead_of_failing(self):
+        from types import SimpleNamespace
+
+        from sexo2.services.stats import alternatives_from
+
+        def row(category, identifiers, games, path="payload.runes.stats"):
+            return SimpleNamespace(
+                category=category,
+                identifiers=identifiers,
+                metrics={"win_rate": 50.0, "pick_rate": 1.0, "games": games},
+                source_path=path,
+            )
+
+        snapshot = SimpleNamespace(
+            records=[
+                row("rune_statistics", ["5008f", "0"], 900),  # a shard id with a suffix, seen in Swiftplay data
+                row("rune_statistics", ["8128", "0"], 4000),
+                row("rune_statistics", ["8128"], 10),  # a row without a slot
+            ]
+        )
+        found = alternatives_from(snapshot, frozenset({8112, 8128}))
+        self.assertEqual([(k.keystone, k.games) for k in found.keystones], [(8128, 4000)])
+
     def test_page_with_a_chosen_keystone_is_its_most_played_one(self):
         stats, transport = service()
         layout = stats.keystone_layout(103, "ranked", "middle", 8112)
         self.assertEqual((layout.selection, layout.keystone, layout.primary[0]), ("keystone", 8112, 8112))
         self.assertTrue(any("keystone=8112" in url for url in transport.calls))
         with self.assertRaises(StatsError):
-            stats.keystone_layout(103, "swift", "all", 8112)
+            stats.keystone_layout(103, "arena", "all", 8112)
+
+
+class SoloQueueRuleTests(unittest.TestCase):
+    """D-147: whatever the game mode, the statistics are the Solo/Duo queue ones."""
+
+    MODES = ("ranked", "aram", "swift")
+
+    def urls(self, call):
+        stats, transport = service()
+        call(stats)
+        return transport.calls
+
+    def assert_solo(self, urls):
+        self.assertTrue(urls)
+        for url in urls:
+            self.assertTrue(url.startswith("https://lolalytics.com/lol/ahri/build/q-data.json?"), url)
+            self.assertNotIn("/aram/", url)
+            self.assertNotIn("/swift/", url)
+            self.assertNotIn("/arena/", url)
+
+    def test_runes_builds_and_alternatives_ask_for_solo_queue_data_in_every_mode(self):
+        for mode in self.MODES:
+            with self.subTest(mode=mode):
+                self.assert_solo(self.urls(lambda s: s.runes(103, mode, "middle")))
+                self.assert_solo(self.urls(lambda s: s.builds(103, mode, "middle")))
+                self.assert_solo(self.urls(lambda s: s.alternatives(103, mode, "middle", frozenset({8112}))))
+
+    def test_the_result_says_it_is_solo_queue_data(self):
+        stats, _ = service()
+        for mode in self.MODES:
+            self.assertEqual(stats.runes(103, mode, "middle").mode, "ranked")
+
+    def test_a_mode_without_solo_queue_statistics_is_still_unsupported(self):
+        stats, transport = service()
+        for call in (
+            lambda: stats.runes(103, "arena", "all"),
+            lambda: stats.builds(103, "arena", "all"),
+            lambda: stats.alternatives(103, "arena", "all", frozenset()),
+            lambda: stats.keystone_layout(103, "arena", "all", 8112),
+        ):
+            with self.assertRaises(StatsError):
+                call()
+        self.assertEqual(transport.calls, [])
+
+    def test_every_mode_can_load_another_keystones_page(self):
+        for mode in self.MODES:
+            with self.subTest(mode=mode):
+                stats, transport = service()
+                stats.keystone_layout(103, mode, "middle", 8112)
+                self.assertTrue(all("/aram/" not in u and "/swift/" not in u for u in transport.calls))
+                self.assertTrue(any("keystone=8112" in u for u in transport.calls))
 
 
 class DefaultCacheTests(unittest.TestCase):
