@@ -194,7 +194,61 @@
     }
   }
 
-  // ---- clock: one timeline, one rAF ----
+  // ---- baked animation ----
+  // The frames are computed once and handed to the browser as transform/opacity keyframes, which
+  // it runs on the compositor: the opening keeps its pace while the client's main thread is busy
+  // loading (a requestAnimationFrame loop there drew about half a frame per second).
+  var anims = null, bakedFrom = 0, copyTimer = 0;
+  function bake(from) {
+    var span = G.dur - from, n = Math.max(2, Math.ceil(span * 60)), k, i, t, f, y;
+    var ic = [], gl = [[], [], [], [], []];
+    for (k = 0; k <= n; k++) {
+      t = from + (span * k) / n; f = frame(t, M); y = f.y.toFixed(2) + "px";
+      ic.push({ offset: k / n, transform: "translate3d(" + f.iconL.toFixed(2) + "px," + f.iconT.toFixed(2) + "px,0)" });
+      for (i = 0; i < 5; i++) {
+        gl[i].push({
+          offset: k / n,
+          transform: "translate3d(" + f.glyphs[i].x.toFixed(2) + "px," + y + ",0) scaleX(" + f.glyphs[i].sc.toFixed(4) + ")",
+          opacity: f.glyphs[i].op.toFixed(3),
+        });
+      }
+    }
+    return { ic: ic, gl: gl, ms: span * 1000 };
+  }
+  function stopBaked() {
+    clearInterval(copyTimer); copyTimer = 0;
+    if (!anims) return;
+    anims.forEach(function (a) { a.onfinish = null; a.cancel(); });
+    anims = null;
+  }
+  function bakedTime() {
+    return anims ? bakedFrom + clamp((anims[0].currentTime || 0) / 1000, 0, G.dur - bakedFrom) : el;
+  }
+  function playBaked(from) {
+    rebind(); stopBaked();
+    var b = bake(from), opts = { duration: b.ms, easing: "linear", fill: "forwards" };
+    bakedFrom = from;
+    anims = [iconEl.animate(b.ic, opts)].concat(glyphs.map(function (g, i) { return g.animate(b.gl[i], opts); }));
+    anims[0].onfinish = function () {
+      if (!anims) return;
+      el = G.dur; playing = false;
+      render(G.dur); stopBaked(); finish();
+    };
+    // The client can replace the element with a copy; the copy has no animation, so move on to it
+    copyTimer = setInterval(function () {
+      var shown = document.getElementById(ROOT_ID);
+      if (anims && shown && shown !== root) relayout();
+    }, 250);
+  }
+  // Measuring needs the elements without their transform, so a running animation is stopped first
+  function relayout() {
+    var t = bakedTime(), live = !!anims && playing;
+    stopBaked(); rebind(); layout();
+    if (live && t < G.dur) { render(t); playBaked(t); }
+    else render(el);
+  }
+
+  // ---- clock: one timeline, one rAF (the fallback when the browser cannot animate) ----
   var el = 0, playing = false, raf = 0, last = 0, ended = false, loadingGone = false, booted = false, resizeTimer = 0;
   var holdTimer = 0, loadingObs = null, killTimer = 0, lastShownAt = 0, bridgeLostAt = 0;
   // Longest the final frame waits for the client after the animation, whatever the client does
@@ -205,6 +259,7 @@
 
   function unmount() {
     cancelAnimationFrame(raf); raf = 0; playing = false;
+    stopBaked();
     clearTimeout(resizeTimer);
     clearTimeout(holdTimer);
     clearTimeout(killTimer);
@@ -238,7 +293,7 @@
   function tick() {
     if (!playing) return;
     var now = performance.now();
-    var dt = clamp((now - last) / 1000, 0, 0.06);
+    var dt = clamp((now - last) / 1000, 0, 0.5);
     last = now; el += dt;
     try {
       if (el >= G.dur) { el = G.dur; render(G.dur); playing = false; raf = 0; finish(); return; }
@@ -254,12 +309,16 @@
     if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
       playing = false; el = G.dur; render(G.dur); finish(); return;
     }
-    el = 0; render(0); last = performance.now(); playing = true; raf = requestAnimationFrame(tick);
+    el = 0; render(0); last = performance.now(); playing = true;
+    if (iconEl && iconEl.animate) {
+      try { playBaked(0); return; } catch (e) { stopBaked(); }
+    }
+    raf = requestAnimationFrame(tick);
   }
 
   function onResize() {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { if (booted && root) { layout(); render(el); } }, 90);
+    resizeTimer = setTimeout(function () { if (booted && root) relayout(); }, 90);
   }
 
   function boot() {
@@ -317,7 +376,7 @@
       function () {
         clearTimeout(timer);
         if (!booted) boot();
-        else if (root) { layout(); render(el); }
+        else if (root) relayout();
       },
       function () { clearTimeout(timer); boot(); }
     );
