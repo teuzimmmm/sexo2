@@ -58,11 +58,11 @@
 .s2-tip b{display:block;font-weight:600;margin-bottom:2px;}
 .s2-tip[hidden]{display:none;}
 /* One quiet scrollbar for every SEXO2 surface: thin, square, in the app colours. */
-#sexo2-hub ::-webkit-scrollbar,#sexo2-amigos-panel::-webkit-scrollbar,#sexo2-amigos-panel ::-webkit-scrollbar,#sexo2-swiftplay-pins ::-webkit-scrollbar{width:8px;height:8px}
-#sexo2-hub ::-webkit-scrollbar-track,#sexo2-amigos-panel::-webkit-scrollbar-track,#sexo2-amigos-panel ::-webkit-scrollbar-track,#sexo2-swiftplay-pins ::-webkit-scrollbar-track{background:transparent}
-#sexo2-hub ::-webkit-scrollbar-thumb,#sexo2-amigos-panel::-webkit-scrollbar-thumb,#sexo2-amigos-panel ::-webkit-scrollbar-thumb,#sexo2-swiftplay-pins ::-webkit-scrollbar-thumb{background:var(--s2-line);border-radius:0}
-#sexo2-hub ::-webkit-scrollbar-thumb:hover,#sexo2-amigos-panel::-webkit-scrollbar-thumb:hover,#sexo2-amigos-panel ::-webkit-scrollbar-thumb:hover,#sexo2-swiftplay-pins ::-webkit-scrollbar-thumb:hover{background:var(--s2-fg-3)}
-#sexo2-hub ::-webkit-scrollbar-corner,#sexo2-amigos-panel::-webkit-scrollbar-corner,#sexo2-amigos-panel ::-webkit-scrollbar-corner,#sexo2-swiftplay-pins ::-webkit-scrollbar-corner{background:transparent}
+#sexo2-assistant ::-webkit-scrollbar,#sexo2-hub ::-webkit-scrollbar,#sexo2-amigos-panel::-webkit-scrollbar,#sexo2-amigos-panel ::-webkit-scrollbar,#sexo2-swiftplay-pins ::-webkit-scrollbar{width:8px;height:8px}
+#sexo2-assistant ::-webkit-scrollbar-track,#sexo2-hub ::-webkit-scrollbar-track,#sexo2-amigos-panel::-webkit-scrollbar-track,#sexo2-amigos-panel ::-webkit-scrollbar-track,#sexo2-swiftplay-pins ::-webkit-scrollbar-track{background:transparent}
+#sexo2-assistant ::-webkit-scrollbar-thumb,#sexo2-hub ::-webkit-scrollbar-thumb,#sexo2-amigos-panel::-webkit-scrollbar-thumb,#sexo2-amigos-panel ::-webkit-scrollbar-thumb,#sexo2-swiftplay-pins ::-webkit-scrollbar-thumb{background:var(--s2-line);border-radius:0}
+#sexo2-assistant ::-webkit-scrollbar-thumb:hover,#sexo2-hub ::-webkit-scrollbar-thumb:hover,#sexo2-amigos-panel::-webkit-scrollbar-thumb:hover,#sexo2-amigos-panel ::-webkit-scrollbar-thumb:hover,#sexo2-swiftplay-pins ::-webkit-scrollbar-thumb:hover{background:var(--s2-fg-3)}
+#sexo2-assistant ::-webkit-scrollbar-corner,#sexo2-hub ::-webkit-scrollbar-corner,#sexo2-amigos-panel::-webkit-scrollbar-corner,#sexo2-amigos-panel ::-webkit-scrollbar-corner,#sexo2-swiftplay-pins ::-webkit-scrollbar-corner{background:transparent}
 `;
 
   // Tooltips "Título|Texto" em qualquer elemento com data-tip dentro de .s2 (como no protótipo).

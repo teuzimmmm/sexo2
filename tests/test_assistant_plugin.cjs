@@ -134,6 +134,13 @@ test('a tela do Swiftplay mostra só Runas e Itens e conhece os erros do espaço
   assert.equal(A.runeError('slot_format'), 'O cliente recusou a página.');
 });
 
+test('Campeão · Jogador: o campeão quando escolhido, depois o jogador', () => {
+  assert.equal(A.rowLabel('Draven', 'Fulano'), 'Draven · Fulano');
+  assert.equal(A.rowLabel('', 'Fulano'), 'Fulano');
+  assert.equal(A.rowLabel('Draven', ''), 'Draven');
+  assert.equal(A.rowLabel('', ''), '—');
+});
+
 test('sem estatísticas só Equipe, Mods e Todas as configurações aparecem; Equipe só com elenco', () => {
   const keys = (noStats, hasTeam) => A.visibleTabs(noStats, hasTeam).map(([k]) => k);
   // Summoner's Rift (ranqueadas, normais): tudo
@@ -147,9 +154,12 @@ test('sem estatísticas só Equipe, Mods e Todas as configurações aparecem; Eq
   assert.deepEqual(keys(true, false), ['mods', 'settings']);
   assert.ok(!keys(false, true).includes('prefs'));
   assert.equal(A.hasTeamRows(null), false);
-  assert.equal(A.hasTeamRows({ ranked: { team: [], enemies: [] } }), false);
-  assert.equal(A.hasTeamRows({ ranked: { team: [{ position: 'top' }], enemies: [] } }), true);
-  assert.equal(A.hasTeamRows({ ranked: { team: [], enemies: [{ position: 'top' }] } }), true);
+  assert.equal(A.hasTeamRows({ ranked: { available: true, team: [], enemies: [] } }), false);
+  assert.equal(A.hasTeamRows({ ranked: { available: true, team: [{ position: 'top' }], enemies: [] } }), true);
+  // the service decides by queue: Solo/Duo, Arena and Swiftplay never show the tab
+  assert.equal(A.hasTeamRows({ ranked: { available: false, team: [{ position: 'top' }], enemies: [] } }), false);
+  // the enemies alone never open it (the client hides them)
+  assert.equal(A.hasTeamRows({ ranked: { available: true, team: [], enemies: [{ position: 'top' }] } }), false);
 });
 
 test('build favorita: o trio do topo do conjunto e a comparação com o fixado', () => {

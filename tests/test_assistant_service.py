@@ -473,6 +473,54 @@ class RankedTeamTests(unittest.TestCase):
         self.service.handle({"type": "assistant-request"})
         self.assertEqual(self.lcu.ranked_calls, calls)
 
+    def service_for(self, queue_id):
+        published = []
+        service = AssistantService(
+            self.lcu,
+            published.append,
+            queue_id=lambda: queue_id,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            controller=FakeController(),
+        )
+        return service, published
+
+    def test_the_tab_exists_only_where_the_champion_select_shows_the_allies(self):
+        self.lcu.session = ranked_session("cs-q", [player(i, "", f"p{i}", 1) for i in range(5)])
+        shown = {}
+        for queue_id in (400, 420, 430, 440, 450, 480, 1750, 2400, 3140):
+            service, published = self.service_for(queue_id)
+            service.handle({"type": "assistant-request"})
+            shown[queue_id] = published[-1]["ranked"]["available"]
+        # normal draft, blind, flex and ARAM show it; Solo/Duo hides the allies, the rest has no such roster
+        self.assertEqual(
+            shown,
+            {400: True, 420: False, 430: True, 440: True, 450: True, 480: False, 1750: False, 2400: False, 3140: False},
+        )
+
+    def test_a_roster_of_sixteen_is_never_a_team(self):
+        self.lcu.session = ranked_session("cs-arena", [player(i, "", f"p{i}", 1) for i in range(16)])
+        service, published = self.service_for(440)
+        service.handle({"type": "assistant-request"})
+        ranked = published[-1]["ranked"]
+        self.assertFalse(ranked["available"])
+        self.assertLessEqual(len(ranked["team"]), 5)
+
+    def test_rows_carry_the_player_name_the_client_shows(self):
+        top = player(1, "top", "p-top", 86)
+        top.update({"gameName": "Fulano", "tagLine": "BR1"})
+        hidden = player(2, "middle", "p-mid", 103)  # a name the client hides stays empty
+        old = player(3, "utility", "p-sup", 1)
+        old["summonerName"] = "Beltrano"
+        self.lcu.session = ranked_session("cs-names", [top, hidden, old])
+        service, published = self.service_for(440)
+        service.handle({"type": "assistant-request"})
+        rows = {row["position"]: row for row in published[-1]["ranked"]["team"]}
+        self.assertEqual((rows["top"]["name"], rows["top"]["tag"]), ("Fulano", "BR1"))
+        self.assertEqual((rows["middle"]["name"], rows["middle"]["tag"]), ("", ""))
+        self.assertEqual(rows["support"]["name"], "Beltrano")
+
     def test_enemies_are_read_only_when_the_client_exposes_a_puuid(self):
         self.lcu.session = ranked_session(
             "cs-enemy",
@@ -497,7 +545,7 @@ class RankedTeamTests(unittest.TestCase):
         self.service.handle({"type": "assistant-request"})
         self.assertIsNone(self.published[-1]["ranked"]["team"][0]["elo"])
 
-    def test_the_cap_is_five_puuids_per_side(self):
+    def test_the_cap_is_five_players_per_side(self):
         team = [player(i, "", f"p{i}", 1) for i in range(1, 7)]
         team[1] = player(2, "middle", "p2", 103)  # local player
         enemies = [player(10 + i, "", f"e{i}", 1) for i in range(1, 7)]
@@ -509,8 +557,9 @@ class RankedTeamTests(unittest.TestCase):
         self.assertEqual(len(self.lcu.ranked_calls), 10)
         self.assertNotIn("p6", self.lcu.ranked_calls)
         self.assertNotIn("e6", self.lcu.ranked_calls)
-        self.assertEqual(len(self.published[-1]["ranked"]["team"]), 6)
-        self.assertIsNone(self.published[-1]["ranked"]["team"][-1]["elo"])
+        self.assertEqual(
+            len(self.published[-1]["ranked"]["team"]), 5
+        )  # never more than a team, as the panel has no scroll
 
     def test_ranks_show_before_the_local_player_picks_a_champion(self):
         self.lcu.session = ranked_session("cs-pick", [player(2, "middle", "p-mid", 0)])

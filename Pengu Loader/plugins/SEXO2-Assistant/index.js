@@ -244,10 +244,13 @@
     if (embedded) return all.filter(([k]) => k === "runes" || k === "items"); // the Hub's Swiftplay screen
     return all.filter(([k]) => (k !== "team" || hasTeam) && (!noStats || k === "team" || k === "mods" || k === "settings"));
   }
-  const hasTeamRows = (st) => !!(st && st.ranked && ((st.ranked.team || []).length || (st.ranked.enemies || []).length));
+  // The service says when the queue's champion select shows the allies (D-151)
+  const hasTeamRows = (st) => !!(st && st.ranked && st.ranked.available && (st.ranked.team || []).length);
+  // "Campeão · Jogador": the champion once picked, then the player; "—" when the client hides both
+  const rowLabel = (champion, name) => [champion, name].filter(Boolean).join(" · ") || "—";
 
   if (typeof window === "undefined" && typeof module !== "undefined" && module.exports) {
-    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, topTrio, sameIds, visibleTabs, hasTeamRows, runeError, itemError, eloText, TIERS, LANES };
+    module.exports = { gameFromClient, index, fromPerks, toPerks, validate, edit, samePage, computeAnchor, anchorRect, fallbackAnchor, filterBuilds, defaultBuild, topTrio, sameIds, visibleTabs, hasTeamRows, rowLabel, runeError, itemError, eloText, TIERS, LANES };
     return;
   }
 
@@ -301,7 +304,7 @@
 #sexo2-assistant .rank-row{display:flex;align-items:center;gap:var(--sp-2);padding:6px var(--sp-1);border-bottom:1px solid var(--s2-line);}
 #sexo2-assistant .rank-row .champ{width:20px;height:20px;border-radius:2px;}
 #sexo2-assistant .rank-row .champ.empty{background:var(--s2-surface-2);}
-#sexo2-assistant .rank-row .pos{font-size:13px;color:var(--s2-fg);}
+#sexo2-assistant .rank-row .who{font-size:13px;color:var(--s2-fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #sexo2-assistant .rank-row .elo{font-size:13px;color:var(--s2-fg);font-variant-numeric:tabular-nums;}
 #sexo2-assistant .list-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-1) 4px;font-size:var(--t-small);color:var(--s2-fg-3);}
 #sexo2-assistant .list-head .wr{width:52px;text-align:right;}
@@ -614,14 +617,12 @@
         const icon = p.championId
           ? `<img class="champ s2-icon" src="/lol-game-data/assets/v1/champion-icons/${p.championId}.png" alt="">`
           : `<span class="champ empty"></span>`;
-        return `<div class="rank-row">${icon}<span class="pos">${esc(LANES[p.position] || champName(p.championId))}</span><span class="grow"></span><span class="elo">${esc(eloText(p.elo))}</span></div>`;
+        return `<div class="rank-row">${icon}<span class="who">${esc(rowLabel(champName(p.championId), p.name))}</span><span class="grow"></span><span class="elo">${esc(eloText(p.elo))}</span></div>`;
       };
-      const section = (title, rows) =>
-        rows.length ? `<div class="section-head"><span class="t-heading">${title}</span></div>${rows.map(row).join("")}` : "";
+      // The enemies are hidden by the client until the game starts: only the team is shown
       const team = ranked.team || [];
-      const enemies = ranked.enemies || [];
-      if (!team.length && !enemies.length) return `<div class="state">—</div>`;
-      return `${section("Meu time", team)}${section("Adversário", enemies)}`;
+      if (!team.length) return `<div class="state">—</div>`;
+      return `<div class="section-head"><span class="t-heading">Meu time</span></div>${team.map(row).join("")}`;
     }
 
     // ----------------------------------------------------------- painel

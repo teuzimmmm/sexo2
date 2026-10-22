@@ -60,6 +60,10 @@ POSITION_LANES = {"top": "top", "jungle": "jungle", "middle": "middle", "bottom"
 # cap of players read in one champion select (D-140).
 RANKED_QUEUES = ("RANKED_SOLO_5x5", "RANKED_FLEX_SR")
 RANKED_LIMIT = 5
+TEAM_SIZE = 5
+# Queues whose champion select shows the allies' identities (D-151). Ranked Solo/Duo hides them
+# (Riot, patch 12.22), Arena has sixteen players and Swiftplay has no champion select.
+ELO_QUEUES = frozenset({400, 430, 440, 450})
 RANKED_TIMEOUT_S = 0.5
 POSITION_ORDER = {"top": 0, "jungle": 1, "middle": 2, "bottom": 3, "support": 4}
 _MISSING = object()
@@ -162,6 +166,16 @@ def read_ranked_entry(payload: Any) -> RankedEntry | None:
             points = None
         return RankedEntry(queue, tier.strip().upper(), division, points)
     return None
+
+
+def player_name(player: dict) -> tuple[str, str]:
+    """(name, tag) of a player of the champion-select roster; empty when the client hides it."""
+    name = next(
+        (v for k in ("gameName", "summonerName", "displayName") if isinstance(v := player.get(k), str) and v.strip()),
+        "",
+    )
+    tag = player.get("tagLine")
+    return name.strip(), tag.strip() if isinstance(tag, str) else ""
 
 
 def champion_id(player: dict, allow_intent: bool) -> int:
@@ -299,6 +313,7 @@ class AssistantService:
         self._ranked_team: list[dict] = []
         self._ranked_enemies: list[dict] = []
         self._ranked_session: str | None = None
+        self._ranked_available = False
         self._ranked_cache: dict[str, RankedEntry | None] = {}
         self._ranked_seen: dict[str, set[str]] = {"team": set(), "enemies": set()}
 
@@ -435,6 +450,7 @@ class AssistantService:
         self._ranked_team = []
         self._ranked_enemies = []
         self._ranked_session = None
+        self._ranked_available = False
         self._ranked_cache = {}
         self._ranked_seen = {"team": set(), "enemies": set()}
 
@@ -447,7 +463,9 @@ class AssistantService:
             self._ranked_session = session_id
             self._ranked_cache = {}
             self._ranked_seen = {"team": set(), "enemies": set()}
-        self._ranked_team = self._ranked_rows(session.get("myTeam"), "team", allow_intent=True)
+        allies = session.get("myTeam") or []
+        self._ranked_available = self._queue_id() in ELO_QUEUES and 1 <= len(allies) <= TEAM_SIZE
+        self._ranked_team = self._ranked_rows(allies, "team", allow_intent=True)
         self._ranked_enemies = self._ranked_rows(
             session.get("theirTeam"), "enemies", allow_intent=False, require_puuid=True
         )
@@ -463,16 +481,19 @@ class AssistantService:
                 continue  # the client did not reveal this enemy: never infer it
             entry = self._ranked_entry(puuid, side) if puuid else None
             position = POSITION_LANES.get(str(player.get("assignedPosition") or "").lower(), "")
+            name, tag = player_name(player)
             rows.append(
                 {
                     "cellId": player.get("cellId"),
                     "position": position,
+                    "name": name,
+                    "tag": tag,
                     "championId": champion_id(player, allow_intent),
                     "elo": entry.json() if entry is not None else None,
                 }
             )
         rows.sort(key=lambda row: POSITION_ORDER.get(row["position"], len(POSITION_ORDER)))
-        return rows
+        return rows[:TEAM_SIZE]
 
     def _ranked_entry(self, puuid: str, side: str) -> RankedEntry | None:
         if puuid in self._ranked_cache:
@@ -1012,7 +1033,7 @@ class AssistantService:
             "lane": context.lane if context else None,
             "mode": context.mode if context else None,
             "enemies": list(context.enemies) if context else [],
-            "ranked": {"team": self._ranked_team, "enemies": self._ranked_enemies},
+            "ranked": {"team": self._ranked_team, "enemies": self._ranked_enemies, "available": self._ranked_available},
             "opponentId": self._opponent,
             "error": self._error,
             "runes": {
