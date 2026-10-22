@@ -146,7 +146,8 @@ class TeamRowsStressTests(unittest.TestCase):
                     if published:
                         allies = session.get("myTeam") if isinstance(session, dict) else None
                         count = len(allies) if isinstance(allies, list) else 0
-                        self.assertEqual(ranked_state["available"], queue in ELO_QUEUES and 1 <= count <= 5)
+                        if queue != 1750:  # Arena counts only the duo, not the whole roster
+                            self.assertEqual(ranked_state["available"], queue in ELO_QUEUES and 1 <= count <= 5)
                 if published and not published[-1]["ranked"]["available"]:
                     self.assertEqual(opened, [])
                 for url in opened:

@@ -62,9 +62,10 @@ POSITION_LANES = {"top": "top", "jungle": "jungle", "middle": "middle", "bottom"
 RANKED_QUEUES = ("RANKED_SOLO_5x5", "RANKED_FLEX_SR")
 RANKED_LIMIT = 5
 TEAM_SIZE = 5
+ARENA_QUEUE = 1750  # sixteen players in the roster: the team is the duo, the ones that share the player's teamId
 # Queues whose champion select shows the allies' identities (D-151). Ranked Solo/Duo hides them
 # (Riot, patch 12.22), Arena has sixteen players and Swiftplay has no champion select.
-ELO_QUEUES = frozenset({400, 430, 440, 450})
+ELO_QUEUES = frozenset({400, 430, 440, 450, ARENA_QUEUE})
 RANKED_TIMEOUT_S = 0.5
 FORM_TIMEOUT_S = 2.0
 POSITION_ORDER = {"top": 0, "jungle": 1, "middle": 2, "bottom": 3, "support": 4}
@@ -188,6 +189,17 @@ def _open_in_browser(url: str) -> None:
     import webbrowser
 
     webbrowser.open(url)
+
+
+def arena_duo(roster: list, local_cell: Any) -> list:
+    """The Arena roster has everyone; the user's team is the players with the same teamId."""
+    local = next((p for p in roster if isinstance(p, dict) and p.get("cellId") == local_cell), None)
+    team = local.get("teamId") if isinstance(local, dict) else None
+    if isinstance(team, bool) or not isinstance(team, int):
+        return []
+    return [
+        p for p in roster if isinstance(p, dict) and p.get("teamId") == team and not isinstance(p.get("teamId"), bool)
+    ]
 
 
 def _puuid(player: Any) -> str:
@@ -349,6 +361,7 @@ class AssistantService:
         self._ranked_session: str | None = None
         self._ranked_available = False
         self._roster: tuple[list, str] = ([], "")  # the allies of the session and the local player's puuid
+        self._arena_logged: str | None = None
         self._region: str | None = None  # the profile site's code for the client's region
         self._region_read = False
         self._forms: dict[str, dict | None] = {}  # puuid -> recent form, for this session
@@ -508,6 +521,9 @@ class AssistantService:
             self._forms = {}
         allies = session.get("myTeam")
         allies = allies if isinstance(allies, list) else []
+        if self._queue_id() == ARENA_QUEUE:
+            self._log_arena(session_id, allies)
+            allies = arena_duo(allies, session.get("localPlayerCellId"))
         self._ranked_available = self._queue_id() in ELO_QUEUES and 1 <= len(allies) <= TEAM_SIZE
         local_cell = session.get("localPlayerCellId")
         local = next((_puuid(p) for p in allies if isinstance(p, dict) and p.get("cellId") == local_cell), "")
@@ -547,6 +563,14 @@ class AssistantService:
             )
         rows.sort(key=lambda row: POSITION_ORDER.get(row["position"], len(POSITION_ORDER)))
         return rows[:TEAM_SIZE]
+
+    def _log_arena(self, session_id: str, roster: list) -> None:
+        """Once per selection, the shape of the Arena roster (field names only), to learn it from a log."""
+        if self._arena_logged == session_id:
+            return
+        self._arena_logged = session_id
+        keys = sorted({k for p in roster if isinstance(p, dict) for k in p})
+        log.info("[ASSISTANT] arena roster: %d players, fields %s", len(roster), keys)
 
     def _open_profile(self, cell_id: Any) -> None:
         """Open the profile of one ally of the team shown, in the user's browser."""

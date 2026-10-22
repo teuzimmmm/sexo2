@@ -522,6 +522,30 @@ class RankedTeamTests(unittest.TestCase):
             {400: True, 420: False, 430: True, 440: True, 450: True, 480: False, 1750: False, 2400: False, 3140: False},
         )
 
+    def test_in_arena_the_team_is_the_duo_that_shares_the_team_id(self):
+        roster = []
+        for cell in range(16):
+            entry = player(cell, "", f"p{cell}", 1)
+            entry["teamId"] = cell // 2 + 1  # eight duos
+            entry["gameName"] = f"N{cell}"
+            roster.append(entry)
+        session = ranked_session("cs-arena-duo", roster)
+        session["localPlayerCellId"] = 5  # in duo 3, with cell 4
+        self.lcu.session = session
+        service, published = self.service_for(1750)
+        service.handle({"type": "assistant-request"})
+        ranked = published[-1]["ranked"]
+        self.assertTrue(ranked["available"])
+        self.assertEqual(sorted(row["cellId"] for row in ranked["team"]), [4, 5])
+        self.assertEqual(sorted(self.lcu.ranked_calls), ["p4", "p5"])  # only the duo is asked about
+
+    def test_in_arena_without_a_team_id_the_tab_is_not_shown(self):
+        self.lcu.session = ranked_session("cs-arena-none", [player(i, "", f"p{i}", 1) for i in range(16)])
+        service, published = self.service_for(1750)
+        service.handle({"type": "assistant-request"})
+        self.assertFalse(published[-1]["ranked"]["available"])
+        self.assertEqual(published[-1]["ranked"]["team"], [])
+
     def test_a_roster_of_sixteen_is_never_a_team(self):
         self.lcu.session = ranked_session("cs-arena", [player(i, "", f"p{i}", 1) for i in range(16)])
         service, published = self.service_for(440)
