@@ -303,7 +303,6 @@
 #sexo2-assistant .fav-row .rec-row{flex:1;min-width:0;}
 #sexo2-assistant .rank-row{display:flex;align-items:center;gap:var(--sp-2);padding:6px var(--sp-1);border-bottom:1px solid var(--s2-line);}
 #sexo2-assistant .rank-row .champ{width:20px;height:20px;border-radius:2px;}
-#sexo2-assistant .rank-row .champ.empty{background:var(--s2-surface-2);}
 #sexo2-assistant .rank-row .who{font-size:13px;color:var(--s2-fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #sexo2-assistant .rank-row .elo{font-size:13px;color:var(--s2-fg);font-variant-numeric:tabular-nums;}
 #sexo2-assistant .list-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-1) 4px;font-size:var(--t-small);color:var(--s2-fg-3);}
@@ -616,7 +615,7 @@
       const row = (p) => {
         const icon = p.championId
           ? `<img class="champ s2-icon" src="/lol-game-data/assets/v1/champion-icons/${p.championId}.png" alt="">`
-          : `<span class="champ empty"></span>`;
+          : ""; // no champion yet: no empty square, which looks like a checkbox
         return `<div class="rank-row">${icon}<span class="who">${esc(rowLabel(champName(p.championId), p.name))}</span><span class="grow"></span><span class="elo">${esc(eloText(p.elo))}</span></div>`;
       };
       // The enemies are hidden by the client until the game starts: only the team is shown
