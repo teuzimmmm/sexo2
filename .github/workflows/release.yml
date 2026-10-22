@@ -80,7 +80,8 @@ jobs:
         with:
           name: SEXO2-teste-${{ github.sha }}
           path: app/dist-test/SEXO2
-          retention-days: 14
+          retention-days: 3
+        continue-on-error: true  # the artifact quota of the repository can be full; the pre-release below does not use it
       - name: Publish test pre-release
         if: github.event_name == 'push' && github.ref == 'refs/heads/galinacio'
         shell: pwsh
