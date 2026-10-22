@@ -102,12 +102,18 @@ class ChampSelectContext:
     locked: bool = False
 
 
+def _team(session: dict, key: str) -> list:
+    """One team of a champion-select session; anything that is not a list is no team."""
+    team = session.get(key)
+    return team if isinstance(team, list) else []
+
+
 def read_context(session: Any, queue_id: int | None) -> ChampSelectContext | None:
     """The local player's champion-select context, or None outside a usable session."""
     if not isinstance(session, dict):
         return None
     local = session.get("localPlayerCellId")
-    me = next((p for p in session.get("myTeam") or [] if isinstance(p, dict) and p.get("cellId") == local), None)
+    me = next((p for p in _team(session, "myTeam") if isinstance(p, dict) and p.get("cellId") == local), None)
     if me is None:
         return None
     locked = me.get("championId") or 0
@@ -120,7 +126,7 @@ def read_context(session: Any, queue_id: int | None) -> ChampSelectContext | Non
     phase = (session.get("timer") or {}).get("phase")
     enemies = tuple(
         p["championId"]
-        for p in session.get("theirTeam") or []
+        for p in _team(session, "theirTeam")
         if isinstance(p, dict) and isinstance(p.get("championId"), int) and p["championId"] > 0
     )
     return ChampSelectContext(
@@ -176,6 +182,17 @@ def read_ranked_entry(payload: Any) -> RankedEntry | None:
         )
         return RankedEntry(queue, tier.strip().upper(), division, points, wins, losses)
     return None
+
+
+def _open_in_browser(url: str) -> None:
+    import webbrowser
+
+    webbrowser.open(url)
+
+
+def _puuid(player: Any) -> str:
+    puuid = player.get("puuid") if isinstance(player, dict) else None
+    return puuid.strip() if isinstance(puuid, str) else ""
 
 
 def player_name(player: dict) -> tuple[str, str]:
@@ -284,6 +301,7 @@ class AssistantService:
         auto_delay: float = 0.5,
         favorites: FavoriteBuilds | None = None,
         forms_worker: SerialWorker | None = None,
+        open_url: Callable[[str], Any] | None = None,
     ) -> None:
         self._lcu = lcu
         self._publish = publish
@@ -292,6 +310,7 @@ class AssistantService:
         self._stats_factory = stats_factory
         self._worker = worker if worker is not None else SerialWorker("SEXO2-Assistant", capacity=16)
         # The recent games of the team are read apart, so a slow answer never delays the runes or items
+        self._open_url = open_url if open_url is not None else _open_in_browser
         self._forms_worker = (
             forms_worker if forms_worker is not None else SerialWorker("SEXO2-AssistantForms", capacity=4)
         )
@@ -330,9 +349,9 @@ class AssistantService:
         self._ranked_session: str | None = None
         self._ranked_available = False
         self._roster: tuple[list, str] = ([], "")  # the allies of the session and the local player's puuid
-        self._met_read = False
+        self._region: str | None = None  # the profile site's code for the client's region
+        self._region_read = False
         self._forms: dict[str, dict | None] = {}  # puuid -> recent form, for this session
-        self._met: set[str] = set()
         self._ranked_cache: dict[str, RankedEntry | None] = {}
         self._ranked_seen: dict[str, set[str]] = {"team": set(), "enemies": set()}
 
@@ -344,6 +363,8 @@ class AssistantService:
             self._submit(self._refresh)
         elif kind == "assistant-ranked":
             self._submit(self._refresh_ranked)
+        elif kind == "assistant-open-profile":
+            self._submit(lambda: self._open_profile(payload.get("cellId")))
         elif kind == "assistant-opponent":
             opponent = payload.get("championId")
             self._opponent = opponent if isinstance(opponent, int) and opponent > 0 else None
@@ -472,8 +493,6 @@ class AssistantService:
         self._ranked_available = False
         self._roster = ([], "")
         self._forms = {}
-        self._met = set()
-        self._met_read = False
         self._ranked_cache = {}
         self._ranked_seen = {"team": set(), "enemies": set()}
 
@@ -487,13 +506,12 @@ class AssistantService:
             self._ranked_cache = {}
             self._ranked_seen = {"team": set(), "enemies": set()}
             self._forms = {}
-            self._met = set()
-            self._met_read = False
-        allies = session.get("myTeam") or []
+        allies = session.get("myTeam")
+        allies = allies if isinstance(allies, list) else []
         self._ranked_available = self._queue_id() in ELO_QUEUES and 1 <= len(allies) <= TEAM_SIZE
         local_cell = session.get("localPlayerCellId")
-        local = next((p.get("puuid") for p in allies if isinstance(p, dict) and p.get("cellId") == local_cell), "")
-        self._roster = (list(allies), local if isinstance(local, str) else "")
+        local = next((_puuid(p) for p in allies if isinstance(p, dict) and p.get("cellId") == local_cell), "")
+        self._roster = (list(allies), local)
         self._ranked_team = self._ranked_rows(allies, "team", allow_intent=True)
         if self._ranked_available:
             self._queue_forms(session_id)
@@ -503,7 +521,7 @@ class AssistantService:
 
     def _ranked_rows(self, players: Any, side: str, *, allow_intent: bool, require_puuid: bool = False) -> list[dict]:
         rows = []
-        for player in players or []:
+        for player in players if isinstance(players, list) else []:
             if not isinstance(player, dict):
                 continue
             puuid = player.get("puuid")
@@ -524,33 +542,45 @@ class AssistantService:
                     "championId": champion,
                     "elo": entry.json() if entry is not None else None,
                     "form": player_form.public(self._forms.get(puuid), champion) if others else None,
-                    "met": bool(others and puuid and puuid in self._met),
+                    "canOpen": bool(others and player_form.profile_url(self._region, name, tag)),
                 }
             )
         rows.sort(key=lambda row: POSITION_ORDER.get(row["position"], len(POSITION_ORDER)))
         return rows[:TEAM_SIZE]
 
+    def _open_profile(self, cell_id: Any) -> None:
+        """Open the profile of one ally of the team shown, in the user's browser."""
+        if not self._ranked_available or isinstance(cell_id, bool) or not isinstance(cell_id, int):
+            return
+        ally = next((a for a in self._roster[0] if isinstance(a, dict) and a.get("cellId") == cell_id), None)
+        if ally is None or _puuid(ally) == self._roster[1]:
+            return
+        name, tag = player_name(ally)
+        url = player_form.profile_url(self._region, name, tag)
+        if url is None:
+            return
+        try:
+            self._open_url(url)
+        except Exception as error:
+            log.info("[ASSISTANT] could not open the profile: %s", error)
+
     def _queue_forms(self, session_id: str) -> None:
-        pending = [
-            p
-            for p in (a.get("puuid") for a in self._roster[0] if isinstance(a, dict))
-            if p and p != self._roster[1] and p not in self._forms
-        ]
-        if pending or (self._roster[0] and not self._met_read):
+        pending = [p for p in map(_puuid, self._roster[0]) if p and p != self._roster[1] and p not in self._forms]
+        if pending or (self._roster[0] and not self._region_read):
             self._forms_worker.submit(
                 lambda: self._load_forms(session_id), lambda error: log.info("[ASSISTANT] recent games: %s", error)
             )
 
     def _load_forms(self, session_id: str) -> None:
         """The recent games of each ally, and who the user already met, once per selection."""
-        if not self._met_read:
-            self._met_read = True
+        if not self._region_read:
+            self._region_read = True
             try:
-                self._met = player_form.recently_met(self._lcu.recently_played())
+                self._region = player_form.profile_region(self._lcu.get("/riotclient/region-locale"))
             except Exception as error:
-                log.info("[ASSISTANT] recently played unavailable: %s", error)
+                log.info("[ASSISTANT] client region unavailable: %s", error)
         for ally in list(self._roster[0])[:TEAM_SIZE]:
-            puuid = ally.get("puuid") if isinstance(ally, dict) else None
+            puuid = _puuid(ally)
             if not puuid or puuid == self._roster[1] or puuid in self._forms:
                 continue
             if session_id != self._ranked_session:

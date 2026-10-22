@@ -9,6 +9,7 @@ from pengu.communication.message_handler import MessageHandler
 ROUTES = {
     "assistant-request": "_handle_assistant",
     "assistant-ranked": "_handle_assistant",
+    "assistant-open-profile": "_handle_assistant",
     "assistant-opponent": "_handle_assistant",
     "assistant-runes-choose": "_handle_assistant",
     "assistant-runes-edit": "_handle_assistant",

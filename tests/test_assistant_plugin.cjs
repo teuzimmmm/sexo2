@@ -68,7 +68,7 @@ test('ranked entries from the client become the Equipe line', () => {
   const solo = ranked.queueMap.RANKED_SOLO_5x5;
   const flex = ranked.queueMap.RANKED_FLEX_SR;
   assert.equal(A.eloText({ queue: solo.queueType, tier: solo.tier, division: solo.division, leaguePoints: solo.leaguePoints }), 'Platina IV · 77 PDL');
-  assert.equal(A.eloText({ queue: flex.queueType, tier: flex.tier, division: flex.division, leaguePoints: flex.leaguePoints }), 'Flex · Ouro II · 45 PDL');
+  assert.equal(A.eloText({ queue: flex.queueType, tier: flex.tier, division: flex.division, leaguePoints: flex.leaguePoints }), 'Ouro II · 45 PDL');
   assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: null, leaguePoints: 312 }), 'Mestre · 312 PDL');
   assert.equal(A.eloText({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: 'I', leaguePoints: 312 }), 'Mestre · 312 PDL');
 });
@@ -150,22 +150,23 @@ test('linha da Equipe: tudo o que o cliente der aparece, nada além', () => {
       name: 'Fulano', championId: 86,
       elo: { queue: 'RANKED_SOLO_5x5', tier: 'PLATINUM', division: 'IV', leaguePoints: 77, wins: 86, losses: 56 },
       form: { games: 20, wins: 13, recent: [true, true, false, true, true], role: 'top', top: [{ id: 22, games: 9 }, { id: 86, games: 3 }], withChampion: { games: 6, wins: 4 } },
-      met: true,
+      canOpen: true, cellId: 3,
     },
     champ,
   );
   assert.equal(full.name, 'Fulano');
   assert.equal(full.champion, 'Garen');
-  assert.deepEqual(full.elo, { queue: '', tier: 'Platina IV', points: '77 PDL' });
+  assert.deepEqual(full.elo, { tier: 'Platina IV', points: '77 PDL' });
   assert.deepEqual(full.facts, ['Topo', '61% em 142', 'Garen 67% em 6']);
   assert.deepEqual(full.recent, [true, true, false, true, true]);
-  assert.equal(full.met, true);
+  assert.equal(full.canOpen, true);
+  assert.equal(full.cell, 3);
   assert.equal(full.tip, 'Fulano|Mais jogados: Ashe 9, Garen 3. 13 vitórias e 7 derrotas nas últimas 20.');
 });
 
 test('linha da Equipe: cada dado ausente some, sem estragar os outros', () => {
   const none = A.rowParts({ name: '', championId: 0, elo: null, form: null, met: false }, champ);
-  assert.deepEqual(none, { name: '', champion: '', icon: 0, elo: null, facts: [], recent: [], met: false, tip: '' });
+  assert.deepEqual(none, { name: '', champion: '', icon: 0, elo: null, facts: [], recent: [], cell: -1, canOpen: false, tip: '' });
   // ainda não escolheu o campeão: nada de "com o campeão"
   const unpicked = A.rowParts({ name: 'X', championId: 0, form: { games: 5, wins: 1, recent: [false], role: null, top: [], withChampion: null } }, champ);
   assert.deepEqual(unpicked.facts, []);
@@ -184,10 +185,10 @@ test('linha da Equipe: cada dado ausente some, sem estragar os outros', () => {
   assert.equal(A.rowParts({ form: { games: 0 } }, champ).tip, '');
 });
 
-test('elo em partes: Flex, divisão só onde existe, pontos só se vierem', () => {
-  assert.deepEqual(A.eloParts({ queue: 'RANKED_FLEX_SR', tier: 'GOLD', division: 'II', leaguePoints: 45 }), { queue: 'Flex', tier: 'Ouro II', points: '45 PDL' });
-  assert.deepEqual(A.eloParts({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: 'I', leaguePoints: 312 }), { queue: '', tier: 'Mestre', points: '312 PDL' });
-  assert.deepEqual(A.eloParts({ queue: 'RANKED_SOLO_5x5', tier: 'IRON', division: 'IV' }), { queue: '', tier: 'Ferro IV', points: '' });
+test('elo em partes: a fila não é distinguida, divisão só onde existe, pontos só se vierem', () => {
+  assert.deepEqual(A.eloParts({ queue: 'RANKED_FLEX_SR', tier: 'GOLD', division: 'II', leaguePoints: 45 }), { tier: 'Ouro II', points: '45 PDL' });
+  assert.deepEqual(A.eloParts({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: 'I', leaguePoints: 312 }), { tier: 'Mestre', points: '312 PDL' });
+  assert.deepEqual(A.eloParts({ queue: 'RANKED_SOLO_5x5', tier: 'IRON', division: 'IV' }), { tier: 'Ferro IV', points: '' });
   assert.equal(A.eloParts({ tier: 'UNRANKED' }), null);
   assert.equal(A.eloParts(null), null);
   assert.equal(A.eloText(null), '—');

@@ -127,6 +127,7 @@ def _choose_mod_file() -> Optional[Path]:
 _ROUTES = {
     "assistant-request": "_handle_assistant",
     "assistant-ranked": "_handle_assistant",
+    "assistant-open-profile": "_handle_assistant",
     "assistant-opponent": "_handle_assistant",
     "assistant-runes-choose": "_handle_assistant",
     "assistant-runes-edit": "_handle_assistant",

@@ -82,10 +82,6 @@ class LCU:
         """Recent games of one player (see LCUAPI.match_history)"""
         return self._api.match_history(puuid, count, timeout)
 
-    def recently_played(self, timeout: float = 2.0):
-        """Players of the user's last games (see LCUAPI.recently_played)"""
-        return self._api.recently_played(timeout)
-
     def put(self, path: str, json_data, timeout: float, headers: Optional[dict] = None):
         """Make PUT request to LCU API (see LCUAPI.put)"""
         return self._api.put(path, json_data, timeout, headers)

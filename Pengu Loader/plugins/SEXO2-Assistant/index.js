@@ -210,7 +210,7 @@
     CHALLENGER: "Desafiante",
   };
   const APEX_TIERS = new Set(["MASTER", "GRANDMASTER", "CHALLENGER"]);
-  // The pieces of an elo: the queue prefix (Flex), the tier with its division, and the points
+  // The pieces of an elo: the tier with its division, and the points (the queue is not told apart)
   function eloParts(elo) {
     if (!elo || typeof elo.tier !== "string") return null;
     const upper = elo.tier.toUpperCase();
@@ -218,49 +218,51 @@
     if (!tier) return null;
     const division = !APEX_TIERS.has(upper) && elo.division && /^(I|II|III|IV)$/.test(elo.division) ? ` ${elo.division}` : "";
     return {
-      queue: elo.queue === "RANKED_FLEX_SR" ? "Flex" : "",
       tier: `${tier}${division}`,
       points: Number.isInteger(elo.leaguePoints) ? `${elo.leaguePoints} PDL` : "",
     };
   }
   function eloText(elo) {
     const parts = eloParts(elo);
-    return parts ? [parts.queue, parts.tier, parts.points].filter(Boolean).join(" · ") : "—";
+    return parts ? [parts.tier, parts.points].filter(Boolean).join(" · ") : "—";
   }
 
   // Everything one row of the Equipe tab can show. Every field is optional (D-153): what the client
   // does not give is left out, never guessed.
   const count = (n) => Number(n).toLocaleString("pt-BR");
+  const nat = (n) => Number.isInteger(n) && n >= 0;
+  const percent = (won, of) => Math.round((100 * won) / of);
   function rowParts(p, champName) {
     const champion = p.championId ? champName(p.championId) || "" : "";
     const elo = p.elo || null;
-    const games = elo && Number.isInteger(elo.wins) && Number.isInteger(elo.losses) ? elo.wins + elo.losses : 0;
+    const games = elo && nat(elo.wins) && nat(elo.losses) ? elo.wins + elo.losses : 0;
     const form = p.form || null;
     const facts = [];
     if (form && LANES[form.role]) facts.push(LANES[form.role]);
-    if (games > 0) facts.push(`${Math.round((100 * elo.wins) / games)}% em ${count(games)}`);
+    if (games > 0) facts.push(`${percent(elo.wins, games)}% em ${count(games)}`);
     const withChampion = form && form.withChampion;
-    if (withChampion && withChampion.games > 0 && champion) {
-      facts.push(`${champion} ${Math.round((100 * withChampion.wins) / withChampion.games)}% em ${count(withChampion.games)}`);
+    if (withChampion && nat(withChampion.games) && withChampion.games > 0 && nat(withChampion.wins) && withChampion.wins <= withChampion.games && champion) {
+      facts.push(`${champion} ${percent(withChampion.wins, withChampion.games)}% em ${count(withChampion.games)}`);
     }
     return {
-      name: p.name || "",
+      name: typeof p.name === "string" ? p.name : "",
       champion,
       icon: p.championId || 0,
       elo: eloParts(elo),
       facts,
-      recent: form && Array.isArray(form.recent) ? form.recent.map(Boolean) : [],
-      met: p.met === true,
+      recent: form && Array.isArray(form.recent) ? form.recent.slice(0, 5).map(Boolean) : [],
+      cell: Number.isInteger(p.cellId) ? p.cellId : -1,
+      canOpen: p.canOpen === true && Number.isInteger(p.cellId),
       tip: rowTip(p, champName),
     };
   }
   // The most played champions and the record of the last games, for the tooltip ("Título|Texto")
   function rowTip(p, champName) {
     const form = p.form;
-    if (!form || !(form.games > 0)) return "";
-    const top = (form.top || []).filter((t) => champName(t.id)).map((t) => `${champName(t.id)} ${t.games}`);
+    if (!form || !nat(form.games) || form.games <= 0 || form.games > 100 || !nat(form.wins) || form.wins > form.games) return "";
+    const top = (Array.isArray(form.top) ? form.top : []).filter((t) => t && nat(t.games) && champName(t.id)).slice(0, 3).map((t) => `${champName(t.id)} ${t.games}`);
     const record = `${count(form.wins)} ${form.wins === 1 ? "vitória" : "vitórias"} e ${count(form.games - form.wins)} ${form.games - form.wins === 1 ? "derrota" : "derrotas"} nas últimas ${count(form.games)}`;
-    return `${p.name || "Jogador"}|${top.length ? `Mais jogados: ${top.join(", ")}. ` : ""}${record}.`;
+    return `${(typeof p.name === "string" && p.name) || "Jogador"}|${top.length ? `Mais jogados: ${top.join(", ")}. ` : ""}${record}.`;
   }
 
   const RUNE_ERRORS = {
@@ -349,20 +351,20 @@
 #sexo2-assistant .rank-row .champ.none{display:grid;place-items:center;font:500 14px var(--s2-font-display);color:var(--s2-fg-3);}
 #sexo2-assistant .rank-row .col{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;}
 #sexo2-assistant .rank-row .l1,#sexo2-assistant .rank-row .l2{display:flex;align-items:baseline;gap:var(--sp-3);min-width:0;}
-#sexo2-assistant .rank-row .who{font-size:14px;font-weight:600;color:var(--s2-fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#sexo2-assistant .rank-row .cn{font-size:13px;color:var(--s2-fg-2);white-space:nowrap;}
-#sexo2-assistant .rank-row .elo{margin-left:auto;display:flex;align-items:baseline;gap:6px;white-space:nowrap;font-size:14px;font-variant-numeric:var(--s2-numeric-stats);}
-#sexo2-assistant .rank-row .elo b{font-weight:600;}
-#sexo2-assistant .rank-row .elo .pts{font-size:12px;color:var(--s2-fg-3);}
-#sexo2-assistant .rank-row .elo .q{font:500 11px var(--s2-font-display);text-transform:uppercase;letter-spacing:.06em;color:var(--s2-fg-3);}
+#sexo2-assistant .rank-row .who{font:500 16px/1.2 var(--s2-font-display);letter-spacing:.01em;color:var(--s2-fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#sexo2-assistant .rank-row .cn{font:400 14px/1.2 var(--s2-font-display);letter-spacing:.01em;color:var(--s2-fg-2);white-space:nowrap;}
+#sexo2-assistant .rank-row .elo{margin-left:auto;display:flex;align-items:baseline;gap:6px;white-space:nowrap;font:400 16px/1.2 var(--s2-font-display);font-variant-numeric:var(--s2-numeric-stats);}
+#sexo2-assistant .rank-row .elo b{font-weight:500;}
+#sexo2-assistant .rank-row .elo .pts{font-size:13px;color:var(--s2-fg-3);}
 #sexo2-assistant .rank-row .elo.none{color:var(--s2-fg-3);}
-#sexo2-assistant .rank-row .l2{font-size:12px;color:var(--s2-fg-3);font-variant-numeric:var(--s2-numeric-stats);}
-#sexo2-assistant .rank-row .facts{display:flex;min-width:0;overflow:hidden;white-space:nowrap;}
+#sexo2-assistant .rank-row .l2{font:600 12px/1.3 var(--s2-font-text);color:var(--s2-fg-3);font-variant-numeric:var(--s2-numeric-stats);}
+#sexo2-assistant .rank-row .facts{flex:1;display:flex;flex-wrap:wrap;min-width:0;max-height:16px;overflow:hidden;}  /* a fact that does not fit is left out whole, never cut */
+#sexo2-assistant .rank-row .facts span{white-space:nowrap;}
 #sexo2-assistant .rank-row .facts span+span{border-left:1px solid var(--s2-line);margin-left:var(--sp-3);padding-left:var(--sp-3);}
-#sexo2-assistant .rank-row .met{flex:none;font:500 11px var(--s2-font-display);text-transform:uppercase;letter-spacing:.06em;color:var(--s2-fg-2);border:1px solid var(--s2-line);padding:1px 5px;}
 #sexo2-assistant .rank-row .res{margin-left:auto;display:flex;gap:3px;flex:none;}
 #sexo2-assistant .rank-row .res i{width:8px;height:8px;border:1px solid var(--s2-fg-3);}
 #sexo2-assistant .rank-row .res i.w{background:var(--s2-fg);border-color:var(--s2-fg);}
+#sexo2-assistant .rank-row .open{width:28px;padding:0;display:grid;place-items:center;flex:none;}
 #sexo2-assistant .list-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-1) 4px;font-size:var(--t-small);color:var(--s2-fg-3);}
 #sexo2-assistant .list-head .wr{width:52px;text-align:right;}
 #sexo2-assistant .list-head .n{width:56px;text-align:right;}
@@ -676,15 +678,18 @@
           ? `<img class="champ" src="/lol-game-data/assets/v1/champion-icons/${v.icon}.png" alt="">`
           : `<span class="champ none" data-tip="Ainda não escolheu|O campeão aparece aqui quando ele escolher.">?</span>`;
         const elo = v.elo
-          ? `<span class="elo">${v.elo.queue ? `<span class="q">${esc(v.elo.queue)}</span>` : ""}<b>${esc(v.elo.tier)}</b>${v.elo.points ? `<span class="pts">${esc(v.elo.points)}</span>` : ""}</span>`
+          ? `<span class="elo"><b>${esc(v.elo.tier)}</b>${v.elo.points ? `<span class="pts">${esc(v.elo.points)}</span>` : ""}</span>`
           : `<span class="elo none">—</span>`;
         const second =
-          v.met || v.facts.length || v.recent.length
-            ? `<div class="l2">${v.met ? `<span class="met">Já cruzou com você</span>` : ""}<span class="facts">${v.facts.map((f) => `<span>${esc(f)}</span>`).join("")}</span>${
+          v.facts.length || v.recent.length
+            ? `<div class="l2"><span class="facts">${v.facts.map((f) => `<span>${esc(f)}</span>`).join("")}</span>${
                 v.recent.length ? `<span class="res" aria-label="Últimas partidas">${v.recent.map((w) => `<i class="${w ? "w" : ""}"></i>`).join("")}</span>` : ""
               }</div>`
             : "";
-        return `<div class="rank-row"${v.tip ? ` data-tip="${esc(v.tip)}"` : ""}>${icon}<div class="col"><div class="l1"><span class="who">${esc(v.name || "—")}</span>${v.champion ? `<span class="cn">${esc(v.champion)}</span>` : ""}${elo}</div>${second}</div></div>`;
+        const open = v.canOpen
+          ? `<button class="s2-btn ghost open" data-act="open-profile" data-cell="${v.cell}" aria-label="Abrir perfil de ${esc(v.name)}" data-tip="Abrir perfil|Abre o perfil de ${esc(v.name)} no op.gg."><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V14H2V4h4.5"/></svg></button>`
+          : "";
+        return `<div class="rank-row"${v.tip ? ` data-tip="${esc(v.tip)}"` : ""}>${icon}<div class="col"><div class="l1"><span class="who">${esc(v.name || "—")}</span>${v.champion ? `<span class="cn">${esc(v.champion)}</span>` : ""}${elo}</div>${second}</div>${open}</div>`;
       };
       // The enemies are hidden by the client until the game starts: only the team is shown
       const team = ranked.team || [];
@@ -785,6 +790,11 @@
       const st = S.state;
       switch (name) {
         case "close": close(); return;
+        case "open-profile": {
+          const cell = Number(el.dataset.cell);
+          if (Number.isInteger(cell) && cell >= 0) send({ type: "assistant-open-profile", cellId: cell });
+          return;
+        }
         case "tab":
           if (el.dataset.tab === "settings") {
             // O painel do SEXO2 abre em Configurações; o assistente fecha.

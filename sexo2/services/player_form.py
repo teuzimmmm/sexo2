@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections import Counter
 from typing import Any
+from urllib.parse import quote
 
 RECENT = 5  # results shown as dots
 TOP_CHAMPIONS = 3  # most played, for the tooltip
@@ -124,8 +125,22 @@ def public(summary: dict | None, champion_id: int) -> dict | None:
     }
 
 
-def recently_met(payload: Any) -> set[str]:
-    """Players who were in one of the user's last games, on either team."""
-    if not isinstance(payload, list):
-        return set()
-    return {p["puuid"] for p in payload if isinstance(p, dict) and isinstance(p.get("puuid"), str) and p["puuid"]}
+# The site the profile button opens. Only this address is ever built, from the client's own data.
+PROFILE_URL = "https://www.op.gg/summoners/{region}/{name}-{tag}"
+_PROFILE_REGIONS = {
+    "BR": "br", "NA": "na", "EUW": "euw", "EUNE": "eune", "LAN": "lan", "LAS": "las", "OCE": "oce", "TR": "tr",
+    "RU": "ru", "JP": "jp", "KR": "kr", "PH2": "ph", "SG2": "sg", "TH2": "th", "TW2": "tw", "VN2": "vn",
+}  # fmt: skip
+
+
+def profile_region(payload: Any) -> str | None:
+    """The site's region code for the client's region (``/riotclient/region-locale``), or None."""
+    region = payload.get("region") if isinstance(payload, dict) else None
+    return _PROFILE_REGIONS.get(region.strip().upper()) if isinstance(region, str) else None
+
+
+def profile_url(region: str | None, name: str, tag: str) -> str | None:
+    """The address of a player's profile; None when the region, the name or the tag is missing."""
+    if not region or not name or not tag:
+        return None
+    return PROFILE_URL.format(region=region, name=quote(name, safe=""), tag=quote(tag, safe=""))

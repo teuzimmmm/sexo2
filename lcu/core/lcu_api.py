@@ -160,10 +160,6 @@ class LCUAPI:
             use_cache=False,
         )
 
-    def recently_played(self, timeout: float = 2.0) -> Optional[list]:
-        """Players who were in the user's last games (uncached)."""
-        return self.get("/lol-match-history/v1/recently-played-summoners", timeout=timeout, use_cache=False)
-
     def get_bytes(self, path: str, timeout: float = 2.0) -> Optional[bytes]:
         """Raw body of a GET, uncached (game data assets such as icons); None when unavailable."""
         if not self.connection.ok:

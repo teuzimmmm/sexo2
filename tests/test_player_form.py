@@ -126,14 +126,27 @@ class SummarizeTests(unittest.TestCase):
         self.assertEqual(player_form.summarize([game(1, 1, True)], "p1")["recent"], [True])
 
 
-class RecentlyMetTests(unittest.TestCase):
-    def test_puuids_of_the_last_games(self):
-        met = player_form.recently_met([{"puuid": "a", "teamId": 100}, {"puuid": "b"}, {"summonerName": "x"}, "junk"])
-        self.assertEqual(met, {"a", "b"})
+class ProfileTests(unittest.TestCase):
+    def test_the_address_comes_from_the_clients_region_name_and_tag(self):
+        region = player_form.profile_region({"region": "BR", "locale": "pt_BR"})
+        self.assertEqual(region, "br")
+        self.assertEqual(player_form.profile_url(region, "Fulano", "BR1"), "https://www.op.gg/summoners/br/Fulano-BR1")
 
-    def test_anything_else_is_nobody(self):
-        for bad in (None, {}, "x", 3):
-            self.assertEqual(player_form.recently_met(bad), set())
+    def test_names_are_encoded_so_nothing_can_leave_the_address(self):
+        url = player_form.profile_url("br", "A B/ü?x#y", "T&G")
+        self.assertEqual(url, "https://www.op.gg/summoners/br/A%20B%2F%C3%BC%3Fx%23y-T%26G")
+        self.assertTrue(url.startswith("https://www.op.gg/summoners/br/"))
+
+    def test_without_a_region_a_name_or_a_tag_there_is_no_address(self):
+        for args in ((None, "A", "B"), ("br", "", "B"), ("br", "A", ""), ("", "A", "B")):
+            with self.subTest(args=args):
+                self.assertIsNone(player_form.profile_url(*args))
+
+    def test_unknown_or_malformed_regions_give_no_region(self):
+        for payload in (None, {}, [], "BR", {"region": 3}, {"region": "MARS"}, {"region": ""}):
+            with self.subTest(payload=payload):
+                self.assertIsNone(player_form.profile_region(payload))
+        self.assertEqual(player_form.profile_region({"region": " euw "}), "euw")
 
 
 if __name__ == "__main__":

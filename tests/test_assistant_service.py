@@ -42,11 +42,15 @@ class FakeLCU:
         self.ranked_calls = []
         self.history = {}
         self.history_calls = []
-        self.recent = []
+        self.region = {"region": "BR", "locale": "pt_BR"}
 
     def get(self, path, **kwargs):
         if path == "/lol-item-sets/v1/item-sets/7/sets":
             return copy.deepcopy(self.item_sets)
+        if path == "/riotclient/region-locale":
+            if isinstance(self.region, Exception):
+                raise self.region
+            return copy.deepcopy(self.region)
         return {
             "/lol-champ-select/v1/session": self.session,
             "/lol-perks/v1/styles": STYLES["styles"],
@@ -68,11 +72,6 @@ class FakeLCU:
         if isinstance(value, Exception):
             raise value
         return copy.deepcopy(value)
-
-    def recently_played(self, timeout=2.0):
-        if isinstance(self.recent, Exception):
-            raise self.recent
-        return copy.deepcopy(self.recent)
 
     def ranked_stats(self, puuid, timeout=1.0):
         self.ranked_calls.append(puuid)
@@ -548,7 +547,7 @@ class RankedTeamTests(unittest.TestCase):
     def form_team(self):
         local = player(2, "middle", "p-me", 103)
         top = player(1, "top", "p-top", 86)
-        top.update({"gameName": "Fulano"})
+        top.update({"gameName": "Fulano", "tagLine": "BR1"})
         jungle = player(3, "jungle", "p-jg", 0)  # has not picked yet
         jungle.update({"gameName": "Beltrano"})
         return [top, local, jungle]
@@ -565,17 +564,16 @@ class RankedTeamTests(unittest.TestCase):
     def test_the_form_of_each_ally_is_read_apart_once_and_published(self):
         self.lcu.session = ranked_session("cs-form", self.form_team())
         self.lcu.history["p-top"] = self.top_games()
-        self.lcu.recent = [{"puuid": "p-top"}]
         service, published = self.service_for(440)
         service.handle({"type": "assistant-request"})
         rows = {row["position"]: row for row in published[-1]["ranked"]["team"]}
         self.assertEqual(rows["top"]["form"]["recent"], [True, True, False])
         self.assertEqual(rows["top"]["form"]["role"], "top")
         self.assertEqual(rows["top"]["form"]["withChampion"], {"games": 2, "wins": 2})
-        self.assertTrue(rows["top"]["met"])
+        self.assertTrue(rows["top"]["canOpen"])  # name, tag and region are known
         # the local player is never compared with himself, and a player without history has no form
         self.assertIsNone(rows["middle"]["form"])
-        self.assertFalse(rows["middle"]["met"])
+        self.assertFalse(rows["middle"]["canOpen"])
         self.assertIsNone(rows["jungle"]["form"])
         self.assertNotIn("p-me", self.lcu.history_calls)
         service.handle({"type": "assistant-request"})
@@ -606,12 +604,12 @@ class RankedTeamTests(unittest.TestCase):
         self.lcu.session = ranked_session("cs-fail", self.form_team())
         self.lcu.history["p-top"] = RuntimeError("timeout")
         self.lcu.history["p-jg"] = "not a payload"
-        self.lcu.recent = RuntimeError("down")
+        self.lcu.region = RuntimeError("down")
         service, published = self.service_for(440)
         service.handle({"type": "assistant-request"})
         rows = published[-1]["ranked"]["team"]
         self.assertEqual(len(rows), 3)
-        self.assertTrue(all(row["form"] is None and row["met"] is False for row in rows))
+        self.assertTrue(all(row["form"] is None and row["canOpen"] is False for row in rows))
 
     def test_nothing_about_the_form_is_read_where_the_tab_is_not_shown(self):
         self.lcu.session = ranked_session("cs-solo", self.form_team())
@@ -619,6 +617,67 @@ class RankedTeamTests(unittest.TestCase):
             service, _ = self.service_for(queue_id)
             service.handle({"type": "assistant-request"})
         self.assertEqual(self.lcu.history_calls, [])
+
+    def service_with_opener(self, queue_id=440):
+        opened = []
+        service = AssistantService(
+            self.lcu,
+            lambda state: None,
+            queue_id=lambda: queue_id,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            forms_worker=InlineWorker(),
+            controller=FakeController(),
+            open_url=opened.append,
+        )
+        return service, opened
+
+    def test_the_profile_button_opens_the_site_for_that_ally_only(self):
+        self.lcu.session = ranked_session("cs-open", self.form_team())
+        service, opened = self.service_with_opener()
+        service.handle({"type": "assistant-request"})
+        service.handle({"type": "assistant-open-profile", "cellId": 1})
+        self.assertEqual(opened, ["https://www.op.gg/summoners/br/Fulano-BR1"])
+
+    def test_the_profile_button_never_opens_what_it_should_not(self):
+        team = self.form_team()
+        self.lcu.session = ranked_session("cs-no", team)
+        service, opened = self.service_with_opener()
+        service.handle({"type": "assistant-request"})
+        for cell in (2, 3, 9, None, "1", True, 1.0, -1, [1], {"a": 1}):  # me, no tag, not in the team, junk
+            service.handle({"type": "assistant-open-profile", "cellId": cell})
+        self.assertEqual(opened, [])
+        # a queue where the tab is not shown opens nothing either
+        solo, opened_solo = self.service_with_opener(420)
+        solo.handle({"type": "assistant-request"})
+        solo.handle({"type": "assistant-open-profile", "cellId": 1})
+        self.assertEqual(opened_solo, [])
+
+    def test_the_profile_button_needs_the_clients_region(self):
+        self.lcu.session = ranked_session("cs-region", self.form_team())
+        for region in (None, {}, {"region": "MARS"}, RuntimeError("down")):
+            self.lcu.region = region
+            service, opened = self.service_with_opener()
+            service.handle({"type": "assistant-request"})
+            service.handle({"type": "assistant-open-profile", "cellId": 1})
+            self.assertEqual(opened, [])
+
+    def test_a_browser_that_fails_to_open_changes_nothing(self):
+        self.lcu.session = ranked_session("cs-fail-open", self.form_team())
+        service = AssistantService(
+            self.lcu,
+            lambda state: None,
+            queue_id=lambda: 440,
+            in_champ_select=lambda: True,
+            stats_factory=FakeStats,
+            worker=InlineWorker(),
+            forms_worker=InlineWorker(),
+            controller=FakeController(),
+            open_url=lambda url: (_ for _ in ()).throw(OSError("no browser")),
+        )
+        service.handle({"type": "assistant-request"})
+        service.handle({"type": "assistant-open-profile", "cellId": 1})  # logged, never raised
 
     def test_a_player_without_a_puuid_is_not_asked_about(self):
         hidden = player(1, "top", "", 0)
