@@ -621,7 +621,7 @@
       // The enemies are hidden by the client until the game starts: only the team is shown
       const team = ranked.team || [];
       if (!team.length) return `<div class="state">—</div>`;
-      return `<div class="section-head"><span class="t-heading">Meu time</span></div>${team.map(row).join("")}`;
+      return team.map(row).join("");
     }
 
     // ----------------------------------------------------------- painel
