@@ -519,7 +519,7 @@ class RankedTeamTests(unittest.TestCase):
         # normal draft, blind, flex and ARAM show it; Solo/Duo hides the allies, the rest has no such roster
         self.assertEqual(
             shown,
-            {400: True, 420: False, 430: True, 440: True, 450: True, 480: False, 1750: False, 2400: False, 3140: False},
+            {400: True, 420: False, 430: True, 440: True, 450: True, 480: False, 1750: False, 2400: True, 3140: False},
         )
 
     def test_in_arena_the_team_is_the_duo_that_shares_the_team_id(self):

@@ -65,7 +65,7 @@ TEAM_SIZE = 5
 ARENA_QUEUE = 1750  # sixteen players in the roster: the team is the duo, the ones that share the player's teamId
 # Queues whose champion select shows the allies' identities (D-151). Ranked Solo/Duo hides them
 # (Riot, patch 12.22), Arena has sixteen players and Swiftplay has no champion select.
-ELO_QUEUES = frozenset({400, 430, 440, 450, ARENA_QUEUE})
+ELO_QUEUES = frozenset({400, 430, 440, 450, 2400, ARENA_QUEUE})  # 2400 is ARAM: Mayhem, a champion select like ARAM's
 RANKED_TIMEOUT_S = 0.5
 FORM_TIMEOUT_S = 2.0
 POSITION_ORDER = {"top": 0, "jungle": 1, "middle": 2, "bottom": 3, "support": 4}
