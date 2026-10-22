@@ -82,6 +82,19 @@ jobs:
           path: app/dist-test/SEXO2
           retention-days: 3
         continue-on-error: true  # the artifact quota of the repository can be full; the pre-release below does not use it
+      - name: Overlay for the installed release (test)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/galinacio'
+        shell: pwsh
+        continue-on-error: true  # without it the test build is still published, whole
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $base = gh release list --repo ${{ github.repository }} --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName'
+          if (-not $base) { throw 'No release to take as the base.' }
+          gh release download $base --repo ${{ github.repository }} --pattern SEXO2-baseline.zip --dir .
+          if ($LASTEXITCODE -ne 0) { throw 'Could not download the base release.' }
+          python scripts/build_test_overlay.py --base SEXO2-baseline.zip --new dist-test/SEXO2 --output SEXO2-teste-arquivos.zip --base-version $base
+          if ($LASTEXITCODE -ne 0) { throw 'No overlay.' }
       - name: Publish test pre-release
         if: github.event_name == 'push' && github.ref == 'refs/heads/galinacio'
         shell: pwsh
@@ -90,8 +103,10 @@ jobs:
         run: |
           $tag = "teste-$($env:GITHUB_SHA.Substring(0, 7))"
           Compress-Archive -Path dist-test/SEXO2 -DestinationPath SEXO2-teste.zip
-          $notes = "Build de teste da branch galinacio ($env:GITHUB_SHA), sem assinatura. Extraia o zip e rode SEXO2.exe com o SEXO2 instalado e o cliente do LoL fechados."
-          gh release create $tag SEXO2-teste.zip --repo ${{ github.repository }} --prerelease --target $env:GITHUB_SHA --title "SEXO2 teste $tag" --notes $notes
+          $notes = "Build de teste da branch galinacio ($env:GITHUB_SHA), sem assinatura. Para quem já tem o SEXO2 instalado: baixe só SEXO2-teste-arquivos.zip (poucos arquivos) e extraia dentro da pasta do SEXO2 (leia o LEIA-ME dentro dele). O SEXO2-teste.zip é a pasta inteira, para rodar sem instalar, com o SEXO2 instalado e o cliente do LoL fechados."
+          $files = @('SEXO2-teste.zip')
+          if (Test-Path SEXO2-teste-arquivos.zip) { $files = @('SEXO2-teste-arquivos.zip') + $files }
+          gh release create $tag $files --repo ${{ github.repository }} --prerelease --target $env:GITHUB_SHA --title "SEXO2 teste $tag" --notes $notes
           if ($LASTEXITCODE -ne 0) { throw 'Pre-release failed.' }
           # Keep only the newest test pre-release.
           $old = gh release list --repo ${{ github.repository }} --limit 100 --json tagName,isPrerelease | ConvertFrom-Json | Where-Object { $_.isPrerelease -and $_.tagName -like 'teste-*' -and $_.tagName -ne $tag }
