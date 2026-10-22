@@ -1,4 +1,7 @@
 ﻿#define MyAppName "SEXO2"
+#ifndef AppSourceDir
+#define AppSourceDir "..\SEXO2-r3\SEXO2"
+#endif
 #define MyAppVersion "1.9.0.0"
 [Setup]
 AppId={{B876AA51-DB38-448E-BD13-716F1C9DE750}
@@ -27,8 +30,8 @@ Name: "brazilian"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 [Tasks]
 Name: "desktopicon"; Description: "Criar atalho na area de trabalho"; GroupDescription: "Atalhos:"
 [Files]
-Source: "..\SEXO2-r3\SEXO2\*"; DestDir: "{app}"; Excludes: "hashes.game.txt"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\SEXO2-r3\SEXO2\_internal\injection\tools\hashes.game.txt"; DestDir: "{app}\_internal\injection\tools"; Flags: onlyifdoesntexist
+Source: "{#AppSourceDir}\*"; DestDir: "{app}"; Excludes: "hashes.game.txt"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#AppSourceDir}\_internal\injection\tools\hashes.game.txt"; DestDir: "{app}\_internal\injection\tools"; Flags: onlyifdoesntexist
 [Icons]
 Name: "{group}\SEXO2"; Filename: "{app}\SEXO2.exe"; IconFilename: "{app}\_internal\assets\sexo2-v2.ico"
 Name: "{autodesktop}\SEXO2"; Filename: "{app}\SEXO2.exe"; IconFilename: "{app}\_internal\assets\sexo2-v2.ico"; Tasks: desktopicon

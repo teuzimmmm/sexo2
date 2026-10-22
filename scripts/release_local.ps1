@@ -31,6 +31,14 @@ try {
     $releaseFolder = "../SEXO2-$releaseVersion"
     python scripts/package_update_release.py --base $previousFolder --new "$appDist/SEXO2" --helper "$helperDist/SEXO2 Update.exe" --version $releaseVersion --output $releaseFolder
     if ($LASTEXITCODE -ne 0) { throw 'Packaging failed.' }
+    # First-install file: the update packages only serve installations that already exist
+    $iscc = @("$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe", "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    if ($iscc) {
+        & $iscc "/DAppSourceDir=$((Resolve-Path "$appDist/SEXO2").Path)" "/O$((Resolve-Path $releaseFolder).Path)" "/FSEXO2-Instalador-$releaseVersion" installer-sexo2.iss
+        if ($LASTEXITCODE -ne 0) { throw 'Installer build failed.' }
+    } else {
+        throw 'Inno Setup 6 not found: install it from https://jrsoftware.org/isdl.php (the release needs the first-install file).'
+    }
     python scripts/build_patch.py --base $previousFolder --new "$appDist/SEXO2" --output "$releaseFolder/SEXO2-update.zip" --version $releaseVersion --key-file $keyFile
     if ($LASTEXITCODE -ne 0) { throw 'Signing failed.' }
     python scripts/build_compatibility.py --new "$appDist/SEXO2" --output $releaseFolder --version $releaseVersion --key-file $keyFile

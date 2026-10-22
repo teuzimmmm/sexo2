@@ -39,6 +39,12 @@ if response.status_code == 404:
     notes = Path(args.folder) / "release-notes.md"
     if notes.exists():
         body = notes.read_text(encoding="utf-8")
+    body = (
+        "**Primeira instalação:** baixe `SEXO2-Instalador-" + version + ".exe` e execute.\n"
+        "**Quem já tem o SEXO2:** não precisa baixar nada aqui; atualize pelo painel (Configurações > Atualizações). "
+        "Os outros arquivos (`SEXO2-update*.zip`, `SEXO2-Atualizacao-*.zip`, `SEXO2-baseline.zip`, `SEXO2.Update.exe`) "
+        "são usados pelo atualizador, inclusive de versões antigas.\n\n"
+    ) + body
     response = session.post(
         api,
         json={
@@ -57,7 +63,8 @@ upload = release["upload_url"].split("{")[0]
 if urlparse(upload).hostname != "uploads.github.com":
     raise ValueError("Unexpected upload destination")
 folder = Path(args.folder)
-names = ["SEXO2-update.zip", "SEXO2-baseline.zip", "SEXO2 Update.exe"]
+names = [f.name for f in sorted(folder.glob("SEXO2-Instalador-*.exe"))]
+names += ["SEXO2-update.zip", "SEXO2-baseline.zip", "SEXO2 Update.exe"]
 names += [f.name for f in sorted(folder.glob("SEXO2-update-from-*.zip"))]
 names += [f.name for f in sorted(folder.glob("SEXO2-Atualizacao-*.zip"))]
 existing = {a["name"] for a in release.get("assets", [])}
