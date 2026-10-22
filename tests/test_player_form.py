@@ -126,6 +126,23 @@ class SummarizeTests(unittest.TestCase):
         self.assertEqual(player_form.summarize([game(1, 1, True)], "p1")["recent"], [True])
 
 
+class ShapeTests(unittest.TestCase):
+    def test_the_shape_has_names_and_types_never_values(self):
+        answer = {
+            "games": {"games": [{"gameId": 123456, "participants": [{"championId": 22, "stats": {"win": True}}]}]},
+            "name": "Secret#BR1",
+        }
+        text = repr(player_form.shape(answer))
+        self.assertIn("championId", text)
+        self.assertIn("bool", text)
+        self.assertNotIn("Secret", text)
+        self.assertNotIn("123456", text)
+
+    def test_it_never_fails_on_odd_answers(self):
+        for value in (None, 3, "x", [], {}, [[]], {"a": [None]}, {"a": {"b": {"c": {"d": {"e": {"f": 1}}}}}}):
+            player_form.shape(value)
+
+
 class ProfileTests(unittest.TestCase):
     def test_the_address_comes_from_the_clients_region_name_and_tag(self):
         region = player_form.profile_region({"region": "BR", "locale": "pt_BR"})

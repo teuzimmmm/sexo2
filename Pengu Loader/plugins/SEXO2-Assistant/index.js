@@ -235,7 +235,8 @@
   function rowParts(p, champName) {
     const champion = p.championId ? champName(p.championId) || "" : "";
     const elo = p.elo || null;
-    const games = elo && nat(elo.wins) && nat(elo.losses) ? elo.wins + elo.losses : 0;
+    // No losses at all over a season is not a real record (the client leaves it empty for other players)
+    const games = elo && nat(elo.wins) && nat(elo.losses) && elo.losses > 0 ? elo.wins + elo.losses : 0;
     const form = p.form || null;
     const facts = [];
     if (form && LANES[form.role]) facts.push(LANES[form.role]);
@@ -365,6 +366,7 @@
 #sexo2-assistant .rank-row .res i{width:8px;height:8px;border:1px solid var(--s2-fg-3);}
 #sexo2-assistant .rank-row .res i.w{background:var(--s2-fg);border-color:var(--s2-fg);}
 #sexo2-assistant .rank-row .open{width:28px;padding:0;display:grid;place-items:center;flex:none;}
+#sexo2-assistant .rank-row .open-slot{width:28px;flex:none;}
 #sexo2-assistant .list-head{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-1) 4px;font-size:var(--t-small);color:var(--s2-fg-3);}
 #sexo2-assistant .list-head .wr{width:52px;text-align:right;}
 #sexo2-assistant .list-head .n{width:56px;text-align:right;}
@@ -688,7 +690,7 @@
             : "";
         const open = v.canOpen
           ? `<button class="s2-btn ghost open" data-act="open-profile" data-cell="${v.cell}" aria-label="Abrir perfil de ${esc(v.name)}" data-tip="Abrir perfil|Abre o perfil de ${esc(v.name)} no op.gg."><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V14H2V4h4.5"/></svg></button>`
-          : "";
+          : `<span class="open-slot" aria-hidden="true"></span>`; // the place stays, so every elo lines up
         return `<div class="rank-row"${v.tip ? ` data-tip="${esc(v.tip)}"` : ""}>${icon}<div class="col"><div class="l1"><span class="who">${esc(v.name || "—")}</span>${v.champion ? `<span class="cn">${esc(v.champion)}</span>` : ""}${elo}</div>${second}</div>${open}</div>`;
       };
       // The enemies are hidden by the client until the game starts: only the team is shown

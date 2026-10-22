@@ -185,6 +185,13 @@ test('linha da Equipe: cada dado ausente some, sem estragar os outros', () => {
   assert.equal(A.rowParts({ form: { games: 0 } }, champ).tip, '');
 });
 
+test('taxa de vitórias: sem derrotas não é um registro real e some', () => {
+  const rate = (wins, losses) => A.rowParts({ elo: { queue: 'RANKED_SOLO_5x5', tier: 'GOLD', division: 'I', leaguePoints: 0, wins, losses } }, champ).facts;
+  assert.deepEqual(rate(274, 0), []);
+  assert.deepEqual(rate(45, 55), ['45% em 100']);
+  assert.deepEqual(rate(0, 3), ['0% em 3']);
+});
+
 test('elo em partes: a fila não é distinguida, divisão só onde existe, pontos só se vierem', () => {
   assert.deepEqual(A.eloParts({ queue: 'RANKED_FLEX_SR', tier: 'GOLD', division: 'II', leaguePoints: 45 }), { tier: 'Ouro II', points: '45 PDL' });
   assert.deepEqual(A.eloParts({ queue: 'RANKED_SOLO_5x5', tier: 'MASTER', division: 'I', leaguePoints: 312 }), { tier: 'Mestre', points: '312 PDL' });

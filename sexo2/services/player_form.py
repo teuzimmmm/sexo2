@@ -144,3 +144,12 @@ def profile_url(region: str | None, name: str, tag: str) -> str | None:
     if not region or not name or not tag:
         return None
     return PROFILE_URL.format(region=region, name=quote(name, safe=""), tag=quote(tag, safe=""))
+
+
+def shape(value: Any, depth: int = 8) -> Any:
+    """The structure of an answer: field names and value types, never a value (for logs)."""
+    if isinstance(value, dict):
+        return {str(k): shape(v, depth - 1) for k, v in list(value.items())[:40]} if depth > 0 else "{...}"
+    if isinstance(value, list):
+        return [len(value), shape(value[0], depth - 1)] if value and depth > 0 else [len(value)]
+    return type(value).__name__

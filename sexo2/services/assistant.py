@@ -377,6 +377,7 @@ class AssistantService:
         self._ranked_available = False
         self._roster: tuple[list, str] = ([], "")  # the allies of the session and the local player's puuid
         self._arena_logged: str | None = None
+        self._shapes_seen: set[str] = set()  # kinds of answer whose structure was already logged
         self._region: str | None = None  # the profile site's code for the client's region
         self._region_read = False
         self._forms: dict[str, dict | None] = {}  # puuid -> recent form, for this session
@@ -579,6 +580,15 @@ class AssistantService:
         rows.sort(key=lambda row: POSITION_ORDER.get(row["position"], len(POSITION_ORDER)))
         return rows[:TEAM_SIZE]
 
+    def _log_shape(self, kind: str, payload: Any, summary: Any = "-") -> None:
+        """Once per run and kind: how the client's answer is built (names and types only), to learn it from a log."""
+        if kind in self._shapes_seen:
+            return
+        self._shapes_seen.add(kind)
+        text = json.dumps(player_form.shape(payload), ensure_ascii=False)[:3500]
+        parsed = "-" if summary == "-" else ("nothing usable" if summary is None else f"{summary['games']} games")
+        log.info("[ASSISTANT] shape of %s: %s (read: %s)", kind, text, parsed)
+
     def _log_arena(self, session_id: str, roster: list, local_cell: Any) -> None:
         """Once per selection, the shape of the Arena roster (field names only), to learn it from a log."""
         if self._arena_logged == session_id:
@@ -634,9 +644,9 @@ class AssistantService:
             if session_id != self._ranked_session:
                 return  # another selection started meanwhile
             try:
-                self._forms[puuid] = player_form.summarize(
-                    self._lcu.match_history(puuid, 20, timeout=FORM_TIMEOUT_S), puuid
-                )
+                history = self._lcu.match_history(puuid, 20, timeout=FORM_TIMEOUT_S)
+                self._forms[puuid] = player_form.summarize(history, puuid)
+                self._log_shape("match history", history, self._forms[puuid])
             except Exception as error:
                 log.info("[ASSISTANT] recent games unavailable: %s", error)
                 self._forms[puuid] = None
@@ -656,6 +666,7 @@ class AssistantService:
         except Exception as error:
             log.info("[ASSISTANT] ranked stats unavailable: %s", error)
             payload = None
+        self._log_shape("ranked stats", payload)
         entry = read_ranked_entry(payload)
         self._ranked_cache[puuid] = entry
         return entry
