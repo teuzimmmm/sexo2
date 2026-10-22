@@ -37,6 +37,7 @@ from sexo2.services.item_sets import build_item_set, import_item_set
 from sexo2.services.rune_import import RuneImportController, RuneImportSnapshot, SessionKey
 from sexo2.services.rune_rules import PageSpec, StyleCatalog, validate_page
 from sexo2.services.stats import Alternatives, ChampionDirectory, ItemCombo, RuneLayout, StatsError, StatsService
+from sexo2.services import player_form
 from sexo2.services.work_queue import SerialWorker
 
 log = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ TEAM_SIZE = 5
 # (Riot, patch 12.22), Arena has sixteen players and Swiftplay has no champion select.
 ELO_QUEUES = frozenset({400, 430, 440, 450})
 RANKED_TIMEOUT_S = 0.5
+FORM_TIMEOUT_S = 2.0
 POSITION_ORDER = {"top": 0, "jungle": 1, "middle": 2, "bottom": 3, "support": 4}
 _MISSING = object()
 
@@ -75,6 +77,8 @@ class RankedEntry:
     tier: str
     division: str | None
     league_points: int | None
+    wins: int | None = None
+    losses: int | None = None
 
     def json(self) -> dict:
         return {
@@ -82,6 +86,8 @@ class RankedEntry:
             "tier": self.tier,
             "division": self.division,
             "leaguePoints": self.league_points,
+            "wins": self.wins,
+            "losses": self.losses,
         }
 
 
@@ -164,7 +170,11 @@ def read_ranked_entry(payload: Any) -> RankedEntry | None:
         points = entry.get("leaguePoints")
         if isinstance(points, bool) or not isinstance(points, int):
             points = None
-        return RankedEntry(queue, tier.strip().upper(), division, points)
+        wins, losses = (
+            n if isinstance(n, int) and not isinstance(n, bool) else None
+            for n in (entry.get("wins"), entry.get("losses"))
+        )
+        return RankedEntry(queue, tier.strip().upper(), division, points, wins, losses)
     return None
 
 
@@ -273,6 +283,7 @@ class AssistantService:
         schedule: Callable[[float, Callable[[], None]], None] | None = None,
         auto_delay: float = 0.5,
         favorites: FavoriteBuilds | None = None,
+        forms_worker: SerialWorker | None = None,
     ) -> None:
         self._lcu = lcu
         self._publish = publish
@@ -280,6 +291,10 @@ class AssistantService:
         self._in_champ_select = in_champ_select
         self._stats_factory = stats_factory
         self._worker = worker if worker is not None else SerialWorker("SEXO2-Assistant", capacity=16)
+        # The recent games of the team are read apart, so a slow answer never delays the runes or items
+        self._forms_worker = (
+            forms_worker if forms_worker is not None else SerialWorker("SEXO2-AssistantForms", capacity=4)
+        )
         self._context: ChampSelectContext | None = None
         self._controller = controller or RuneImportController(
             LCUPerks(lcu), can_edit=self._can_edit, on_change=self._on_runes
@@ -314,6 +329,10 @@ class AssistantService:
         self._ranked_enemies: list[dict] = []
         self._ranked_session: str | None = None
         self._ranked_available = False
+        self._roster: tuple[list, str] = ([], "")  # the allies of the session and the local player's puuid
+        self._met_read = False
+        self._forms: dict[str, dict | None] = {}  # puuid -> recent form, for this session
+        self._met: set[str] = set()
         self._ranked_cache: dict[str, RankedEntry | None] = {}
         self._ranked_seen: dict[str, set[str]] = {"team": set(), "enemies": set()}
 
@@ -451,6 +470,10 @@ class AssistantService:
         self._ranked_enemies = []
         self._ranked_session = None
         self._ranked_available = False
+        self._roster = ([], "")
+        self._forms = {}
+        self._met = set()
+        self._met_read = False
         self._ranked_cache = {}
         self._ranked_seen = {"team": set(), "enemies": set()}
 
@@ -463,9 +486,17 @@ class AssistantService:
             self._ranked_session = session_id
             self._ranked_cache = {}
             self._ranked_seen = {"team": set(), "enemies": set()}
+            self._forms = {}
+            self._met = set()
+            self._met_read = False
         allies = session.get("myTeam") or []
         self._ranked_available = self._queue_id() in ELO_QUEUES and 1 <= len(allies) <= TEAM_SIZE
+        local_cell = session.get("localPlayerCellId")
+        local = next((p.get("puuid") for p in allies if isinstance(p, dict) and p.get("cellId") == local_cell), "")
+        self._roster = (list(allies), local if isinstance(local, str) else "")
         self._ranked_team = self._ranked_rows(allies, "team", allow_intent=True)
+        if self._ranked_available:
+            self._queue_forms(session_id)
         self._ranked_enemies = self._ranked_rows(
             session.get("theirTeam"), "enemies", allow_intent=False, require_puuid=True
         )
@@ -482,18 +513,58 @@ class AssistantService:
             entry = self._ranked_entry(puuid, side) if puuid else None
             position = POSITION_LANES.get(str(player.get("assignedPosition") or "").lower(), "")
             name, tag = player_name(player)
+            champion = champion_id(player, allow_intent)
+            others = side == "team" and puuid != self._roster[1]
             rows.append(
                 {
                     "cellId": player.get("cellId"),
                     "position": position,
                     "name": name,
                     "tag": tag,
-                    "championId": champion_id(player, allow_intent),
+                    "championId": champion,
                     "elo": entry.json() if entry is not None else None,
+                    "form": player_form.public(self._forms.get(puuid), champion) if others else None,
+                    "met": bool(others and puuid and puuid in self._met),
                 }
             )
         rows.sort(key=lambda row: POSITION_ORDER.get(row["position"], len(POSITION_ORDER)))
         return rows[:TEAM_SIZE]
+
+    def _queue_forms(self, session_id: str) -> None:
+        pending = [
+            p
+            for p in (a.get("puuid") for a in self._roster[0] if isinstance(a, dict))
+            if p and p != self._roster[1] and p not in self._forms
+        ]
+        if pending or (self._roster[0] and not self._met_read):
+            self._forms_worker.submit(
+                lambda: self._load_forms(session_id), lambda error: log.info("[ASSISTANT] recent games: %s", error)
+            )
+
+    def _load_forms(self, session_id: str) -> None:
+        """The recent games of each ally, and who the user already met, once per selection."""
+        if not self._met_read:
+            self._met_read = True
+            try:
+                self._met = player_form.recently_met(self._lcu.recently_played())
+            except Exception as error:
+                log.info("[ASSISTANT] recently played unavailable: %s", error)
+        for ally in list(self._roster[0])[:TEAM_SIZE]:
+            puuid = ally.get("puuid") if isinstance(ally, dict) else None
+            if not puuid or puuid == self._roster[1] or puuid in self._forms:
+                continue
+            if session_id != self._ranked_session:
+                return  # another selection started meanwhile
+            try:
+                self._forms[puuid] = player_form.summarize(
+                    self._lcu.match_history(puuid, 20, timeout=FORM_TIMEOUT_S), puuid
+                )
+            except Exception as error:
+                log.info("[ASSISTANT] recent games unavailable: %s", error)
+                self._forms[puuid] = None
+        if session_id == self._ranked_session:
+            self._ranked_team = self._ranked_rows(self._roster[0], "team", allow_intent=True)
+            self._publish_state()
 
     def _ranked_entry(self, puuid: str, side: str) -> RankedEntry | None:
         if puuid in self._ranked_cache:

@@ -150,6 +150,20 @@ class LCUAPI:
             use_cache=False,
         )
 
+    def match_history(self, puuid: str, count: int = 20, timeout: float = 2.0) -> Optional[dict]:
+        """The last ``count`` games of one player, as the client lists them (uncached)."""
+        if not isinstance(puuid, str) or not puuid.strip():
+            return None
+        return self.get(
+            f"/lol-match-history/v1/products/lol/{quote(puuid.strip(), safe='')}/matches?begIndex=0&endIndex={int(count)}",
+            timeout=timeout,
+            use_cache=False,
+        )
+
+    def recently_played(self, timeout: float = 2.0) -> Optional[list]:
+        """Players who were in the user's last games (uncached)."""
+        return self.get("/lol-match-history/v1/recently-played-summoners", timeout=timeout, use_cache=False)
+
     def get_bytes(self, path: str, timeout: float = 2.0) -> Optional[bytes]:
         """Raw body of a GET, uncached (game data assets such as icons); None when unavailable."""
         if not self.connection.ok:

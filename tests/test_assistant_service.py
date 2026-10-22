@@ -40,6 +40,9 @@ class FakeLCU:
         self.puts = []
         self.ranked = {}
         self.ranked_calls = []
+        self.history = {}
+        self.history_calls = []
+        self.recent = []
 
     def get(self, path, **kwargs):
         if path == "/lol-item-sets/v1/item-sets/7/sets":
@@ -58,6 +61,18 @@ class FakeLCU:
         self.puts.append(copy.deepcopy(json_data))
         self.item_sets = copy.deepcopy(json_data)
         return MagicMock(status_code=204)
+
+    def match_history(self, puuid, count=20, timeout=2.0):
+        self.history_calls.append(puuid)
+        value = self.history.get(puuid)
+        if isinstance(value, Exception):
+            raise value
+        return copy.deepcopy(value)
+
+    def recently_played(self, timeout=2.0):
+        if isinstance(self.recent, Exception):
+            raise self.recent
+        return copy.deepcopy(self.recent)
 
     def ranked_stats(self, puuid, timeout=1.0):
         self.ranked_calls.append(puuid)
@@ -445,6 +460,7 @@ class RankedTeamTests(unittest.TestCase):
             in_champ_select=lambda: True,
             stats_factory=FakeStats,
             worker=InlineWorker(),
+            forms_worker=InlineWorker(),
             controller=FakeController(),
         )
 
@@ -465,7 +481,14 @@ class RankedTeamTests(unittest.TestCase):
         rows = {row["position"]: row for row in self.published[-1]["ranked"]["team"]}
         self.assertEqual(
             rows["top"]["elo"],
-            {"queue": "RANKED_SOLO_5x5", "tier": "PLATINUM", "division": "IV", "leaguePoints": 77},
+            {
+                "queue": "RANKED_SOLO_5x5",
+                "tier": "PLATINUM",
+                "division": "IV",
+                "leaguePoints": 77,
+                "wins": None,
+                "losses": None,
+            },
         )
         self.assertEqual(rows["middle"]["elo"]["queue"], "RANKED_FLEX_SR")
         self.assertIsNone(rows["support"]["elo"])  # no rank: the panel shows a dash
@@ -482,6 +505,7 @@ class RankedTeamTests(unittest.TestCase):
             in_champ_select=lambda: True,
             stats_factory=FakeStats,
             worker=InlineWorker(),
+            forms_worker=InlineWorker(),
             controller=FakeController(),
         )
         return service, published
@@ -520,6 +544,110 @@ class RankedTeamTests(unittest.TestCase):
         self.assertEqual((rows["top"]["name"], rows["top"]["tag"]), ("Fulano", "BR1"))
         self.assertEqual((rows["middle"]["name"], rows["middle"]["tag"]), ("", ""))
         self.assertEqual(rows["support"]["name"], "Beltrano")
+
+    def form_team(self):
+        local = player(2, "middle", "p-me", 103)
+        top = player(1, "top", "p-top", 86)
+        top.update({"gameName": "Fulano"})
+        jungle = player(3, "jungle", "p-jg", 0)  # has not picked yet
+        jungle.update({"gameName": "Beltrano"})
+        return [top, local, jungle]
+
+    def top_games(self):
+        from tests.test_player_form import game, payload
+
+        return payload(
+            game(3, 86, True, "TOP", puuid="p-top"),
+            game(2, 86, True, "TOP", puuid="p-top"),
+            game(1, 22, False, "TOP", puuid="p-top"),
+        )
+
+    def test_the_form_of_each_ally_is_read_apart_once_and_published(self):
+        self.lcu.session = ranked_session("cs-form", self.form_team())
+        self.lcu.history["p-top"] = self.top_games()
+        self.lcu.recent = [{"puuid": "p-top"}]
+        service, published = self.service_for(440)
+        service.handle({"type": "assistant-request"})
+        rows = {row["position"]: row for row in published[-1]["ranked"]["team"]}
+        self.assertEqual(rows["top"]["form"]["recent"], [True, True, False])
+        self.assertEqual(rows["top"]["form"]["role"], "top")
+        self.assertEqual(rows["top"]["form"]["withChampion"], {"games": 2, "wins": 2})
+        self.assertTrue(rows["top"]["met"])
+        # the local player is never compared with himself, and a player without history has no form
+        self.assertIsNone(rows["middle"]["form"])
+        self.assertFalse(rows["middle"]["met"])
+        self.assertIsNone(rows["jungle"]["form"])
+        self.assertNotIn("p-me", self.lcu.history_calls)
+        service.handle({"type": "assistant-request"})
+        self.assertEqual(sorted(self.lcu.history_calls), ["p-jg", "p-top"])  # each read once per selection
+
+    def test_a_champion_picked_later_changes_only_the_with_champion_part(self):
+        team = self.form_team()
+        team[2]["championId"] = 0
+        self.lcu.session = ranked_session("cs-pick", team)
+        self.lcu.history["p-jg"] = {"games": {"games": []}}
+        from tests.test_player_form import game, payload
+
+        self.lcu.history["p-jg"] = payload(
+            game(1, 64, True, "JUNGLE", puuid="p-jg"), game(2, 64, False, "JUNGLE", puuid="p-jg")
+        )
+        service, published = self.service_for(440)
+        service.handle({"type": "assistant-request"})
+        self.assertIsNone(published[-1]["ranked"]["team"][1]["form"]["withChampion"])
+        team[2]["championId"] = 64
+        self.lcu.session = ranked_session("cs-pick", team)
+        calls = len(self.lcu.history_calls)
+        service.handle({"type": "assistant-ranked"})
+        jungle = published[-1]["ranked"]["team"][1]
+        self.assertEqual(jungle["form"]["withChampion"], {"games": 2, "wins": 1})
+        self.assertEqual(len(self.lcu.history_calls), calls)
+
+    def test_a_failing_history_or_met_list_never_breaks_the_rows(self):
+        self.lcu.session = ranked_session("cs-fail", self.form_team())
+        self.lcu.history["p-top"] = RuntimeError("timeout")
+        self.lcu.history["p-jg"] = "not a payload"
+        self.lcu.recent = RuntimeError("down")
+        service, published = self.service_for(440)
+        service.handle({"type": "assistant-request"})
+        rows = published[-1]["ranked"]["team"]
+        self.assertEqual(len(rows), 3)
+        self.assertTrue(all(row["form"] is None and row["met"] is False for row in rows))
+
+    def test_nothing_about_the_form_is_read_where_the_tab_is_not_shown(self):
+        self.lcu.session = ranked_session("cs-solo", self.form_team())
+        for queue_id in (420, 480, 1750):
+            service, _ = self.service_for(queue_id)
+            service.handle({"type": "assistant-request"})
+        self.assertEqual(self.lcu.history_calls, [])
+
+    def test_a_player_without_a_puuid_is_not_asked_about(self):
+        hidden = player(1, "top", "", 0)
+        self.lcu.session = ranked_session("cs-hidden", [hidden, player(2, "middle", "p-me", 103)])
+        service, published = self.service_for(440)
+        service.handle({"type": "assistant-request"})
+        self.assertEqual(self.lcu.history_calls, [])
+        self.assertIsNone(published[-1]["ranked"]["team"][0]["form"])
+
+    def test_the_form_of_one_selection_never_reaches_the_next(self):
+        self.lcu.session = ranked_session("cs-a", self.form_team())
+        self.lcu.history["p-top"] = self.top_games()
+        service, published = self.service_for(440)
+        service.handle({"type": "assistant-request"})
+        self.lcu.session = ranked_session("cs-b", self.form_team())
+        self.lcu.history["p-top"] = None
+        service.handle({"type": "assistant-request"})
+        rows = {row["position"]: row for row in published[-1]["ranked"]["team"]}
+        self.assertIsNone(rows["top"]["form"])  # read again for the new selection
+
+    def test_the_win_and_loss_counts_of_the_ranked_queue_reach_the_row(self):
+        self.lcu.session = ranked_session("cs-wl", self.form_team())
+        payload = ranked_payload("RANKED_FLEX_SR", "GOLD", "II", 45)
+        payload["queueMap"]["RANKED_FLEX_SR"].update({"wins": 70, "losses": 60})
+        self.lcu.ranked["p-top"] = payload
+        service, published = self.service_for(440)
+        service.handle({"type": "assistant-request"})
+        elo = {row["position"]: row for row in published[-1]["ranked"]["team"]}["top"]["elo"]
+        self.assertEqual((elo["wins"], elo["losses"]), (70, 60))
 
     def test_enemies_are_read_only_when_the_client_exposes_a_puuid(self):
         self.lcu.session = ranked_session(

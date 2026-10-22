@@ -78,6 +78,14 @@ class LCU:
         """Ranked queues of one player (see LCUAPI.ranked_stats)"""
         return self._api.ranked_stats(puuid, timeout)
 
+    def match_history(self, puuid: str, count: int = 20, timeout: float = 2.0):
+        """Recent games of one player (see LCUAPI.match_history)"""
+        return self._api.match_history(puuid, count, timeout)
+
+    def recently_played(self, timeout: float = 2.0):
+        """Players of the user's last games (see LCUAPI.recently_played)"""
+        return self._api.recently_played(timeout)
+
     def put(self, path: str, json_data, timeout: float, headers: Optional[dict] = None):
         """Make PUT request to LCU API (see LCUAPI.put)"""
         return self._api.put(path, json_data, timeout, headers)

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Proposta: aba Equipe com a forma dos jogadores</title>
+<title>Aba Equipe: nome, elo e forma</title>
 <link rel="stylesheet" href="../tokens.css">
 <style>
-/* Proposta (pendente de aprovação, D-151). Cores e espaços são os do painel do Assistente. */
+/* D-153. As linhas abaixo são as do painel (mesmo HTML e mesmo CSS). Ícones de campeão: quadrados. */
 :root{
   --s2-bg:#0d0e10;--s2-surface:#15171a;--s2-surface-2:#1b1d21;--s2-hover:#22252a;--s2-line:#2a2d32;
   --s2-fg:#ececec;--s2-fg-2:#a4a9b0;--s2-fg-3:#6e747b;
@@ -18,118 +18,67 @@ h1{font:500 18px/1.15 var(--s2-font-display);text-transform:uppercase;letter-spa
 .lead{color:var(--s2-fg-2);margin:0 0 20px;max-width:760px}
 .wrap{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
 .panel{width:450px;background:var(--s2-surface);border:1px solid var(--s2-line);flex:none}
-.head{display:flex;justify-content:flex-end;padding:12px 12px 0}
-.head .x{color:var(--s2-fg-2)}
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--s2-line);padding:8px 12px 0}
+.tabs{display:flex;border-bottom:1px solid var(--s2-line);padding:12px 12px 0}
 .tabs span{font:500 12px/1 var(--s2-font-display);text-transform:uppercase;letter-spacing:.06em;color:var(--s2-fg-3);padding:10px 12px}
 .tabs span.on{color:var(--s2-fg);border-bottom:2px solid var(--s2-fg);margin-bottom:-1px}
 .body{padding:var(--sp-2) var(--sp-3) var(--sp-3)}
-.row{display:flex;align-items:center;gap:var(--sp-3);padding:10px var(--sp-1);border-bottom:1px solid var(--s2-line);min-height:64px}
-.row:last-child{border-bottom:0}
-.ico{width:40px;height:40px;border-radius:50%;background:var(--s2-surface-2);display:grid;place-items:center;font:500 14px var(--s2-font-display);color:var(--s2-fg-2);flex:none}
-.col{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
-.l1,.l2{display:flex;align-items:baseline;gap:var(--sp-2);min-width:0}
-.name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.champ{color:var(--s2-fg-2);font-size:13px;white-space:nowrap}
-.elo{margin-left:auto;font-weight:600;font-variant-numeric:var(--s2-numeric-stats);white-space:nowrap}
-.l2{font-size:12px;color:var(--s2-fg-3);font-variant-numeric:var(--s2-numeric-stats)}
-.l2 .facts{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.l2 .met{color:var(--s2-fg-2)}
-.dots{margin-left:auto;display:flex;gap:4px;flex:none}
-.dots i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--s2-fg-3)}
-.dots i.w{background:var(--s2-fg);border-color:var(--s2-fg)}
-.dash{color:var(--s2-fg-3)}
-.tip{position:relative;margin:12px 0 0;width:300px;background:var(--s2-surface-2);border:1px solid var(--s2-line);padding:8px 12px;font-size:12px;color:var(--s2-fg-2)}
-.tip b{color:var(--s2-fg);font-weight:600;display:block;margin-bottom:2px}
-.notes{max-width:420px;font-size:13px;color:var(--s2-fg-2)}
+.rank-row{display:flex;align-items:center;gap:var(--sp-3);padding:10px var(--sp-1);border-bottom:1px solid var(--s2-line);min-height:64px;}
+.rank-row:last-child{border-bottom:0;}
+.rank-row .champ{width:40px;height:40px;flex:none;background:var(--s2-surface-2);}
+.rank-row .champ.none{display:grid;place-items:center;font:500 14px var(--s2-font-display);color:var(--s2-fg-3);}
+.rank-row .col{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;}
+.rank-row .l1,.rank-row .l2{display:flex;align-items:baseline;gap:var(--sp-3);min-width:0;}
+.rank-row .who{font-size:14px;font-weight:600;color:var(--s2-fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rank-row .cn{font-size:13px;color:var(--s2-fg-2);white-space:nowrap;}
+.rank-row .elo{margin-left:auto;display:flex;align-items:baseline;gap:6px;white-space:nowrap;font-size:14px;font-variant-numeric:var(--s2-numeric-stats);}
+.rank-row .elo b{font-weight:600;}
+.rank-row .elo .pts{font-size:12px;color:var(--s2-fg-3);}
+.rank-row .elo .q{font:500 11px var(--s2-font-display);text-transform:uppercase;letter-spacing:.06em;color:var(--s2-fg-3);}
+.rank-row .elo.none{color:var(--s2-fg-3);}
+.rank-row .l2{font-size:12px;color:var(--s2-fg-3);font-variant-numeric:var(--s2-numeric-stats);}
+.rank-row .facts{display:flex;min-width:0;overflow:hidden;white-space:nowrap;}
+.rank-row .facts span+span{border-left:1px solid var(--s2-line);margin-left:var(--sp-3);padding-left:var(--sp-3);}
+.rank-row .met{flex:none;font:500 11px var(--s2-font-display);text-transform:uppercase;letter-spacing:.06em;color:var(--s2-fg-2);border:1px solid var(--s2-line);padding:1px 5px;}
+.rank-row .res{margin-left:auto;display:flex;gap:3px;flex:none;}
+.rank-row .res i{width:8px;height:8px;border:1px solid var(--s2-fg-3);}
+.rank-row .res i.w{background:var(--s2-fg);border-color:var(--s2-fg);}
+.notes{max-width:430px;font-size:13px;color:var(--s2-fg-2)}
 .notes h2{font:500 12px/1.2 var(--s2-font-display);text-transform:uppercase;letter-spacing:.06em;color:var(--s2-fg);margin:18px 0 6px}
 .notes h2:first-child{margin-top:0}
 .notes ul{margin:0;padding-left:18px}
 .notes li{margin:0 0 4px}
-.cap{font-size:12px;color:var(--s2-fg-3);margin:8px 0 0}
+.cap{font-size:12px;color:var(--s2-fg-3);margin:8px 0 0;max-width:450px}
 </style>
 </head>
 <body>
 <h1>Aba Equipe: nome, elo e forma</h1>
-<p class="lead">Proposta pendente de aprovação. Cinco linhas, sem rolagem, cada uma com duas linhas de texto. A de cima diz quem é e qual o elo; a de baixo, como vem jogando. Os ícones de campeão aparecem aqui como círculos com a inicial; no cliente, são os ícones de verdade.</p>
-
+<p class="lead">Cinco linhas, sem rolagem. Em cima, quem é e o elo; embaixo, como vem jogando. Tudo quadrado, como o resto do app. No cliente, os quadrados grandes são os ícones dos campeões.</p>
 <div class="wrap">
   <div>
     <div class="panel">
-      <div class="head"><span class="x">✕</span></div>
       <div class="tabs"><span>Runas</span><span>Itens</span><span class="on">Equipe</span><span>Mods</span><span>Todas as configurações</span></div>
       <div class="body">
-
-        <div class="row">
-          <span class="ico">D</span>
-          <div class="col">
-            <div class="l1"><span class="name">Fulano de Tal</span><span class="champ">· Draven</span><span class="elo">Platina IV · 77 PDL</span></div>
-            <div class="l2"><span class="facts">Atirador · 56% em 142 · Draven 67% (6)</span><span class="dots" aria-label="Últimas 5 partidas"><i class="w"></i><i class="w"></i><i></i><i class="w"></i><i class="w"></i></span></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <span class="ico">V</span>
-          <div class="col">
-            <div class="l1"><span class="name">Beltrano</span><span class="champ">· Vladimir</span><span class="elo">Flex · Ouro II · 45 PDL</span></div>
-            <div class="l2"><span class="facts"><span class="met">Já cruzou com você</span> · Meio · 51% em 88</span><span class="dots"><i></i><i></i><i class="w"></i><i></i><i class="w"></i></span></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <span class="ico">A</span>
-          <div class="col">
-            <div class="l1"><span class="name">Ciclano com um nome muito comprido</span><span class="champ">· Aatrox</span><span class="elo">Mestre · 312 PDL</span></div>
-            <div class="l2"><span class="facts">Topo · 58% em 301 · Aatrox 71% (14)</span><span class="dots"><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i><i></i></span></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <span class="ico">?</span>
-          <div class="col">
-            <div class="l1"><span class="name">Novato</span><span class="champ">· escolhendo…</span><span class="elo dash">Sem ranqueada</span></div>
-            <div class="l2"><span class="facts">Suporte</span><span class="dots"><i class="w"></i><i></i><i></i><i class="w"></i><i></i></span></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <span class="ico">·</span>
-          <div class="col">
-            <div class="l1"><span class="name">Você</span><span class="champ">· Ahri</span><span class="elo">Esmeralda I · 0 PDL</span></div>
-            <div class="l2"><span class="facts">54% em 210</span></div>
-          </div>
-        </div>
-
+<div class="rank-row" data-tip="Fulano de Tal|Mais jogados: Ashe 9, Garen 3. 13 vitórias e 7 derrotas nas últimas 20."><span class="champ">​</span><div class="col"><div class="l1"><span class="who">Fulano de Tal</span><span class="cn">Garen</span><span class="elo"><b>Platina IV</b><span class="pts">77 PDL</span></span></div><div class="l2"><span class="facts"><span>Topo</span><span>61% em 142</span><span>Garen 67% em 6</span></span><span class="res" aria-label="Últimas partidas"><i class="w"></i><i class="w"></i><i class=""></i><i class="w"></i><i class="w"></i></span></div></div></div><div class="rank-row" data-tip="Beltrano|Mais jogados: Ashe 9, Garen 3. 13 vitórias e 7 derrotas nas últimas 20."><span class="champ">​</span><div class="col"><div class="l1"><span class="who">Beltrano</span><span class="cn">Lee Sin</span><span class="elo"><span class="q">Flex</span><b>Ouro II</b><span class="pts">45 PDL</span></span></div><div class="l2"><span class="met">Já cruzou com você</span><span class="facts"><span>Selva</span><span>54% em 130</span></span><span class="res" aria-label="Últimas partidas"><i class=""></i><i class=""></i><i class="w"></i><i class=""></i><i class="w"></i></span></div></div></div><div class="rank-row" data-tip="Ciclano com um nome muito comprido mesmo|Mais jogados: Ashe 9, Garen 3. 13 vitórias e 7 derrotas nas últimas 20."><span class="champ">​</span><div class="col"><div class="l1"><span class="who">Ciclano com um nome muito comprido mesmo</span><span class="cn">Aatrox</span><span class="elo"><b>Mestre</b><span class="pts">312 PDL</span></span></div><div class="l2"><span class="facts"><span>Meio</span><span>60% em 300</span><span>Aatrox 71% em 14</span></span><span class="res" aria-label="Últimas partidas"><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class=""></i></span></div></div></div><div class="rank-row" data-tip="Novato|Mais jogados: Ashe 9, Garen 3. 13 vitórias e 7 derrotas nas últimas 20."><span class="champ">​</span><div class="col"><div class="l1"><span class="who">Novato</span><span class="cn">Ashe</span><span class="elo none">—</span></div><div class="l2"><span class="facts"></span><span class="res" aria-label="Últimas partidas"><i class="w"></i><i class=""></i><i class=""></i><i class="w"></i><i class=""></i></span></div></div></div><div class="rank-row"><span class="champ">​</span><div class="col"><div class="l1"><span class="who">Você</span><span class="cn">Lulu</span><span class="elo"><b>Esmeralda I</b><span class="pts">0 PDL</span></span></div><div class="l2"><span class="facts"><span>53% em 200</span></span></div></div></div>
       </div>
     </div>
-    <p class="cap">Passar o mouse em uma linha mostra o resumo (exemplo ao lado). Sem os dados do cliente, a segunda linha some e fica só a primeira.</p>
+    <p class="cap">Passar o mouse numa linha mostra os campeões mais jogados e o placar das últimas 20 partidas.</p>
   </div>
-
   <div class="notes">
-    <h2>O que cada linha mostra</h2>
+    <h2>Cada linha</h2>
     <ul>
-      <li><b>Nome · campeão</b>: o campeão só aparece depois de escolhido.</li>
-      <li><b>Elo</b> à direita, como já é hoje (solo antes de flex).</li>
-      <li><b>Rota principal</b>: a que mais jogou nas últimas 20 partidas (precisa de 2 ou mais).</li>
-      <li><b>Taxa de vitórias e partidas</b> da fila do elo mostrado.</li>
-      <li><b>Com o campeão escolhido</b>: vitórias e partidas nas últimas 20 com ele. Só aparece se ele já jogou com esse campeão.</li>
-      <li><b>Forma</b>: as 5 últimas partidas, ponto cheio é vitória, vazio é derrota (sem azul nem vermelho, que ficam para aliado e inimigo).</li>
-      <li><b>A sua linha</b>: só o elo e a taxa de vitórias; não faz sentido comparar você com você.</li>
-      <li><b>Já cruzou com você</b>: ele esteve numa das suas últimas partidas, no seu time ou no adversário.</li>
+      <li>Nome e campeão (só depois de escolhido); elo à direita, com Flex quando for o da Flex.</li>
+      <li>Rota principal, taxa de vitórias e partidas da fila, e como ele vai com o campeão escolhido.</li>
+      <li>Últimas 5 partidas em quadrados: cheio é vitória, vazio é derrota.</li>
+      <li>Selo "Já cruzou com você" se ele esteve numa das suas últimas partidas.</li>
+      <li>A sua linha mostra só o elo e a taxa de vitórias.</li>
     </ul>
-    <h2>Mouse em cima</h2>
-    <div class="tip"><b>Fulano de Tal</b>Mais jogados: Jinx 9 · Ashe 5 · Draven 3<br>13 vitórias e 7 derrotas nas últimas 20</div>
-    <h2>Ideias que eu deixei de fora</h2>
+    <h2>Quando falta informação</h2>
     <ul>
-      <li><b>Os 3 campeões mais jogados na linha</b>: deixa a linha densa demais. Vão no mouse em cima.</li>
-      <li><b>"Já jogou com você" separando time e adversário</b>: o cliente não diz de que lado ele estava de forma confiável; fica "cruzou".</li>
-      <li><b>Sequência de vitórias e derrotas em número</b> (ex.: "3 seguidas"): os cinco pontos já dizem isso.</li>
-    </ul>
-    <h2>Limites</h2>
-    <ul>
-      <li>Só aparece onde o cliente mostra os aliados (draft normal, às cegas, Flex, ARAM).</li>
-      <li>Vem do histórico do próprio cliente; se ele não responder, a segunda linha fica vazia.</li>
-      <li>Uma leitura por jogador por seleção, sem repetir.</li>
+      <li>Campeão não escolhido: quadrado com "?", e some o dado "com o campeão".</li>
+      <li>Nome escondido pelo cliente: "—".</li>
+      <li>Sem ranqueada: "—" no elo, sem taxa de vitórias.</li>
+      <li>Sem histórico: a segunda linha mostra só o que existir; se não houver nada, some.</li>
+      <li>Nunca jogou com o campeão: some o dado do campeão.</li>
     </ul>
   </div>
 </div>
