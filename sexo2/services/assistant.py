@@ -191,15 +191,30 @@ def _open_in_browser(url: str) -> None:
     webbrowser.open(url)
 
 
+ARENA_TEAM_FIELDS = ("teamId", "subteamId", "subteamIndex", "subteam", "team")
+
+
+def _same_group(roster: list, key: str, value: Any) -> list:
+    return [p for p in roster if isinstance(p, dict) and p.get(key) == value and not isinstance(p.get(key), bool)]
+
+
 def arena_duo(roster: list, local_cell: Any) -> list:
-    """The Arena roster has everyone; the user's team is the players with the same teamId."""
+    """The Arena roster has everyone; the user's team is the pair that shares a team field with the user.
+
+    The client's field name is not documented for Arena, so the usual names are tried in turn and the
+    first one that puts exactly two players (the duo) together is taken; none, no team.
+    """
     local = next((p for p in roster if isinstance(p, dict) and p.get("cellId") == local_cell), None)
-    team = local.get("teamId") if isinstance(local, dict) else None
-    if isinstance(team, bool) or not isinstance(team, int):
+    if not isinstance(local, dict):
         return []
-    return [
-        p for p in roster if isinstance(p, dict) and p.get("teamId") == team and not isinstance(p.get("teamId"), bool)
-    ]
+    for key in ARENA_TEAM_FIELDS:
+        value = local.get(key)
+        if isinstance(value, bool) or not isinstance(value, int):
+            continue
+        group = _same_group(roster, key, value)
+        if len(group) == 2:
+            return group
+    return []
 
 
 def _puuid(player: Any) -> str:
@@ -522,7 +537,7 @@ class AssistantService:
         allies = session.get("myTeam")
         allies = allies if isinstance(allies, list) else []
         if self._queue_id() == ARENA_QUEUE:
-            self._log_arena(session_id, allies)
+            self._log_arena(session_id, allies, session.get("localPlayerCellId"))
             allies = arena_duo(allies, session.get("localPlayerCellId"))
         self._ranked_available = self._queue_id() in ELO_QUEUES and 1 <= len(allies) <= TEAM_SIZE
         local_cell = session.get("localPlayerCellId")
@@ -564,13 +579,22 @@ class AssistantService:
         rows.sort(key=lambda row: POSITION_ORDER.get(row["position"], len(POSITION_ORDER)))
         return rows[:TEAM_SIZE]
 
-    def _log_arena(self, session_id: str, roster: list) -> None:
+    def _log_arena(self, session_id: str, roster: list, local_cell: Any) -> None:
         """Once per selection, the shape of the Arena roster (field names only), to learn it from a log."""
         if self._arena_logged == session_id:
             return
         self._arena_logged = session_id
         keys = sorted({k for p in roster if isinstance(p, dict) for k in p})
-        log.info("[ASSISTANT] arena roster: %d players, fields %s", len(roster), keys)
+        local = next((p for p in roster if isinstance(p, dict) and p.get("cellId") == local_cell), {})
+        groups = {
+            k: len(_same_group(roster, k, local.get(k))) for k in ARENA_TEAM_FIELDS if isinstance(local.get(k), int)
+        }
+        log.info(
+            "[ASSISTANT] arena roster: %d players, fields %s, players sharing the user's value %s",
+            len(roster),
+            keys,
+            groups,
+        )
 
     def _open_profile(self, cell_id: Any) -> None:
         """Open the profile of one ally of the team shown, in the user's browser."""
