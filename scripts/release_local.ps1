@@ -15,7 +15,7 @@ try {
     if (-not (Test-Path -LiteralPath $keyFile)) { throw 'Local signing key is missing. Do not generate a replacement for existing clients.' }
     $source = Get-Content -LiteralPath 'assets\update-source.json' -Raw | ConvertFrom-Json
     $env:GITHUB_REPOSITORY = $source.repository
-    $env:SEXO2_SIGNING_KEY_HEX = [Convert]::ToHexString([IO.File]::ReadAllBytes($keyFile))
+    $env:SEXO2_SIGNING_KEY_HEX = [BitConverter]::ToString([IO.File]::ReadAllBytes($keyFile)).Replace("-", "").ToLower()
     python scripts/prepare_release.py --base $previousFolder --version $releaseVersion
     if ($LASTEXITCODE -ne 0) { throw 'Preparation failed.' }
     python scripts/run_tests.py -q
