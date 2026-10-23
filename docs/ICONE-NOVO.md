@@ -1,7 +1,8 @@
-# Novo ícone do SEXO2 (D-123 pendente de confirmação; D-112 decidido)
+# Ícone do SEXO2 (D-154: o galo; substitui o “2 · Degrau” da D-123)
 
-Fonte única: `assets/sexo2.svg` (cópia byte a byte de `icone-final.svg`, sha256
-`ee8a0d414846af736215fbbf3690f5101348d1770b27bd907a05d1fe6f9ebb31`). Derivados:
+Fonte única: `assets/sexo2.svg` (galo busto, variação “Mais fluido” de `design/propostas/icone/galo-r3`, sha256
+`db86f234ed2a5c0f946def080dfdc3d72c370a7a98c72a4328aeac3fda54a1a6`). Até 24 px o desenho usa o corte `assets/sexo2-small.svg` (sha256 `956f6671dffe105312421591adbeb52745a4cf8b2a3d33670f5f94318402539e`), com fresta e barbela mais
+grossas. A abertura animada usa o mesmo arquivo (`SEXO2-Startup/icone-final.svg`, cópia byte a byte). Derivados:
 `python scripts/render_icon.py` (Chromium headless; ICO com entradas PNG de 16, 24, 32, 48, 64,
 128 e 256). Testes: `tests/test_icon.py`. Nomes de arquivo antigos mantidos (o código já os usa).
 

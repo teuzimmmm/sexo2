@@ -1,4 +1,5 @@
-"""Derive every app icon from assets/sexo2.svg (the single source, never edited).
+"""Derive every app icon from assets/sexo2.svg (the single source, never edited) and, up to 24 px, from
+assets/sexo2-small.svg (the same drawing with heavier details).
 
     python scripts/render_icon.py [--chrome PATH]
 
@@ -18,6 +19,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 SOURCE = ASSETS / "sexo2.svg"
+SMALL = ASSETS / "sexo2-small.svg"  # corte para 16 e 24 px (fresta, barbela e olho mais grossos)
+SMALL_MAX = 24
 SIZES = (16, 24, 32, 48, 64, 128, 256)
 ICO_FILES = ("sexo2.ico", "sexo2-v2.ico", "sexo2-black-v3.ico", "icon.ico")
 PNG_256 = ("icon.png", "tray_ready.png", "tray_starting.png")
@@ -35,7 +38,7 @@ def find_chrome() -> Path:
 def render(chrome: Path, size: int, out: Path, work: Path) -> bytes:
     page = work / f"icon-{size}.html"
     page.write_text(
-        f'<!doctype html><body style="margin:0"><img src="{SOURCE.as_uri()}" width="{size}" height="{size}" '
+        f'<!doctype html><body style="margin:0"><img src="{(SMALL if size <= SMALL_MAX else SOURCE).as_uri()}" width="{size}" height="{size}" '
         'style="display:block"></body>',
         encoding="utf-8",
     )

@@ -6,7 +6,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-SVG_SHA256 = "ee8a0d414846af736215fbbf3690f5101348d1770b27bd907a05d1fe6f9ebb31"
+SVG_SHA256 = "db86f234ed2a5c0f946def080dfdc3d72c370a7a98c72a4328aeac3fda54a1a6"
+SMALL_SVG_SHA256 = "956f6671dffe105312421591adbeb52745a4cf8b2a3d33670f5f94318402539e"
 SIZES = [16, 24, 32, 48, 64, 128, 256]
 ICOS = ("sexo2.ico", "sexo2-v2.ico", "sexo2-black-v3.ico", "icon.ico")
 PNG_SIZES = {"icon.png": 256, "tray_ready.png": 256, "tray_starting.png": 256, "sexo2-toast.png": 64}
@@ -32,6 +33,11 @@ def png_size(data: bytes) -> tuple[int, int]:
 class IconTests(unittest.TestCase):
     def test_source_svg_is_unchanged(self):
         self.assertEqual(hashlib.sha256((ASSETS / "sexo2.svg").read_bytes()).hexdigest(), SVG_SHA256)
+        self.assertEqual(hashlib.sha256((ASSETS / "sexo2-small.svg").read_bytes()).hexdigest(), SMALL_SVG_SHA256)
+
+    def test_startup_plugin_uses_the_same_icon(self):
+        plugin = ROOT / "Pengu Loader" / "plugins" / "SEXO2-Startup" / "icone-final.svg"
+        self.assertEqual(plugin.read_bytes(), (ASSETS / "sexo2.svg").read_bytes())
 
     def test_ico_files_have_every_resolution(self):
         for name in ICOS:
