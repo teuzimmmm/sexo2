@@ -115,6 +115,17 @@ class RebrandTests(unittest.TestCase):
             b'<div class=mt-2><div class="text-sm text-black"></div><div class="flex mt-5 space-x-1"></div>', out
         )
 
+    def test_a_new_picture_replaces_the_one_from_an_earlier_rebrand(self):
+        import base64
+
+        once = patcher.rebrand(ROSE_UI, PICTURE)
+        newer = b"\x89PNG another icon, a different size"
+        twice = patcher.rebrand(once, newer)
+        self.assertEqual(len(twice), len(once))
+        self.assertIn(b' to="data:image/png;base64,' + base64.b64encode(newer), twice)
+        self.assertNotIn(base64.b64encode(PICTURE), twice)
+        self.assertEqual(patcher.rebrand(twice, newer), twice)
+
     def test_rebranding_twice_changes_nothing_and_a_different_build_is_refused(self):
         once = patcher.rebrand(ROSE_UI, PICTURE)
         self.assertEqual(patcher.rebrand(once, PICTURE), once)

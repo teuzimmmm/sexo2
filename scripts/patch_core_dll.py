@@ -112,7 +112,8 @@ def patch(data: bytes) -> bytes:
 # core.dll by Rose: its name, its rose picture and links to its Discord, Ko-fi and GitHub.
 # Each piece of text is swapped for one of the same length (spaces fill the rest, which
 # HTML, CSS and JS all ignore there), so no offset in the file moves.
-_TOAST_PICTURE = re.compile(rb'(?<= to=")data:image/jpeg;base64,[A-Za-z0-9+/=]+(?=")')
+# The picture is Rose's jpeg or, once rebranded, a PNG followed by the padding spaces: a later icon replaces it.
+_TOAST_PICTURE = re.compile(rb'(?<= to=")data:image/(?:jpeg|png);base64,[A-Za-z0-9+/= ]+(?=")')
 _BADGES = re.compile(rb'<div class="flex mt-5 space-x-1"><a href=https://discord\.gg/roseskins.*?</a></div>', re.S)
 _TEXT = (
     (
