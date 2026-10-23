@@ -31,7 +31,9 @@ Name: "brazilian"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "desktopicon"; Description: "Criar atalho na area de trabalho"; GroupDescription: "Atalhos:"
 [Files]
 Source: "{#AppSourceDir}\*"; DestDir: "{app}"; Excludes: "hashes.game.txt"; Flags: ignoreversion recursesubdirs createallsubdirs
+#if FileExists(AppSourceDir + "\_internal\injection\tools\hashes.game.txt")
 Source: "{#AppSourceDir}\_internal\injection\tools\hashes.game.txt"; DestDir: "{app}\_internal\injection\tools"; Flags: onlyifdoesntexist
+#endif
 [Icons]
 Name: "{group}\SEXO2"; Filename: "{app}\SEXO2.exe"; IconFilename: "{app}\_internal\assets\sexo2-v2.ico"
 Name: "{autodesktop}\SEXO2"; Filename: "{app}\SEXO2.exe"; IconFilename: "{app}\_internal\assets\sexo2-v2.ico"; Tasks: desktopicon
