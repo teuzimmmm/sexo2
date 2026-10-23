@@ -2,7 +2,7 @@
 #ifndef AppSourceDir
 #define AppSourceDir "..\SEXO2-r3\SEXO2"
 #endif
-#define MyAppVersion "1.9.2.0"
+#define MyAppVersion "2.0.0.0"
 [Setup]
 AppId={{B876AA51-DB38-448E-BD13-716F1C9DE750}
 AppName={#MyAppName}

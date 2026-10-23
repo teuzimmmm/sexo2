@@ -28,7 +28,7 @@ if token:
     Path("assets/update-access.json").write_text(json.dumps({"token": token}), encoding="utf-8")
 p = Path("sexo2/version.py")
 s = p.read_text(encoding="utf-8")
-s = re.sub(r"RELEASE_VERSION = '[^']+'", "RELEASE_VERSION = " + repr(version), s)
+s = re.sub(r"RELEASE_VERSION = (['\"])[^'\"]+\1", 'RELEASE_VERSION = "' + version + '"', s)
 p.write_text(s, encoding="utf-8")
 p = Path("assets/sexo2-version.txt")
 s = p.read_text(encoding="utf-8")
