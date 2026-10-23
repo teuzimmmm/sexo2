@@ -28,6 +28,16 @@ $velho = Join-Path $Novo 'velho'
 $aparte = Join-Path $Novo '_para-apagar'
 $guardar = @($Projeto, 'SEXO2', 'SEXO2-r2', 'SEXO2-r3')
 
+# 0. O Windows não move uma pasta que está em uso: nem o terminal nem este script podem estar dentro de novo.
+$aqui = (Get-Location).Path
+$esteScript = $PSCommandPath
+if ($aqui.StartsWith($Novo, [StringComparison]::OrdinalIgnoreCase) -or ($esteScript -and $esteScript.StartsWith($Novo, [StringComparison]::OrdinalIgnoreCase))) {
+    Write-Output 'Saia da pasta novo antes de rodar. Copie este script para a pasta de cima e rode de lá:'
+    Write-Output "  cd `"$(Split-Path -Parent $Novo)`""
+    Write-Output '  powershell -ExecutionPolicy Bypass -File .\organizar_novo.ps1 -Executar'
+    exit 1
+}
+
 # 1. O que tem de existir para a próxima release. Se faltar algo, nada é tocado.
 $exigidos = @(
     "$Projeto\release-secrets\signing.key",
