@@ -12,6 +12,8 @@ O histórico anterior está em `docs/arquivo/DECISOES.md` (entrega r6) e no plan
 
 ## Aprovadas
 
+- **Importação manual da configuração de jogo padrão (24/10/2026):** em Configurações, botão “Importar configuração de jogo padrão”, confirmação com Confirmar/Cancelar e cópia de segurança antes da aplicação. Perfil local do usuário com Shift + Q/W/E/R para conjurar em si mesmo; Shift + clique direito preservado. Sem automatismo, runas ou conjuntos de itens. Bloqueada durante partidas. Componentes e tokens existentes. Implementação apenas no código local, sem publicação ou atualização. Autorização explícita do usuário nesta conversa.
+
 | ID | Decisão | Origem |
 |---|---|---|
 | D-001 | O núcleo continua em Python e evolui por marcos, sem reescrita. | plano-mestre, ADR-1 |

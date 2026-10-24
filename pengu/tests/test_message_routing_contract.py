@@ -57,6 +57,7 @@ ROUTES = {
     "diagnostics-apply-recommended": "_handle_diagnostics_apply_recommended",
     "open-pengu-loader-ui": "_handle_open_pengu_loader_ui",
     "settings-save": "_enqueue_settings",
+    "settings-import-game": "_enqueue_settings",
     "language-save": "_handle_language_save",
     "add-custom-mods-category-selected": "_handle_add_custom_mods_category_selected",
     "add-custom-mods-champion-selected": "_handle_add_custom_mods_champion_selected",
@@ -123,6 +124,36 @@ class MessageRoutingContractTests(unittest.TestCase):
         with patch.object(MessageHandler, "_handle_skin_detection") as handler:
             self.handler._route("no-such-message", {"type": "no-such-message"})
         handler.assert_not_called()
+
+    def test_game_config_import_returns_its_own_response(self):
+        import json
+        import threading
+        from unittest.mock import Mock
+
+        self.handler._background_lock = threading.Lock()
+        self.handler._send_response = Mock()
+        self.handler._settings_worker = Mock()
+        self.handler._settings_worker.submit.side_effect = lambda work, failed: (work(), True)[1]
+        with patch("sexo2.services.game_config.import_default", return_value={"success": True}) as apply:
+            self.handler._enqueue_settings({"type": "settings-import-game", "requestId": "import-1", "confirmed": True})
+        apply.assert_called_once_with(confirmed=True)
+        response = json.loads(self.handler._send_response.call_args.args[0])
+        self.assertEqual(response, {"type": "settings-game-imported", "requestId": "import-1", "success": True})
+
+    def test_game_config_queue_failure_is_not_a_settings_snapshot(self):
+        import json
+        import threading
+        from unittest.mock import Mock
+
+        self.handler._background_lock = threading.Lock()
+        self.handler._send_response = Mock()
+        self.handler._settings_worker = Mock()
+        self.handler._settings_worker.submit.return_value = False
+        self.handler._enqueue_settings({"type": "settings-import-game", "requestId": "import-2"})
+        response = json.loads(self.handler._send_response.call_args.args[0])
+        self.assertEqual(response["type"], "settings-game-imported")
+        self.assertEqual(response["requestId"], "import-2")
+        self.assertFalse(response["success"])
 
 
 if __name__ == "__main__":

@@ -178,6 +178,7 @@ _ROUTES = {
     "diagnostics-apply-recommended": "_handle_diagnostics_apply_recommended",
     "open-pengu-loader-ui": "_handle_open_pengu_loader_ui",
     "settings-save": "_enqueue_settings",
+    "settings-import-game": "_enqueue_settings",
     "language-save": "_handle_language_save",
     "add-custom-mods-category-selected": "_handle_add_custom_mods_category_selected",
     "add-custom-mods-champion-selected": "_handle_add_custom_mods_champion_selected",
@@ -814,11 +815,12 @@ class MessageHandler:
         with self._background_lock:
             if not hasattr(self, "_settings_worker"):
                 self._settings_worker = SerialWorker("SEXO2-Settings", capacity=16)
+        importing = payload.get("type") == "settings-import-game"
         saving = payload.get("type") == "settings-save"
 
         def failed(error):
             response = {
-                "type": "settings-saved" if saving else "settings-data",
+                "type": "settings-game-imported" if importing else ("settings-saved" if saving else "settings-data"),
                 "requestId": payload.get("requestId"),
                 "success": False,
                 "error": str(error),
@@ -826,7 +828,13 @@ class MessageHandler:
             self._send_response(json.dumps(response, ensure_ascii=False))
 
         def work():
-            if saving:
+            if importing:
+                from sexo2.services.game_config import import_default
+
+                response = import_default(confirmed=payload.get("confirmed"))
+                response.update(type="settings-game-imported", requestId=payload.get("requestId"))
+                self._send_response(json.dumps(response, ensure_ascii=False))
+            elif saving:
                 self._handle_settings_save(payload)
             else:
                 self._handle_settings_request(payload)

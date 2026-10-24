@@ -14,6 +14,7 @@
     sfx: 'Sons',
     others: 'Outros',
   };
+  let importButton, importConfirm, importStatus, importPending = null;
   let bridge = null,
     root = null,
     form = null,
@@ -133,6 +134,37 @@
       e.preventDefault();
       autoSave();
     });
+    root.append(el('h3', 'Configuração de jogo'));
+    const gameActions = el('div');
+    gameActions.className = 's2-actions';
+    importButton = button('Importar configuração de jogo padrão', () => {
+      importConfirm.hidden = false;
+    });
+    gameActions.append(importButton);
+    importConfirm = el('div');
+    importConfirm.hidden = true;
+    importConfirm.append(el('p', 'Aplicar a configuração de jogo padrão? Sua configuração atual será salva em uma cópia de segurança.'));
+    const confirmActions = el('div');
+    confirmActions.className = 's2-actions';
+    confirmActions.append(
+      button('Confirmar', () => {
+        if (importPending) return;
+        if (!bridge?.ready) {
+          importStatus.textContent = 'O aplicativo está desconectado. Tente novamente após reconectar.';
+          return;
+        }
+        importPending = { id: 's2-game-config-' + ++sequence, at: Date.now() };
+        importButton.disabled = true;
+        importConfirm.hidden = true;
+        importStatus.textContent = 'Importando…';
+        bridge.send({ type: 'settings-import-game', requestId: importPending.id, confirmed: true });
+      }),
+      button('Cancelar', () => { importConfirm.hidden = true; }),
+    );
+    importConfirm.append(confirmActions);
+    importStatus = el('p');
+    importStatus.setAttribute('role', 'status');
+    root.append(gameActions, importConfirm, importStatus);
     root.append(el('h3', 'Mods personalizados'));
     const tools = el('div');
     tools.className = 's2-actions';
@@ -299,6 +331,14 @@
       bridge = window.__sexo2Bridge;
       bridge.subscribe('settings-data', receive);
       bridge.subscribe('settings-saved', receive);
+      bridge.subscribe('settings-game-imported', (data) => {
+        if (!importPending || data.requestId !== importPending.id) return;
+        importPending = null;
+        importButton.disabled = false;
+        importStatus.textContent = data.success === true
+          ? 'Configuração importada. A cópia anterior foi salva. Confira os ajustes na próxima partida.'
+          : (data.error || 'Não foi possível importar a configuração.');
+      });
       bridge.subscribe('sexo2-update-state', updateReceived);
       bridge.onReady(() => {
         pending = null;
@@ -310,6 +350,11 @@
     }
   }, 100);
   setInterval(() => {
+    if (importPending && Date.now() - importPending.at > 15000) {
+      importPending = null;
+      importButton.disabled = false;
+      importStatus.textContent = 'Não houve confirmação. Confira a configuração antes de tentar novamente.';
+    }
     if (pending && Date.now() - pending.at > 15000) {
       pending = null;
       lock(false);
